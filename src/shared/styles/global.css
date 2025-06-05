@@ -2,6 +2,11 @@
 @import './base.css';
 @import './components.css';
 
+@font-face {
+  font-family: 'PT Serif';
+  font-display: swap;
+}
+
 html {
   font-family: var(--font-sans);
   box-sizing: border-box;

@@ -40,6 +40,15 @@ const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/$
       content='width=device-width, initial-scale=1.0'
     />
     <link
+      rel='preconnect'
+      href='https://fonts.googleapis.com'
+    />
+    <link
+      rel='preconnect'
+      href='https://fonts.gstatic.com'
+      crossorigin
+    />
+    <link
       rel='icon'
       type='image/png'
       href='/icon.png'
@@ -63,6 +72,8 @@ const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/$
     <link
       href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
       rel='stylesheet'
+      media='print'
+      onload="this.media='all'"
     />
     <link
       rel='alternate'

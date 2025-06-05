@@ -231,14 +231,15 @@ const { placeholder, className } = Astro.props;
 </div>
 
 <style is:global>
-  /* Search Trigger */
   .search-trigger {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
-    max-width: 240px;
+    width: 240px;
     height: 36px;
+    min-width: 240px;
+    min-height: 36px;
+    max-width: 240px;
     padding: 0 12px;
     background: hsl(var(--background));
     border: 1px solid hsl(var(--border));
@@ -249,7 +250,19 @@ const { placeholder, className } = Astro.props;
     text-align: left;
     font-size: 14px;
   }
-
+  .search-trigger:not(.loaded) {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
   .search-trigger:hover {
     border-color: hsl(var(--primary) / 0.5);
     background: hsl(var(--muted) / 0.5);
@@ -279,16 +292,15 @@ const { placeholder, className } = Astro.props;
     justify-content: center;
     height: 20px;
     padding: 0 6px;
-    background: hsl(var(--muted));
-    border: 1px solid hsl(var(--border));
-    border-radius: 4px;
+    background: #374151;
+    color: #f9fafb;
+    border-color: #6b7280;
+    border-radius: var(--radius);
     font-size: 11px;
     font-family: monospace;
-    color: hsl(var(--muted-foreground));
     font-weight: 500;
   }
 
-  /* Search Modal */
   .search-modal {
     position: fixed;
     top: 0;
@@ -337,7 +349,6 @@ const { placeholder, className } = Astro.props;
     transform: scale(1);
   }
 
-  /* Header */
   .search-modal__header {
     display: flex;
     align-items: center;
@@ -413,13 +424,11 @@ const { placeholder, className } = Astro.props;
     color: hsl(var(--foreground));
   }
 
-  /* Content */
   .search-content {
     max-height: calc(80vh - 80px);
     overflow-y: auto;
   }
 
-  /* Default state */
   .search-default {
     padding: 1.5rem;
   }
@@ -499,7 +508,6 @@ const { placeholder, className } = Astro.props;
     margin-top: 2px;
   }
 
-  /* Search results - ПОЛНОСТЬЮ НОВАЯ СТРУКТУРА */
   .search-results {
     padding: 0;
   }
@@ -550,7 +558,6 @@ const { placeholder, className } = Astro.props;
     border: 1px solid hsl(var(--border));
   }
 
-  /* Цветовая индикация категорий */
   .search-category[data-category='posts'] .category-header {
     border-left: 3px solid hsl(221 83% 53%);
   }
@@ -593,7 +600,6 @@ const { placeholder, className } = Astro.props;
     transform: translateY(-1px);
   }
 
-  /* Специфичные hover эффекты для каждой категории */
   .search-category[data-category='posts'] .search-item:hover {
     background: hsl(221 83% 53% / 0.05);
     border-color: hsl(221 83% 53% / 0.2);
@@ -633,7 +639,6 @@ const { placeholder, className } = Astro.props;
     margin: 0;
   }
 
-  /* Улучшенный highlight */
   :global(.search-highlight) {
     background: hsl(48 96% 53% / 0.25);
     color: hsl(25 95% 53%);
@@ -642,7 +647,6 @@ const { placeholder, className } = Astro.props;
     font-weight: 600;
   }
 
-  /* Empty state */
   .search-empty {
     padding: 3rem 1.5rem;
   }
@@ -669,12 +673,10 @@ const { placeholder, className } = Astro.props;
     font-size: 14px;
   }
 
-  /* Utility */
   .hidden {
     display: none !important;
   }
 
-  /* Dark mode */
   :global(.dark) .search-modal__dialog {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
@@ -684,7 +686,6 @@ const { placeholder, className } = Astro.props;
     color: hsl(48 96% 53%);
   }
 
-  /* Responsive */
   @media (max-width: 768px) {
     .search-trigger {
       max-width: 200px;

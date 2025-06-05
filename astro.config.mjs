@@ -28,6 +28,16 @@ export default defineConfig({
         '@': '/src',
       },
     },
+    build: {
+      cssCodeSplit: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['astro']
+          }
+        }
+      }
+    }
   },
 
   adapter: netlify(),
