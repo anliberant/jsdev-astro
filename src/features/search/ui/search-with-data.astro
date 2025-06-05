@@ -19,13 +19,4 @@ const searchData = await getAllSearchData();
 
 <script define:vars={{ searchData }}>
   window.searchData = searchData;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log(`🔍 Search initialized with ${searchData.length} items:`, {
-      posts: searchData.filter(item => item.category === 'posts').length,
-      howtos: searchData.filter(item => item.category === 'howtos').length,
-      snippets: searchData.filter(item => item.category === 'snippets').length,
-      fridays: searchData.filter(item => item.category === 'fridays').length,
-    });
-  });
 </script>

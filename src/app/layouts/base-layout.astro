@@ -59,22 +59,25 @@ const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/$
     />
     <title>{fullTitle}</title>
 
+    <!-- Umami Analytics -->
+    <script
+      defer
+      src='https://cloud.umami.is/script.js'
+      data-website-id='97be30e6-d00d-41c8-9353-a900d0f96dc7'
+    ></script>
     <!-- Fonts -->
     <link
-      rel='preconnect'
-      href='https://fonts.googleapis.com'
-    />
-    <link
-      rel='preconnect'
-      href='https://fonts.gstatic.com'
-      crossorigin
-    />
-    <link
       href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
-      rel='stylesheet'
-      media='print'
-      onload="this.media='all'"
+      rel='preload'
+      as='style'
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
+        rel='stylesheet'
+      />
+    </noscript>
     <link
       rel='alternate'
       type='application/rss+xml'
@@ -196,7 +199,32 @@ const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/$
   </body>
 </html>
 
-<style is:global>
+<style>
+  html {
+    font-family: 'Roboto', system-ui, sans-serif;
+    font-display: swap;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    font-size: 16px;
+    background: #fff;
+    color: #000;
+  }
+  .header {
+    height: 4rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .container {
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  .main {
+    padding: 0 0.5rem;
+    font-size: 1.2rem;
+  }
+
   .scroll-to-top {
     position: fixed;
     bottom: var(--space-xl);
@@ -210,22 +238,27 @@ const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/$
     font-size: 1.2rem;
     cursor: pointer;
     z-index: 1000;
-    transition: all var(--transition-normal);
+
+    transform: translateY(100px);
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    will-change: transform, opacity;
+
     box-shadow: var(--shadow-lg);
   }
 
-  .scroll-to-top:hover {
-    background: var(--color-primary-dark);
-    transform: translateY(-2px);
+  .scroll-to-top.visible {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
   }
 
-  @media (max-width: 768px) {
-    .scroll-to-top {
-      bottom: var(--space-md);
-      right: var(--space-md);
-      width: 2.5rem;
-      height: 2.5rem;
-      font-size: 1rem;
-    }
+  .scroll-to-top:hover {
+    transform: translateY(-2px) scale(1.05);
   }
 </style>

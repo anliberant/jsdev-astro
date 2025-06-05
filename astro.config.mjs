@@ -1,44 +1,61 @@
+import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import { defineConfig } from 'astro/config';
-
+import netlify from '@astrojs/netlify';
 import { remarkReadingTime } from './src/shared/utils/remark-reading-time.mjs';
 
-import netlify from '@astrojs/netlify';
-
-// https://astro.build/config
 export default defineConfig({
   site: 'https://jsdev.space',
-  output: 'static',
 
   integrations: [
     mdx(),
     sitemap(),
   ],
 
+  output: 'static',
+  adapter: netlify(),
+
   markdown: {
     remarkPlugins: [remarkReadingTime],
-    syntaxHighlight: 'prism',
-    gfm: true,
-  },
-
-  vite: {
-    resolve: {
-      alias: {
-        '@': '/src',
-      },
-    },
-    build: {
-      cssCodeSplit: false,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['astro']
-          }
-        }
-      }
+    shikiConfig: {
+      theme: 'github-dark',
+      wrap: true
     }
   },
 
-  adapter: netlify(),
+  build: {
+    inlineStylesheets: 'auto',
+  },
+
+  vite: {
+    build: {
+      cssMinify: true,
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+        },
+      },
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            // Разделяем по папкам
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+            if (id.includes('src/features/search')) {
+              return 'search';
+            }
+            if (id.includes('src/features/tools')) {
+              return 'tools';
+            }
+            if (id.includes('src/shared/ui')) {
+              return 'ui';
+            }
+          },
+        }
+      }
+    }
+  }
 });

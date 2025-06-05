@@ -231,15 +231,14 @@ const { placeholder, className } = Astro.props;
 </div>
 
 <style is:global>
+  /* Search Trigger */
   .search-trigger {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 240px;
-    height: 36px;
-    min-width: 240px;
-    min-height: 36px;
+    width: 100%;
     max-width: 240px;
+    height: 36px;
     padding: 0 12px;
     background: hsl(var(--background));
     border: 1px solid hsl(var(--border));
@@ -250,19 +249,7 @@ const { placeholder, className } = Astro.props;
     text-align: left;
     font-size: 14px;
   }
-  .search-trigger:not(.loaded) {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-  }
-  @keyframes loading {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
-  }
+
   .search-trigger:hover {
     border-color: hsl(var(--primary) / 0.5);
     background: hsl(var(--muted) / 0.5);
@@ -308,9 +295,17 @@ const { placeholder, className } = Astro.props;
     right: 0;
     bottom: 0;
     z-index: 1000;
-    display: none;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    visibility: hidden;
+
+    transform: scale(0.95);
+
+    transition:
+      opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    will-change: transform, opacity;
   }
 
   .search-modal.open {
@@ -319,6 +314,8 @@ const { placeholder, className } = Astro.props;
     justify-content: center;
     padding-top: 10vh;
     opacity: 1;
+    visibility: visible;
+    transform: scale(1);
   }
 
   .search-modal__overlay {
@@ -686,6 +683,7 @@ const { placeholder, className } = Astro.props;
     color: hsl(48 96% 53%);
   }
 
+  /* Responsive */
   @media (max-width: 768px) {
     .search-trigger {
       max-width: 200px;

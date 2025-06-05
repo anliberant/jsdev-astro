@@ -30,8 +30,11 @@ const truncatedDesc =
             class='post-image'
             width={400}
             height={250}
-            loading='eager'
+            loading='lazy'
+            decoding='async'
             formats={['avif', 'webp']}
+            quality={80}
+            sizes='(max-width: 768px) 100vw, 400px'
           />
         )
       }

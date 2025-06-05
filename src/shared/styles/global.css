@@ -1,6 +1,26 @@
 @import './variables.css';
 @import './base.css';
 @import './components.css';
+@layer critical {
+  html {
+    font-family: 'Roboto', system-ui, sans-serif;
+    font-display: swap;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    font-size: 16px;
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .header {
+    height: 4rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+}
 
 @font-face {
   font-family: 'PT Serif';
@@ -32,6 +52,13 @@ body {
   line-height: 1.6;
   width: 100%;
   min-height: 100vh;
+  font-family:
+    'Roboto',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-display: swap;
 }
 
 h1,
@@ -43,6 +70,8 @@ h6 {
   line-height: 1.2;
   margin-top: 1.25rem;
   margin-bottom: 0.75rem;
+  font-family: 'PT Serif', Georgia, serif;
+  font-display: swap;
 }
 
 h1 {
@@ -86,6 +115,12 @@ a {
   .container {
     max-width: 1400px;
   }
+}
+
+code,
+pre {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-display: swap;
 }
 
 p code {
