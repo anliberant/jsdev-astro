@@ -1,0 +1,152 @@
+---
+title: How to Fix The NPM Conflicting Peer Dependency Error
+slug: peer-dependency-error
+heading: Fixing NPM Conflicting Peer Dependency Errors
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/peer-dependency-error
+date: 2024-09-16
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['npm']
+desc: Fix NPM conflicting peer dependency errors with clear troubleshooting steps. Learn effective methods to resolve version conflicts in Node.js projects.
+---
+
+When working with **npm** (Node Package Manager), you might encounter a conflicting **peer
+dependency error**. This error usually occurs when different packages you’re trying to install
+depend on different (and often incompatible) versions of the same dependency.
+
+Here's how you can address this issue:
+
+## 1. Understand Peer Dependencies
+
+**Peer dependencies** are a way for a package to declare that it expects another package to be
+present in the consuming project, but it doesn’t install it automatically. It’s the responsibility
+of the project that uses these packages to ensure the correct version is installed.
+
+For example, if package A requires react@17 and package B requires react@18, npm will throw a
+conflicting peer dependency error because it’s impossible to satisfy both requests.
+
+Reed also - [How Peer Dependencies Work and Why You Need Them](/howto/peer-dependecies/).
+
+## 2. Analyze the Error Message
+
+When npm shows a conflicting peer dependency error, it will usually show which packages are causing
+the conflict. Here’s an example of what the error might look like:
+
+```bash
+npm ERR! Could not resolve dependency:
+npm ERR! peer react@"^17.0.0" from package-a@1.0.0
+npm ERR! node_modules/package-a
+npm ERR!   package-a@"^1.0.0" from the root project
+npm ERR!
+npm ERR! Conflicting peer dependency: react@17.0.0
+npm ERR!   peer react@"^17.0.0" from package-b@1.0.0
+npm ERR!   node_modules/package-b
+npm ERR!     package-b@"^1.0.0" from the root project
+```
+
+In this example, package-a requires **react@17**, but package-b requires **react@18**. This conflict
+prevents npm from resolving the dependencies automatically.
+
+## 3. Use the --legacy-peer-deps Flag (Quick Fix)
+
+If you're in a hurry and you just want to bypass the conflict, you can use the **--legacy-peer-deps
+flag**. This will make npm use the old method of resolving dependencies (used in npm v6 and
+earlier).
+
+<span className='code-cmd'>npm install --legacy-peer-deps</span>
+
+This option tells npm to ignore peer dependency conflicts, allowing you to install the packages
+without the error. However, **this is not a permanent solution** and may cause issues in the future
+because it doesn’t actually resolve the underlying dependency problem.
+
+## 4. Use --force (Temporary Fix)
+
+Another approach is using the **--force** flag to force the installation of dependencies, even when
+there are conflicts.
+
+<span className='code-cmd'>npm install --force</span>
+
+This is more aggressive than **--legacy-peer-deps** and could result in broken or incompatible
+packages. Only use this as a last resort when you're aware of the potential risks.
+
+## 5. Manually Resolve Peer Dependency Versions (Best Practice)
+
+The best way to solve peer dependency conflicts is by manually updating the version of the
+conflicting dependencies in your **package.json**.
+
+Steps:
+
+- 1. **Identify the conflicting dependencies** from the error message.
+- 2. **Check the required versions** by looking at the peer dependencies of the conflicting
+     packages. For example, if **package-a** requires **react@^17** and **package-b** requires
+     **react@^18**, you may need to update one of the packages or find a version of React that works
+     with both.
+- 3. **Install the correct version** of the dependency that satisfies both packages.
+
+For example, if **react@18** works with both package-a and package-b:
+
+<span className='code-cmd'>npm install react@18</span>
+
+- 4. **Add resolutions in package.json**: If you cannot find a version that works for both packages,
+     you can use the **resolutions** field (if using npm v7+ or yarn). This forces npm or yarn to
+     install a specific version of the dependency.
+
+In **package.json**, add:
+
+```json
+{
+  "resolutions": {
+    "react": "18.2.0"
+  }
+}
+```
+
+Then run:
+
+<span className='code-cmd'>npm install</span>
+
+Note: Using **resolutions** is a workaround, so be cautious. It could cause breakage if a package
+requires a strict version.
+
+## 6. Use npm info to Check Package Versions
+
+You can use the **npm info** command to inspect which versions of a package are compatible with
+another package. This will help you determine the versions that satisfy the peer dependencies.
+
+For example, to check the available versions of react:
+
+<span className='code-cmd'>npm info react versions</span>
+
+You can also check the peer dependencies of a specific package:
+
+<span className='code-cmd'>npm info package-a peerDependencies</span>
+
+## 7. Use npx to Check Dependency Trees
+
+To understand the dependency tree and where the conflicts are happening, you can use the **npx
+npm-why** package. It shows why certain packages are installed, which can help you trace the source
+of peer dependency issues.
+
+1. Install **npm-why**:
+
+<span className='code-cmd'>npm install -g npm-why</span>
+
+2. Run the tool:
+
+<span className='code-cmd'>npx npm-why react</span>
+
+This will show you which packages depend on **react** and their versions, helping you track down
+conflicting versions.
+
+## Conclusion
+
+To fix npm conflicting peer dependency errors:
+
+- Use **--legacy-peer-deps** or **--force** as quick fixes.
+- Manually resolve version conflicts for a more permanent solution.
+- Use **npm info** and tools like **npm-why** to inspect dependencies and understand the conflicts.
+  By carefully resolving dependencies and keeping packages up to date, you can avoid peer dependency
+  conflicts in the future.

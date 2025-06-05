@@ -1,0 +1,216 @@
+---
+title: "How to Fix the Git Error 'failed to push some refs to'"
+slug: git-failed-push-refs-fix
+heading: "Resolving Git's `Failed to Push Some Refs` Error: Comprehensive Solutions"
+icon: /icons/git.png
+image: /icon.png
+permalink: howto/git-failed-push-refs-fix
+date: 2025-04-17
+author: anton liberant
+category: git
+type: howto
+tags: ['git-error']
+desc: Fix the common Git error ‘failed to push some refs to’ with step-by-step tips on resolving merge conflicts, force pushing, and updating your local repo quickly.
+---
+
+If you’ve run into this message:
+
+<div className='code-cmd'>
+  error: failed to push some refs to 'https://github.com/user/repo.git'
+</div>
+
+you’re not alone. This is one of the most common Git errors, especially when collaborating or managing multiple branches. It’s a generic message that could be triggered by multiple underlying causes — from divergent branches to missing commits, permissions, or even pre-push hooks.
+
+In this article, we’ll break down what the error actually means, why it happens, and show you multiple solutions depending on the scenario you're facing.
+
+## 🔍 What Does ‘failed to push some refs to’ Mean?
+
+At a high level, this error means that your local Git repository is out of sync with the remote, and Git can’t complete the push because it would overwrite changes — something Git avoids by design unless explicitly told otherwise.
+
+"Refs" in Git refers to branches, tags, or HEAD pointers. So if you can’t push them, it usually means the branch you're pushing has conflicts, is outdated, or Git is blocking the push for another reason.
+
+## 🧪 Common Scenarios and Solutions
+
+Below are multiple reasons you might see this error, along with the appropriate fixes for each one.
+
+### 🧯 Option 1: Your Local Branch is Behind the Remote
+
+**Scenario:**
+
+Someone else pushed changes to the remote branch, and your local branch doesn’t have them. Git won’t let you push unless your local history includes the remote changes.
+
+**Fix:**
+
+Pull the latest changes and merge them locally:
+
+<div className="code-cmd">git pull origin `<branch-name>`</div>
+
+Then push again:
+
+<div className="code-cmd">git push origin `<branch-name>`</div>
+
+If you're okay with merging automatically:
+
+<div className="code-cmd">git pull --rebase origin `<branch-name>`</div>
+<div className="code-cmd">git push origin `<branch-name>`</div>
+
+### 🧨 Option 2: Rejected Because of Non-Fast-Forward
+
+**Scenario:**
+
+Your local commit history has diverged from the remote. Git refuses to push because it would overwrite history.
+
+**Fix (safe way):**
+
+<div className="code-cmd">git pull --rebase origin `<branch>`</div>
+<div className="code-cmd">git push origin `<branch>`</div>
+
+**Fix (force push — be careful!):**
+
+If you understand the consequences and it’s safe (e.g., on a feature branch):
+
+<div className="code-cmd">git push --force origin `<branch>`</div>
+
+### 🔐 Option 3: Permissions Issue or Auth Failure
+
+**Scenario:**
+
+You’re trying to push to a repo where you don’t have write access, or you're using outdated credentials (especially with GitHub token authentication).
+
+**Fix:**
+
+- Double-check your remote URL:
+  <div className='code-cmd'>git remote -v</div>
+- Re-authenticate if needed. With GitHub, use a [Personal Access Token (PAT)](https://github.com/settings/tokens) instead of your password.
+- Update the remote URL (if using HTTPS):
+  <div className="code-cmd">git remote set-url origin `https://<token>@github.com/username/repo.git`</div>
+
+### 🧱 Option 4: Trying to Push to a Protected Branch
+
+**Scenario:**
+
+You’re trying to force-push or push directly to a protected branch (like main or master) where force-push is disabled.
+
+**Fix:**
+
+- Push to a new branch and open a pull request:
+  <div className='code-cmd'>git checkout -b fix/my-change</div>
+  <div className='code-cmd'>git push origin fix/my-change</div>
+- Or change repo settings if you have admin access.
+
+### 🪞 Option 5: Remote Tracking Confusion
+
+**Scenario:**
+
+You’re pushing to a branch that doesn't track the correct remote or upstream.
+
+**Fix:**
+
+Set the upstream explicitly:
+
+<div className="code-cmd">git push --set-upstream origin `<branch-name>`</div>
+
+Or:
+
+<div className="code-cmd">git branch --set-upstream-to=origin/`<branch> <branch>`</div>
+
+### 🧹 Option 6: Stale Refs or Corrupted State
+
+**Scenario:**
+
+Git’s internal state is messed up. Could happen due to interrupted pushes or network errors.
+
+**Fix:**
+
+Clear out old references:
+
+<div className='code-cmd'>git remote prune origin</div>
+
+Re-fetch:
+
+<div className='code-cmd'>git fetch --all</div>
+
+Try again:
+
+<div className="code-cmd">git push origin `<branch>`</div>
+
+### 🔗 Option 7: Conflicts Due to Rewritten History
+
+**Scenario:**
+
+You rebased or amended commits, which rewrote history. Your local refs now conflict with remote history.
+
+**Fix:**
+
+You must force push:
+
+<div className="code-cmd">git push --force-with-lease origin `<branch>`</div>
+
+⚠️ This is safer than `--force` because it ensures no one else pushed since you last pulled.
+
+## 🧪 Bonus Fixes
+
+### 📦 Detached HEAD State
+
+If you're in a detached HEAD state:
+
+<div className='code-cmd'>git switch -c new-branch</div>
+<div className='code-cmd'>git push origin new-branch</div>
+
+### 🧼 Reset to Remote (Hard)
+
+Use this only if you're sure you want to discard local changes:
+
+<div className="code-cmd">git fetch origin</div>
+<div className="code-cmd">git reset --hard origin/`<branch>`</div>
+
+## 📋 Summary Table of Fixes
+
+<table>
+  <thead>
+    <tr>
+      <th>**Problem**</th>
+      <th>**Fix**</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Branch behind</td>
+      <td>`git pull --rebase`</td>
+    </tr>
+    <tr>
+      <td>Non-fast-forward</td>
+      <td>`git pull` or `git push --force`</td>
+    </tr>
+    <tr>
+      <td>No upstream</td>
+      <td>`git push --set-upstream origin <branch>`</td>
+    </tr>
+    <tr>
+      <td>Auth error</td>
+      <td>Re-authenticate, use token</td>
+    </tr>
+    <tr>
+      <td>Protected branch</td>
+      <td>Push to feature branch, PR</td>
+    </tr>
+    <tr>
+      <td>Rewritten history</td>
+      <td>`git push --force-with-lease`</td>
+    </tr>
+    <tr>
+      <td>Confused refs</td>
+      <td>`git remote prune origin`</td>
+    </tr>
+    <tr>
+      <td>Detached HEAD</td>
+      <td>`git switch -c new-branch`</td>
+    </tr>
+  </tbody>
+</table>
+
+## 🚀 Final Thoughts
+
+The `“failed to push some refs to”` Git error is one of those catch-all messages that can mean many things — but once you understand Git’s branching model and how remote tracking works, it becomes much easier to diagnose and fix.
+
+Whether you're working solo or collaborating across a team, using the correct push/pull workflow and being careful with force pushes will keep your repo clean and conflict-free.

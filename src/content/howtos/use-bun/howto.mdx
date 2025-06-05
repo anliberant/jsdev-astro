@@ -1,0 +1,95 @@
+---
+title: How to Use Bun for Fast JavaScript Development
+slug: use-bun
+heading: Getting Started with Bun
+icon: /icons/nodejs.png
+image: ./images/how-to-use-bun.png
+permalink: howto/use-bun
+date: 2024-09-05
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['bun']
+desc: Learn to use Bun, a fast JavaScript runtime and toolkit. Install Bun, run scripts, manage packages, and bundle code efficiently for high-performance apps.
+---
+
+## What is Bun?
+
+[**Bun**](https://bun.sh/) is a modern JavaScript runtime like Node.js or Deno, but designed to be
+faster and more efficient. It includes an all-in-one toolkit with a JavaScript/TypeScript runtime,
+bundler, transpiler, and package manager. Here's a quick guide on how to get started with Bun.
+
+![How to use Bun](./images/how-to-use-bun.png)
+
+### 1. Install Bun
+
+<span className='code-cmd'>npm install -g bun</span>
+
+or
+
+<span className='code-cmd'>powershell -c "irm bun.sh/install.ps1|iex"</span>
+
+or (Mac)
+
+<span className='code-cmd'>curl -fsSL https://bun.sh/install | bash</span>
+
+This will download and install Bun. Once installed, you can verify it with:
+
+<span className='code-cmd'>bun --version</span>
+
+The current version is **1.1.26**
+
+### 2. Creating a New Project
+
+To create a new project using Bun, you can simply initialize it with the following command:
+
+<span className='code-cmd'>bun init</span>
+
+This will prompt you with options to create a basic project setup, similar to how npm or yarn works.
+
+### 3. Running a Script
+
+<span className='code-cmd'>bun run index.js</span>
+
+### 4. 4. Using Bun as a Package Manager
+
+Bun acts as a package manager similar to npm or yarn, but faster. You can install packages using:
+
+<span className='code-cmd'>bun add express</span>
+
+Bun also automatically generates a bun.lockb lockfile for dependency management.
+
+### 5. Bundling Code
+
+Bun has a built-in bundler, which can bundle your **JavaScript** or **TypeScript** files for
+deployment:
+
+<span className='code-cmd'>bun build index.ts</span>
+
+This will create an optimized bundle for your project.
+
+### 6. Running a Development Server
+
+You can use Bun to quickly spin up a development server for web apps:
+
+<span className='code-cmd'>bun dev</span>
+
+This will serve your application and automatically reload changes as you update your code.
+
+### 7. Using Bun with Frameworks
+
+Bun supports frameworks like **React**, **Vue**, and others. For example, you can start a React
+project by running:
+
+```dash
+bun create react-app my-app
+cd my-app
+bun install
+bun dev
+```
+
+## Conclusion
+
+**Bun** offers a streamlined and fast environment for building **JavaScript** and **TypeScript**
+projects. With its integrated package manager, bundler, and dev server, Bun provides an all-in-one
+solution that enhances developer productivity.

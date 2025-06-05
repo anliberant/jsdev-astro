@@ -1,0 +1,341 @@
+---
+title: How to Write React's useEffect and Understand Its Principle
+slug: write-useeffect-react
+heading: Mastering React’s useEffect Hook
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/write-useeffect-react
+date: 2025-01-13
+author: anton liberant
+category: react
+type: howto
+tags: ['useEffect']
+desc: Discover how to manually implement React’s useEffect hook. Learn dependencies, lifecycle management, and cleanup with clear explanations and code examples.
+---
+
+This article explains how to implement `useEffect` manually in React to understand its inner workings. It includes the method's parameters, its execution logic during the first and subsequent renders, and the core principles behind `useEffect`. Topics include the creation of hooks, managing dependencies, and lifecycle-like behavior with `useEffect`. Code examples illustrate key concepts, and reference materials are provided.
+
+## 1. Introduction to `useEffect`
+
+The `useEffect` method accepts two parameters:
+
+1. `create` (**Function**): Executed during the first render and subsequent updates.
+2. `deps` (**Array**): Dependency array that determines when create should be re-executed.
+
+**Example**
+
+```jsx
+function HelloWorld() {
+  useEffect(() => {
+    console.log('HelloWorld Mounted');
+    return () => {
+      console.log('HelloWorld Unmounted');
+    };
+  }, []); // Empty deps array ensures this runs only on mount and unmount.
+
+  return <h1>Hello World</h1>;
+}
+
+function App() {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    console.log('App Mounted');
+  }, []); // Runs only once during mount.
+
+  return (
+    <div>
+      <button onClick={() => setVisible(!visible)}>Toggle HelloWorld</button>
+      {visible && <HelloWorld />}
+    </div>
+  );
+}
+```
+
+**Output:**
+
+- First render: "HelloWorld Mounted"
+- Toggling the button: "HelloWorld Unmounted" and "HelloWorld Mounted"
+
+## Implementing `useEffect`
+
+### 2.1 Creating a Hook Object
+
+A Hook object stores hook-specific data and is linked in a chain for function components.
+
+```js
+function Hook() {
+  this.memoizedState = null; // Stores hook state
+  this.next = null; // Points to the next hook
+  this.queue = []; // Stores state update functions
+}
+```
+
+### 2.2 Extending FiberNode
+
+A `FiberNode` object tracks updates for each component instance, including hook-related information.
+
+```js
+function FiberNode() {
+  this.updateQueue = null; // Stores `useEffect` data
+}
+```
+
+### 2.3 Differentiating Effect Types
+
+`HookFlags` distinguish between effect types like `useEffect` and `useLayoutEffect`.
+
+```js
+const HookHasEffect = 1;
+const HookInsertion = 2; // For `useInsertionEffect`
+const HookLayout = 4; // For `useLayoutEffect`
+const HookPassive = 8; // For `useEffect`
+```
+
+## 3. First Call to `useEffect`
+
+When `useEffect` is called for the first time:
+
+1. A new Hook object is created.
+2. Effect objects store the `create` function, dependencies (`deps`), and cleanup function (`destroy`).
+3. Effects are pushed into the `updateQueue`.
+
+Key implementation:
+
+```js
+function mountWorkInProgressHook() {
+  const hook = new Hook();
+  if (!workInProgressHook) {
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
+  } else {
+    workInProgressHook = workInProgressHook.next = hook;
+  }
+  return hook;
+}
+
+function pushEffect(tag, create, deps, destroy = null) {
+  const effect = { tag, create, deps, destroy };
+  if (!currentlyRenderingFiber.updateQueue) {
+    currentlyRenderingFiber.updateQueue = [];
+  }
+  currentlyRenderingFiber.updateQueue.push(effect);
+}
+
+function mountEffect(create, deps) {
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = pushEffect(HookPassive | HookHasEffect, create, deps);
+}
+```
+
+## 4. Updating useEffect
+
+During updates:
+
+1. Old hooks are reused, and `deps` are compared using `Object.is`.
+2. If dependencies differ, the `create` function is re-executed.
+
+Key implementation:
+
+```js
+function updateWorkInProgressHook() {
+  currentHook = currentHook
+    ? currentHook.next
+    : currentlyRenderingFiber.alternate.memoizedState;
+
+  const hook = new Hook();
+  hook.memoizedState = currentHook.memoizedState;
+  hook.queue = currentHook.queue;
+
+  if (!workInProgressHook) {
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
+  } else {
+    workInProgressHook = workInProgressHook.next = hook;
+  }
+  return hook;
+}
+
+function updateEffect(create, deps) {
+  const hook = updateWorkInProgressHook();
+  const prevEffect = hook.memoizedState;
+
+  if (deps && areHookInputsEqual(deps, prevEffect.deps)) {
+    hook.memoizedState = pushEffect(
+      HookPassive,
+      create,
+      deps,
+      prevEffect.destroy
+    );
+  } else {
+    currentlyRenderingFiber.flags |= HookPassive;
+    hook.memoizedState = pushEffect(
+      HookPassive | HookHasEffect,
+      create,
+      deps,
+      prevEffect.destroy
+    );
+  }
+}
+```
+
+## 5. Managing Cleanup
+
+Clean up previous effects during unmount or dependency changes:
+
+```js
+function commitHookPassiveUnmountEffects(fiber, hookFlags) {
+  const queue = fiber.updateQueue;
+  queue.forEach(effect => {
+    if (effect.tag & hookFlags && effect.destroy) {
+      effect.destroy();
+      effect.destroy = null;
+    }
+  });
+}
+```
+
+## 6. Final useEffect Implementation
+
+The final implementation switches between `mountEffect` and `updateEffect`:
+
+```js
+function useEffect(create, deps) {
+  const current = currentlyRenderingFiber.alternate;
+  if (!current) {
+    mountEffect(create, deps);
+  } else {
+    updateEffect(create, deps);
+  }
+}
+```
+
+## 7. Full Code Implementation
+
+Below is the complete code implementation for `useEffect`, including mount, update, and cleanup logic:
+
+```js
+// Define Hook and FiberNode prototypes
+function Hook() {
+  this.memoizedState = null; // Hook state
+  this.next = null; // Pointer to the next Hook
+  this.queue = []; // State update queue
+}
+
+function FiberNode() {
+  this.updateQueue = null; // Effect queue
+}
+
+// Hook flags for effect types
+const HookHasEffect = 1;
+const HookInsertion = 2; // For `useInsertionEffect`
+const HookLayout = 4; // For `useLayoutEffect`
+const HookPassive = 8; // For `useEffect`
+
+// Global variables for managing fiber nodes and hooks
+let currentlyRenderingFiber = null;
+let currentHook = null;
+let workInProgressHook = null;
+
+// Helper functions
+function areHookInputsEqual(nextDeps, prevDeps) {
+  if (!nextDeps || !prevDeps) return false;
+  for (let i = 0; i < nextDeps.length; i++) {
+    if (!Object.is(nextDeps[i], prevDeps[i])) return false;
+  }
+  return true;
+}
+
+function pushEffect(tag, create, deps, destroy = null) {
+  const effect = { tag, create, deps, destroy };
+  if (!currentlyRenderingFiber.updateQueue) {
+    currentlyRenderingFiber.updateQueue = [];
+  }
+  currentlyRenderingFiber.updateQueue.push(effect);
+}
+
+// Mounting hooks and effects
+function mountWorkInProgressHook() {
+  const hook = new Hook();
+  if (!workInProgressHook) {
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
+  } else {
+    workInProgressHook = workInProgressHook.next = hook;
+  }
+  return hook;
+}
+
+function mountEffect(create, deps) {
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = pushEffect(HookPassive | HookHasEffect, create, deps);
+}
+
+// Updating hooks and effects
+function updateWorkInProgressHook() {
+  currentHook = currentHook
+    ? currentHook.next
+    : currentlyRenderingFiber.alternate.memoizedState;
+
+  const hook = new Hook();
+  hook.memoizedState = currentHook.memoizedState;
+  hook.queue = currentHook.queue;
+
+  if (!workInProgressHook) {
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
+  } else {
+    workInProgressHook = workInProgressHook.next = hook;
+  }
+  return hook;
+}
+
+function updateEffect(create, deps) {
+  const hook = updateWorkInProgressHook();
+  const prevEffect = hook.memoizedState;
+
+  if (deps && areHookInputsEqual(deps, prevEffect.deps)) {
+    hook.memoizedState = pushEffect(
+      HookPassive,
+      create,
+      deps,
+      prevEffect.destroy
+    );
+  } else {
+    currentlyRenderingFiber.flags |= HookPassive;
+    hook.memoizedState = pushEffect(
+      HookPassive | HookHasEffect,
+      create,
+      deps,
+      prevEffect.destroy
+    );
+  }
+}
+
+// Cleanup logic
+function commitHookPassiveUnmountEffects(fiber, hookFlags) {
+  const queue = fiber.updateQueue;
+  if (queue) {
+    queue.forEach(effect => {
+      if (effect.tag & hookFlags && effect.destroy) {
+        effect.destroy();
+        effect.destroy = null;
+      }
+    });
+  }
+}
+
+// Main `useEffect` implementation
+function useEffect(create, deps) {
+  const current = currentlyRenderingFiber.alternate;
+  if (!current) {
+    mountEffect(create, deps);
+  } else {
+    updateEffect(create, deps);
+  }
+}
+```
+
+**References**
+
+[React useEffect Official Documentation](https://react.dev/reference/react/useEffect)
+
+## Conclusion
+
+By implementing `useEffect` from scratch, we gain a deeper understanding of its underlying mechanics, including how hooks manage dependencies, execute side effects, and handle cleanup operations. This exercise provides valuable insights into React's rendering process, fiber architecture, and lifecycle management. Whether you’re troubleshooting `useEffect` in your projects or striving to master React’s inner workings, this knowledge equips you with the tools to write more efficient and predictable code.

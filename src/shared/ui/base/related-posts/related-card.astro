@@ -1,0 +1,70 @@
+---
+export interface Props {
+  post: {
+    slug: string;
+    data: {
+      title: string;
+      permalink: string;
+    };
+  };
+}
+
+const { post } = Astro.props;
+---
+
+<div class='card'>
+  <div class='card-content'>
+    <a
+      href={`/${post.data.permalink}/`}
+      class='card-title'>
+      {post.data.title}
+    </a>
+  </div>
+</div>
+
+<style>
+  .card {
+    max-width: 45%;
+    padding: 0.75rem;
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+    color: var(--oposite-color);
+    border-radius: var(--radius);
+    box-shadow: 0 0 0 transparent;
+    transition: box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .card:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.12);
+  }
+
+  :global(.dark) .card:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+  }
+
+  .card-content {
+    padding: 0;
+    width: 100%;
+  }
+
+  .card-title {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card-title:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    .card {
+      max-width: 100%;
+    }
+  }
+</style>

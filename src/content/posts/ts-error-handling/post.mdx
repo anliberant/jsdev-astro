@@ -1,0 +1,99 @@
+---
+title: 'TS Error Handling Evolution: From Try/Catch to Result Types'
+slug: ts-error-handling
+heading: 'TypeScript Error Handling: The Shift to Result Types'
+image: ./images/ts-error-handling.png
+permalink: ts-error-handling
+date: 2025-02-02
+author: anton liberant
+category: typescript
+type: post
+tags: ['error-handling']
+desc: Improve TypeScript error handling by using Result types instead of try/catch. Achieve clearer, safer code with explicit error cases and better type safety.
+---
+
+Error handling is a crucial part of any application, but traditional `try/catch` blocks in TypeScript can be cumbersome and introduce unintended side effects. In this article, we explore a modern approach to error handling using a utility function that enhances code readability and robustness.
+
+## The Problem with Traditional Try/Catch
+
+### 1. Catching Unintended Errors
+
+When using try/catch, all errors inside the try block are caught, even if they are unrelated to the function we intend to monitor.
+
+```ts
+const fetchData = async (id: number): Promise<{ id: number; name: string }> => {
+  if (id === 2) throw new Error('User not found');
+  return { id, name: 'Alice' };
+};
+
+try {
+  const user = await fetchData(1);
+  console.log(usr.name); // ❌ Typo (usr instead of user)
+} catch (error) {
+  console.log('An error occurred');
+}
+```
+
+The `catch` block executes for both API errors and developer mistakes (like the typo above), making it harder to distinguish between real failures and simple bugs.
+
+### 2. Mutability Pitfalls with `let`
+
+A common workaround is declaring the variable outside the `try/catch` block:
+
+```ts
+let userData: { id: number; name: string } | undefined;
+
+try {
+  userData = await fetchData(1);
+} catch (error) {
+  console.log('Error:', error);
+}
+
+console.log(userData?.name); // Could be undefined
+```
+
+This introduces risks:
+
+- **Unintentional reassignments**: The variable remains mutable and could be overwritten.
+- **Undefined values**: If an error occurs, userData remains undefined, leading to potential runtime issues.
+
+## A Better Way: Using a handleAsync Utility
+
+We can improve error handling by wrapping promises in a reusable function:
+
+```ts
+const handleAsync = async <T>(
+  promise: Promise<T>
+): Promise<[T, null] | [null, Error]> => {
+  try {
+    const data = await promise;
+    return [data, null];
+  } catch (error) {
+    return [null, error instanceof Error ? error : new Error(String(error))];
+  }
+};
+```
+
+### Using handleAsync
+
+Now, we can handle errors explicitly:
+
+```ts
+const [user, error] = await handleAsync(fetchData(1));
+
+if (error) {
+  console.error('Error:', error.message);
+} else {
+  console.log('User:', user.name);
+}
+```
+
+Why This Approach Is Better
+
+✔ Explicit error handling – Forces developers to check errors before using values.
+✔ Prevents unintended mutations – user remains immutable.
+✔ Cleaner and more readable – Separates error handling from function execution.
+
+## Conclusion
+
+By replacing `try/catch` with a structured utility like `handleAsync`, we create a more maintainable, predictable, and readable approach to error handling in TypeScript. Would you adopt this method in your next project? Let’s discuss! 🚀

@@ -1,0 +1,315 @@
+---
+title: Get All Directories and Files Within Directory in NodeJs
+slug: get-dirs-files
+heading: Exploring Directories in Node.js
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: snippets/get-dirs-files
+date: 2024-11-03
+author: anton liberant
+category: nodejs
+type: snippets
+tags: ['file', 'dir', 'fn']
+desc: Learn how to explore directories in Node.js. This guide covers listing files, handling nested folders, and filtering with practical, real-world code examples.
+---
+
+## Basic Setup and Installation
+
+First, create a new Node.js project and ensure it supports ES modules by adding this to your package.json:
+
+```json
+{
+  "type": "module"
+}
+```
+
+Create two files:
+
+1. fileExplorer.js - Contains the core functionality
+2. main.js - Contains usage examples
+
+### Core Implementation (fileExplorer.js)
+
+```js
+import { promises as fsPromises } from 'fs';
+import { extname, join } from 'path';
+
+import { promises as fsPromises } from 'fs';
+import { extname, join } from 'path';
+
+// Main function to get files and directories
+export async function getFilesAndDirs(dirPath, options = {}) {
+  const { recursive = false, filePattern = null, dirPattern = null } = options;
+
+  const result = {
+    files: [],
+    directories: [],
+  };
+
+  try {
+    const entries = await fsPromises.readdir(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        if (!dirPattern || dirPattern.test(entry.name)) {
+          result.directories.push(fullPath);
+        }
+
+        if (recursive) {
+          const subResults = await getFilesAndDirs(fullPath, options);
+          result.files.push(...subResults.files);
+          result.directories.push(...subResults.directories);
+        }
+      } else if (entry.isFile()) {
+        if (!filePattern || filePattern.test(entry.name)) {
+          result.files.push(fullPath);
+        }
+      }
+    }
+
+    return result;
+  } catch (error) {
+    throw new Error(`Failed to read directory: ${error.message}`);
+  }
+}
+
+// Get detailed file information
+export async function getDetailedInfo(dirPath) {
+  try {
+    const entries = await fsPromises.readdir(dirPath, { withFileTypes: true });
+    const result = {
+      files: [],
+      directories: [],
+    };
+
+    for (const entry of entries) {
+      const fullPath = join(dirPath, entry.name);
+      const stats = await fsPromises.stat(fullPath);
+
+      const baseInfo = {
+        name: entry.name,
+        path: fullPath,
+        size: stats.size,
+        created: stats.birthtime,
+        modified: stats.mtime,
+      };
+
+      if (entry.isDirectory()) {
+        result.directories.push({
+          ...baseInfo,
+          type: 'directory',
+        });
+      } else if (entry.isFile()) {
+        result.files.push({
+          ...baseInfo,
+          type: 'file',
+          extension: extname(entry.name),
+        });
+      }
+    }
+
+    return result;
+  } catch (error) {
+    throw new Error(`Failed to get detailed information: ${error.message}`);
+  }
+}
+
+// File size formatter utility
+export function formatFileSize(bytes) {
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  if (bytes === 0) return '0 Bytes';
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${Math.round(bytes / Math.pow(1024, i))} ${sizes[i]}`;
+}
+
+// Utility functions
+export const utils = {
+  createFilePattern: (...extensions) => {
+    const pattern = extensions
+      .map(ext => `\\.${ext.replace(/^\./, '')}`)
+      .join('|');
+    return new RegExp(`(${pattern})$`);
+  },
+
+  async isAccessible(path) {
+    try {
+      await fsPromises.access(path);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};
+```
+
+### Usage Examples (main.js)
+
+```js
+import {
+  formatFileSize,
+  getDetailedInfo,
+  getFilesAndDirs,
+  utils,
+} from './fileExplorer.js';
+
+import {
+  formatFileSize,
+  getDetailedInfo,
+  getFilesAndDirs,
+  utils,
+} from './fileExplorer.js';
+
+// Basic directory scanning
+async function basicExample() {
+  try {
+    const result = await getFilesAndDirs('./my-directory');
+    console.log('Files:', result.files);
+    console.log('Directories:', result.directories);
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+// Recursive scanning with filters
+async function advancedExample() {
+  try {
+    const result = await getFilesAndDirs('./my-directory', {
+      recursive: true,
+      filePattern: utils.createFilePattern('js', 'ts'), // Only JavaScript and TypeScript files
+      dirPattern: /^(?!node_modules).*/, // Exclude node_modules directory
+    });
+    console.log('JavaScript and TypeScript files:', result.files);
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+// Getting detailed file information
+async function detailedExample() {
+  try {
+    const details = await getDetailedInfo('./my-directory');
+    details.files.forEach(file => {
+      console.log(`
+                File: ${file.name}
+                Size: ${formatFileSize(file.size)}
+                Created: ${file.created}
+                Modified: ${file.modified}
+                Extension: ${file.extension}
+            `);
+    });
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+// Run all examples
+async function runExamples() {
+  console.log('--- Basic Example ---');
+  await basicExample();
+
+  console.log('\n--- Advanced Example ---');
+  await advancedExample();
+
+  console.log('\n--- Detailed Example ---');
+  await detailedExample();
+}
+
+runExamples();
+```
+
+### Common Use Cases
+
+**1. List All JavaScript Files**
+
+```js
+const jsFiles = await getFilesAndDirs('./src', {
+  recursive: true,
+  filePattern: /\.js$/,
+});
+console.log('JavaScript files:', jsFiles.files);
+```
+
+**2. Get Size of All Images**
+
+```js
+const imagePattern = utils.createFilePattern('jpg', 'png', 'gif');
+const details = await getDetailedInfo('./images');
+const totalSize = details.files
+  .filter(file => imagePattern.test(file.name))
+  .reduce((total, file) => total + file.size, 0);
+
+console.log('Total image size:', formatFileSize(totalSize));
+```
+
+**3. Find Large Files**
+
+```js
+const details = await getDetailedInfo('./');
+const largeFiles = details.files
+  .filter(file => file.size > 1024 * 1024) // Files larger than 1MB
+  .sort((a, b) => b.size - a.size);
+
+largeFiles.forEach(file => {
+  console.log(`${file.name}: ${formatFileSize(file.size)}`);
+});
+```
+
+**4. Check for Empty Directories**
+
+```js
+async function findEmptyDirs(dirPath) {
+  const result = await getFilesAndDirs(dirPath, { recursive: true });
+  const emptyDirs = [];
+
+  for (const dir of result.directories) {
+    const contents = await getFilesAndDirs(dir);
+    if (contents.files.length === 0 && contents.directories.length === 0) {
+      emptyDirs.push(dir);
+    }
+  }
+
+  return emptyDirs;
+}
+```
+
+### Error Handling Examples
+
+```js
+async function safeDirectoryOperation(dirPath) {
+  try {
+    // Check if directory exists and is accessible
+    const isAccessible = await utils.isAccessible(dirPath);
+    if (!isAccessible) {
+      throw new Error('Directory is not accessible');
+    }
+
+    const result = await getFilesAndDirs(dirPath, {
+      recursive: true,
+    });
+
+    return result;
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.error('Directory does not exist:', dirPath);
+    } else if (error.code === 'EACCES') {
+      console.error('Permission denied:', dirPath);
+    } else {
+      console.error('Unexpected error:', error.message);
+    }
+    return null;
+  }
+}
+```
+
+### Best Practices
+
+1. Always use try-catch blocks for error handling
+2. Use the utility functions for consistent patterns
+3. Consider memory usage with recursive operations
+4. Check directory accessibility before operations
+5. Use async/await for cleaner code
+6. Format file sizes for better readability
+
+Remember to handle errors appropriately and consider performance implications when dealing with large directories or deep recursive operations.

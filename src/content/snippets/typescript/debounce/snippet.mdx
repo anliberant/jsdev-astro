@@ -1,0 +1,72 @@
+---
+title: TypeScript Debounce Function
+slug: debounce-ts
+heading: Implementing Debounce Function in TypeScript
+icon: /icons/typescript.png
+image: /icon.png
+permalink: snippets/debounce-ts
+date: 2024-11-12
+author: anton liberant
+category: typescript
+type: snippets
+tags: ['debounce']
+desc: Learn to create a type-safe debounce function in TypeScript to limit high-frequency events. Supports sync and async callbacks for better app performance and control.
+---
+
+When creating a `debounce` function in TypeScript, it’s essential to handle type safety, particularly for the callback function's arguments and return type, as well as to ensure compatibility with both synchronous and asynchronous functions. Below is a simple, generic `debounce` implementation.
+
+## TypeScript Debounce Function
+
+This `debounce` function takes a `callback` function and a wait time in milliseconds. It creates a timer that resets with each new call, only executing the `callback` function once no calls have been made for the duration of `wait`.
+
+```ts
+export function debounce<T extends unknown[], U>(
+  callback: (...args: T) => PromiseLike<U> | U,
+  wait: number
+) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  return (...args: T): Promise<U> => {
+    if (timer) clearTimeout(timer);
+
+    return new Promise(resolve => {
+      timer = setTimeout(() => resolve(callback(...args)), wait);
+    });
+  };
+}
+```
+
+### Explanation of the Code
+
+**Generics (`T` and `U`)**:
+
+- `T` is an array of argument types that callback can take.
+- `U` is the return type of `callback`, which can either be a direct value or a `Promise` (handled asynchronously).
+
+**Timer Management**:
+
+- `timer` is a reference to the current timeout. Using `ReturnType<typeof setTimeout>` ensures compatibility with both Node.js and browser environments.
+- `clearTimeout(timer)` cancels any active timeout, preventing the `callback` from firing until the debounce period (`wait`) has passed without additional calls.
+
+**Asynchronous Callback Support**:
+
+- The function supports asynchronous callbacks using `await` to handle any promises that `callback` may return, providing more flexibility.
+
+### Usage Example
+
+Here’s how to use this debounce function to limit the frequency of a function that logs data to the console:
+
+```ts
+const logInput = debounce((input: string) => {
+  console.log(`User typed: ${input}`);
+}, 300);
+
+logInput('Hello'); // Only logs if no further calls are made within 300ms
+```
+
+### Advantages
+
+- **Type Safety**: Ensures that the arguments and return types are correctly typed for TypeScript.
+- **Asynchronous Handling**: Supports promises, making it adaptable for various use cases.
+
+This implementation of `debounce` can help you efficiently handle performance-intensive operations by reducing the rate at which a function executes while maintaining TypeScript’s type safety and compatibility.

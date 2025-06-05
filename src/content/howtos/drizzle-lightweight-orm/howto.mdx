@@ -1,0 +1,225 @@
+---
+title: 'How to Use Drizzle ORM: A TypeScript ORM for Relational Databases'
+slug: drizzle-lightweight-orm
+heading: 'Drizzle ORM: A Modern, Type-Safe ORM for JavaScript/TypeScript'
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/drizzle-lightweight-orm
+date: 2025-02-13
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['Drizzle', 'orm']
+desc: Discover Drizzle ORM—a lightweight, type-safe ORM for PostgreSQL, MySQL, and SQLite. Learn to integrate it with JS/TS for smooth, efficient database management.
+---
+
+[Drizzle ORM](https://orm.drizzle.team/) has rapidly gained popularity within the JavaScript and TypeScript communities. Known for its compact size and strong type-safety, Drizzle provides an efficient way to manage relational databases like PostgreSQL, MySQL, and SQLite. It’s the [second most desired ORM](https://stateofdb.com/tools/drizzle) based on developer surveys and was ranked 27th in the [JavaScript Rising Stars of 2024](https://risingstars.js.org/2024/en#section-all). This article explores what makes Drizzle ORM a powerful tool, its installation process, and how to get started with using it effectively in your projects.
+
+## What Is Drizzle ORM?
+
+Drizzle is a lightweight and modern ORM designed for both JavaScript and TypeScript environments. It supports all major relational databases and is known for its small footprint (around 7.4 KB) and lack of external dependencies. Drizzle is especially well-suited for serverless environments, making it a compelling alternative to traditional ORMs like Sequelize and TypeORM.
+
+### Key Features:
+
+- **Lightweight**: With a size of ~7.4 KB, Drizzle is one of the lightest ORM libraries available.
+- **Type Safety**: Strong typing ensures your database schema and queries are fully typed, reducing errors.
+- **Environment Compatibility**: Works seamlessly in Node.js, serverless environments, and even browsers.
+- **CLI Tools**: Drizzle Kit provides a robust CLI for database migrations and seeding.
+- **Graphical Interface**: Drizzle Studio lets you manage your database visually, ideal for projects like Neon or Turso.
+
+### How to Install Drizzle ORM
+
+To get started with Drizzle ORM, simply run:
+
+<div className='code-cmd'>npm install drizzle-orm --save</div>
+
+For **pnpm** or **Yarn**, the process is the same. Don’t forget to install the appropriate driver for your database, such as `pg` for PostgreSQL or `sqlite3` for SQLite.
+
+## Example Usage
+
+### 1. Declare a Schema (Postgres)
+
+```ts
+import { pgTable, primaryKey, serial, varchar } from 'drizzle-orm/pg-core';
+
+import { pgTable, primaryKey, serial, varchar } from 'drizzle-orm/pg-core';
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  firstName: varchar(),
+});
+```
+
+### 2. Initialize Database Connection
+
+```ts
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+const dbUrl = process.env.DATABASE_URL;
+const db = drizzle(dbUrl);
+
+// Optionally, change column naming conventions:
+const db = drizzle({ connection: dbUrl, casing: 'snake_case' });
+```
+
+### 3. Simple Select Query
+
+```ts
+const result = await db.select().from(users);
+// SELECT "id", "first_name" FROM users;
+```
+
+### 4. Advanced Example: Reuse Structures Between Tables
+
+```ts
+// columns.helpers.ts
+const timestamps = {
+  updated_at: timestamp(),
+  created_at: timestamp().defaultNow().notNull(),
+  deleted_at: timestamp(),
+};
+
+// users.sql.ts
+export const users = pgTable('users', {
+  id: integer(),
+  ...timestamps,
+});
+
+// posts.sql.ts
+export const posts = pgTable('posts', {
+  id: integer(),
+  ...timestamps,
+});
+```
+
+### Full Schema with References and Indexes
+
+```ts
+import * as t from 'drizzle-orm/pg-core';
+import { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable as table } from 'drizzle-orm/pg-core';
+
+import * as t from 'drizzle-orm/pg-core';
+import { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable as table } from 'drizzle-orm/pg-core';
+
+export const rolesEnum = pgEnum('roles', ['guest', 'user', 'admin']);
+
+export const users = table(
+  'users',
+  {
+    id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+    firstName: t.varchar('first_name', { length: 256 }),
+    lastName: t.varchar('last_name', { length: 256 }),
+    email: t.varchar().notNull(),
+    invitee: t.integer().references(() => users.id),
+    role: rolesEnum().default('guest'),
+  },
+  table => [t.uniqueIndex('email_idx').on(table.email)]
+);
+
+export const posts = table(
+  'posts',
+  {
+    id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+    slug: t.varchar().$default(() => generateUniqueString(16)),
+    title: t.varchar({ length: 256 }),
+    ownerId: t.integer('owner_id').references(() => users.id),
+  },
+  table => [
+    t.uniqueIndex('slug_idx').on(table.slug),
+    t.index('title_idx').on(table.title),
+  ]
+);
+
+export const comments = table('comments', {
+  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+  text: t.varchar({ length: 256 }),
+  postId: t.integer('post_id').references(() => posts.id),
+  ownerId: t.integer('owner_id').references(() => users.id),
+});
+```
+
+## Queries and CRUD Operations
+
+Drizzle ORM features a SQL builder that feels similar to Knex.js or TypeORM’s QueryBuilder.
+
+### Basic Select Query
+
+```ts
+await db
+  .select()
+  .from(posts)
+  .leftJoin(comments, eq(posts.id, comments.post_id))
+  .where(eq(posts.id, 10));
+```
+
+### Advanced Query with Filters
+
+```ts
+async function getProductsBy({
+  name,
+  category,
+  maxPrice,
+}: {
+  name?: string;
+  category?: string;
+  maxPrice?: string;
+}) {
+  const filters: SQL[] = [];
+
+  if (name) filters.push(ilike(products.name, name));
+  if (category) filters.push(eq(products.category, category));
+  if (maxPrice) filters.push(lte(products.price, maxPrice));
+
+  return db
+    .select()
+    .from(products)
+    .where(and(...filters));
+}
+```
+
+### Subqueries Example
+
+```ts
+const subquery = db
+  .select()
+  .from(internalStaff)
+  .leftJoin(customUser, eq(internalStaff.userId, customUser.id))
+  .as('internal_staff');
+
+const mainQuery = await db
+  .select()
+  .from(ticket)
+  .leftJoin(subquery, eq(subquery.internal_staff.userId, ticket.staffId));
+```
+
+### CRUD Operations
+
+**Insert:**
+
+```ts
+await db.insert(users).values({ name: 'Masha' });
+```
+
+**Select:**
+
+```ts
+const result = await db.select().from(users);
+```
+
+**Update:**
+
+```ts
+await db.update(users).set({ name: 'Vasya' }).where(users.name.eq('Masha'));
+```
+
+**Delete:**
+
+```ts
+await db.delete(users).where(users.name.eq('Vasya'));
+```
+
+## Conclusion
+
+Drizzle ORM stands out for its simplicity and performance, offering a modern, type-safe approach to working with relational databases. Whether you're building a traditional web app or a serverless system, Drizzle provides an elegant and lightweight solution for all your database needs. The intuitive syntax and powerful features, such as support for subqueries, make it a great tool for both novice and advanced developers.

@@ -1,0 +1,200 @@
+---
+title: 'Clean Code Secrets: Push Ifs Up, Pull Fors Down Like a Pro'
+slug: clean-code-push-ifs-pull-fors-pro-tips
+heading: 'Master Clean Code Architecture: Advanced Techniques for Professional Developers'
+permalink: clean-code-push-ifs-pull-fors-pro-tips
+image: ./images/clean-code-push-ifs-pull-fors-pro-tips.png
+date: 2025-05-26
+author: anton liberant
+category: javascript
+type: post
+tags: ['micro-optimizations', 'clean-code']
+desc: Write cleaner, more maintainable code with professional techniques. Master pushing conditionals up and pulling loops down for improved structure and readability.
+---
+
+Let’s discuss control flow. We’ll be covering three powerful techniques for faster, cleaner, and more maintainable code:
+
+- Push `if` statements up to centralize logic
+- Move `for` loops to the bottom to support batching and optimization
+- Move `switch` logic outside of hot loops.
+
+We'll also examine the Big O consequences and how compilers benefit from clean structure.
+
+## Move `if` Statements to the Top
+
+If you're verifying nulls or guards within a function, ask yourself: should this logic be at the calling site instead?
+
+**Bad:**
+
+```js
+interface User {
+  email: string;
+}
+
+function processUser(user: User | null): void {
+  if (!user) return;
+  sendEmail(user.email);
+}
+```
+
+**Good:**
+
+```js
+function processUser(user: User): void {
+  sendEmail(user.email);
+}
+
+const maybeUser = getUser();
+if (maybeUser !== null) {
+  processUser(maybeUser);
+}
+```
+
+**Why?**
+
+- Fewer branches within reusable logic
+- Call site has context to inform behavior
+- Enhances type safety and compiler inference
+
+**Big O:**
+
+Eliminating inner function branching decreases decisions at run-time from O(n) to O(1) per invocation in performance-critical code paths
+
+## Pull Down `for` Loops
+
+Rather than looping externally, bring iteration into the function to take advantage of batching.
+
+**Bad:**
+
+```js
+for (let task of taskList) {
+  runTask(task);
+}
+```
+
+**Good:**
+
+```js
+function runTasks(tasks: Task[]): void {
+  for (let task of tasks) {
+    runTask(task);
+  }
+}
+
+runTasks(taskList);
+```
+
+**Better:**
+
+```js
+function runTasksOptimized(tasks: Task[]): void {
+  // Stage 1: Validate
+  for (let task of tasks) validate(task);
+
+  // Stage 2: Execute
+  for (let task of tasks) execute(task);
+
+  // Stage 3: Cleanup
+  for (let task of tasks) console.log(task);
+}
+```
+
+**Why?**
+
+- Batch-aware logic minimizes the overhead of calls
+- Facilitates vectorization, caching, and stages of the pipeline
+
+**Big O:**
+
+O(n) remains O(n) but with less branching = better caching and better CPU efficiency
+
+## Combine: `if` Outside, `for` Inside
+
+**Bad:**
+
+```js
+for (let msg of messages) {
+  if (urgent) handleUrgent(msg);
+  else handleNormal(msg);
+}
+```
+
+**Good:**
+
+```js
+if (urgent) {
+  for (let msg of messages) handleUrgent(msg);
+} else {
+  for (let msg of messages) handleNormal(msg);
+}
+```
+
+**Why?**
+
+- Conditional extracted outside the loop
+- No repeated branching, assists CPU prediction
+
+**Big O:**
+
+- Same number of steps overall, but reduced branch misprediction and improved runtime
+
+## Loop-Switching: Refactor Your Dispatch
+
+**Typical Code:**
+
+```js
+for (let item of items) {
+  switch (item.kind) {
+    case 'text':
+      renderText(item);
+      break;
+    case 'image':
+      renderImage(item);
+      break;
+  }
+}
+```
+
+**Improved:**
+
+```js
+const textItems = items.filter(i => i.kind === 'text');
+const imageItems = items.filter(i => i.kind === 'image');
+
+for (let t of textItems) renderText(t);
+for (let i of imageItems) renderImage(i);
+```
+
+**Why?**
+
+- Fewer branches in the inner loop
+- Supports multi-pass or parallel strategies
+
+**Big O:**
+
+Minor increment (2×O(n)), but enhanced locality and optimizable dispatching
+
+## Compile-Time Wins: What Compilers Understand
+
+- Inner loops without branches allow compilers to employ SIMD and loop unrolling
+- Split loops can be parallelized or pipelined
+- Centralized conditions result in fewer jumps and improved CPU branch prediction
+
+## Final Thoughts
+
+These aren't tricks. These are coding models for what works with the machine, not against it.
+
+- Organize information more effectively:
+- Shun accidental complexity
+- Improve performance (particularly in hot paths)
+- Make debugging and testing simpler
+
+> Push your `if`s to the top, bring your `for`s to the bottom, shift your `switch` aside—and code to please the compiler.
+
+### TL;DR (Too Long? Don’t Refactor):
+
+- ✅ Move `if` conditions out of inner logic
+- ✅ Batch your logic within `for`-friendly functions
+- ✅ Split `switch` into groups prior to looping
+
+Small changes result in big wins. Now go fix some loops!

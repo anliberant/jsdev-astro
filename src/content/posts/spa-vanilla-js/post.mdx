@@ -1,0 +1,519 @@
+---
+title: Build a Single-Page Application(SPA) Router in Vanilla JavaScript
+slug: spa-vanilla-js
+heading: Create a SPA Router with Vanilla JavaScript
+image: ./images/spa-vanilla-js.png
+permalink: spa-vanilla-js
+date: 2025-02-03
+author: anton liberant
+category: javascript
+type: post
+tags: ['spa']
+desc: Learn to build client-side routing in single-page apps with vanilla JavaScript. A step-by-step guide to creating a robust SPA router without frameworks or libraries.
+---
+
+Single-page applications (SPAs) have revolutionized web development by offering smoother user experiences with seamless navigation. At the heart of every SPA lies a routing system that manages page transitions without full page reloads. In this guide, we'll explore how to build a robust routing system using vanilla JavaScript, understanding the core concepts and implementing them from scratch.
+
+In a Single Page Application (SPA), routing is primarily about managing browser URLs and rendering the corresponding views. There are two common routing modes: **Hash Mode** and **History Mode**.
+
+## Hash Mode
+
+This mode utilizes the hashchange event to update the page content without requiring a full refresh.
+
+### What is the hash property?
+
+The `hash` property of a URL contains a fragment identifier starting with `#`. This fragment is not sent to the server, meaning hash-based navigation is purely client-side.
+
+**Key Features:**
+
+- **Client-side only**: The hash is not sent to the server.
+- **No page reload**: Changing the hash does not trigger a page refresh.
+- **Event-driven updates**: The hashchange event can be used to detect hash modifications.
+
+### How Hash Mode Works
+
+Hash-based navigation depends on the `window.hashchange` event.
+
+**Triggers:**
+
+**1. JavaScript Modification:**
+
+```js
+window.location.hash = '#newSection';
+```
+
+**2. Anchor Links in HTML:**
+
+```html
+<a href="#section2">Go to Section 2</a>
+```
+
+**3. Browser Navigation Buttons:** Clicking the back or forward button updates the hash and triggers `hashchange`.
+
+**4. Using `location.assign()` or `location.replace()`:**
+
+```js
+location.assign('#anotherSection');
+location.replace('#anotherSection');
+```
+
+**Note:** history.pushState() does not trigger the hashchange event, even if the hash changes.
+
+## History Mode
+
+History mode leverages the browser's history API to update the URL without a page refresh. It uses the `window.popstate` event to detect navigation changes.
+
+### History API Overview
+
+The `History` object provides methods to manipulate session history, including navigating back and forth.
+
+**Key Methods:**
+
+**1. Navigation:**
+
+```js
+history.back(); // Equivalent to history.go(-1)
+history.forward(); // Equivalent to history.go(1)
+history.go(-2); // Moves two steps back
+```
+
+**2. Managing History Entries:**
+
+- `history.pushState(data, title, url)`: Adds a new entry to the history stack without refreshing.
+- `history.replaceState(data, title, url)`: Replaces the current entry without refreshing.
+
+**Example:**
+
+```js
+history.pushState({ page: 1 }, 'Page 1', '/page1');
+history.replaceState({ page: 2 }, 'Page 2', '/page2');
+```
+
+**Note**: Unlike `hashchange`, `pushState` and `replaceState` do not trigger the popstate event.
+
+### Monitoring `pushState` and `replaceState`
+
+Since `pushState` and `replaceState` do not trigger events by default, we can override them:
+
+```js
+(function (history) {
+  var originalPushState = history.pushState;
+  var originalReplaceState = history.replaceState;
+
+  history.pushState = function (state) {
+    if (typeof history.onpushstate === 'function') {
+      history.onpushstate({ state });
+    }
+    return originalPushState.apply(history, arguments);
+  };
+
+  history.replaceState = function (state) {
+    if (typeof history.onreplacestate === 'function') {
+      history.onreplacestate({ state });
+    }
+    return originalReplaceState.apply(history, arguments);
+  };
+})(window.history);
+
+window.onpopstate =
+  history.onpushstate =
+  history.onreplacestate =
+    function (event) {
+      console.log('State changed:', event.state);
+    };
+```
+
+## Hash Mode vs. History Mode
+
+**1. URL Structure:**
+
+- **Hash Mode**: The URL contains a `#`, such as `/page#1`.
+- **History Mode**: Uses a clean, traditional URL format like `/page1`.
+
+**2. SEO**
+
+- **Hash Mode**: Not SEO-friendly, as search engines may not index hash fragments properly.
+- **History Mode**: Better for SEO since URLs are structured like traditional web pages.
+
+**3. Ease of Use**
+
+- **Hash Mode**: Simple to implement and does not require server configuration.
+- **History Mode**: More complex, requiring server-side configuration to handle URL requests correctly.
+
+**4. Page Refresh**
+
+- **Hash Mode**: No special handling is needed; the page remains intact when navigating.
+- **History Mode**: Requires server redirection to prevent "404 Not Found" errors when users refresh the page.
+
+Using history mode is generally preferred for better user experience and SEO, but hash mode remains a simpler option when server-side support is limited.
+
+## Building a Basic Router
+
+Let's start by implementing a simple router class that handles route definitions and navigation:
+
+```js
+class Router {
+  constructor(routes) {
+    this.routes = routes;
+    this.rootElem = document.getElementById('app');
+
+    // Handle initial route
+    this.handleRoute();
+
+    // Listen for route changes
+    window.addEventListener('popstate', () => this.handleRoute());
+  }
+
+  handleRoute() {
+    const path = window.location.pathname;
+    const route = this.routes[path] || this.routes['/404'];
+
+    this.rootElem.innerHTML = route.template;
+    document.title = route.title;
+  }
+
+  navigate(path) {
+    window.history.pushState({}, '', path);
+    this.handleRoute();
+  }
+}
+```
+
+### Route Configuration
+
+Define your routes with corresponding templates and metadata:
+
+```js
+const routes = {
+  '/': {
+    template: '<h1>Home Page</h1><p>Welcome to our SPA!</p>',
+    title: 'Home',
+  },
+  '/about': {
+    template: '<h1>About Us</h1><p>Learn about our spa website</p>',
+    title: 'About',
+  },
+  '/404': {
+    template:
+      '<h1>Page Not Found</h1><p>Sorry, the page you requested does not exist.</p>',
+    title: '404 - Not Found',
+  },
+};
+
+// Initialize router
+const router = new Router(routes);
+```
+
+### Handling Navigation Events
+
+To create a seamless navigation experience, we need to intercept link clicks:
+
+```js
+document.addEventListener('click', e => {
+  if (e.target.matches('[data-link]')) {
+    e.preventDefault();
+    router.navigate(e.target.href);
+  }
+});
+```
+
+### Adding Dynamic Routes
+
+Let's enhance our router to support dynamic route parameters:
+
+```js
+class Router {
+  // ... previous code ...
+
+  parseRoute(path) {
+    const routes = Object.keys(this.routes);
+    return routes.find(route => {
+      const routeParts = route.split('/');
+      const pathParts = path.split('/');
+
+      if (routeParts.length !== pathParts.length) return false;
+
+      return routeParts.every((part, i) => {
+        return part.startsWith(':') || part === pathParts[i];
+      });
+    });
+  }
+
+  getParams(route, path) {
+    const params = {};
+    const routeParts = route.split('/');
+    const pathParts = path.split('/');
+
+    routeParts.forEach((part, i) => {
+      if (part.startsWith(':')) {
+        const paramName = part.slice(1);
+        params[paramName] = pathParts[i];
+      }
+    });
+
+    return params;
+  }
+
+  handleRoute() {
+    const path = window.location.pathname;
+    const matchedRoute = this.parseRoute(path);
+    const route = this.routes[matchedRoute] || this.routes['/404'];
+    const params = this.getParams(matchedRoute, path);
+
+    const content =
+      typeof route.template === 'function'
+        ? route.template(params)
+        : route.template;
+
+    this.rootElem.innerHTML = content;
+    document.title = route.title;
+  }
+}
+```
+
+### State Management
+
+For more complex applications, we can add state management capabilities:
+
+```js
+class Router {
+  constructor(routes) {
+    this.state = {};
+    // ... previous initialization code ...
+  }
+
+  setState(newState) {
+    this.state = { ...this.state, ...newState };
+    this.handleRoute(); // Re-render current route with new state
+  }
+
+  getState() {
+    return { ...this.state };
+  }
+}
+```
+
+### Example Usage
+
+Here's a complete example bringing everything together:
+
+```js
+// Define routes with dynamic parameters
+const routes = {
+  '/': {
+    template: '<h1>Home</h1><nav><a href="/users" data-link>Users</a></nav>',
+    title: 'Home',
+  },
+  '/users': {
+    template: params => `
+            <h1>Users</h1>
+            <ul>
+                <li><a href="/users/1" data-link>User 1</a></li>
+                <li><a href="/users/2" data-link>User 2</a></li>
+            </ul>
+        `,
+    title: 'Users',
+  },
+  '/users/:id': {
+    template: params => `
+            <h1>User Profile</h1>
+            <p>User ID: ${params.id}</p>
+            <a href="/users" data-link>Back to Users</a>
+        `,
+    title: 'User Profile',
+  },
+};
+
+// Initialize router
+const router = new Router(routes);
+
+// Add some global state
+router.setState({
+  isAuthenticated: true,
+  user: { name: 'John Doe' },
+});
+```
+
+## Full implementation of a simple SPA (Single Page Application)
+
+This example provides a human-friendly and clean approach to SPA development.
+
+### Project Structure 📌
+
+```bash
+/spa-project
+│── index.html
+│── style.css
+└── app.js
+```
+
+### index.html (Main HTML file) 📄
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple SPA</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="/" data-link>Home</a>
+      <a href="/about" data-link>About</a>
+      <a href="/contact" data-link>Contact</a>
+    </nav>
+
+    <div id="app">
+      <!-- Dynamic content will be injected here -->
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
+```
+
+### style.css (Basic Styling) 🎨
+
+```css
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+nav {
+  background-color: #333;
+  padding: 10px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+#app {
+  margin-top: 20px;
+  font-size: 20px;
+}
+```
+
+### app.js (The SPA Router) 🚀
+
+```js
+// SPA Router - Handles navigation and rendering
+class Router {
+  constructor() {
+    this.routes = {}; // Stores route-to-handler mapping
+    this.mode = 'history'; // Can be "hash" or "history"
+    this.root = '/'; // Base path
+
+    // Bind link clicks
+    document.addEventListener('click', event => {
+      if (event.target.matches('[data-link]')) {
+        event.preventDefault();
+        this.navigate(event.target.getAttribute('href'));
+      }
+    });
+
+    // Handle back/forward buttons
+    window.addEventListener('popstate', () => this.resolveRoute());
+
+    // Initial route handling
+    this.resolveRoute();
+  }
+
+  // Define a new route
+  add(route, handler) {
+    this.routes[route] = handler;
+  }
+
+  // Navigate to a new route
+  navigate(path) {
+    if (this.mode === 'history') {
+      history.pushState(null, '', path);
+    } else {
+      location.hash = path;
+    }
+    this.resolveRoute();
+  }
+
+  // Determine the current route and load content
+  resolveRoute() {
+    let path =
+      this.mode === 'history'
+        ? location.pathname.replace(this.root, '') || '/'
+        : location.hash.replace('#', '') || '/';
+
+    let handler = this.routes[path] || this.routes['/404'];
+    document.getElementById('app').innerHTML = handler();
+  }
+}
+
+// Initialize Router
+const router = new Router();
+
+// Define routes
+router.add('/', () => `<h1>🏡 Home</h1><p>Welcome to the home page!</p>`);
+router.add(
+  '/about',
+  () => `<h1>📖 About</h1><p>This is a simple SPA built in JavaScript.</p>`
+);
+router.add(
+  '/contact',
+  () => `<h1>📞 Contact</h1><p>Feel free to reach out!</p>`
+);
+router.add('/404', () => `<h1>❌ 404</h1><p>Page not found.</p>`);
+```
+
+<Codepen id='raBbZpa' />
+
+### ow It Works 🎯
+
+**1. Dynamic Routing**
+
+- Routes (`/`, `/about`, `/contact`) are mapped to handlers that return HTML content.
+
+**2. Navigation Without Reloading**
+
+- Clicking a `<a>` link prevents the default behavior.
+- The `history.pushState()` or `location.hash` updates the URL.
+
+**3. Rendering Content Dynamically**
+
+- The `#app` div is updated based on the current route.
+
+**4. Back & Forward Button Support**
+
+- The `popstate` event ensures proper navigation.
+
+✅ **Run the SPA**
+
+- Just open index.html in a browser.
+- Click the links to navigate.
+- Try using Back and Forward buttons.
+
+🏁 **Summary**
+
+✅ No page reloads \
+✅ Works with history & hash mode \
+✅ Simple yet powerful
+
+This is a clean and easy implementation of an SPA router. Want to add AJAX, animations, or state management? You can easily extend this!
+
+🔥 **Next Steps:**
+
+- Add API fetching (e.g., `fetch()` to load dynamic content).
+- Implement components for a more modular structure.
+- Use `localStorage` or `sessionStorage` for state persistence.
+
+## Conclusion
+
+Building a custom router for your SPA using vanilla JavaScript provides complete control over navigation and state management. While modern frameworks offer sophisticated routing solutions, understanding the underlying principles helps you make better architectural decisions and troubleshoot issues more effectively.

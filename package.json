@@ -1,0 +1,49 @@
+{
+  "name": "jsdev",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "clean": "rimraf node_modules/.vite dist .astro",
+    "dev:clean": "npm run clean && npm install && npm run dev",
+    "lint": "eslint . --ext .js,.ts,.astro",
+    "lint:fix": "eslint . --ext .js,.ts,.astro --fix",
+    "prettier": "prettier --write \"src/**/*.{js,ts,astro,json,md}\"",
+    "prettier:check": "prettier --check .",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.0",
+    "@astrojs/node": "^9.2.2",
+    "@astrojs/prism": "^3.3.0",
+    "@astrojs/rss": "^4.0.11",
+    "@astrojs/sitemap": "^3.4.0",
+    "@lucide/astro": "^0.511.0",
+    "astro": "^5.8.0",
+    "markdown-it": "^14.1.0",
+    "mdast-util-to-string": "^4.0.0",
+    "reading-time": "^1.5.0",
+    "sanitize-html": "^2.17.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.28.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.2",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
+    "add": "^2.0.6",
+    "astro-eslint-parser": "^1.2.2",
+    "eslint": "^9.28.0",
+    "eslint-plugin-astro": "^1.3.1",
+    "globals": "^16.2.0",
+    "prettier": "^3.5.3",
+    "prettier-plugin-astro": "^0.14.1",
+    "rimraf": "^5.0.5",
+    "sharp": "^0.34.2",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,249 @@
+---
+title: Master Image Processing in Node.js Using Sharp for Fast Web Apps
+slug: nodejs-sharp-image-processing
+heading: Comprehensive Guide to Image Manipulation Using Sharp in Node.js
+image: ./images/nodejs-sharp-image-processing.png
+permalink: nodejs-sharp-image-processing
+date: 2025-06-05
+author: anton liberant
+category: nodejs
+type: post
+tags: ['sharp', 'image-processing']
+desc: Learn how to resize, optimize, and process images in Node.js using the Sharp library. Enhance your application's performance with efficient image handling techniques
+---
+
+Handling images efficiently is crucial for web applications, especially those dealing with user uploads or content management. Node.js, combined with the Sharp library, offers a powerful solution for image processing tasks such as resizing, optimization, format conversion, and more.
+
+This guide provides a comprehensive overview of using Sharp in Node.js to perform various image manipulations, ensuring your application delivers optimized images for better performance and user experience.
+
+## Prerequisites
+
+Before diving into image processing, ensure you have the following:
+
+- **Node.js Installed**:
+  Download and install Node.js from the [official website](https://nodejs.org/).
+- **Sharp Library**:
+  Install Sharp using npm:
+  <div class="code-cmd">npm install sharp</div>
+
+## Setting Up the Project
+
+1. **Initialize the Project:**
+    ```bash
+    mkdir image-processing
+    cd image-processing
+    npm init -y
+    ```
+2. **Install Sharp:**
+    ```bash
+    npm install sharp
+    ```
+3. **Create a Sample Image:**
+    Place an image (e.g., `sample.jpg`) in the project directory to work with.
+
+## Reading Image Metadata
+
+Understanding an image's metadata is essential before performing operations. Sharp allows you to extract metadata easily.
+
+```js 
+const sharp = require('sharp');
+
+async function getMetadata() {
+  try {
+    const metadata = await sharp('sample.jpg').metadata();
+    console.log(metadata);
+  } catch (error) {
+    console.error('Error reading metadata:', error);
+  }
+}
+
+getMetadata();
+```
+
+This script will output details like format, width, height, and more.
+
+## Resizing Images
+
+Resizing images helps in reducing file size and adapting images to different display requirements.
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.jpg')
+  .resize({ width: 800 })
+  .toFile('sample_resized.jpg')
+  .then(() => {
+    console.log('Image resized successfully.');
+  })
+  .catch(err => {
+    console.error('Error resizing image:', err);
+  });
+```
+
+This script resizes the image to a width of 800 pixels while maintaining the aspect ratio.
+
+## Converting Image Formats
+
+Converting images to different formats can be beneficial for compatibility and optimization.
+
+### Convert to PNG
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.jpg')
+  .png()
+  .toFile('sample_converted.png')
+  .then(() => {
+    console.log('Image converted to PNG.');
+  })
+  .catch(err => {
+    console.error('Error converting image:', err);
+  });
+```
+
+### Convert to WebP
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.jpg')
+  .webp({ quality: 80 })
+  .toFile('sample_converted.webp')
+  .then(() => {
+    console.log('Image converted to WebP.');
+  })
+  .catch(err => {
+    console.error('Error converting image:', err);
+  });
+```
+
+## Compressing Images
+
+Compressing images reduces file size, leading to faster load times.
+
+### Compress JPEG
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.jpg')
+  .jpeg({ quality: 70 })
+  .toFile('sample_compressed.jpg')
+  .then(() => {
+    console.log('JPEG image compressed.');
+  })
+  .catch(err => {
+    console.error('Error compressing JPEG image:', err);
+  });
+```
+
+### Compress PNG
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.png')
+  .png({ compressionLevel: 9 })
+  .toFile('sample_compressed.png')
+  .then(() => {
+    console.log('PNG image compressed.');
+  })
+  .catch(err => {
+    console.error('Error compressing PNG image:', err);
+  });
+```
+
+### Batch Processing Images in a Directory
+
+Processing multiple images in a directory can be automated using Node.js.
+
+```js 
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
+
+const inputDir = 'images';
+const outputDir = 'processed_images';
+
+fs.readdir(inputDir, (err, files) => {
+  if (err) {
+    console.error('Error reading input directory:', err);
+    return;
+  }
+
+  files.forEach(file => {
+    const inputPath = path.join(inputDir, file);
+    const outputPath = path.join(outputDir, file);
+
+    sharp(inputPath)
+      .resize({ width: 800 })
+      .toFile(outputPath)
+      .then(() => {
+        console.log(`Processed ${file}`);
+      })
+      .catch(err => {
+        console.error(`Error processing ${file}:`, err);
+      });
+  });
+});
+```
+
+Ensure that the `processed_images` directory exists before running the script.
+
+## Advanced Image Manipulations
+
+### Grayscale Conversion
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.jpg')
+  .grayscale()
+  .toFile('sample_grayscale.jpg')
+  .then(() => {
+    console.log('Image converted to grayscale.');
+  })
+  .catch(err => {
+    console.error('Error converting image to grayscale:', err);
+  });
+```
+
+### Rotating Images
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.jpg')
+  .rotate(90)
+  .toFile('sample_rotated.jpg')
+  .then(() => {
+    console.log('Image rotated by 90 degrees.');
+  })
+  .catch(err => {
+    console.error('Error rotating image:', err);
+  });
+```
+
+### Adding Watermarks
+
+Adding watermarks involves overlaying one image over another.
+
+```js 
+const sharp = require('sharp');
+
+sharp('sample.jpg')
+  .composite([{ input: 'watermark.png', gravity: 'southeast' }])
+  .toFile('sample_watermarked.jpg')
+  .then(() => {
+    console.log('Watermark added to image.');
+  })
+  .catch(err => {
+    console.error('Error adding watermark:', err);
+  });
+```
+
+## Conclusion
+The Sharp library in Node.js provides a robust set of tools for image processing, enabling developers to perform a wide range of operations efficiently. By incorporating these techniques into your application, you can ensure optimized image delivery, leading to improved performance and user satisfaction.
+
+For more advanced features and updates, refer to the [official Sharp documentation](https://sharp.pixelplumbing.com/).

@@ -1,0 +1,152 @@
+---
+title: 'Currying in React: A Guide to Functional Components'
+slug: currying-react
+heading: 'Master Component Currying in React'
+image: ./images/currying-react.png
+permalink: currying-react
+date: 2025-02-16
+author: anton liberant
+category: react
+type: post
+tags: ['currying', 'patterns']
+desc: Master currying in React to write flexible, reusable components. Explore practical examples and best practices for functional programming in frontend development.
+---
+
+Modern React aligns closely with functional programming (FP) principles, making our code cleaner, more readable, and predictable. Some fundamental FP concepts used in React include:
+
+- **Declarative Code**: Defining what to render instead of how.
+- **UI = f(state)**: UI as a function of state.
+- **Composition**: Building complex components from simple, independent ones.
+- **Memoization**: Reusing computed results until inputs change.
+
+## Why Functional Programming Matters
+
+Functional programming can seem complex at first—filled with abstract concepts, strict rules, and unfamiliar patterns. But once mastered, it simplifies development and improves code maintainability.
+
+One powerful FP pattern is **currying**, which we’ll explore in the context of React development.
+
+## Understanding Currying
+
+Currying transforms a function that accepts multiple arguments into a sequence of functions, each accepting a single argument:
+
+```js
+function add(x: number, y: number) {
+  return x + y;
+}
+
+function curriedAdd(x: number) {
+  return function (y: number) {
+    return x + y;
+  };
+}
+
+curriedAdd(2)(3); // Returns 5
+```
+
+A related concept is **partial application**, which pre-fills some arguments of a function in advance. Unlike currying, partial application allows multiple arguments at once.
+
+## Applying Currying in React Components
+
+React functional components naturally align with FP principles. They accept props as input and return JSX as output. Using partial application, we can predefine some props while allowing others to be provided later.
+
+Here’s a utility function for partial application in React:
+
+```tsx
+import { FC } from 'react';
+
+function applyPartialProps<
+  T extends Record<string, unknown>,
+  K extends keyof T,
+>(Component: FC<T>, predefinedProps: Pick<T, K>): FC<Omit<T, K>> {
+  return props => <Component {...predefinedProps} {...(props as T)} />;
+}
+```
+
+### Breaking Down the Function
+
+- `T`: Represents the full set of props for the original component.
+- `K extends keyof T`: Specifies a subset of prop keys to predefine.
+- `Pick<T, K>`: Selects only the predefined props.
+- `Omit<T, K>`: Excludes the predefined props from T.
+- Returns a new component expecting only the remaining props.
+- During rendering, `predefinedProps` and `props` merge into a full prop set.
+
+## Practical Examples
+
+**Example 1: Summing Two Numbers**
+
+```tsx
+type SumProps = {
+  num1: number;
+  num2: number;
+};
+
+const Sum: FC<SumProps> = ({ num1, num2 }) => <div>{num1 + num2}</div>;
+
+const PartialSum = applyPartialProps(Sum, { num1: 5 });
+
+export default function App() {
+  return <PartialSum num2={7} />; // Outputs: 12
+}
+```
+
+**Example 2: Preconfigured Buttons**
+
+Predefined UI components enhance consistency and reduce repetitive code:
+
+```tsx
+type ButtonProps = {
+  color: string;
+  size: 'small' | 'medium' | 'large';
+  variant: 'contained' | 'outlined';
+  onClick?: () => void;
+};
+
+const Button: FC<ButtonProps> = ({
+  color,
+  size,
+  variant,
+  onClick,
+  children,
+}) => {
+  const style = { backgroundColor: color };
+  const className = `${size} ${variant}`;
+
+  return (
+    <button style={style} onClick={onClick} className={className}>
+      {children}
+    </button>
+  );
+};
+
+const DangerButton = applyPartialProps(Button, {
+  color: 'red',
+  size: 'large',
+  variant: 'contained',
+});
+
+export default function App() {
+  return <DangerButton onClick={() => alert('Warning!')}>Delete</DangerButton>;
+}
+```
+
+### Other Use Cases for `applyPartialProps`
+
+- Predefined route/navigation components
+- Pre-configured API request parameters
+- Themed UI components
+- Partially applied callback functions
+
+### Comparing with Higher-Order Components (HOCs)
+
+This approach resembles **Higher-Order Components (HOCs)**, another FP-inspired pattern.
+
+- HOCs provide broad prop manipulation.
+- Partial application is simpler and more readable.
+- TypeScript infers which props remain required.
+
+## Conclusion
+
+Partial application and currying are powerful FP patterns that improve React component composition. They enhance code readability, reusability, and maintainability.
+
+By integrating these patterns, you can write more declarative and flexible React components while embracing functional programming principles.

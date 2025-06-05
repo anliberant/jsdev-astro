@@ -1,0 +1,155 @@
+---
+title: How to Set Up a Basic Webpack 5 Project with CSS Support
+slug: basic-webpack-project
+heading: 'Basic Webpack 5 Project with CSS: Step-by-Step'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/basic-webpack-project
+date: 2024-10-23
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['webpack5']
+desc: Set up a Webpack 5 project with CSS support. Learn to install Webpack, configure CSS loaders, and bundle JavaScript and styles efficiently.
+---
+
+In this guide, we'll walk through setting up a basic Webpack 5 project with added support for CSS. This will allow you to bundle both JavaScript and CSS into your project efficiently.
+
+## Step 1: Set Up Your Project Directory
+
+Start by creating a new project directory and initializing a `package.json` file.
+
+<div className='code-cmd'>mkdir my-webpack-project</div>
+<div className='code-cmd'>cd my-webpack-project</div>
+<div className='code-cmd'>npm init -y</div>
+
+## Step 2: Install Webpack, Webpack CLI, and CSS Loader Packages
+
+To use Webpack, you need to install both Webpack and the Webpack CLI. Additionally, we will need `css-loader` and `style-loader` to handle CSS files.
+
+Run the following command to install the necessary dependencies:
+
+<div className='code-cmd'>
+  npm install webpack webpack-cli css-loader style-loader --save-dev
+</div>
+
+## Step 3: Create the Project Structure
+
+Create the following file structure for your project:
+
+```
+my-webpack-project/
+├── src/
+│   ├── index.js
+│   └── styles.css
+├── dist/
+├── package.json
+└── webpack.config.js
+```
+
+- **src/index.js**: This is where your JavaScript code goes.
+- **src/styles.css**: This file will contain your CSS styles.
+- **dist/**: This directory will hold the bundled output.
+- **webpack.config.js**: The Webpack configuration file.
+
+## Step 4: Write Some JavaScript and CSS
+
+Open `src/index.js` and add a simple JavaScript function:
+
+```js
+import './styles.css';
+import './styles.css';
+
+// Import the CSS file
+
+console.log('Hello, Webpack 5 with CSS!');
+```
+
+Next, add some CSS styles to `src/styles.css`:
+
+```css
+body {
+  background-color: #f0f0f0;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+h1 {
+  color: #007bff;
+}
+```
+
+## Step 5: Configure Webpack for JavaScript and CSS
+
+In the root of your project, create the `webpack.config.js` file and configure it to handle both JavaScript and CSS files:
+
+```js
+const path = require('path');
+
+module.exports = {
+  entry: './src/index.js', // Entry point for the application
+  output: {
+    filename: 'bundle.js', // Output file name
+    path: path.resolve(__dirname, 'dist'), // Output directory
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/, // Match CSS files
+        use: ['style-loader', 'css-loader'], // Use both loaders to handle CSS
+      },
+    ],
+  },
+  mode: 'development', // Set mode to development or production
+};
+```
+
+- **css-loader**: This interprets `@import` and `url()` in CSS and resolves them.
+- **style-loader**: This injects CSS into the DOM.
+
+## Step 6: Add Scripts to package.json
+
+In the `"scripts"` section of your `package.json`, add the following command to make it easier to build your project:
+
+```json
+"scripts": {
+  "build": "webpack"
+}
+```
+
+Now, you can bundle your project using:
+
+<div className='code-cmd'>npm run build</div>
+
+## Step 7: Bundle Your Project
+
+Run the following command to bundle your JavaScript and CSS:
+
+<div className='code-cmd'>npm run build</div>
+
+Webpack will create a bundled `dist/bundle.js` file, which includes both the JavaScript and the CSS.
+
+## Step 8: Test the Output
+
+Create an `index.html` file inside the `dist/` directory to test the output:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Webpack 5 Setup with CSS</title>
+  </head>
+  <body>
+    <h1>Welcome to Webpack 5 with CSS!</h1>
+    <script src="bundle.js"></script>
+  </body>
+</html>
+```
+
+Open the `dist/index.html` file in your browser. You should see a styled page with the heading "Welcome to Webpack 5 with CSS!" and a background color, confirming that both JavaScript and CSS are bundled correctly.
+
+## Conclusion
+
+You’ve now set up a basic Webpack 5 project with CSS support. Webpack handles both JavaScript and CSS files, bundling them into a single output file. From here, you can expand your configuration to support more features like image loading, SCSS, or TypeScript.

@@ -1,0 +1,14 @@
+---
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import HtmlTableGenerator from '@/features/tools/html/table/html-table-generator.astro';
+
+const pageTitle = 'HTML Table Generator | JSdev Tools';
+const pageDescription =
+  'Generate customizable HTML tables with headers, styling, and responsive options.';
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}>
+  <HtmlTableGenerator />
+</BaseLayout>

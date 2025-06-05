@@ -1,0 +1,159 @@
+---
+title: 'LRU (Least Recently Used) Algorithm – Overview and Implementation'
+slug: lru-algorithm
+heading: 'Understanding LRU Cache: Principles, Applications, and Coding Implementation'
+icon: /icons/typescript.png
+image: /icon.png
+permalink: snippets/lru-algorithm
+date: 2025-02-25
+author: anton liberant
+category: typescript
+type: snippets
+tags: ['lru', 'algorithm', 'data-structure', 'cache', 'least-recently-used']
+desc: Learn how the Least Recently Used (LRU) caching algorithm improves memory management with efficient page replacement. Includes concepts, uses, and code examples.
+---
+
+## What is LRU Algorithm?
+
+The **LRU (Least Recently Used) algorithm** is a widely used cache replacement policy that removes the least recently accessed item when the cache reaches its limit. It is commonly applied in cache management, operating system memory management, and database query optimization.
+
+### Implementation Approaches
+
+Here's the complete LRU Cache implementation using three different methods:
+
+1. **Array-based LRU**
+2. **Hash Table + Doubly Linked List LRU**
+3. **JavaScript Map-based LRU**
+
+```ts
+// 1. Array-based LRU Cache Implementation
+class LRUCacheArray {
+  private cache: Map<number, number>;
+  private capacity: number;
+
+  constructor(capacity: number) {
+    this.capacity = capacity;
+    this.cache = new Map();
+  }
+
+  get(key: number): number {
+    if (!this.cache.has(key)) return -1;
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value!);
+    return value!;
+  }
+
+  put(key: number, value: number): void {
+    if (this.cache.has(key)) this.cache.delete(key);
+    else if (this.cache.size >= this.capacity)
+      this.cache.delete(this.cache.keys().next().value);
+    this.cache.set(key, value);
+  }
+}
+
+// 2. Hash Table + Doubly Linked List LRU Cache Implementation
+class Node {
+  key: number;
+  value: number;
+  prev: Node | null;
+  next: Node | null;
+  constructor(key: number, value: number) {
+    this.key = key;
+    this.value = value;
+    this.prev = this.next = null;
+  }
+}
+
+class LRUCacheDLL {
+  private capacity: number;
+  private cache: Map<number, Node>;
+  private head: Node;
+  private tail: Node;
+
+  constructor(capacity: number) {
+    this.capacity = capacity;
+    this.cache = new Map();
+    this.head = new Node(0, 0);
+    this.tail = new Node(0, 0);
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+  }
+
+  private remove(node: Node): void {
+    node.prev!.next = node.next;
+    node.next!.prev = node.prev;
+  }
+
+  private insert(node: Node): void {
+    node.next = this.head.next;
+    node.prev = this.head;
+    this.head.next!.prev = node;
+    this.head.next = node;
+  }
+
+  get(key: number): number {
+    if (!this.cache.has(key)) return -1;
+    const node = this.cache.get(key)!;
+    this.remove(node);
+    this.insert(node);
+    return node.value;
+  }
+
+  put(key: number, value: number): void {
+    if (this.cache.has(key)) this.remove(this.cache.get(key)!);
+    if (this.cache.size >= this.capacity) {
+      this.cache.delete(this.tail.prev!.key);
+      this.remove(this.tail.prev!);
+    }
+    const node = new Node(key, value);
+    this.cache.set(key, node);
+    this.insert(node);
+  }
+}
+
+// 3. JavaScript Map-based LRU Cache Implementation
+class LRUCacheMap {
+  private cache: Map<number, number>;
+  private capacity: number;
+
+  constructor(capacity: number) {
+    this.capacity = capacity;
+    this.cache = new Map();
+  }
+
+  get(key: number): number {
+    if (!this.cache.has(key)) return -1;
+    const value = this.cache.get(key)!;
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  put(key: number, value: number): void {
+    if (this.cache.has(key)) this.cache.delete(key);
+    else if (this.cache.size >= this.capacity)
+      this.cache.delete(this.cache.keys().next().value);
+    this.cache.set(key, value);
+  }
+}
+```
+
+### Explanation:
+
+**1. Array-based LRUCache (`LRUCacheArray`)**
+
+- Uses a `Map` to store key-value pairs.
+- When a key is accessed, it is removed and reinserted to maintain order.
+- If capacity is exceeded, the least recently used item (first inserted) is deleted.
+
+**2. Hash Table + Doubly Linked List (`LRUCacheDLL`)**
+
+- Uses a `Map` for **O(1)** lookups and a doubly linked list for **O(1)** insertions/removals.
+- The most recently used elements are near the head; least used near the tail.
+- When capacity is exceeded, the least recently used node (tail’s previous) is removed.
+
+**3. JavaScript Map-based LRUCache (`LRUCacheMap`)**
+
+- Similar to `LRUCacheArray`, but fully relies on `Map` to keep order.
+- Offers slightly better performance than the array-based approach.

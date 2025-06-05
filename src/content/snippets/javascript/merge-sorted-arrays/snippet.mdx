@@ -1,0 +1,116 @@
+---
+title: Merge Two Sorted Arrays in JavaScript
+slug: merge-sorted-arrays
+heading: Merging Two Sorted Arrays
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/merge-sorted-arrays
+date: 2024-11-18
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['arrays', 'merge']
+desc: Learn how to efficiently merge two sorted arrays in JavaScript using two-pointer techniques. Includes clear examples, code snippets, and optimization tips.
+---
+
+## Introduction
+
+Merging two sorted arrays is a common problem often encountered in coding interviews. The task requires combining two sorted integer arrays into a single sorted array. Here's a detailed guide on solving this problem efficiently with examples and different approaches.
+
+## Problem Statement
+
+You are given two integer arrays `nums1` and `nums2`, sorted in non-decreasing order. Additionally, you are provided with integers `m` and `n`, representing the number of elements in `nums1` and `nums2`, respectively.
+
+- The final merged array must also be in non-decreasing order.
+- `nums1` has a size of `m + n`, where the last n elements are initialized to 0 to accommodate the elements of `nums2`.
+- The solution should merge `nums2` into `nums1` in-place, meaning no additional array can be used.
+
+## Approach 1: Two Pointers (Forward)
+
+The two-pointer technique is a standard solution for merging sorted arrays. Here's how it works:
+
+1. Use two pointers to traverse `nums1` and `nums2`.
+2. Compare elements from both arrays and insert the smaller element into `nums1`.
+3. Continue until all elements are merged.
+
+**Code Implementation:**
+
+```js
+function merge(nums1, m, nums2, n) {
+  let i = 0,
+    j = 0;
+  while (i < m + j && j < n) {
+    if (nums1[i] >= nums2[j]) {
+      nums1.splice(i, 0, nums2[j]); // Insert nums2[j] into nums1
+      j++;
+    }
+    i++;
+  }
+
+  // Append remaining elements of nums2
+  while (j < n) {
+    nums1[m + j] = nums2[j];
+    j++;
+  }
+
+  // Remove extra zeros
+  nums1.length = m + n;
+}
+```
+
+## Approach 2: Optimized with Reverse Two Pointers
+
+Instead of inserting elements and shifting them, this approach fills `nums1` from the back, avoiding unnecessary shifts.
+
+1. Use two pointers starting from the ends of the actual elements in `nums1` and `nums2`.
+2. Place the larger of the two elements at the end of `nums1`.
+3. Continue until all elements from `nums2` are placed in `nums1`.
+
+**Code Implementation:**
+
+```js
+function merge(nums1, m, nums2, n) {
+  let i = m - 1,
+    j = n - 1,
+    k = m + n - 1;
+
+  while (i >= 0 && j >= 0) {
+    if (nums1[i] > nums2[j]) {
+      nums1[k--] = nums1[i--];
+    } else {
+      nums1[k--] = nums2[j--];
+    }
+  }
+
+  // If nums2 still has remaining elements
+  while (j >= 0) {
+    nums1[k--] = nums2[j--];
+  }
+}
+```
+
+## Comparison of Approaches
+
+### 1. Forward Two Pointers
+
+- **Advantages**: Intuitive and easy to understand.
+- **Disadvantages**: Slower due to the overhead of shifting elements in the array during insertion.
+
+### 2. Reverse Two Pointers
+
+- **Advantages**: Efficient and avoids unnecessary array operations like shifting.
+- **Disadvantages**: Slightly more complex and harder to understand for beginners.
+
+## Example Execution
+
+```js
+let nums1 = [1, 2, 3, 0, 0, 0];
+let nums2 = [2, 5, 6];
+let m = 3,
+  n = 3;
+
+merge(nums1, m, nums2, n);
+console.log(nums1); // Output: [1, 2, 2, 3, 5, 6]
+```
+
+Merging two sorted arrays efficiently is a fundamental problem that demonstrates proficiency in array manipulation and algorithm optimization. Using techniques like double pointers, especially reverse pointers, not only enhances performance but also showcases your problem-solving skills during interviews.

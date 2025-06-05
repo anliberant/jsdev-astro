@@ -1,0 +1,118 @@
+---
+title: 'Transforming Object Keys to camelCase with TypeScript'
+slug: camelcase-ts
+heading: Converting Object Keys to camelCase with TypeScript
+permalink: camelcase-ts
+image: ./images/camelcase-ts.png
+date: 2025-01-13
+author: anton liberant
+category: typescript
+type: post
+tags: ['camelCase']
+desc: Learn to convert snake_case keys to camelCase in TypeScript using reusable utility types. Handle nested objects and arrays for seamless backend data transformation.
+---
+
+In this guide, you'll learn how to transform object keys written in `snake_case` into `camelCase` using TypeScript. This recipe provides a practical and reusable solution that maintains compatibility with existing backend responses and ensures proper type safety.
+
+## Problem: Why We Need Key Transformation
+
+In many projects, backend responses often use `snake_case` for key naming. For example, Go-based backends commonly follow this pattern. However, frontend development in JavaScript/TypeScript typically prefers `camelCase`.
+
+This discrepancy can lead to mismatches and additional transformation layers in code, especially when auto-generated types (e.g., Swagger) are involved. Instead of manually handling these discrepancies, we can automate the process by transforming keys directly in TypeScript types.
+
+## Step 1: Convert Strings to camelCase
+
+The first step is to create a recursive utility that converts a single string from `snake_case` to `camelCase`. Here's the implementation:
+
+```ts
+type CamelCase<S> = S extends `${infer First}_${infer SecondFirst}${infer Rest}`
+  ? `${First}${Uppercase<SecondFirst>}${CamelCase<Rest>}`
+  : S;
+```
+
+**Explanation:**
+
+**1. Base Case**: If the string contains no underscores (\_), it remains unchanged.
+**2. Recursive Case**: Split the string into three parts:
+
+- `First`: The portion before the first underscore.
+- `SecondFirst`: The first character after the underscore, converted to uppercase.
+- `Rest`: The remaining part of the string.
+  **3. Combine `First`**, the uppercase version of `SecondFirst`, and recursively process `Rest`.
+
+**Example:**
+
+For `array_of_strings`, the transformation works as follows:
+
+1. Split into `array`, `o`, and `f_strings`.
+2. Convert to `arrayOf_strings`.
+3. Continue recursively until no underscores remain, resulting in `arrayOfStrings`.
+
+## Step 2: Transform Object Keys
+
+Next, create a utility type to recursively transform all keys in an object type to `camelCase`.
+
+```ts
+type KeysToCamelCase<T> =
+  T extends Record<string, unknown>
+    ? {
+        [K in keyof T as CamelCase<K>]: KeysToCamelCase<T[K]>;
+      }
+    : T extends Array<infer U>
+      ? Array<KeysToCamelCase<U>>
+      : T;
+```
+
+**Explanation:**
+
+1. **Objects**: Transform keys using CamelCase and recursively process their values.
+2. **Arrays**: Recursively process the array's item type.
+3. **Base Types**: Return the original type for non-objects and non-arrays.
+
+## Complete Example
+
+Here’s the complete code with a practical use case:
+
+```ts
+// Input Types
+type CityOne = {
+  city_one: string;
+};
+
+type GetUserResponse = {
+  id: string;
+  user_name: string;
+  user_email?: string;
+  organization: {
+    array_of_strings: ['string_one', CityOne];
+    org_units_optional?: string[];
+    addresses: CityOne[];
+    several_different?: [{ type_one: string }, { type_two: string }];
+  };
+};
+
+// Transformation Utilities
+type CamelCase<S> = S extends `${infer First}_${infer SecondFirst}${infer Rest}`
+  ? `${First}${Uppercase<SecondFirst>}${CamelCase<Rest>}`
+  : S;
+
+type KeysToCamelCase<T> =
+  T extends Record<string, unknown>
+    ? {
+        [K in keyof T as CamelCase<K>]: KeysToCamelCase<T[K]>;
+      }
+    : T extends Array<infer U>
+      ? Array<KeysToCamelCase<U>>
+      : T;
+
+// Transformed Type
+type CameledRecord = KeysToCamelCase<GetUserResponse>;
+```
+
+### Result:
+
+`CameledRecord` has all keys transformed into `camelCase`, including nested types and arrays, while preserving optional fields and other type details.
+
+## Conclusion
+
+By combining the `CamelCase` and `KeysToCamelCase` utilities, you can effortlessly transform any TypeScript type from `snake_case` to `camelCase`. This approach is particularly useful for integrating with backends that follow different naming conventions. With this recipe, you can ensure consistency in your frontend code while maintaining strong type safety.

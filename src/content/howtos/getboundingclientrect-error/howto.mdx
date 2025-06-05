@@ -1,0 +1,135 @@
+---
+title: 'How to Resolve getBoundingClientRect Is Not a Function Error'
+slug: getboundingclientrect-error
+heading: Fix getBoundingClientRect Is Not a Function Error
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/getboundingclientrect-error
+date: 2025-01-06
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn how to fix the getBoundingClientRect is not a function error in JavaScript by checking DOM elements, handling null references, and proper usage.
+---
+
+The error `getBoundingClientRect is not a function` typically occurs in JavaScript when you try to call the method on an object that is not a DOM element or on a reference that is `null` or `undefined`. Here's how to resolve it:
+
+## 1. Verify the Target Element
+
+Ensure that the variable you’re calling `getBoundingClientRect()` on is a valid DOM element.
+
+```js
+const element = document.getElementById('my-element');
+if (element) {
+  const rect = element.getBoundingClientRect();
+  console.log(rect);
+} else {
+  console.error('Element not found');
+}
+```
+
+## 2. Check for `Null` or `Undefined` References
+
+If you're using a dynamic framework like React, ensure the element exists before accessing it.
+
+```jsx
+import { useEffect, useRef } from 'react';
+
+function App() {
+  const divRef = useRef(null);
+
+  useEffect(() => {
+    if (divRef.current) {
+      console.log(divRef.current.getBoundingClientRect());
+    } else {
+      console.error('Element is null or undefined');
+    }
+  }, []);
+
+  return <div ref={divRef}>Hello World</div>;
+}
+
+export default App;
+```
+
+## 3. Verify Query Selector Usage
+
+Ensure you're using the correct query selector to retrieve the element.
+
+```js
+const element = document.querySelector('.my-class');
+if (element) {
+  const rect = element.getBoundingClientRect();
+  console.log(rect);
+} else {
+  console.error('No element matches the selector');
+}
+```
+
+## 4. Ensure the Script Runs After the DOM is Loaded
+
+If your script executes before the DOM is fully loaded, it won’t find the element.
+
+```js
+document.addEventListener('DOMContentLoaded', () => {
+  const element = document.getElementById('my-element');
+  if (element) {
+    console.log(element.getBoundingClientRect());
+  }
+});
+```
+
+## 5. Avoid Using `getBoundingClientRect` on Non-DOM Elements
+
+If you are passing an object or something other than a DOM node, `getBoundingClientRect` will not exist.
+
+```js
+const nonDomElement = {};
+console.log(nonDomElement.getBoundingClientRect); // undefined
+```
+
+Always ensure the object is a DOM element.
+
+## 6. Handling Ref Forwarding in React
+
+If you’re using ref forwarding, make sure the reference is applied correctly.
+
+```jsx
+const CustomComponent = React.forwardRef((props, ref) => (
+  <div ref={ref}>Custom Component</div>
+));
+
+function App() {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      console.log(ref.current.getBoundingClientRect());
+    }
+  }, []);
+
+  return <CustomComponent ref={ref} />;
+}
+
+export default App;
+```
+
+## 7. Debugging Tips
+
+- Log the element to inspect its type:
+  ```js
+  console.log(element);
+  ```
+- If it’s `null` or not a DOM element, investigate why.
+- Use `typeof` or `instanceof` to confirm it’s an element:
+
+```js
+if (element instanceof HTMLElement) {
+  console.log(element.getBoundingClientRect());
+}
+```
+
+## Summary
+
+The error arises because the method is being called on an invalid object. Double-check that your code correctly references a DOM element, ensures it exists, and that your script runs after the DOM is ready.

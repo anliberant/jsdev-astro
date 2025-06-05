@@ -1,0 +1,233 @@
+---
+title: '15 Git Commands That Cover 90% of a Developer’s Daily Workflow'
+slug: 15-git-commands
+permalink: 15-git-commands
+heading: 'Essential Git Command Reference: The Core Operations Every Developer Needs'
+image: ./images/git-commands.png
+date: 2025-05-02
+author: anton liberant
+category: git
+type: post
+tags: ['git-commands']
+desc: Master 15 essential Git commands every developer uses daily. Streamline your workflow and collaborate better with these core version control tools.
+---
+
+If you're new to Git or only use it occasionally, you’ve likely googled “most useful Git commands” more than once. This guide is for you. It won’t cover everything Git can do, but it focuses on the most practical commands that will save you time and headaches during day-to-day development.
+
+Let’s dive in.
+
+## 1. `git init`
+
+Creates a new Git repository in the current folder.
+
+<div className='code-cmd'>git init</div>
+
+This sets up Git tracking for your project. It creates a `.git` directory containing metadata about your repo, including commit history, branches, and remote settings.
+
+## 2. `git clone`
+
+Creates a local copy of a remote repository.
+
+<div className='code-cmd'>git clone #repository-url</div>
+
+Example:
+
+<div className='code-cmd'>
+  git clone https://github.com/test/hello-world.git
+</div>
+
+This copies all the files, history, and branches from the remote repo.
+
+## 3. `git status`
+
+Shows the current state of your working directory and staging area.
+
+<div className='code-cmd'>git status</div>
+
+You’ll see:
+
+- Files that have been modified
+- Files that are staged
+- Untracked files
+
+This is one of the most frequently used Git commands.
+
+## 4. `git add`
+
+Adds files to the staging area so they’re ready to be committed.
+
+<div className='code-cmd'>git add #file</div>
+
+<div className='code-cmd'>git add .</div>
+
+- `git add #file` adds a specific file.
+- `git add .` adds all changes in the current directory and subdirectories.
+
+Tip: Use `git status` before running this to see which files you’re staging.
+
+## 5. `git commit`
+
+Saves a snapshot of your staged changes with a message.
+
+<div className='code-cmd'>git commit -m "@feature auth added"</div>
+
+Each commit should describe why the changes were made—not just what was changed.
+
+Use clear, concise messages that help teammates (and your future self) understand the history.
+
+## 6. `git diff`
+
+Shows differences between your working directory and the staging area or between commits.
+
+<div className='code-cmd'>git diff # changes not yet staged</div>
+
+<div className='code-cmd'>git diff --staged # staged but not yet committed</div>
+
+This helps you preview what’s going to be committed or what changed between commits.
+
+## 7. `git log`
+
+Displays the commit history.
+
+<div className='code-cmd'>git log</div>
+
+You’ll see:
+
+- Commit hashes
+- Author names
+- Dates
+- Commit messages
+
+To simplify the view:
+
+<div className='code-cmd'>git log --oneline --graph --decorate</div>
+
+This gives a compact visual history with branches and tags.
+
+## 8. `git reset`
+
+Resets your staging area or moves HEAD to a different commit.
+
+Undo staged changes:
+
+<div className='code-cmd'>git reset #file</div>
+
+Undo a commit (but keep your changes):
+
+<div className='code-cmd'>git reset --soft HEAD~1</div>
+
+Undo a commit and remove changes:
+
+<div className='code-cmd'>git reset --hard HEAD~1</div>
+
+⚠️ Be careful with `--hard` — it deletes your changes.
+
+## 9. `git checkout`
+
+Switches branches or restores files.
+
+Switch to a branch:
+
+<div className='code-cmd'>git checkout main</div>
+
+Restore a file to the last committed version:
+
+<div className='code-cmd'>git checkout -- index.html</div>
+
+Since Git 2.23, the safer alternative is to use:
+
+<div className='code-cmd'>git restore #file</div>
+
+<div className='code-cmd'>git switch #branch</div>
+
+## 10. `git branch`
+
+Lists, creates, or deletes branches.
+
+List branches:
+
+<div className='code-cmd'>git branch</div>
+
+Create a new branch:
+
+<div className='code-cmd'>git branch @feature/login-form</div>
+
+Delete a branch:
+
+<div className='code-cmd'>git branch -d old-feature</div>
+
+## 11. `git merge`
+
+Combines changes from one branch into another.
+
+<div className='code-cmd'>git checkout main</div>
+
+<div className='code-cmd'>git merge @feature/login-form</div>
+
+This merges the feature branch into the `main` branch.
+
+If there are conflicting changes in the same files, Git will prompt you to resolve them manually.
+
+## 12. `git pull`
+
+Downloads changes from a remote repository and merges them into your local branch.
+
+<div className='code-cmd'>git pull origin main</div>
+
+This is equivalent to:
+
+<div className='code-cmd'>git fetch</div>
+
+<div className='code-cmd'>git merge</div>
+
+Use `git pull --rebase` to avoid unnecessary merge commits.
+
+## 13. `git push`
+
+Uploads your local commits to a remote repository.
+
+<div className='code-cmd'>git push origin main</div>
+
+Use this to share your work with others.
+
+## 14. `git stash`
+
+Temporarily saves changes that you don’t want to commit yet.
+
+<div className='code-cmd'>git stash</div>
+
+This clears your working directory so you can switch branches cleanly.
+
+Restore stashed changes:
+
+<div className='code-cmd'>git stash pop</div>
+
+View all stashes:
+
+<div className='code-cmd'>git stash list</div>
+
+## 15. `git remote`
+
+Manages remote repositories.
+
+List remotes:
+
+<div className='code-cmd'>git remote -v</div>
+
+Add a new remote:
+
+<div className='code-cmd'>
+  git remote add origin https://github.com/user/repo.git
+</div>
+
+Rename a remote:
+
+<div className='code-cmd'>git remote rename origin upstream</div>
+
+## Final Tips
+
+- Use `git status` and `git log` often — they’re your safety net.
+- Don’t be afraid of branching and stashing — they help you experiment safely.
+- Always write meaningful commit messages.
+
+Learning these 15 commands gives you a strong foundation for working with Git in most real-world scenarios.

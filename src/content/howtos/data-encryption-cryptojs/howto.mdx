@@ -1,0 +1,172 @@
+---
+title: How to Secure Front-End Data Encryption with CryptoJS
+slug: data-encryption-cryptojs
+heading: 'Implementing CryptoJS for Enhanced Data Security'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/data-encryption-cryptojs
+date: 2025-02-20
+author: anton liberant
+category: javascript
+type: howto
+tags: ['CryptoJS', 'data-encryption']
+desc: Learn to secure sensitive data in web apps using front-end encryption with CryptoJS. This guide covers encrypting data in the browser to protect user information.
+---
+
+In modern web applications, protecting sensitive user data is crucial. This article explores how to use [CryptoJS](https://github.com/brix/crypto-js), a powerful JavaScript encryption library, to enhance front-end security. We’ll cover AES and RSA encryption, their implementations, and practical examples of encrypting and transmitting data securely.
+
+## 1. Introduction to Front-End Encryption
+
+During a recent interview, I was asked how to implement encryption and decryption of sensitive user data, such as phone numbers and identification numbers, on the front end. With growing concerns about security and privacy, understanding how to manage encryption is essential. In this guide, we’ll break down the use of CryptoJS for securing front-end data.
+
+## 2. CryptoJS Overview
+
+CryptoJS is a JavaScript library that offers multiple encryption algorithms, including AES, MD5, and SHA. It is widely used in web applications for encrypting and securing data.
+
+### 2.1 Basic Usage of CryptoJS
+
+```js
+import CryptoJS from 'crypto-js';
+
+import CryptoJS from 'crypto-js';
+
+// Encrypt data
+function encrypt(data, key) {
+  return CryptoJS.AES.encrypt(data, key).toString();
+}
+
+// Decrypt data
+function decrypt(encryptedData, key) {
+  const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+  return bytes.toString(CryptoJS.enc.Utf8);
+}
+
+const key = 'secret key 123';
+const text = 'Sensitive data to encrypt';
+
+const encrypted = encrypt(text, key);
+console.log('Encrypted:', encrypted);
+
+const decrypted = decrypt(encrypted, key);
+console.log('Decrypted:', decrypted);
+```
+
+### 2.2 Advanced Usage
+
+```js
+// AES Encryption with CBC mode and custom IV
+const encrypted = CryptoJS.AES.encrypt('hello', 'key', {
+  mode: CryptoJS.mode.CBC,
+  padding: CryptoJS.pad.Pkcs7,
+  iv: CryptoJS.enc.Utf8.parse('1234567890123456'),
+}).toString();
+
+// AES Decryption with CBC mode and custom IV
+const decrypted = CryptoJS.AES.decrypt(encrypted, 'key', {
+  mode: CryptoJS.mode.CBC,
+  padding: CryptoJS.pad.Pkcs7,
+  iv: CryptoJS.enc.Utf8.parse('1234567890123456'),
+}).toString(CryptoJS.enc.Utf8);
+```
+
+### 2.3 Other CryptoJS Functions
+
+```js
+// MD5 Hashing
+const md5Hash = CryptoJS.MD5('Text to hash').toString();
+
+// SHA256 Hashing
+const sha256Hash = CryptoJS.SHA256('Text to hash').toString();
+
+// Base64 Encoding
+const base64 = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse('hello'));
+```
+
+## 3. AES Symmetric Encryption
+
+AES ([Advanced Encryption Standard](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard)) is a symmetric encryption algorithm, meaning the same key is used for both encryption and decryption. This approach is fast and efficient for encrypting large amounts of data.
+
+### 3.1 AES Modes
+
+- **ECB Mode**: A simple encryption mode where the same plaintext always generates the same ciphertext, making it less secure.
+- **CBC Mode**: A more secure mode requiring an initialization vector (IV), ensuring that identical plaintexts produce different ciphertexts.
+
+```js
+const encryptedECB = CryptoJS.AES.encrypt('hello', 'key', {
+  mode: CryptoJS.mode.ECB,
+}).toString();
+```
+
+```js
+const encryptedCBC = CryptoJS.AES.encrypt('hello', 'key', {
+  mode: CryptoJS.mode.CBC,
+  iv: CryptoJS.enc.Utf8.parse('1234567890123456'),
+}).toString();
+```
+
+## 4. RSA Asymmetric Encryption
+
+[RSA](<https://en.wikipedia.org/wiki/RSA_(cryptosystem)>) is an asymmetric encryption algorithm that uses two keys: a public key for encryption and a private key for decryption. It’s commonly used for transmitting encryption keys, digital signatures, and securing sensitive data.
+
+### 4.1 RSA Use Cases
+
+- Secure Transmission of Encryption Keys
+- Digital Signatures for Authenticity Verification
+- Encrypting Sensitive Data Before Transmission
+
+```js
+const encrypted = crypto
+  .publicEncrypt(publicKey, Buffer.from('Sensitive Data'))
+  .toString('base64');
+```
+
+## 5. Combining AES and RSA for Enhanced Security
+
+A combination of AES and RSA provides an extra layer of security, particularly for encrypting and transmitting sensitive data.
+
+### 5.1 Encrypting Passwords with RSA
+
+RSA encryption is ideal for encrypting passwords due to its strong security, even though it is slower than AES.
+
+```js
+async function encryptPassword(password) {
+  const publicKey = await getPublicKey();
+  return crypto
+    .publicEncrypt(publicKey, Buffer.from(password))
+    .toString('base64');
+}
+```
+
+### 5.2 Encrypting Sensitive Data with AES + RSA
+
+For encrypting sensitive information such as user IDs and account details, a combination of AES for data encryption and RSA for key encryption is commonly used.
+
+```js
+class SecurityService {
+  async encryptSensitiveData(data) {
+    // Generate random AES key
+    const aesKey = CryptoJS.lib.WordArray.random(16).toString();
+
+    // Encrypt data with AES
+    const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(data), aesKey, {
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+      iv: CryptoJS.enc.Utf8.parse('1234567890123456'),
+    }).toString();
+
+    // Encrypt AES key with RSA
+    const publicKey = await this.getPublicKey();
+    const encryptedKey = crypto
+      .publicEncrypt(publicKey, Buffer.from(aesKey))
+      .toString('base64');
+
+    return { data: encryptedData, key: encryptedKey };
+  }
+}
+```
+
+## 6. Conclusion
+
+By combining AES for encrypting data and RSA for securely transmitting encryption keys, you can significantly enhance front-end security. CryptoJS provides an efficient way to implement these encryption techniques, ensuring that sensitive user information remains protected.
+
+Implementing these strategies in your projects will improve data security and help prevent unauthorized access.

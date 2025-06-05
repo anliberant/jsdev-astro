@@ -1,0 +1,77 @@
+---
+title: How to Use TypeScript Decorators Quickly
+slug: ts-decorators-quickly
+heading: Master TypeScript Decorators Quickly
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/ts-decorators-quickly
+date: 2024-11-03
+author: anton liberant
+category: typescript
+type: howto
+tags: ['decorators']
+desc: Master TypeScript decorators fast! Enhance classes, methods, and properties with metadata annotations. Learn syntax, advanced patterns, and practical examples.
+---
+
+Decorators in TypeScript are functions applied at runtime to classes or methods to modify or extend behavior.
+
+## Enabling Decorators
+
+To enable experimental support, add this setting to your tsconfig.json or via CLI:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "experimentalDecorators": true
+  }
+}
+```
+
+## Class Decorators
+
+Class decorators modify the class constructor and prototype:
+
+```ts
+function sealed(constructor: Function) {
+  Object.seal(constructor);
+  Object.seal(constructor.prototype);
+}
+
+@sealed
+class BugReport {
+  // class logic
+}
+```
+
+## Method Decorators
+
+These wrap method properties and can adjust visibility or behavior:
+
+```ts
+function enumerable(value: boolean) {
+  return (target: any, key: string, descriptor: PropertyDescriptor) => {
+    descriptor.enumerable = value;
+  };
+}
+
+class Greeter {
+  @enumerable(false)
+  greet() {
+    return 'Hello';
+  }
+}
+```
+
+## Property Decorators
+
+These apply runtime modifications to class properties:
+
+```ts
+class MyClass {
+  @MyDecorator
+  myProperty: string;
+}
+```
+
+Decorators allow modular adjustments to class structure, method behavior, and property access, enhancing TypeScript's functionality in complex applications.

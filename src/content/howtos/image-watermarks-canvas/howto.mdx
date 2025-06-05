@@ -1,0 +1,173 @@
+---
+title: How to Add Image Watermarks Using HTML5 Canvas
+slug: image-watermarks-canvas
+heading: Using HTML5 Canvas to Add Watermarks to Images
+icon: /icons/javascript.png
+image: ./images/image-watermarks-canvas.png
+permalink: howto/image-watermarks-canvas
+date: 2024-11-13
+author: anton liberant
+category: javascript
+type: howto
+tags: ['canvas', 'watermark']
+desc: Learn how to add text and image watermarks with HTML5 Canvas and JavaScript. Control opacity, position, and style to protect or brand your images easily.
+---
+
+Adding watermarks to images with HTML5 Canvas is straightforward and allows you to customize the placement, opacity, and styling of the watermark. Here’s a guide on how to add text or image watermarks using Canvas.
+
+![How to Add Image Watermarks Using HTML5 Canvas](./images/image-watermarks-canvas.png)
+
+## 1. Set Up the HTML Structure
+
+First, add an `<img>` tag for the source image and a `<canvas>` element in your HTML.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <img
+      id="sourceImage"
+      src="buldog.png"
+      alt="Buldog image"
+      style="display:none;"
+    />
+    <canvas id="canvas"></canvas>
+    <script src="app.js"></script>
+  </body>
+</html>
+```
+
+## 2. JavaScript Code for Adding a Text Watermark
+
+You can use the Canvas API to draw the image and add a text watermark. Here’s how:
+
+```js
+const canvas = document.getElementById('canvas');
+const context = canvas.getContext('2d');
+const image = document.getElementById('sourceImage');
+
+// Set the canvas size to match the image dimensions
+image.onload = function () {
+  canvas.width = image.width;
+  canvas.height = image.height;
+  context.drawImage(image, 0, 0);
+
+  // Set text properties for the watermark
+  context.font = '30px Arial';
+  context.fillStyle = 'rgba(255, 255, 255, 0.5)'; // white text with 50% opacity
+  context.textAlign = 'right';
+  context.textBaseline = 'bottom';
+
+  // Draw the watermark text
+  context.fillText(
+    'Your Watermark Text',
+    canvas.width - 10,
+    canvas.height - 10
+  ); // bottom-right corner
+};
+```
+
+This code will display the image on the canvas, and then add semi-transparent text in the bottom-right corner.
+
+## 3. Adding an Image Watermark
+
+If you prefer using an image as a watermark, load the watermark image separately and draw it on top of the main image.
+
+```js
+const watermarkImage = new Image();
+watermarkImage.src = 'path/to/watermark.png';
+
+watermarkImage.onload = function () {
+  context.drawImage(
+    watermarkImage,
+    canvas.width - watermarkImage.width - 10,
+    canvas.height - watermarkImage.height - 10
+  );
+};
+```
+
+Here, `watermarkImage` is drawn near the bottom-right corner of the canvas, 10 pixels from the edges. Adjust its opacity in an image editor beforehand or in Canvas using `globalAlpha`:
+
+```js
+context.globalAlpha = 0.5; // 50% opacity
+context.drawImage(
+  watermarkImage,
+  canvas.width - watermarkImage.width - 10,
+  canvas.height - watermarkImage.height - 10
+);
+context.globalAlpha = 1.0; // Reset opacity for future drawings
+```
+
+## 4. Export the Result
+
+To save or use the image with the watermark, convert the canvas content to a data URL:
+
+```js
+const watermarkedImageURL = canvas.toDataURL('image/png');
+```
+
+You can use this data URL to download the watermarked image or set it as the `src` for another `<img>` tag.
+
+## Complete Code
+
+Combining all steps into one:
+
+```html
+<img
+  id="sourceImage"
+  src="path/to/your-image.jpg"
+  alt="Source Image"
+  style="display:none;"
+/>
+<canvas id="canvas"></canvas>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+  const image = document.getElementById('sourceImage');
+
+  image.onload = function () {
+    canvas.width = image.width;
+    canvas.height = image.height;
+    context.drawImage(image, 0, 0);
+
+    // Adding Text Watermark
+    context.font = '30px Arial';
+    context.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    context.textAlign = 'right';
+    context.textBaseline = 'bottom';
+    context.fillText(
+      'Your Watermark Text',
+      canvas.width - 10,
+      canvas.height - 10
+    );
+
+    // Adding Image Watermark
+    const watermarkImage = new Image();
+    watermarkImage.src = 'path/to/watermark.png';
+    watermarkImage.onload = function () {
+      context.globalAlpha = 0.5; // Set opacity
+      context.drawImage(
+        watermarkImage,
+        canvas.width - watermarkImage.width - 10,
+        canvas.height - watermarkImage.height - 10
+      );
+      context.globalAlpha = 1.0; // Reset opacity
+    };
+  };
+</script>
+```
+
+### Customization Tips
+
+- Adjust the position of the text and image watermarks by modifying the `x` and `y` coordinates in `fillText` and `drawImage`.
+- Change `context.globalAlpha` to control the transparency of the image watermark.
+- Customize `context.font` and `context.fillStyle` to style the text watermark to your liking.
+
+This code allows you to overlay both text and image watermarks on your canvas, with adjustable styling options. You can further customize by changing font properties, color, and positioning.

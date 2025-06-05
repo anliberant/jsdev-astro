@@ -1,0 +1,280 @@
+---
+import { getCollection } from 'astro:content';
+
+import { siteConfig } from '@/app/config/site';
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import Posts from '@/entities/post/posts.astro';
+import { generateTagBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import Pagination from '@/shared/ui/layout/pagination.astro';
+
+export const getStaticPaths = async ({ paginate }) => {
+  try {
+    const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);
+
+    if (allPosts.length === 0) {
+      console.warn('⚠️ No posts found!');
+      return [];
+    }
+
+    const postsByTag = allPosts.reduce((acc, post) => {
+      const tags = Array.isArray(post.data.tags) ? post.data.tags : [];
+
+      tags.forEach(tag => {
+        if (tag && typeof tag === 'string') {
+          const tagSlug = tag.toLowerCase().replace(/\s+/g, '-');
+          if (!acc[tagSlug]) {
+            acc[tagSlug] = {
+              name: tag,
+              posts: [],
+            };
+          }
+          acc[tagSlug].posts.push(post);
+        }
+      });
+
+      return acc;
+    }, {});
+
+    if (Object.keys(postsByTag).length === 0) {
+      console.warn('⚠️ No tags found!');
+      return [];
+    }
+
+    Object.keys(postsByTag).forEach(tagSlug => {
+      postsByTag[tagSlug].posts.sort((a, b) => {
+        const dateA = new Date(a.data.date);
+        const dateB = new Date(b.data.date);
+        return dateB.getTime() - dateA.getTime();
+      });
+    });
+
+    const allPaths = [];
+
+    for (const [tagSlug, tagData] of Object.entries(postsByTag)) {
+      const pages = paginate(tagData.posts, {
+        params: { tag: tagSlug },
+        pageSize: siteConfig.postsPerPage,
+        props: { tagName: tagData.name, totalPosts: tagData.posts.length },
+      });
+
+      allPaths.push(...pages);
+    }
+
+    return allPaths;
+  } catch (error) {
+    console.error('❌ Error in getStaticPaths:', error);
+    throw error;
+  }
+};
+
+const { tag } = Astro.params;
+const page = Astro.props.page;
+const { tagName, totalPosts } = Astro.props;
+
+const currentPage = page.currentPage;
+const isFirstPage = currentPage === 1;
+
+if (!tag || !page || !tagName) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const breadcrumbItems = generateTagBreadcrumbs(tagName, tag, isFirstPage ? undefined : currentPage);
+
+const pageTitle =
+  isFirstPage ?
+    `${tagName} Articles - Latest JavaScript Tutorials | JSdev`
+  : `${tagName} Articles - Page ${currentPage} | JSdev`;
+
+const pageDescription =
+  isFirstPage ?
+    `Discover ${totalPosts} expert articles about ${tagName.toLowerCase()}. Learn from practical examples, tutorials, and in-depth guides on ${tagName} development.`
+  : `Page ${currentPage} of ${page.lastPage} - Continue exploring ${tagName.toLowerCase()} articles and tutorials.`;
+
+const canonicalUrl =
+  isFirstPage ?
+    `${siteConfig.siteUrl}/tags/${tag}/`
+  : `${siteConfig.siteUrl}/tags/${tag}/${currentPage}/`;
+
+const shouldIndex = isFirstPage;
+const robotsContent = shouldIndex ? 'index, follow' : 'noindex, follow';
+const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}>
+  <Fragment slot='head'>
+    <link
+      rel='canonical'
+      href={canonicalUrl}
+    />
+    <meta
+      name='robots'
+      content={robotsContent}
+    />
+
+    {
+      page.url.prev && (
+        <link
+          rel='prev'
+          href={`${siteConfig.siteUrl}${page.url.prev}`}
+        />
+      )
+    }
+    {
+      page.url.next && (
+        <link
+          rel='next'
+          href={`${siteConfig.siteUrl}${page.url.next}`}
+        />
+      )
+    }
+
+    <meta
+      property='og:type'
+      content='website'
+    />
+    <meta
+      property='og:url'
+      content={canonicalUrl}
+    />
+    <meta
+      property='og:title'
+      content={pageTitle}
+    />
+    <meta
+      property='og:description'
+      content={pageDescription}
+    />
+
+    {
+      isFirstPage && (
+        <script
+          type='application/ld+json'
+          set:html={JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: `${tagName} Articles`,
+            description: pageDescription,
+            url: canonicalUrl,
+            mainEntity: {
+              '@type': 'ItemList',
+              numberOfItems: totalPosts,
+              itemListElement: page.data.slice(0, 3).map((post, index) => ({
+                '@type': 'Article',
+                position: index + 1,
+                name: post.data.title,
+                description: post.data.desc,
+                url: `${siteConfig.siteUrl}/${post.data.permalink}/`,
+              })),
+            },
+          })}
+        />
+      )
+    }
+  </Fragment>
+
+  <main class='main'>
+    <header class='tag-header'>
+      <div class='tag-header__container'>
+        <Breadcrumbs items={breadcrumbItems} />
+
+        <h1 class='tag-header__title'>
+          #{tagName}
+          <span class='tag-header__count'>({totalPosts} articles)</span>
+        </h1>
+
+        <p class='tag-header__description'>
+          {pageDescription}
+        </p>
+      </div>
+    </header>
+
+    <Posts posts={page.data} />
+
+    {
+      numberOfPages > 1 && (
+        <Pagination
+          numPages={page.lastPage}
+          currentPage={currentPage}
+          slug={`tags/${tag}`}
+        />
+      )
+    }
+  </main>
+</BaseLayout>
+
+<style>
+  .tag-header {
+    background: linear-gradient(135deg, #f9fbfd 0%, #edf2f7 100%);
+    color: var(--oposite-color);
+    padding: 1.5rem 0;
+    position: relative;
+    margin-top: 2.5rem;
+  }
+
+  :global(.dark) .tag-header {
+    background: linear-gradient(135deg, #070503 0%, #1d1720 100%);
+  }
+
+  .tag-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  }
+
+  .tag-header__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .tag-header__title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: #3b82f6;
+  }
+
+  .tag-header__count {
+    font-size: 1.4rem;
+    font-weight: 400;
+    opacity: 0.8;
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--oposite-color);
+  }
+
+  .tag-header__description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    margin: 0;
+    max-width: 1000px;
+  }
+
+  @media (max-width: 768px) {
+    .tag-header {
+      padding: 1.5rem 0;
+    }
+
+    .tag-header__title {
+      font-size: 1.5rem;
+    }
+
+    .tag-header__count {
+      font-size: 1.125rem;
+    }
+
+    .tag-header__description {
+      font-size: 1rem;
+    }
+  }
+</style>

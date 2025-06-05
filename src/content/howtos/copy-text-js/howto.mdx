@@ -1,0 +1,98 @@
+---
+title: How to Copy Text to Clipboard in JavaScript | Modern Methods
+slug: copy-text-js
+heading: Copying Text to Clipboard with Modern Techniques
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/copy-text-js
+date: 2025-02-08
+author: anton liberant
+category: javascript
+type: howto
+tags: ['clipboard', 'copy']
+desc: Learn multiple ways to copy text to the clipboard in JavaScript using the Clipboard API and fallbacks. Includes examples and best practices for cross-browser support
+---
+
+Copying text to the clipboard is a common feature in modern web applications, making it easy for users to copy and paste content effortlessly. JavaScript provides simple methods to achieve this, whether you're using modern clipboard APIs or working with traditional input fields.
+
+## 1. Using `navigator.clipboard.writeText()`
+
+The most reliable way to copy text to the clipboard is by using the `navigator.clipboard.writeText()` API. This method is asynchronous and requires user interaction (e.g., a button click) to work due to security restrictions.
+
+**Example:**
+
+```js
+function copyToClipboard(text) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => alert('Copied to clipboard!'))
+    .catch(err => console.error('Failed to copy: ', err));
+}
+
+// Usage
+copyToClipboard('Hello, Clipboard!');
+```
+
+**Explanation:**
+
+- `navigator.clipboard.writeText(text)`: Writes the given text to the clipboard.
+- `.then(() => alert("Copied to clipboard!"))`: Displays an alert when successful.
+- `.catch(err => console.error("Failed to copy: ", err))`: Handles errors if copying fails.
+
+## 2. Copying from an Input or Textarea
+
+If you need to copy text from an input field, you can use the `select()` method along with `document.execCommand('copy')` (though this method is considered deprecated).
+
+**Example:**
+
+```js
+<input type="text" id="myInput" value="Copy this text">
+<button onclick="copyInputText()">Copy</button>
+
+<script>
+function copyInputText() {
+  const input = document.getElementById("myInput");
+  input.select();
+  document.execCommand("copy");
+  alert("Copied: " + input.value);
+}
+</script>
+```
+
+**Explanation:**
+
+- `input.select()`: Selects the text inside the input field.
+- `document.execCommand("copy")`: Copies the selected text to the clipboard.
+- This method works on older browsers but is gradually being replaced by `navigator.clipboard.writeText()`.
+
+## 3. Copying Text from a Paragraph or Div
+
+To copy text from a paragraph or div, create a temporary element, copy its content, and remove it.
+
+**Example:**
+
+```js
+function copyDivText() {
+  const text = document.getElementById("myText").innerText;
+  const tempTextArea = document.createElement("textarea");
+  tempTextArea.value = text;
+  document.body.appendChild(tempTextArea);
+  tempTextArea.select();
+  document.execCommand("copy");
+  document.body.removeChild(tempTextArea);
+  alert("Copied: " + text);
+}
+  <div id="myText">This is the text to copy.</div>
+  <button onclick="copyDivText()">Copy</button>
+```
+
+**Explanation:**
+
+- `document.createElement("textarea")`: Creates a temporary textarea element.
+- `document.body.appendChild(tempTextArea)`: Adds it to the document.
+- `tempTextArea.select()` and `document.execCommand("copy")`: Copies the text.
+- `document.body.removeChild(tempTextArea)`: Removes the temporary element after copying.
+
+## Conclusion
+
+Copying text to the clipboard in JavaScript is simple with the `navigator.clipboard.writeText()` API, which is the recommended modern approach. However, for compatibility with older browsers, using `document.execCommand("copy")` in an input field or a temporary element can still be useful. Implementing these methods in your web applications ensures users can easily copy content with a single click.

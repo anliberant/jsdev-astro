@@ -1,0 +1,94 @@
+---
+title: How to Understand the Minimum Delay Mechanism in setTimeout
+slug: settimeout-min-delay
+heading: Understanding the Minimum Delay in setTimeout
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/settimeout-min-delay
+date: 2025-01-13
+author: anton liberant
+category: javascript
+type: howto
+tags: ['setTimeout']
+desc: Discover JavaScript’s setTimeout minimum delay, its evolution, technical details, performance impacts, and alternatives for precise timing in your apps.
+---
+
+In JavaScript, `setTimeout` is a widely-used timer API. However, even with a delay of "0 milliseconds," the actual execution time is never truly 0ms. A minimum delay, often 4ms, is enforced in specific scenarios due to technical constraints and historical evolution.
+
+## Evolution of the Minimum Delay
+
+**Historical Timeline:**
+
+- 1995: Introduced in Netscape Navigator
+- 2003: IE sets a 15.625ms limit
+- 2009: Firefox adopts a 10ms limit
+- 2010: HTML5 standardizes a 4ms delay for nesting levels ≥5
+
+**HTML Specification:**
+
+- Delays below 0ms default to 0ms.
+- Nesting levels ≥5 enforce a minimum of 4ms.
+
+## Technical Insights
+
+**1. Event Loop Basics**
+
+`setTimeout` adds callbacks to the event queue. Execution depends on:
+
+- Current code execution
+- Microtasks and macro tasks
+- Timer expiration
+
+**2. Chrome Source Code Analysis**
+
+In the Chromium source code, we can observe the relevant implementation:
+
+```cpp
+static const int kMaxTimerNestingLevel = 5;
+static const double kMinimumInterval = 0.004; // 4ms
+```
+
+**3. Minimum Delay Example**
+
+```js
+function nestedTimer(depth = 0) {
+  const start = performance.now();
+  setTimeout(() => {
+    const delay = performance.now() - start;
+    console.log(`Depth ${depth}, Actual delay: ${delay}ms`);
+    if (depth < 10) nestedTimer(depth + 1);
+  }, 0);
+}
+nestedTimer();
+```
+
+## Performance and Optimization
+
+### Impact
+
+- High CPU usage
+- Battery drain
+- Device heating
+
+### Alternatives
+
+`requestAnimationFrame`: High-precision for animations.
+
+```js
+requestAnimationFrame(() => {
+  // Animation logic
+});
+```
+
+**Web Workers**: Offload timers to worker threads.
+
+```js
+// worker.js
+setInterval(() => postMessage('tick'));
+```
+
+- `performance.now`: Precise timing for calculations.
+
+## Conclusion
+
+The 4ms minimum delay in `setTimeout` is a deliberate choice, ensuring a balance between performance and compatibility. By understanding this mechanism, developers can optimize asynchronous code effectively.

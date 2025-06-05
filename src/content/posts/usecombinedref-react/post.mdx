@@ -1,0 +1,407 @@
+---
+title: 'Mastering React Refs: Advanced Techniques with useCombinedRef'
+slug: usecombinedref-react
+heading: 'Mastering useCombinedRef React Hook'
+image: ./images/usecombinedref-react.png
+permalink: usecombinedref-react
+date: 2025-02-06
+author: anton liberant
+category: react
+type: post
+tags:
+  [
+    'useRef',
+    'useCombinedRef',
+    'useLayoutEffect',
+    'useResizeObserver',
+    'ResizeObserver',
+    'react-hooks',
+  ]
+desc: Learn to manage and combine React refs efficiently with the useCombinedRef hook. Simplify ref handling, improve component composition, and boost your React workflow.
+---
+
+When developing in React, direct interaction with DOM elements is often necessary. React provides
+the **refs** mechanism to access elements after rendering. The most common approach is using
+**object refs** via `useRef`, but another option is **callback refs**, which offer greater
+flexibility and control over the lifecycle of elements. This article explains how callback refs
+work, their advantages, common issues, and practical use cases.
+
+## How Callback Refs Work
+
+Callback refs provide a more precise way to manage ref bindings compared to object refs. Here's how
+they function:
+
+- **Mounting**: When an element is mounted in the DOM, React calls the ref function with the element
+  itself, allowing immediate interaction.
+- **Unmounting**: When an element is removed, React calls the ref function with null, enabling
+  cleanup operations.
+
+**Example: Tracking Mounting and Unmounting**
+
+```tsx
+import React, { useCallback, useState } from 'react';
+
+function MountUnmountTracker() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  const handleRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      console.log('Mounted:', node);
+    } else {
+      console.log('Unmounted');
+    }
+  }, []);
+
+  return (
+    <div>
+      <button onClick={() => setIsVisible(prev => !prev)}>
+        {isVisible ? 'Hide' : 'Show'} Element
+      </button>
+      {isVisible && <div ref={handleRef}>Tracked Element</div>}
+    </div>
+  );
+}
+
+export default MountUnmountTracker;
+```
+
+In this example, the `handleRef` callback logs the element when it mounts and unmounts. The
+`isVisible` state toggles the visibility of the tracked element. Whenever the element appears or
+disappears, `handleRef` is called, allowing us to track its lifecycle.
+
+### Common Issues and Solutions
+
+**Issue: Unnecessary Callback Ref Calls**
+
+A common problem is that React recreates the ref function on every re-render, leading to unwanted
+ref reassignments. This happens because React thinks it's dealing with a new ref, triggering a
+`null` call before assigning the new node.
+
+**Solution: Memoizing with useCallback**
+
+We can avoid this by using `useCallback` to ensure the function remains unchanged unless
+dependencies change. This memoization prevents unnecessary ref calls and maintains the correct ref
+binding.
+
+```tsx
+import React, { useCallback, useReducer, useState } from 'react';
+
+function Basic() {
+  const [showDiv, setShowDiv] = useState(false);
+  const [, forceRerender] = useReducer(v => v + 1, 0);
+
+  const toggleDiv = () => setShowDiv(prev => !prev);
+
+  const refCallback = useCallback((node: HTMLDivElement | null) => {
+    console.log('div', node);
+  }, []);
+
+  return (
+    <div>
+      <button onClick={toggleDiv}>Toggle Div</button>
+      <button onClick={forceRerender}>Rerender</button>
+      {showDiv && <div ref={refCallback}>Example div</div>}
+    </div>
+  );
+}
+
+export default Basic;
+```
+
+This ensures that refCallback is created only once and prevents unnecessary reassignments. The ref
+function remains stable across re-renders, maintaining the correct ref binding.
+
+## Callback Refs vs `useEffect` and `useLayoutEffect`
+
+Callback refs interact differently with `useEffect` and `useLayoutEffect`:
+
+1. Callback refs fire before `useLayoutEffect` and `useEffect`.
+2. `useLayoutEffect` runs after DOM updates but before the browser repaints.
+3. `useEffect` runs after the browser has painted.
+
+```tsx
+import React, { useCallback, useEffect, useLayoutEffect } from 'react';
+
+function WhenCalled() {
+  const refCallback = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      console.log('Callback ref assigned:', node);
+    } else {
+      console.log('Callback ref removed');
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    console.log('useLayoutEffect triggered');
+  }, []);
+
+  useEffect(() => {
+    console.log('useEffect triggered');
+  }, []);
+
+  return <div ref={refCallback}>Tracked Element</div>;
+}
+
+export default WhenCalled;
+```
+
+**Console Output Order:**
+
+1. `"Callback ref assigned: [div element]"`
+2. `"useLayoutEffect triggered"`
+3. `"useEffect triggered"`
+
+## Solving Issues with Dynamic Elements
+
+**Problem: `useRef` Fails with Changing Elements**
+
+Using `useRef` with elements that dynamically change (e.g., swapping a `<div>` for a `<p>`) can
+cause issues because useRef holds onto the old element reference.
+
+```tsx
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+interface ResizeObserverOptions {
+  elemRef: React.RefObject<HTMLElement>;
+  onResize: ResizeObserverCallback;
+}
+
+function useResizeObserver({ elemRef, onResize }: ResizeObserverOptions) {
+  useEffect(() => {
+    const element = elemRef.current;
+    if (!element) return;
+
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(element);
+
+    return () => resizeObserver.unobserve(element);
+  }, [onResize, elemRef]);
+}
+```
+
+Here, when toggling elements, `ResizeObserver` may still track the removed element.
+
+**Solution: Using Callback Refs**
+
+Callback refs ensure proper reassignment when the element changes.
+
+```tsx
+import { useCallback, useRef, useState } from 'react';
+
+function useResizeObserver(onResize: ResizeObserverCallback) {
+  const roRef = useRef<ResizeObserver | null>(null);
+
+  const attachResizeObserver = useCallback(
+    (element: HTMLElement) => {
+      const resizeObserver = new ResizeObserver(onResize);
+      resizeObserver.observe(element);
+      roRef.current = resizeObserver;
+    },
+    [onResize]
+  );
+
+  const detachResizeObserver = useCallback(() => {
+    roRef.current?.disconnect();
+  }, []);
+
+  const refCb = useCallback(
+    (element: HTMLElement | null) => {
+      if (element) attachResizeObserver(element);
+      else detachResizeObserver();
+    },
+    [attachResizeObserver, detachResizeObserver]
+  );
+
+  return refCb;
+}
+
+export default function App() {
+  const [bool, setBool] = useState(false);
+
+  const handleResize = useCallback((entries: ResizeObserverEntry[]) => {
+    console.log('Resize observed:', entries);
+  }, []);
+
+  const resizeRef = useResizeObserver(handleResize);
+
+  return (
+    <div>
+      <button onClick={() => setBool(v => !v)}>Toggle</button>
+      {bool ? <p ref={resizeRef}>Text</p> : <div ref={resizeRef}>Div</div>}
+    </div>
+  );
+}
+```
+
+Here, the observer automatically attaches/detaches as elements change. The `useResizeObserver` hook
+manages the ResizeObserver lifecycle, ensuring it tracks the correct element.
+
+## Combining Multiple Refs
+
+Callback refs can also help when multiple refs need to be merged.
+
+```tsx
+import { forwardRef, useCallback, useEffect, useRef } from 'react';
+
+function useCombinedRef<T>(...refs: (React.Ref<T> | null)[]) {
+  return useCallback((element: T | null) => {
+    refs.forEach(ref => {
+      if (!ref) return;
+      if (typeof ref === 'function') ref(element);
+      else (ref as React.MutableRefObject<T | null>).current = element;
+    });
+  }, refs);
+}
+
+const Input = forwardRef<HTMLInputElement>((props, ref) => {
+  const localRef = useRef<HTMLInputElement>(null);
+  const combinedRef = useCombinedRef(ref, localRef);
+
+  useEffect(() => {
+    console.log(localRef.current?.getBoundingClientRect());
+  }, []);
+
+  return <input {...props} ref={combinedRef} />;
+});
+
+export function UsageWithCombine() {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  return (
+    <div>
+      <Input ref={inputRef} />
+      <button onClick={() => inputRef.current?.focus()}>Focus</button>
+    </div>
+  );
+}
+```
+
+This allows both internal logic and external props-based refs to function correctly.
+
+### React 19 Updates
+
+React 19 improves callback refs by automatically cleaning up old references, simplifying code.
+
+```tsx
+<input
+  ref={ref => () => {
+    /* Cleanup logic */
+  }}
+/>
+```
+
+### When to Use Callback Refs
+
+- Use `useRef` for simple element access.
+- Use **callback refs** for complex lifecycle control, reusable hooks, or dynamic elements.
+
+## Optimized `useCombinedRef` Hook
+
+Below is an optimized implementation of `useCombinedRef`, improving readability, performance, and
+maintainability.
+
+```tsx
+import { forwardRef, useCallback, useEffect, useRef } from 'react';
+
+type RefItem<T> =
+  | ((element: T | null) => void)
+  | React.MutableRefObject<T | null>
+  | null
+  | undefined;
+
+/**
+ * Hook to combine multiple refs into one.
+ * Supports both object refs and callback refs.
+ */
+function useCombinedRef<T>(...refs: RefItem<T>[]) {
+  return useCallback(
+    (element: T | null) => {
+      refs.forEach(ref => {
+        if (!ref) return;
+        if (typeof ref === 'function') {
+          ref(element);
+        } else {
+          ref.current = element;
+        }
+      });
+    },
+    [refs]
+  );
+}
+
+interface InputProps {
+  value?: string;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+}
+
+/**
+ * Custom Input component that supports multiple refs.
+ */
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  function Input(props, ref) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const combinedInputRef = useCombinedRef(ref, inputRef);
+
+    useEffect(() => {
+      if (inputRef.current) {
+        console.log(
+          'Input position:',
+          inputRef.current.getBoundingClientRect()
+        );
+      }
+    }, []);
+
+    return <input {...props} ref={combinedInputRef} />;
+  }
+);
+
+/**
+ * Example usage of the Input component with combined refs.
+ */
+export function UsageWithCombine() {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const focus = () => {
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div>
+      <Input ref={inputRef} />
+      <button onClick={focus}>Focus</button>
+    </div>
+  );
+}
+```
+
+### Advantages of Using `useCombinedRef`
+
+**1. Supports Multiple Ref Types**
+
+- Works with both callback refs and object refs without conflicts.
+- Ensures seamless integration with various ref-based APIs.
+
+**2. Improved Code Readability and Reusability**
+
+- The `useCombinedRef` function can be reused across multiple components.
+- Reduces redundant logic, keeping components clean and maintainable.
+
+**3. Prevents Unnecessary Re-Renders**
+
+- Uses `useCallback` to memoize the function, avoiding ref resets on re-renders.
+- Keeps reference handling stable for optimal performance.
+
+**4. Automatic Resource Management**
+
+- Ensures old references are properly updated or cleaned up.
+- Helps prevent memory leaks in complex component structures.
+
+**5. Versatility in Component Design**
+
+- Useful for library authors and UI framework developers.
+- Ensures existing logic remains intact while adding ref-based functionality.
+
+## Conclusion
+
+Using `useCombinedRef` provides a cleaner, more efficient approach to handling multiple refs in
+React components. Whether you're building reusable UI components or integrating third-party
+libraries, this hook ensures seamless ref management without unnecessary complexity. 🚀

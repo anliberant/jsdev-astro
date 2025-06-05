@@ -1,0 +1,316 @@
+---
+title: 'Master Async JavaScript: Create Your Own Promise Implementation'
+slug: handwritten-promise
+heading: 'Building Your Own Promise: A Deep Dive into Asynchronous JavaScript'
+permalink: handwritten-promise
+image: ./images/handwritten-promise.png
+date: 2025-02-20
+author: anton liberant
+category: javascript
+type: post
+tags: ['promise']
+desc: Learn how to build a handwritten Promise implementation in JavaScript. Master async programming basics with a step-by-step guide to creating your own Promise class.
+---
+
+In modern JavaScript development, **Promises** provide an elegant solution for handling asynchronous operations. This article delves into manually implementing a Promise from scratch, covering essential features like state transitions, asynchronous execution, chaining, and additional methods such as `catch`, `resolve`, `all`, and `race`.
+
+## 1. Understanding the Promise Skeleton
+
+A Promise object must have:
+
+- A constructor function accepting an `executor` callback.
+- Three states: `pending`, `fulfilled`, and `rejected`.
+- A `.then()` method to handle success and failure.
+
+### Basic Promise Structure
+
+```js
+function MyPromise(executor) {
+  this.state = 'pending';
+  this.value = null;
+  this.reason = null;
+
+  const resolve = value => {
+    this.value = value;
+  };
+  const reject = reason => {
+    this.reason = reason;
+  };
+
+  executor(resolve, reject);
+}
+
+MyPromise.prototype.then = function (onFulfilled, onRejected) {
+  onFulfilled(this.value);
+  onRejected(this.reason);
+};
+```
+
+This implementation lacks state transitions and asynchronous behavior, which we will address next.
+
+## 2. Handling State Changes
+
+A Promise must:
+
+- Transition from `pending` to `fulfilled` or `rejected` irreversibly.
+- Execute `onFulfilled` only if the state is `fulfilled`, and `onRejected` if `rejected`.
+
+### Improved Version
+
+```js
+function MyPromise(executor) {
+  this.state = 'pending';
+  this.value = null;
+  this.reason = null;
+
+  const resolve = value => {
+    if (this.state === 'pending') {
+      this.value = value;
+      this.state = 'fulfilled';
+    }
+  };
+
+  const reject = reason => {
+    if (this.state === 'pending') {
+      this.reason = reason;
+      this.state = 'rejected';
+    }
+  };
+
+  executor(resolve, reject);
+}
+
+MyPromise.prototype.then = function (onFulfilled, onRejected) {
+  if (this.state === 'fulfilled') {
+    onFulfilled(this.value);
+  }
+  if (this.state === 'rejected') {
+    onRejected(this.reason);
+  }
+};
+```
+
+## 3. Implementing Asynchronous Execution
+
+To ensure `.then()` executes asynchronously, we use `setTimeout`:
+
+```js
+function MyPromise(executor) {
+  this.state = 'pending';
+  this.value = null;
+  this.reason = null;
+  this.onFulfilledCallbacks = [];
+  this.onRejectedCallbacks = [];
+
+  const resolve = value => {
+    setTimeout(() => {
+      if (this.state === 'pending') {
+        this.value = value;
+        this.state = 'fulfilled';
+        this.onFulfilledCallbacks.forEach(cb => cb(value));
+      }
+    });
+  };
+
+  const reject = reason => {
+    setTimeout(() => {
+      if (this.state === 'pending') {
+        this.reason = reason;
+        this.state = 'rejected';
+        this.onRejectedCallbacks.forEach(cb => cb(reason));
+      }
+    });
+  };
+
+  executor(resolve, reject);
+}
+
+MyPromise.prototype.then = function (onFulfilled, onRejected) {
+  return new MyPromise((resolve, reject) => {
+    if (this.state === 'fulfilled') {
+      setTimeout(() => {
+        try {
+          const result = onFulfilled(this.value);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    if (this.state === 'rejected') {
+      setTimeout(() => {
+        try {
+          const result = onRejected(this.reason);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    if (this.state === 'pending') {
+      this.onFulfilledCallbacks.push(value => {
+        try {
+          const result = onFulfilled(value);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      this.onRejectedCallbacks.push(reason => {
+        try {
+          const result = onRejected(reason);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+  });
+};
+```
+
+## 4. Implementing Promise Chaining
+
+To enable promise chaining, we introduce the `resolvePromise` function:
+
+```js
+function resolvePromise(promise, result, resolve, reject) {
+  if (result === promise) {
+    return reject(new TypeError('Chaining cycle detected'));
+  }
+
+  if (result instanceof MyPromise) {
+    result.then(resolve, reject);
+    return;
+  }
+
+  if (typeof result === 'object' || typeof result === 'function') {
+    try {
+      let then = result.then;
+      if (typeof then === 'function') {
+        then.call(result, resolve, reject);
+      } else {
+        resolve(result);
+      }
+    } catch (error) {
+      reject(error);
+    }
+  } else {
+    resolve(result);
+  }
+}
+```
+
+Now, we modify `.then()` to use `resolvePromise`:
+
+```js
+MyPromise.prototype.then = function (onFulfilled, onRejected) {
+  return new MyPromise((resolve, reject) => {
+    if (this.state === 'fulfilled') {
+      setTimeout(() => {
+        try {
+          const result = onFulfilled(this.value);
+          resolvePromise(this, result, resolve, reject);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    if (this.state === 'rejected') {
+      setTimeout(() => {
+        try {
+          const result = onRejected(this.reason);
+          resolvePromise(this, result, resolve, reject);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    if (this.state === 'pending') {
+      this.onFulfilledCallbacks.push(value => {
+        try {
+          const result = onFulfilled(value);
+          resolvePromise(this, result, resolve, reject);
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      this.onRejectedCallbacks.push(reason => {
+        try {
+          const result = onRejected(reason);
+          resolvePromise(this, result, resolve, reject);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+  });
+};
+```
+
+## 5. Implementing Additional Methods
+
+### `.catch()`
+
+```js
+MyPromise.prototype.catch = function (onRejected) {
+  return this.then(null, onRejected);
+};
+```
+
+### `Promise.resolve()`
+
+```js
+MyPromise.resolve = function (value) {
+  return new MyPromise(resolve => resolve(value));
+};
+```
+
+### `Promise.reject()`
+
+```js
+MyPromise.reject = function (reason) {
+  return new MyPromise((_, reject) => reject(reason));
+};
+```
+
+### `Promise.all()`
+
+```js
+MyPromise.all = function (promises) {
+  return new MyPromise((resolve, reject) => {
+    let results = [];
+    let completed = 0;
+
+    promises.forEach((promise, index) => {
+      promise.then(value => {
+        results[index] = value;
+        completed++;
+        if (completed === promises.length) resolve(results);
+      }, reject);
+    });
+  });
+};
+```
+
+### `Promise.race()`
+
+```js
+MyPromise.race = function (promises) {
+  return new MyPromise((resolve, reject) => {
+    promises.forEach(promise => {
+      promise.then(resolve, reject);
+    });
+  });
+};
+```
+
+## Conclusion
+
+This implementation covers the fundamental concepts of Promises, including state management, asynchronous execution, chaining, and additional methods. With this foundation, you can now understand and debug Promise-based JavaScript more effectively.

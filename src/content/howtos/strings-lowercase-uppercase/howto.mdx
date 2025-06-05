@@ -1,0 +1,131 @@
+---
+title: HowTo Transform Text Between Upper and Lower Case With JavaScript
+slug: strings-lowercase-uppercase
+heading: Mastering Case Transformations in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/strings-lowercase-uppercase
+date: 2025-02-25
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn how to convert text to lowercase and uppercase in JavaScript with built-in methods, examples, and best practices for effective string case manipulation.
+---
+
+## How to Convert a String to Lowercase and Uppercase in JavaScript
+
+String case conversion is a fundamental operation in JavaScript. While simple methods exist, we can explore more complex, creative, and performance-optimized ways to handle case transformation. This article covers multiple techniques, including built-in methods, ASCII manipulation, regex-based approaches, and even WebAssembly for extreme performance.
+
+## 1. Using Built-In Methods
+
+**Lowercase Conversion**
+
+```js
+const str = 'Hello World!';
+const lower = str.toLowerCase();
+console.log(lower); // Output: hello world!
+```
+
+**Uppercase Conversion**
+
+```js
+const upper = str.toUpperCase();
+console.log(upper); // Output: HELLO WORLD!
+```
+
+## 2. ASCII-Based Conversion (Manual Transformation)
+
+Using ASCII values allows precise control over case conversion.
+
+```js
+function toLowerCaseASCII(str) {
+  return str
+    .split('')
+    .map(char => {
+      let code = char.charCodeAt(0);
+      return code >= 65 && code <= 90 ? String.fromCharCode(code + 32) : char;
+    })
+    .join('');
+}
+
+function toUpperCaseASCII(str) {
+  return str
+    .split('')
+    .map(char => {
+      let code = char.charCodeAt(0);
+      return code >= 97 && code <= 122 ? String.fromCharCode(code - 32) : char;
+    })
+    .join('');
+}
+
+console.log(toLowerCaseASCII('JavaScript')); // javascript
+console.log(toUpperCaseASCII('JavaScript')); // JAVASCRIPT
+```
+
+## 3. Using Regular Expressions
+
+```js
+function toLowerCaseRegex(str) {
+  return str.replace(/[A-Z]/g, letter =>
+    String.fromCharCode(letter.charCodeAt(0) + 32)
+  );
+}
+
+function toUpperCaseRegex(str) {
+  return str.replace(/[a-z]/g, letter =>
+    String.fromCharCode(letter.charCodeAt(0) - 32)
+  );
+}
+
+console.log(toLowerCaseRegex('RegEx Example')); // regex example
+console.log(toUpperCaseRegex('RegEx Example')); // REGEX EXAMPLE
+```
+
+## 4. Using WebAssembly (WASM) for Maximum Performance
+
+**WebAssembly (WASM)** can be used for case conversion, achieving near-native speed. Below is a basic WebAssembly module written in **C**:
+
+```c
+#include <emscripten.h>
+#include <string.h>
+
+EMSCRIPTEN_KEEPALIVE
+void toUpperCase(char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] >= 'a' && str[i] <= 'z') {
+            str[i] -= 32;
+        }
+    }
+}
+
+EMSCRIPTEN_KEEPALIVE
+void toLowerCase(char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] >= 'A' && str[i] <= 'Z') {
+            str[i] += 32;
+        }
+    }
+}
+```
+
+Compile this into WASM and use it in JavaScript:
+
+```js
+fetch('case_conversion.wasm')
+  .then(response => response.arrayBuffer())
+  .then(bytes => {
+    WebAssembly.instantiate(bytes, {}).then(result => {
+      const toUpperCase = result.instance.exports.toUpperCase;
+      const toLowerCase = result.instance.exports.toLowerCase;
+
+      let strPtr = allocateString('wasm Example');
+      toUpperCase(strPtr);
+      console.log(getString(strPtr)); // WASM EXAMPLE
+    });
+  });
+```
+
+## Conclusion
+
+JavaScript provides multiple ways to convert string cases, from simple methods like `toLowerCase()` and `toUpperCase()` to advanced techniques involving ASCII manipulation, regex, and WebAssembly. Depending on performance needs and complexity, developers can choose the best method for their use case.

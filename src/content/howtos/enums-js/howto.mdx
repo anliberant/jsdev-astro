@@ -1,0 +1,174 @@
+---
+title: How to Use Enums in JavaScript - A Complete Guide
+slug: enums-javascript
+heading: Mastering Enums in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/enums-javascript
+date: 2024-09-20
+author: anton liberant
+category: javascript
+type: howto
+tags: ['enum']
+desc: Learn how to implement enums in JavaScript using objects, Symbols, and TypeScript. Covers numeric and bidirectional enums with practical usage tips.
+---
+
+## Introduction
+
+**Enums** (short for "enumerations") are a useful feature for defining a set of named constants.
+While JavaScript doesn't natively support enums like TypeScript, you can implement them in various
+ways using objects or other structures. In this article, we’ll explore how to create and use enums
+in JavaScript, their benefits, and how to simulate enum-like behavior to make your code more
+readable and maintainable.
+
+### 1. What Are Enums?
+
+**Enums** allow you to define a set of named values that represent a particular category or concept.
+They help avoid "magic numbers" or hardcoded strings in your code, making it easier to manage,
+update, and maintain.
+
+For example, instead of using arbitrary strings or numbers to represent different statuses in an
+application, you can use an enum to clearly define each status.
+
+## 2. How to Simulate Enums in JavaScript
+
+Since JavaScript lacks native support for enums, we can use objects to replicate enum behavior.
+Here’s how:
+
+### Example 1: Using an Object to Represent an Enum\*\*
+
+```js
+const Colors = {
+  RED: 'red',
+  GREEN: 'green',
+  BLUE: 'blue',
+};
+
+// Using the enum
+const selectedColor = Colors.RED;
+
+console.log(selectedColor); // Output: "red"
+```
+
+In this example, the **Colors** object acts like an enum, where the constants **RED**, **GREEN**,
+and **BLUE** represent specific values. You can now use these constants in your code instead of
+hardcoding values.
+
+### Example 2: Using Object.freeze() for Immutable Enums
+
+To prevent accidental modification of the enum, you can use **Object.freeze()** to make the object
+immutable:
+
+```js
+const Directions = Object.freeze({
+  UP: 'up',
+  DOWN: 'down',
+  LEFT: 'left',
+  RIGHT: 'right',
+});
+
+console.log(Directions.UP); // Output: "up"
+
+// This will fail silently or throw an error in strict mode
+Directions.UP = 'north';
+```
+
+**Object.freeze()** ensures that the enum's values cannot be altered, maintaining the integrity of
+the constants.
+
+### 3. Numeric Enums in JavaScript
+
+If you need numeric values for enums, you can still implement them using objects:
+
+```js
+const Status = Object.freeze({
+  PENDING: 0,
+  IN_PROGRESS: 1,
+  COMPLETED: 2,
+  FAILED: 3,
+});
+
+const taskStatus = Status.IN_PROGRESS;
+console.log(taskStatus); // Output: 1
+```
+
+Here, the **Status** enum maps each state to a specific numeric value, which can be useful when
+working with status codes or other numerical data.
+
+### 4. Bidirectional Enums
+
+You can create bidirectional enums, where you can look up both by the name and by the value, by
+creating a reverse-mapping:
+
+```js
+const Days = Object.freeze({
+  MONDAY: 0,
+  TUESDAY: 1,
+  WEDNESDAY: 2,
+  THURSDAY: 3,
+  FRIDAY: 4,
+  0: 'MONDAY',
+  1: 'TUESDAY',
+  2: 'WEDNESDAY',
+  3: 'THURSDAY',
+  4: 'FRIDAY',
+});
+
+console.log(Days.MONDAY); // Output: 0
+console.log(Days[0]); // Output: "MONDAY"
+```
+
+This approach allows for both forward and reverse lookups, giving your enum more flexibility.
+
+### 5. Using Symbols for Enums in JavaScript
+
+For even more protection, you can use **Symbol** to create unique, immutable enum values that cannot
+be easily overwritten or compared by mistake:
+
+```js
+const Animal = {
+  CAT: Symbol('cat'),
+  DOG: Symbol('dog'),
+  BIRD: Symbol('bird'),
+};
+
+console.log(Animal.CAT === Animal.DOG); // Output: false
+```
+
+Since **Symbol** creates unique values, even if two symbols have the same description, they are
+distinct.
+
+## Enum-Like Behavior with TypeScript
+
+If you're working in a TypeScript environment, enums are natively supported and offer even more
+flexibility. In TypeScript, you can define an enum with the enum keyword:
+
+```ts
+enum Role {
+  ADMIN = 'admin',
+  USER = 'user',
+  GUEST = 'guest',
+}
+
+let currentRole: Role = Role.ADMIN;
+console.log(currentRole); // Output: "admin"
+```
+
+This approach gives you a more structured way to manage enums with strict type checking and better
+developer tooling.
+
+## Advantages of Using Enums
+
+- **Readability**: Enums make your code more expressive and easier to understand, replacing
+  arbitrary values with meaningful names.
+- **Maintainability**: With enums, changes only need to be made in one place, preventing errors from
+  scattered constants or magic values throughout your code.
+- **Type Safety**: Although JavaScript is dynamically typed, using enums provides a degree of type
+  safety by reducing the risk of using invalid or unexpected values.
+
+### Conclusion
+
+While JavaScript doesn't have native support for enums, you can still achieve similar functionality
+through objects, **Object.freeze()**, symbols, or by using TypeScript’s built-in enums. Implementing
+enums helps you write cleaner, more maintainable, and less error-prone code, making them a valuable
+tool for any JavaScript developer.

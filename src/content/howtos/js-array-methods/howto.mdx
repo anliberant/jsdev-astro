@@ -1,0 +1,329 @@
+---
+title: 'How to Understand and Use JavaScript Array Methods'
+slug: js-array-methods
+heading: Quick Guide to JavaScript Array Methods
+icon: /icons/javascript.png
+image: ./images/js-array-methods.png
+permalink: howto/js-array-methods
+date: 2025-02-13
+author: anton liberant
+category: javascript
+type: howto
+tags: ['js-tips', 'arrays']
+desc: Learn 26 common JavaScript array methods and 3 static ones like concat(), map(), filter(), Array.isArray(), and Array.from() for effective array handling.
+---
+
+![JavaScript Array Methods](./images/js-array-methods.png)
+
+JavaScript arrays offer a wide variety of methods to handle elements efficiently. These methods cover a range of operations, including adding or removing elements, transforming data, and more. In this article, we will explore 26 common array methods along with 3 static methods. The explanations will be accompanied by code examples to demonstrate how each method can be applied in real-world scenarios.
+
+## JavaScript Array Methods Overview
+
+**1. `concat()`**
+
+The `concat()` method is used to merge two or more arrays into a new array.
+
+```js
+var fruits = ['apple', 'banana', 'cherry'];
+var numbers = [10, 20, 30];
+var merged = fruits.concat(numbers);
+console.log(merged); // ["apple", "banana", "cherry", 10, 20, 30]
+```
+
+**Explanation**: This method combines the contents of two arrays into a single new array without modifying the original arrays.
+
+**2. `every()`**
+
+Checks if all elements in an array meet the provided condition.
+
+```js
+function isAdult(age) {
+  return age >= 18;
+}
+var ages = [22, 19, 17, 25];
+var allAdults = ages.every(isAdult);
+console.log(allAdults); // false
+```
+
+**Explanation**: The `every()` method returns `true` if all elements pass the provided test; otherwise, it returns `false`.
+
+**3. `some()`**
+
+Checks if at least one element in an array meets the specified condition.
+
+```js
+function isMinor(age) {
+  return age < 18;
+}
+var ages = [22, 19, 17, 25];
+var hasMinors = ages.some(isMinor);
+console.log(hasMinors); // true
+```
+
+**Explanation**: Unlike `every()`, the `some()` method returns true if at least one element matches the condition.
+
+**4. filter()**
+
+Creates a new array with all elements that pass the test implemented by the provided function.
+
+```js
+function isAbove15(age) {
+  return age > 15;
+}
+var ages = [12, 16, 14, 20, 30];
+var olderThan15 = ages.filter(isAbove15);
+console.log(olderThan15); // [16, 20, 30]
+```
+
+**5. `forEach()`**
+
+Executes a provided function once for each array element.
+
+```js
+var colors = ['red', 'green', 'blue'];
+colors.forEach(function (color) {
+  console.log(color);
+});
+// Output: red, green, blue
+```
+
+**6. `indexOf()`**
+
+Searches the array for a specified element and returns its first index.
+
+```js
+var pets = ['dog', 'cat', 'bird'];
+var petIndex = pets.indexOf('cat');
+console.log(petIndex); // 1
+```
+
+**7. `lastIndexOf()`**
+
+Returns the index of the last occurrence of a specified element.
+
+```js
+var animals = ['dog', 'cat', 'dog', 'fish'];
+var lastDogIndex = animals.lastIndexOf('dog');
+console.log(lastDogIndex); // 2
+```
+
+**8. `join()`**
+
+Joins all elements of an array into a string, with a specified separator.
+
+```js
+var animals = ['cat', 'dog', 'rabbit'];
+var animalString = animals.join(' - ');
+console.log(animalString); // "cat - dog - rabbit"
+```
+
+**9. `map()`**
+
+Creates a new array by applying a function to each element of the original array.
+
+```js
+var prices = [10, 20, 30];
+var discountedPrices = prices.map(price => price * 0.9);
+console.log(discountedPrices); // [9, 18, 27]
+```
+
+**10. `pop()`**
+
+Removes the last element from the array and returns it.
+
+```js
+var numbers = [1, 2, 3];
+var lastNumber = numbers.pop();
+console.log(lastNumber); // 3
+```
+
+**11. `push()`**
+
+Adds one or more elements to the end of the array.
+
+```js
+var colors = ['red', 'green'];
+colors.push('blue');
+console.log(colors); // ["red", "green", "blue"]
+```
+
+**12. reduce()**
+
+Applies a function against an accumulator and each element in the array (from left to right) to reduce it to a single value.
+
+```js
+var numbers = [1, 2, 3, 4];
+var sum = numbers.reduce(function (acc, num) {
+  return acc + num;
+}, 0);
+console.log(sum); // 10
+```
+
+**13. reduceRight()**
+
+Similar to `reduce()`, but it processes the array from right to left.
+
+```js
+var numbers = [1, 2, 3, 4];
+var sum = numbers.reduceRight(function (acc, num) {
+  return acc + num;
+}, 0);
+console.log(sum); // 10
+```
+
+**14. `reverse()`**
+
+Reverses the order of the elements in the array.
+
+```js
+var values = [5, 10, 15];
+values.reverse();
+console.log(values); // [15, 10, 5]
+```
+
+**15. `shift()`**
+
+Removes and returns the first element of the array.
+
+```js
+var queue = ['first', 'second', 'third'];
+var firstItem = queue.shift();
+console.log(firstItem); // "first"
+```
+
+**16. unshift()**
+
+Adds one or more elements to the beginning of the array.
+
+```js
+var stack = ['top', 'middle'];
+stack.unshift('bottom');
+console.log(stack); // ["bottom", "top", "middle"]
+```
+
+**17. `sort()`**
+
+Sorts the elements of the array.
+
+```js
+var nums = [9, 2, 5, 1];
+nums.sort((a, b) => a - b);
+console.log(nums); // [1, 2, 5, 9]
+```
+
+**18. `splice()`**
+
+Changes the contents of an array by removing or replacing elements.
+
+```js
+var fruits = ['apple', 'banana', 'cherry'];
+fruits.splice(1, 1, 'orange');
+console.log(fruits); // ["apple", "orange", "cherry"]
+```
+
+**19. toString()**
+
+Converts the array to a string.
+
+```js
+var items = ['pen', 'notebook', 'eraser'];
+var itemsString = items.toString();
+console.log(itemsString); // "pen,notebook,eraser"
+```
+
+**20. `slice()`**
+
+Extracts a portion of the array and returns a new array.
+
+```js
+var fruits = ['apple', 'banana', 'cherry', 'date'];
+var selectedFruits = fruits.slice(1, 3);
+console.log(selectedFruits); // ["banana", "cherry"]
+```
+
+**21. spread operator (`...`)**
+
+Expands an array into individual elements.
+
+```js
+var numbers = [1, 2, 3];
+var newArray = [...numbers, 4, 5];
+console.log(newArray); // [1, 2, 3, 4, 5]
+```
+
+**22. `includes()`**
+
+Checks if a specific element is in the array.
+
+```js
+var animals = ['lion', 'tiger', 'elephant'];
+var hasLion = animals.includes('lion');
+console.log(hasLion); // true
+```
+
+**23. `fill()`**
+
+Replaces elements of an array with a static value.
+
+```js
+var numbers = [1, 2, 3, 4];
+numbers.fill(0, 2, 4);
+console.log(numbers); // [1, 2, 0, 0]
+```
+
+**24. `flat()`**
+
+Flattens a multidimensional array into a one-dimensional array.
+
+```js
+var nestedArr = [1, [2, 3], [4, [5, 6]]];
+var flatArr = nestedArr.flat(2);
+console.log(flatArr); // [1, 2, 3, 4, 5, 6]
+```
+
+**25. `flatMap()`**
+
+Similar to `flat()`, but first maps the array elements.
+
+```js
+var arr = [1, 2, 3];
+var doubled = arr.flatMap(x => [x * 2]);
+console.log(doubled); // [2, 4, 6]
+```
+
+**26. `at()`**
+
+Accesses an element at a specific index, supporting negative indexing.
+
+```js
+var numbers = [1, 2, 3, 4];
+console.log(numbers.at(-1)); // 4
+```
+
+## Static Methods
+
+**1. `Array.isArray()`**
+
+Checks if the given value is an array.
+
+```js
+var data = [1, 2, 3];
+console.log(Array.isArray(data)); // true
+```
+
+**2. `Array.from()`**
+
+Creates a new array from an array-like or iterable object.
+
+**3. `Array.of()`**
+
+Creates a new array instance with the given arguments as elements.
+
+```js
+var newArray = Array.of(1, 2, 3);
+console.log(newArray); // [1, 2, 3]
+```
+
+## Conclusion
+
+JavaScript arrays are an essential part of programming, and their built-in methods offer a variety of ways to work with data. By understanding how to use methods like `map()`, `filter()`, `reduce()`, and more, you can manipulate arrays in powerful ways to suit your needs. These methods make working with arrays simple and efficient, and changing variable names doesn't affect their functionality.

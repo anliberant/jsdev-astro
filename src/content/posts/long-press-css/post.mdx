@@ -1,0 +1,81 @@
+---
+title: Elegant Long Press Implementation Using CSS Animation
+slug: long-press-css
+heading: 'CSS Animation: Elegant Long Press Implementation'
+permalink: long-press-css
+image: ./images/long-press-css.png
+date: 2025-01-05
+author: anton liberant
+category: css
+type: post
+tags: ['long-press']
+desc: Learn how to implement long press functionality elegantly using CSS animations. Simplify user interactions, improve performance, and write cleaner code effortlessly.
+---
+
+Handling different user interactions, such as short and long presses, is a common task in web development. This article introduces a sleek way to implement handlers for both types of interactions.
+
+## Why Use Long Press?
+
+Long Press is triggered when a user holds down a button or screen for a specific duration. It’s useful for invoking additional actions like context menus, tooltips, or advanced features that aren’t triggered by a regular click.
+
+## Conventional JavaScript Approach
+
+A traditional implementation might look like this:
+
+```html
+<!-- HTML -->
+<button id="btn">Click / Long Press</button>
+
+<!-- JavaScript -->
+const btn = document.getElementById('btn'); let timerId, longPressed;
+btn.onmousedown = () => { longPressed = false; timerId = setTimeout(() => {
+longPressed = true; console.log('Long Press Handler'); }, 200); }; btn.onclick =
+() => { if (!longPressed) console.log('Click Handler'); clearTimeout(timerId);
+}; btn.onmouseleave = () => clearTimeout(timerId);
+```
+
+This approach, while functional, involves timers, global variables, and additional logic to handle edge cases (e.g., releasing the button outside its boundaries).
+
+## Universal CSS-Based Solution
+
+By leveraging CSS animations, you can simplify this process:
+
+```html
+<!-- HTML -->
+<button id="btn">Click / Long Press</button>
+
+<!-- CSS -->
+#btn { transition: background-color 1s 200ms; } #btn:active { animation-name:
+interruptClick; animation-delay: 200ms; animation-fill-mode: forwards;
+background-color: PaleTurquoise; } #btn:not(:hover) { animation-play-state:
+paused; } @keyframes interruptClick { to { pointer-events: none; } } /*
+JavaScript */ const btn = document.getElementById('btn'); btn.onclick = () =>
+console.log('Click Handler'); btn.onanimationend = () => console.log('Long Press
+Animation End');
+```
+
+### How It Works
+
+1. CSS Animation for Long Press
+   - `:active`: Triggers only while the button is held down.
+   - `animation-delay`: Sets a delay (e.g., 200ms) to define a long press.
+   - `pointer-events`: none: Prevents a click event after the animation ends.
+   - `:not(:hover)`: Stops the animation if the button is released outside its bounds.
+2. JavaScript Listeners
+   - `onclick`: Handles short presses.
+   - `onanimationend`: Handles long presses when the animation completes.
+
+### Demo on CodePen
+
+<Codepen id='QwLOoqP' />
+
+## Benefits of the CSS Approach
+
+- **Simplicity**: Eliminates the need for timers or complex JavaScript logic.
+- **Performance**: Reduces JavaScript computations by offloading visual effects to CSS.
+- **Readability**: Keeps the code clean and easy to maintain.
+- **Cross-Browser Compatibility**: Works well with minimal browser-specific adjustments.
+
+## Conclusion
+
+This method showcases the powerful synergy between CSS and JavaScript, enabling clean and efficient code for user interaction. Ensure thorough testing across devices and browsers before deploying to production.

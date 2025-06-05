@@ -1,0 +1,62 @@
+---
+title: 'How to Remove Unused Dependencies in JavaScript'
+slug: remove-unused-dependencies
+heading: Removing Unused Dependencies in JavaScript
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/remove-unused-dependencies
+date: 2024-12-26
+author: anton liberant
+category: nodejs
+type: howto
+tags: []
+desc: Learn how to find and safely remove unused npm dependencies to optimize your JavaScript project’s performance and keep your codebase clean and efficient.
+---
+
+Unused dependencies can bloat your project and introduce vulnerabilities. Here’s how to clean them effectively:
+
+## Tools for Detection
+
+1. **npm-check**: Identifies unused and outdated dependencies.
+   bash
+   <div className='code-cmd'>npm install -g npm-check</div>
+   <div className='code-cmd'>npm-check</div>
+2. **depcheck**: Performs static analysis to find unnecessary or missing libraries.
+   <div className='code-cmd'>npm install -g depcheck</div>
+   <div className='code-cmd'>depcheck</div>
+
+**Manual Inspection**
+
+Open `package.json` and verify dependencies manually using your IDE’s search feature.
+
+**Build Tools for Analysis**
+
+Use tools like [webpack-bundle-analyzer](https://www.npmjs.com/package/webpack-bundle-analyzer) or [vite-plugin-analyzer](https://www.npmjs.com/package/vite-bundle-analyzer) to visualize and identify unnecessary libraries in your project’s build.
+
+**Removing Dependencies**
+
+Run:
+
+<div className="code-cmd">npm uninstall \<dependency-name\></div>
+<div className="code-cmd">yarn remove \<dependency-name\></div>
+
+**Best Practices**
+
+- Regularly use tools like **depcheck** in your CI/CD pipeline.
+- Track `package.json` changes during code reviews.
+- Document dependencies and their purposes for clarity.
+
+**For TypeScript Projects**
+
+Enable unused code detection:
+
+```json
+{
+  "compilerOptions": {
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}
+```
+
+Frequent checks keep your project efficient and secure!

@@ -1,0 +1,183 @@
+---
+title: How to Use Immediately Invoked Functions and this in JavaScript
+slug: invoked-fns-js
+heading: "Mastering Immediately Invoked Functions and 'this'"
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/invoked-fns-js
+date: 2024-11-01
+author: anton liberant
+category: javascript
+type: howto
+tags: ['this', 'context']
+desc: Learn how to use IIFEs and master the this keyword in JavaScript. This guide covers scope, OOP basics, and practical examples to improve your coding skills.
+---
+
+This guide covers the basics of JavaScript's immediately invoked function expressions (IIFE), object handling, memory allocation, and the use of this in object-oriented programming. It explores key concepts, from IIFE syntax to object creation and data handling techniques.
+
+## 1. Introduction to Immediately Invoked Function Expressions (IIFE)
+
+An Immediately Invoked Function Expression (IIFE) is a JavaScript function that runs as soon as it is defined.
+
+```js
+(function () {
+  console.log('This is an IIFE example');
+})();
+```
+
+**Implementing an IIFE**
+
+- Define an anonymous function.
+- Wrap the function in parentheses and immediately follow it with `()` to execute it.
+
+Example:
+
+```js
+(function (num1, num2) {
+  return num1 + num2;
+})(2, 2); // 4
+```
+
+**Why Use an IIFE?**
+
+- **Scope Isolation**: IIFE creates a local scope, reducing conflicts with global variables. This is crucial in large projects or collaborative development.
+- **Avoids Polluting the Global Scope**: Variables and functions inside an IIFE are not accessible outside of it.
+
+Example: Prevent variable conflicts with for loops:
+
+```html
+<div class="btn">1</div>
+<div class="btn">2</div>
+<div class="btn">3</div>
+<div class="btn">4</div>
+
+<script>
+  const btnEls = document.querySelectorAll('.btn');
+  for (let i = 0; i < btnEls.length; i++) {
+    const btn = btnEls[i];
+    (function (i) {
+      btn.onclick = function () {
+        console.log(`Button ${i + 1}`);
+      };
+    })(i);
+  }
+</script>
+```
+
+## 2. Using Object Types in JavaScript
+
+In JavaScript, objects are a powerful data structure allowing storage of complex data through key-value pairs.
+
+**Creating Objects**
+
+There are several ways to create objects:
+
+**1. Object Literal**:
+
+```js
+const person = {
+  name: 'John Doe',
+  age: 42,
+  speak() {
+    console.log('Hello');
+  },
+};
+```
+
+**2. Using `new Object()`**:
+
+```js
+const person = new Object();
+person.name = 'John';
+```
+
+**3. Object Constructor Function**:
+
+```js
+function Person(name) {
+  this.name = name;
+}
+const person = new Person('John');
+```
+
+**Accessing and Modifying Properties**
+
+Properties can be accessed via dot notation or bracket notation.
+
+```js
+person.name; // Access
+person['age'] = 42; // Modify
+```
+
+**Adding and Deleting Properties**
+
+Properties can be added or deleted dynamically.
+
+```js
+person.height = 186;
+delete person.height;
+```
+
+## 3. Memory Allocation in JavaScript
+
+JavaScript has two primary types of memory: stack memory and heap memory.
+
+- **Primitive data types** (numbers, strings, booleans) are stored in stack memory.
+- **Reference data types** (objects, arrays, functions) are stored in heap memory.
+
+This distinction is important for understanding how data is passed and manipulated in JavaScript.
+
+## 4. Understanding Value and Reference Types
+
+- **Value Types**: Primitive data types are copied by value. Modifying one variable does not affect others.
+- **Reference Types**: Object types are copied by reference, meaning modifying one affects all references to that object.
+
+Example:
+
+```js
+const obj = { name: 'Maya' };
+const ref = obj;
+ref.name = 'John';
+console.log(obj.name); // Outputs: "John"
+```
+
+## 5. Working with `this` in JavaScript Functions
+
+The this keyword refers to the object that called the function. Its value depends on the context in which a function is called.
+
+**Basic Usage of `this`**
+
+1. **Global Scope**: In the global scope, `this` refers to the global `window` object.
+2. **Object Methods**: Inside an object method, `this` refers to the object itself.
+3. **Arrow Functions**: `this` in arrow functions takes the value from the enclosing lexical context, making it ideal for callback functions where `this` should not change.
+
+Example:
+
+```js
+const person = {
+  name: 'Alice',
+  greet() {
+    console.log(this.name);
+  },
+};
+person.greet(); // Outputs: "Alice"
+```
+
+**Changing the Context of `this`**
+
+The context of `this` can be changed using `call`, `apply`, or `bind`.
+
+Example:
+
+```js
+function greet() {
+  console.log(this.name);
+}
+
+const person = { name: 'Bob Marley' };
+greet.call(person); // Outputs: "Bob Marley"
+```
+
+## Summary
+
+This guide has provided an overview of IIFE, object manipulation, memory handling, and the this keyword in JavaScript. These concepts are foundational for both front-end and back-end JavaScript development, providing the tools to write efficient, conflict-free code and manage complex data interactions effectively.

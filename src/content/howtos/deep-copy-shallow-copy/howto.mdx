@@ -1,0 +1,106 @@
+---
+title: How to Implement and Use Deep Copy and Shallow Copy in JavaScript
+slug: deep-copy-shallow-copy
+heading: 'Deep vs Shallow Copy in JavaScript: Implementation Guide'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/deep-copy-shallow-copy
+date: 2024-11-17
+author: anton liberant
+category: javascript
+type: howto
+tags: ['deep-copy', 'shallow-copy']
+desc: Learn the difference between deep and shallow copy in JavaScript. Use JSON, recursion, structuredClone, and Lodash to copy objects and arrays effectively.
+---
+
+Copying objects and arrays is a fundamental task in JavaScript development. This article breaks down the concepts of deep copy and shallow copy, explains their implementation methods, and discusses their advantages, disadvantages, and practical applications.
+
+Read also: [How to Clone Complex JavaScript Objects with `structuredClone()`](https://jsdev.space/howto/js-object-clone-structuredclone/)
+
+## Deep Copy vs. Shallow Copy
+
+- **Deep Copy**: Creates an entirely new object, recursively duplicating all nested objects. Changes to the copied object do not affect the original.
+
+- **Shallow Copy**: Copies only the top-level properties. Nested objects remain references to the original, meaning changes to them reflect in both objects.
+
+## Methods to Implement Deep Copy
+
+**Using `JSON.stringify` and `JSON.parse`**
+
+```js
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+```
+
+- **Pros**: Simple and effective for basic data structures.
+- **Cons**: Fails with special objects like `Date`, `RegExp`, or circular references.
+
+**Manual Recursion**
+
+```js
+function deepClone(obj) {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  const clone = Array.isArray(obj) ? [] : {};
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) clone[key] = deepClone(obj[key]);
+  }
+  return clone;
+}
+```
+
+- **Pros**: Handles custom object types and circular references with additional logic.
+- **Cons**: More complex to implement.
+
+**Using `structuredClone`**
+
+```js
+const clonedObj = structuredClone(originalObj);
+```
+
+- **Pros**: Native support in modern browsers for deep copying complex types.
+- **Cons**: Not available in older browsers.
+
+**Third-Party Libraries (e.g., Lodash)**
+
+```js
+import cloneDeep from 'lodash/cloneDeep';
+
+import cloneDeep from 'lodash/cloneDeep';
+
+const clonedObj = cloneDeep(originalObj);
+```
+
+- **Pros**: Optimized for edge cases, supports circular references.
+- **Cons**: Adds project dependencies.
+
+## Methods to Implement Shallow Copy
+
+**`slice()` or `concat()`**
+
+```js
+const shallowCopy = originalArray.slice();
+const shallowCopy2 = originalArray.concat();
+```
+
+**Spread Operator (`...`)**
+
+```js
+const shallowCopy = [...originalArray];
+```
+
+**`Array.from()`**
+
+```js
+const shallowCopy = Array.from(originalArray);
+```
+
+**Key Note**: Changes to nested objects in a shallow copy affect the original.
+
+### Key Considerations
+
+- **Circular References**: Deep copy methods like recursion or libraries handle circular references better than `JSON.stringify`.
+- **Performance**: Deep copying large or complex objects can be resource-intensive.
+- **Special Objects**: Special types (e.g., `Date`, `RegExp`) require customized handling for accurate copying.
+
+By understanding these methods, you can choose the best copy technique for your needs, balancing performance, compatibility, and complexity.

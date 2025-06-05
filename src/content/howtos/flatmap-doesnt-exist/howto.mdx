@@ -1,0 +1,72 @@
+---
+title: "How to Resolve flatMap, flat, Flatten Doesn't Exist on Type any[]"
+slug: flatmap-doesnt-exist
+heading: Fix flatMap, flat, Flatten Not Found on Type any[]
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/flatmap-doesnt-exist
+date: 2025-01-07
+author: anton liberant
+category: typescript
+type: howto
+tags: ['flat', 'flatMap']
+desc: Fix the “flatMap/flat/flatten doesn't exist on type any[]” error in TypeScript and JavaScript. Learn config tweaks, polyfills, and refactoring solutions.
+---
+
+When using TypeScript or older JavaScript environments, you may encounter the error: "flatMap, flat, flatten doesn't exist on type any[]." This usually happens due to incompatible ECMAScript versions or outdated JavaScript runtimes.
+
+## Key Steps to Resolve:
+
+### 1. Update TypeScript Configuration
+
+Ensure your `tsconfig.json` targets a compatible ECMAScript version:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "lib": ["ES2019", "DOM"]
+  }
+}
+```
+
+The `flat` and `flatMap` methods were introduced in ES2019, so this is essential.
+
+### 2. Upgrade Your Runtime
+
+If you’re running JavaScript in Node.js or a browser, make sure they support ES2019 or higher. For Node.js, upgrade to version 12 or later.
+
+### 3. Polyfill Support
+
+For older environments, include a polyfill like `core-js` to add support:
+
+<div className='code-cmd'>npm install core-js</div>
+
+Then, import it into your project:
+
+```js
+import 'core-js/features/array/flat';
+import 'core-js/features/array/flat-map';
+import 'core-js/features/array/flat';
+import 'core-js/features/array/flat-map';
+```
+
+### 4. Verify Type Declarations
+
+If you're using custom type declarations or strict TypeScript, make sure the `any[]` type isn't overriding the expected array methods. Explicitly annotate array types when necessary:
+
+```ts
+const numbers: number[] = [1, 2, [3, 4]].flat();
+```
+
+### 5. Refactor for Compatibility
+
+If flat/flatMap is not feasible, consider alternative methods:
+
+```js
+// Replace .flat() with reduce:
+const nested = [1, 2, [3, 4]];
+const flattened = nested.reduce((acc, val) => acc.concat(val), []);
+```
+
+By ensuring your TypeScript, runtime, and tooling are up-to-date or fallback methods are in place, this issue can be resolved effectively.

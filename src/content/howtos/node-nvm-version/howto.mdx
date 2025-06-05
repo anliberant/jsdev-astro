@@ -1,0 +1,91 @@
+---
+title: How to Change Node Version with NVM
+heading: Using NVM to Switch Node Versions
+icon: /icons/nodejs.png
+image: /icon.png
+slug: node-nvm-version
+permalink: howto/node-nvm-version
+date: 2024-09-20
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['nvm']
+desc: Learn to switch Node.js versions easily with NVM. Step-by-step guide to check, change, set default, and uninstall Node versions for smooth version management.
+---
+
+Node Version Manager (NVM) is a powerful tool for managing multiple versions of Node.js on the same
+machine. With NVM, you can easily switch between different Node versions, making it ideal for
+projects that require specific versions. Here’s a step-by-step guide on how to change Node.js
+versions using NVM.
+
+## 1. Check Installed Node Versions
+
+To see which versions of Node.js are installed on your machine via NVM, use the following command:
+
+<div className='code-cmd'>nvm list</div>
+
+This will display a list of all the Node.js versions you have installed, including the default
+version (if any) and the one currently in use.
+
+## 2. Install a New Node Version
+
+If you want to switch to a version that isn’t installed yet, first, you need to install it. You can
+install any available Node.js version using the following command:
+
+<div className='code-cmd'>nvm install "version"</div>
+
+For example, to install Node.js version 18.20.4
+
+<div className='code-cmd'>nvm install 18.20.4</div>
+
+NVM will download and install the specified version.
+
+## 3. Switch to a Different Node Version
+
+To change to a specific Node.js version that is already installed, use:
+
+<div className='code-cmd'>nvm use "version"</div>
+
+For example, to switch to Node.js version 20.17.0:
+
+<div className='code-cmd'>nvm use 20.17.0</div>
+
+The terminal will now use the selected Node.js version for the current session.
+
+## 4. Set a Default Node Version
+
+If you want a specific version to be the default every time you open a new terminal session, use the
+following command:
+
+<div className='code-cmd'>nvm alias default "version"</div>
+
+For example, to set Node.js version 18.20.4 as the default:
+
+<div className='code-cmd'>nvm alias default 18.20.4</div>
+
+This will ensure that this version is used whenever you open a new terminal window unless you
+explicitly switch to another version.
+
+## 5. Check the Current Node Version
+
+To verify which Node.js version is currently in use, simply run:
+
+<div className='code-cmd'>node -v</div>
+
+This will display the active Node.js version being used in the current session.
+
+## 6. Uninstall a Node Version
+
+If you no longer need a particular Node.js version, you can uninstall it with the following command:
+
+<div className='code-cmd'>nvm uninstall "version"</div>
+
+For example, to uninstall version 12.22.1:
+
+<div className='code-cmd'>nvm uninstall 12.22.1</div>
+
+## Conclusion
+
+**NVM** makes managing and switching between multiple versions of Node.js easy and efficient.
+Whether you're juggling different projects that require specific Node versions or testing your code
+across versions, NVM provides a simple solution to handle it all.

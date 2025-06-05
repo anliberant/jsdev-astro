@@ -1,0 +1,42 @@
+---
+title: Sort Map by Value in JavaScript
+slug: sort-map-by-value
+heading: Sorting a Map by its values
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/sort-map-by-value
+date: 2024-09-01
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['arrays', 'map']
+desc: Discover a quick and easy code snippet to sort a Map by its values in JavaScript. Perfect for enhancing your data management skills.
+---
+
+Sorting a Map by its values in JavaScript can be a useful technique for organizing data more
+effectively. This guide will walk you through the process of sorting a Map by its values using
+straightforward code examples. Whether you’re working with numerical data or custom objects, you’ll
+learn how to leverage JavaScript’s features to achieve sorted results efficiently.
+
+```js
+const searchTerms = new Map();
+searchTerms.set(3, 'javascript');
+searchTerms.set(1, 'python');
+searchTerms.set(12, 'c++');
+searchTerms.set(5, 'kotlin');
+searchTerms.set(4, 'rust');
+
+Array.from(searchTerms.entries())
+  .sort((a, b) => a[0] - b[0])
+  .map(([number, term]) => {
+    console.log('number-term', number, term);
+  });
+
+//     Output:
+//
+// number-term 1 python
+// number-term 3 javascript
+// number-term 4 rust
+// number-term 5 kotlin
+// number-term 12 c++
+```

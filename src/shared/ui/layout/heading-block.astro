@@ -1,0 +1,59 @@
+---
+type Props = {
+  title: string;
+  description: string;
+  headingTwo?: string;
+  class?: string;
+};
+
+const { title, description, headingTwo, class: className = '' } = Astro.props;
+---
+
+<header class={`heading-block ${className}`}>
+  <h1>{title}</h1>
+  {description && <p>{description}</p>}
+  {headingTwo && <h2>{headingTwo}</h2>}
+</header>
+
+<style>
+  .heading-block {
+    margin-top: 2.5rem;
+    width: 100%;
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground, #111827));
+    padding: 0.5rem 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .heading-block h1 {
+    font-family: 'PT Serif', serif;
+    font-size: 1.5rem;
+    line-height: 2.25rem /* 36px */;
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .heading-block h1 {
+      font-size: 1.875rem;
+    }
+  }
+
+  .heading-block p {
+    margin-top: 1.25rem;
+    width: 83.333333%;
+  }
+
+  .heading-block h2 {
+    margin-top: 1.25rem;
+    font-size: 1.25rem;
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .heading-block h2 {
+      font-size: 1.5rem;
+    }
+  }
+</style>

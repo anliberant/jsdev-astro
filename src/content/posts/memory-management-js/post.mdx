@@ -1,0 +1,291 @@
+---
+title: 'JavaScript Memory Management with WeakRef & FinalizationRegistry'
+slug: memory-management-js
+heading: 'Master JavaScript WeakRef & FinalizationRegistry'
+image: ./images/memory-management-js.png
+permalink: memory-management-js
+date: 2024-10-02T00:15:18
+author: anton liberant
+category: javascript
+type: post
+tags: ['WeakRef', 'FinalizationRegistry', 'memory-management']
+desc: Learn to manage memory in JavaScript with WeakRef and FinalizationRegistry. Prevent leaks and optimize resources using weak references and object finalization.
+---
+
+Today, we’re diving into the topic of memory management in JavaScript—but not in the traditional sense of garbage collection. Instead, we'll explore the powerful capabilities of **WeakRef** and **FinalizationRegistry**. These tools give developers control over weak references and asynchronous object finalization, allowing for more refined and efficient memory handling.
+
+JavaScript’s garbage collector automatically manages memory for most objects, but certain scenarios, like caching or long-lived objects, can cause memory leaks.
+
+If you're tired of objects lingering in memory longer than they should, or if you're looking for ways to manage resources without unnecessary memory leaks, this guide is for you. Let’s get started!
+
+## What is WeakRef?
+
+**WeakRef** allows you to hold a weak reference to an object, meaning that the reference won’t prevent the object from being garbage collected if it’s no longer needed.
+
+**Syntax**
+
+```js
+let weakRef = new WeakRef(targetObject);
+```
+
+- `targetObject`: The object you want to reference weakly.
+
+Unlike normal references, weak references don’t interfere with the garbage collector’s ability to clean up unused memory. However, if you attempt to access a weakly referenced object after it has been garbage collected, it will return `undefined`.
+
+**Example**
+
+```js
+let obj = { name: 'WeakRef Example' };
+let weakRef = new WeakRef(obj);
+
+// Accessing the object through the weak reference
+console.log(weakRef.deref()); // { name: "WeakRef Example" }
+
+// After garbage collection (if obj is no longer referenced strongly)
+obj = null;
+console.log(weakRef.deref()); // undefined (after GC)
+```
+
+**Use Cases**
+
+- **Caches**: `WeakRef` is useful in caching where you want to keep references to objects only if they are still in use.
+- **DOM Elements**: Holding references to DOM elements that should be cleaned up once removed from the document.
+
+## What is FinalizationRegistry?
+
+`FinalizationRegistry` allows you to register a callback to perform cleanup tasks when an object is garbage collected. This provides a way to release external resources like file handles, sockets, or database connections tied to the object.
+
+**Syntax**
+
+```js
+let registry = new FinalizationRegistry(heldValue => {
+  // Cleanup code
+});
+```
+
+- `heldValue`: A value (or resource) associated with the object that you want to clean up when it’s collected.
+
+**Example**
+
+```js
+let registry = new FinalizationRegistry(heldValue => {
+  console.log(`Cleaning up ${heldValue}`);
+});
+
+let obj = { name: 'FinalizationRegistry Example' };
+
+// Register the object and associate a resource or value with it
+registry.register(obj, 'Resource1');
+
+// When obj is garbage collected, "Cleaning up Resource1" will be logged
+obj = null;
+```
+
+**Use Cases**
+
+- **Resource Management**: Freeing resources like file handles or network connections when the associated object is no longer needed.
+- **Library Cleanup**: Ensuring that external libraries or tools are properly cleaned up when your objects are garbage collected.
+
+### Key Considerations
+
+- **Non-Deterministic**: Garbage collection is non-deterministic, meaning you can’t predict exactly when an object will be collected. This is important to consider when using WeakRef and FinalizationRegistry.
+- **Limited Use Cases**: WeakRef and FinalizationRegistry should not be overused. They are most useful in specific scenarios like caches, resource management, or long-running applications.
+
+## Benefits of WeakRef and FinalizationRegistry
+
+- **Prevents Memory Leaks**: By using weak references, you can ensure that objects are not unintentionally kept in memory.
+- **Efficient Resource Management**: FinalizationRegistry allows for automatic resource cleanup when objects are no longer needed.
+- **Better Performance**: Helps reduce memory usage in large or long-lived applications by ensuring objects are cleaned up when they’re no longer in use.
+
+## Using WeakRef for Caching
+
+`WeakRef` is an ideal tool for creating a cache that automatically frees up memory when an object is no longer needed. Imagine you're building a web application that loads a lot of data from an API, but you don't want this data to stay in memory indefinitely. With `WeakRef`, you can keep the object in memory while allowing the garbage collector to remove it when it's no longer in use.
+
+**Example**
+
+```js
+class Cache {
+  constructor() {
+    this.cache = new Map();
+  }
+
+  set(key, value) {
+    // Create a weak reference to the object
+    this.cache.set(key, new WeakRef(value));
+  }
+
+  get(key) {
+    const weakRef = this.cache.get(key);
+    if (weakRef) {
+      // Retrieve the object from the weak reference
+      const obj = weakRef.deref();
+      if (obj) {
+        console.log(`Object with key "${key}" found in cache.`);
+        return obj;
+      } else {
+        console.log(`Object with key "${key}" was garbage collected.`);
+        this.cache.delete(key); // Clear the cache if the object was removed
+      }
+    } else {
+      console.log(`Key "${key}" not found in cache.`);
+    }
+    return null;
+  }
+}
+
+// Example usage:
+const cache = new Cache();
+let userData = { name: 'Alice', age: 30 };
+
+cache.set('user_1', userData);
+
+// Manually free the object
+userData = null;
+
+// Attempt to retrieve the object from the cache
+setTimeout(() => {
+  const cachedData = cache.get('user_1');
+  if (cachedData) {
+    console.log(`Data from cache: ${cachedData.name}, ${cachedData.age}`);
+  } else {
+    console.log('Data was removed by the garbage collector.');
+  }
+}, 1000);
+```
+
+This creates a cache that holds weak references to objects. If an object is no longer needed, the garbage collector removes it from memory, and the cache updates automatically. The next time you try to access the object, you’ll know if it was removed and can reload it if necessary.
+
+## Handling DOM Elements with WeakRef
+
+Another great use case for `WeakRef` is working with DOM elements that might be added and removed. For example, if you're building a single-page application (SPA) where components are temporarily removed from the DOM, you can cache information about these DOM elements without worrying about them staying in memory after being removed from the document.
+
+**Example**
+
+```js
+class DomCache {
+  constructor() {
+    this.domElements = new Map();
+  }
+
+  setElement(id, element) {
+    this.domElements.set(id, new WeakRef(element));
+  }
+
+  getElement(id) {
+    const weakRef = this.domElements.get(id);
+    if (weakRef) {
+      const element = weakRef.deref();
+      if (element) {
+        console.log(`Element with ID "${id}" found in cache.`);
+        return element;
+      } else {
+        console.log(`Element with ID "${id}" was garbage collected.`);
+        this.domElements.delete(id); // Remove from cache
+      }
+    } else {
+      console.log(`Element with ID "${id}" not found.`);
+    }
+    return null;
+  }
+}
+
+// Example usage:
+const domCache = new DomCache();
+const divElement = document.createElement('div');
+divElement.id = 'myDiv';
+document.body.appendChild(divElement);
+
+domCache.setElement('myDiv', divElement);
+
+// Remove the element from the DOM
+document.body.removeChild(divElement);
+
+// Attempt to retrieve the element through WeakRef
+setTimeout(() => {
+  const cachedElement = domCache.getElement('myDiv');
+  if (cachedElement) {
+    console.log('Element found and still exists.');
+  } else {
+    console.log('Element was removed by the garbage collector.');
+  }
+}, 1000);
+```
+
+In this example, you store a reference to the DOM element in the cache using `WeakRef`. When the element is removed from the DOM, it can also be removed by the garbage collector, and you'll be able to detect this.
+
+## Freeing Resources with FinalizationRegistry
+
+Now let's move on to `FinalizationRegistry`. This is perfect for situations where you need to release resources, like closing files or network connections, once an object becomes unreachable.
+
+**Example**
+
+```js
+class FileManager {
+  constructor() {
+    this.registry = new FinalizationRegistry(fileName => {
+      console.log(`Releasing resources for file: ${fileName}`);
+    });
+  }
+
+  openFile(fileName) {
+    const fileObject = { name: fileName };
+    this.registry.register(fileObject, fileName);
+    return fileObject;
+  }
+}
+
+// Example usage:
+const fileManager = new FileManager();
+let file = fileManager.openFile('myfile.txt');
+
+// Free the file reference
+file = null;
+
+// When the garbage collector removes the object, the callback will be triggered to release resources.
+```
+
+In this example, we create a file and register it with `FinalizationRegistry`. When the object becomes unreachable, the system automatically releases the associated resources.
+
+## Cache Cleanup with FinalizationRegistry
+
+One of my favorite use cases is automatically cleaning up the cache after an object is removed.
+
+**Example:**
+
+```js
+class ObjectCache {
+  constructor() {
+    this.cache = new Map();
+    this.registry = new FinalizationRegistry(key => {
+      console.log(`Object with key "${key}" was removed. Clearing cache.`);
+      this.cache.delete(key);
+    });
+  }
+
+  setObject(key, obj) {
+    this.cache.set(key, obj);
+    this.registry.register(obj, key);
+  }
+
+  getObject(key) {
+    return this.cache.get(key);
+  }
+}
+
+// Example usage:
+const cache = new ObjectCache();
+let obj = { name: 'Cache me if you can' };
+
+cache.setObject('obj_1', obj);
+
+// Free the object reference
+obj = null;
+
+// When the object is garbage collected, the cache will automatically be cleaned up.
+```
+
+In this example, we create a cache and register the objects with `FinalizationRegistry`. When the object becomes unreachable, the registry takes care of removing it from the cache.
+
+## Conclusion
+
+`WeakRef` and `FinalizationRegistry` provide advanced memory management capabilities in JavaScript, allowing developers to handle memory more efficiently and avoid potential memory leaks. They are valuable tools for managing object lifecycles and cleaning up resources in modern JavaScript applications, especially when dealing with caches, event listeners, or external resources. However, they should be used judiciously to avoid performance pitfalls.

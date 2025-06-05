@@ -1,0 +1,180 @@
+---
+title: "Mastering React's useReducer Hook: State Management Guide"
+slug: react-hook-usereducer
+heading: 'React useReducer Hook: A Guide to State Management'
+image: ./images/react-hook-usereducer.png
+permalink: react-hook-usereducer
+date: 2025-02-13
+author: anton liberant
+category: react
+type: post
+tags: ['react-hooks', 'useReducer']
+desc: Learn how to manage complex state in React applications with useReducer. Discover practical examples, best practices, and when to choose useReducer over useState.
+---
+
+In React development, `useState` is ideal for simple state management, but when handling complex state logic with multiple updates, `useReducer` provides a more structured and maintainable approach. It enables state changes based on dispatched actions, making state management clearer and more predictable.
+
+## Understanding useReducer
+
+`useReducer` follows the Reducer pattern, similar to Redux, using the principle:
+
+**state + action = new state**
+
+Basic structure:
+
+```js
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+
+- `reducer(state, action)`: A pure function that receives the current state and action, returning the new state.
+- `initialState`: The initial state value.
+- `dispatch(action)`: Triggers the reducer to update the state.
+
+### Example 1: Counter
+
+```js
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+};
+
+const Counter = () => {
+  const [state, dispatch] = useReducer(reducer, { count: 0 });
+  return (
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+    </div>
+  );
+};
+```
+
+## When to Use useReducer
+
+1. **Complex state management**: When managing multiple state values, useReducer prevents excessive nesting compared to useState.
+2. **Multiple operations on state**: Ideal for scenarios like a shopping cart, where adding, removing, or modifying items requires structured logic.
+3. **Performance optimization**: Reduces unnecessary re-renders in certain case
+
+### Example 2: Shopping Cart Management
+
+```js
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'add':
+      return state.map(item =>
+        item.id === action.id ? { ...item, quantity: item.quantity + 1 } : item
+      );
+    case 'remove':
+      return state.map(item =>
+        item.id === action.id
+          ? { ...item, quantity: Math.max(0, item.quantity - 1) }
+          : item
+      );
+    case 'updateName':
+      return state.map(item =>
+        item.id === action.id ? { ...item, name: action.newName } : item
+      );
+    default:
+      return state;
+  }
+};
+```
+
+### Example 3: Form State Management
+
+```js
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'change':
+      return { ...state, [action.field]: action.value };
+    case 'reset':
+      return action.initialState;
+    default:
+      return state;
+  }
+};
+
+const Form = () => {
+  const initialState = { name: '', email: '' };
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <form>
+      <input
+        type='text'
+        value={state.name}
+        onChange={e =>
+          dispatch({ type: 'change', field: 'name', value: e.target.value })
+        }
+      />
+      <input
+        type='email'
+        value={state.email}
+        onChange={e =>
+          dispatch({ type: 'change', field: 'email', value: e.target.value })
+        }
+      />
+      <button
+        type='button'
+        onClick={() => dispatch({ type: 'reset', initialState })}
+      >
+        Reset
+      </button>
+    </form>
+  );
+};
+```
+
+### Example 4: Managing API Calls State
+
+```js
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'loading':
+      return { ...state, loading: true, error: null };
+    case 'success':
+      return { ...state, loading: false, data: action.data };
+    case 'error':
+      return { ...state, loading: false, error: action.error };
+    default:
+      return state;
+  }
+};
+
+const FetchData = () => {
+  const [state, dispatch] = useReducer(reducer, {
+    data: null,
+    loading: false,
+    error: null,
+  });
+
+  useEffect(() => {
+    dispatch({ type: 'loading' });
+    fetch('https://api.example.com/data')
+      .then(res => res.json())
+      .then(data => dispatch({ type: 'success', data }))
+      .catch(error => dispatch({ type: 'error', error }));
+  }, []);
+
+  if (state.loading) return <p>Loading...</p>;
+  if (state.error) return <p>Error: {state.error}</p>;
+  return <pre>{JSON.stringify(state.data, null, 2)}</pre>;
+};
+```
+
+## Summary
+
+`useReducer` is a powerful alternative to `useState` when handling complex state logic. Key advantages include:
+
+- **Clear logic**: Avoids scattered state updates in `useState`.
+- **Scalability**: Easy to add new actions as needed.
+- **Performance benefits**: Reduces unnecessary re-renders in some scenarios.
+
+If your application requires structured state management, `useReducer` enhances maintainability and readability, making it an excellent choice for managing complex states in React.

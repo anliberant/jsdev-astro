@@ -1,0 +1,166 @@
+---
+title: Build an Infinite Horizontal Scrolling Logo Display With Pure CSS
+slug: logo-scroll-css
+heading: 'Pure CSS: Infinite Horizontal Scrolling Logo Display'
+permalink: logo-scroll-css
+image: ./images/logo-scroll-css.png
+date: 2024-11-10
+author: anton liberant
+category: css
+type: post
+tags: ['scroll']
+desc: Create an infinite horizontal scrolling logo display using pure CSS. Learn smooth animations, flexbox layout, and responsive design for eye-catching effects.
+---
+
+Creating an infinite horizontal logo scroll effect with pure CSS is a simple yet powerful way to add dynamic movement to a website. This tutorial will walk you through building an infinite scroll effect with added hover effects that allow the user to pause scrolling and scale each logo slightly when hovered.
+
+## Step 1: HTML Structure
+
+To start, we’ll create an HTML structure with a container that holds all the logos. To ensure a smooth infinite scroll effect, each logo will be duplicated.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Build an Infinite Horizontal Scrolling Logo Display</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="logo-container">
+      <div class="logo-scroll">
+        <div class="logo-scroll__wrapper">
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+        </div>
+        <div class="logo-scroll__wrapper">
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+          <div class="logo-item"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+```
+
+This HTML structure sets up the necessary elements to create an infinite horizontal scrolling logo display. The logos will be placed inside `logo-item` divs, which are grouped into `logo-scroll__wrapper` divs. These wrappers are animated via CSS to scroll infinitely.
+
+This HTML is structured to work seamlessly with the provided CSS for smooth, infinite scrolling, and scalable logo elements.
+
+## Step 2: CSS Styling and Animation
+
+Now we’ll add the CSS styles to control the scrolling effect, add a hover-pause, and scale the logos slightly on hover.
+
+```css
+/* Container to limit the scroll width */
+.logo-container {
+  /* Setting custom properties for logo dimensions, spacing, and animation duration */
+  --logo-width: 200px; /* Width of each logo */
+  --logo-height: 100px; /* Height of each logo */
+  --gap: calc(
+    var(--logo-width) / 14
+  ); /* Space between logos, calculated based on logo width */
+  --duration: 60s; /* Duration of the scroll animation */
+  --scroll-start: 0; /* Start position of scroll animation */
+  --scroll-end: calc(-100% - var(--gap)); /* End position of scroll animation */
+
+  display: flex; /* Aligns children in a row */
+  flex-direction: column; /* Stacks content vertically */
+  gap: var(--gap); /* Adds space between child elements */
+  margin: auto; /* Centers container horizontally */
+  max-width: 100vw; /* Limits width to the viewport */
+}
+
+/* Scrolling area */
+.logo-scroll {
+  display: flex; /* Aligns logos in a horizontal row */
+  overflow: hidden; /* Hides overflow to create infinite scroll effect */
+  user-select: none; /* Disables text selection */
+  gap: var(--gap); /* Space between logos */
+  mask-image: linear-gradient(
+    to right,
+    hsl(0 0% 0% / 0),
+    hsl(0 0% 0% / 1) 30%,
+    hsl(0 0% 0% / 1) 70%,
+    hsl(0 0% 0% / 0)
+  ); /* Adds a gradient mask to fade edges */
+}
+
+.logo-scroll__wrapper {
+  flex-shrink: 0; /* Prevents wrapper from shrinking */
+  display: flex; /* Aligns logos horizontally */
+  align-items: center; /* Centers logos vertically */
+  justify-content: space-around; /* Distributes logos evenly */
+  gap: var(--gap); /* Adds spacing between logos */
+  min-width: 100%; /* Wrapper width covers full viewport */
+  animation: scroll var(--duration) linear infinite; /* Infinite scrolling animation */
+}
+
+.logo-scroll__wrapper:nth-child(even) {
+  margin-left: calc(
+    var(--logo-width) / -2
+  ); /* Offsets even wrappers for smooth scroll overlap */
+}
+
+.logo-scroll__wrapper:hover {
+  animation-play-state: paused; /* Pauses animation when wrapper is hovered */
+}
+
+/* Logo styling */
+.logo-item {
+  width: var(--logo-width); /* Sets width of each logo */
+  height: var(--logo-height); /* Sets height of each logo */
+  /* transition: transform 0.5s; Smooth scaling effect */
+  background-color: blue; /* Background color for logos */
+  border-radius: 4px; /* Rounds the logo corners */
+}
+
+.logo-scroll .logo-item:hover {
+  transform: scale(1.05); /* Slightly enlarges logo when hovered */
+}
+
+/* Infinite scroll animation */
+@keyframes scroll {
+  from {
+    transform: translateX(var(--scroll-start)); /* Animation start position */
+  }
+  to {
+    transform: translateX(var(--scroll-end)); /* Animation end position */
+  }
+}
+```
+
+## Summary of Functionality:
+
+- **Container and Scroll Properties**: The `.logo-container` sets up the layout, .`logo-scroll` manages the scroll area, and `.logo-scroll__wrapper` animates the scrolling.
+- **Hover Effects**: Hovering over `.logo-scroll__wrapper` pauses the scroll animation, and hovering over `.logo-item` scales the logos slightly for interaction.
+- **Infinite Scroll Animation**: The `@keyframes scroll` moves the entire `.logo-scroll__wrapper` horizontally from the start to end position, creating a seamless loop.
+
+This setup is fully responsive and adaptable; adjust sizes, timings, and spacing as needed for your layout.
+
+These combined elements create a smooth, interactive, infinite-scrolling logo display with CSS-only animations.
+
+## Tips for Optimization
+
+- **Scroll Speed**: Adjust the 60s duration for faster or slower scrolling.
+- **Hover Effect**: Try different scaling percentages or easing effects to customize the hover appearance.
+- **Responsive Adjustments**: You can set logo sizes with relative units like vw or em for responsive behavior.
+
+## Result
+
+<Codepen id='eYqbNbe' />
+
+This approach is purely CSS-based, easy to implement, and a great way to add interactive design elements to a webpage without JavaScript. Adjust the styling as needed to create a smooth, visually appealing, and responsive scrolling logo display.

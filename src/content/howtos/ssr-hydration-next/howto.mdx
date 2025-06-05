@@ -1,0 +1,193 @@
+---
+title: How to Implement SSR and Client Hydration in Next.js
+slug: ssr-hydration-next
+heading: 'Next.js: SSR and Client Hydration Explained'
+icon: /icons/nextjs.png
+image: /icon.png
+permalink: howto/ssr-hydration-next
+date: 2025-01-13
+author: anton liberant
+category: nextjs
+type: howto
+tags: ['ssr', 'hydration']
+desc: Learn the mechanism of server-side rendering (SSR) and client-side hydration in Next.js, ensuring seamless data injection and updates for efficient page rendering.
+---
+
+## Data Assembly and Update Mechanism in SSR and Hydration
+
+This article explains the workflow of server-side rendering (SSR) and client-side hydration in Next.js. It covers the process of server-side data injection, client-side hydration, and mechanisms to ensure timely updates to data (e.g., `self.__next_f`). Additionally, we discuss handling scenarios where `page.js` is loaded before the data.
+
+### 1. Workflow of Server-Side Rendering (SSR)
+
+**a) Server Obtains Data**
+
+In SSR frameworks like Next.js, data required by the page is fetched server-side, typically using `getServerSideProps` or `getStaticProps`.
+
+**Example:**
+
+```jsx
+export async function getServerSideProps() {
+  const res = await fetch('https://api.example.com/data');
+  const data = await res.json();
+  return { props: { data } };
+}
+```
+
+**b) Injecting Data into HTML**
+
+Once data is fetched, it is injected into the HTML, commonly using:
+
+- **Script tags**: Serialize the data into JSON and embed it.
+- **Global variables**: Assign data to global variables like `self.__next_f`.
+
+**c) Send HTML to the Client**
+
+The HTML, containing the data, is sent to the client.
+
+**d) Client Hydration**
+
+On the client side, React and the page JavaScript extract data injected by the server and "activate" the static HTML using `ReactDOM.hydrate`.
+
+### 2. Implementation Details
+
+**a) Server-Side Data Injection**
+
+Data is serialized into JSON and embedded in an HTML `<script>` tag.
+
+**Example:**
+
+```jsx
+import ReactDOMServer from 'react-dom/server';
+
+function App({ data }) {
+  return <div>{data.message}</div>;
+}
+
+export async function getServerSideProps() {
+  const data = { message: 'Hello, world!' };
+  return { props: { data } };
+}
+
+export function renderToStringWithData(App, props) {
+  const html = ReactDOMServer.renderToString(<App {...props} />);
+  const dataScript = `<script>self.__next_f = ${JSON.stringify(props)};</script>`;
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><title>SSR Example</title></head>
+      <body>
+        <div id="root">${html}</div>
+        ${dataScript}
+        <script src="/client.js"></script>
+      </body>
+    </html>
+  `;
+}
+```
+
+**b) Client Hydration**
+
+The client extracts data from `self.__next_f` and activates the page.
+
+**Example:**
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import App from './App';
+
+import App from './App';
+
+const data = self.__next_f;
+ReactDOM.hydrate(<App {...data} />, document.getElementById('root'));
+```
+
+### 3. Ensuring Timely Updates to self.\_\_next_f
+
+**a) Using Proxy to Monitor Changes**
+
+A `Proxy` object can track changes to `self.__next_f` and trigger hydration when data updates.
+
+**Example:**
+
+```jsx
+self.__next_f = self.__next_f || [];
+
+self.__next_f = new Proxy(self.__next_f, {
+  set(target, prop, value) {
+    const result = Reflect.set(target, prop, value);
+    if (prop === 'length' && value > 0) {
+      console.log('Data updated:', target);
+      hydrateApp(target);
+    }
+    return result;
+  },
+});
+
+function hydrateApp(data) {
+  const parsedData = JSON.parse(data[0][1]);
+  ReactDOM.hydrate(<App data={parsedData} />, document.getElementById('root'));
+}
+```
+
+**b) Monitoring Data in `page.js`**
+
+The script waits for data availability before proceeding.
+
+**Example:**
+
+```jsx
+function waitForData() {
+  return new Promise(resolve => {
+    if (self.__next_f && self.__next_f.length > 0) {
+      resolve();
+    } else {
+      const observer = new MutationObserver(() => {
+        if (self.__next_f && self.__next_f.length > 0) {
+          observer.disconnect();
+          resolve();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+  });
+}
+
+waitForData().then(() => {
+  const data = JSON.parse(self.__next_f[0][1]);
+  ReactDOM.hydrate(<App data={data} />, document.getElementById('root'));
+});
+```
+
+### 4. Handling `page.js` Loading Before Data
+
+**a) Initialize `self.__next_f`**
+
+Add an initialization script in the HTML header:
+
+```html
+<script>
+  self.__next_f = self.__next_f || [];
+</script>
+```
+
+**b) Embed Data Post-HTML**
+
+Embed data after the HTML:
+
+```html
+<script>
+  self.__next_f.push([1, '{"name":"The Octocat"}']);
+</script>
+```
+
+## Conclusion
+
+By implementing these strategies, you can:
+
+- Ensure server-side data is correctly injected into HTML.
+- Facilitate timely client-side hydration.
+- Handle cases where `page.js` loads before data.
+
+These practices enhance the reliability and efficiency of SSR and hydration in Next.js.

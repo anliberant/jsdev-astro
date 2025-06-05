@@ -1,0 +1,367 @@
+---
+title: Document Translation - OpenAI Real-Time Speech API Beta Version
+slug: document-translation
+heading: Document Translation with OpenAI Real-Time Speech API Beta
+image: ./images/document-translation-openai.png
+permalink: document-translation
+date: 2024-10-03
+author: anton liberant
+category: llm
+type: post
+tags: ['openai', 'ai-translation', 'audio-to-text', 'live-document-translation']
+desc: Discover how OpenAI’s Real-Time Speech API Beta instantly translates spoken content into multiple languages, enhancing translation speed and efficiency with AI.
+---
+
+The rise of artificial intelligence has introduced groundbreaking advancements in language processing and speech recognition. One of the latest innovations from [OpenAI](https://openai.com/) is the **Real-Time Speech API** in its Beta version, specifically designed for tasks like document translation. This API represents a leap forward in how we interact with technology, making it easier to transcribe, translate, and interpret spoken language in real-time.
+
+## What Is the OpenAI Real-Time Speech API?
+
+The **OpenAI Real-Time Speech API** is a tool that enables developers and businesses to integrate AI-driven speech-to-text and translation features into their applications. The API is designed to process audio input, convert it into text, and perform translations in real-time across multiple languages. While still in the Beta phase, this API is already showing great potential in handling complex linguistic tasks such as **multilingual transcription**, **live document translation**, and **audio-to-text** conversion.
+
+Oroginal Docs: - [https://platform.openai.com/docs/guides/realtime](https://platform.openai.com/docs/guides/realtime)
+
+## Key Features of the OpenAI Real-Time Speech API
+
+1. **Real-Time Speech Recognition**: The API is capable of converting spoken language into written text almost instantly, allowing for seamless speech-to-text functionality.
+2. **Multilingual Support**: It supports a wide range of languages and dialects, making it a powerful tool for translation across global audiences.
+3. **Real-Time Translation**: Not only can the API transcribe speech, but it can also translate it into different languages in real-time. This is particularly useful for live document translation or communication in multilingual settings.
+4. **Customizable Voice Inputs**: Developers can optimize the API to recognize different accents, languages, and even specific terminologies, making it highly adaptable to various industries such as healthcare, legal, or customer service.
+5. **Scalability**: The API can process large volumes of data efficiently, making it ideal for enterprises needing to translate or transcribe long speeches, meetings, or entire documents.
+
+## How Does the OpenAI Real-Time Speech API Work?
+
+The OpenAI Real-Time Speech API uses advanced deep learning models, particularly transformer architectures and language models, to process spoken language. Here’s a simplified breakdown of how the process works for document translation:
+
+1. **Audio Input**: The API takes an audio file or a real-time voice stream as input.
+2. **Speech Recognition**: Using AI models, the speech is converted into written text. This involves understanding phonetics, grammar, and contextual nuances in the spoken language.
+3. **Translation**: The transcribed text is then translated into the target language using a neural machine translation model.
+4. **Output**: The final output is delivered in the form of translated text, ready to be integrated into documents, subtitles, or any other written form.
+
+### Quick Start
+
+The real-time API is a WebSocket interface designed to run on a server. To help you get started quickly, we have created a console Demo to demonstrate some functions of this API. Although we don't recommend using this front-end pattern in a production environment , the app will help you visualize and inspect the event flow of your live API.
+
+To get started quickly, download and configure this demo - [https://github.com/openai/openai-realtime-console](https://github.com/openai/openai-realtime-console).
+
+### Overview
+
+The real-time API is a stateful , event-based API that communicates via WebSockets. WebSocket connections require the following parameters:
+
+- **URL**: wss://api.openai.com/v1/realtime
+
+- **Query parameters**: ?model=gpt-4o-realtime-preview-2024-10-01
+
+- **Request header** :
+  **Authorization**: Bearer YOUR_API_KEY
+  **OpenAI-Beta**: realtime=v1
+
+Here is a simple example of using popular [ws](https://github.com/websockets/ws) lib to establish a socket connection, send a message from the client, and receive a response from the server in Node.js. It requires to be in the system environment variables OPENAI_API_KEY.
+
+```js
+import WebSocket from "ws";
+ ​
+ const url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01";
+ const ws = new WebSocket(url, {
+     headers: {
+         "Authorization": "Bearer " + process.env.OPENAI_API_KEY,
+         "OpenAI-Beta": "realtime=v1",
+     },
+ });
+ ​
+ws.on("open", function open() {
+    console.log("Connected to the server.");
+    ws.send(JSON.stringify({
+        type: "response.create",
+        response: {
+            modalities: ["text"],
+            instructions: "Please assist the user.",
+        }
+    }));
+});
+ ​
+ ws.on("message", function incoming(message) {
+     console.log(JSON.parse(message.toString()));
+ });
+```
+
+A complete list of events emitted by the server, and events that the client can send, can be found in the [API reference](https://platform.openai.com/docs/api-reference/realtime-client-events/session-update) . Once connected, you will send and receive events representing text, audio, function calls, interrupts, configuration updates, and more.
+
+### Example
+
+Here are some common examples of API functionality to get you started. These examples assume you have already instantiated a WebSocket.
+
+**Send user text**
+
+```js
+const event = {
+  type: 'conversation.item.create',
+  item: {
+    type: 'message',
+    role: 'user',
+    content: [
+      {
+        type: 'input_text',
+        text: 'Hello!',
+      },
+    ],
+  },
+};
+ws.send(JSON.stringify(event));
+ws.send(JSON.stringify({ type: 'response.create' }));
+```
+
+**Send user audio**
+
+```js
+ import fs from 'fs';
+ import decodeAudio from 'audio-decode';
+ ​
+ // Converts Float32Array of audio data to PCM16 ArrayBuffer
+ function floatTo16BitPCM(float32Array) {
+   const buffer = new ArrayBuffer(float32Array.length * 2);
+   const view = new DataView(buffer);
+   let offset = 0;
+   for (let i = 0; i < float32Array.length; i++, offset += 2) {
+     let s = Math.max(-1, Math.min(1, float32Array[i]));
+     view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+   }
+   return buffer;
+ }
+ ​
+ // Converts a Float32Array to base64-encoded PCM16 data
+ base64EncodeAudio(float32Array) {
+   const arrayBuffer = floatTo16BitPCM(float32Array);
+   let binary = '';
+   let bytes = new Uint8Array(arrayBuffer);
+   const chunkSize = 0x8000; // 32KB chunk size
+   for (let i = 0; i < bytes.length; i += chunkSize) {
+     let chunk = bytes.subarray(i, i + chunkSize);
+     binary += String.fromCharCode.apply(null, chunk);
+   }
+   return btoa(binary);
+ }
+ ​
+ // Using the "audio-decode" library to get raw audio bytes
+ const myAudio = fs.readFileSync('./path/to/audio.wav');
+ const audioBuffer = await decodeAudio(myAudio);
+ const channelData = audioBuffer.getChannelData(0); // only accepts mono
+ const base64AudioData = base64EncodeAudio(channelData);
+ ​
+ const event = {
+   type: 'conversation.item.create',
+   item: {
+     type: 'message',
+     role: 'user',
+     content: [
+       {
+         type: 'input_audio',
+         audio: base64AudioData
+       }
+     ]
+   }
+ };
+ ws.send(JSON.stringify(event));
+ ws.send(JSON.stringify({type: 'response.create'}));
+```
+
+**Stream user audio**
+
+```js
+import decodeAudio from 'audio-decode';
+import fs from 'fs';
+
+import decodeAudio from 'audio-decode';
+import fs from 'fs';
+
+// Convert Float32Array audio data to PCM16 ArrayBuffer
+function floatTo16BitPCM(float32Array) {
+  const buffer = new ArrayBuffer(float32Array.length * 2);
+  const view = new DataView(buffer);
+  let offset = 0;
+  for (let i = 0; i < float32Array.length; i++, offset += 2) {
+    let s = Math.max(-1, Math.min(1, float32Array[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return buffer;
+}
+
+// Convert Float32Array to base64-encoded PCM16 data
+function base64EncodeAudio(float32Array) {
+  const arrayBuffer = floatTo16BitPCM(float32Array);
+  let binary = '';
+  let bytes = new Uint8Array(arrayBuffer);
+  const chunkSize = 0x8000; // 32KB chunk size
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    let chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(binary);
+}
+
+// Fill the audio buffer with the contents of three files,
+// then request the model to generate a response.
+const files = [
+  './path/to/sample1.wav',
+  './path/to/sample2.wav',
+  './path/to/sample3.wav',
+];
+
+for (const filename of files) {
+  const audioFile = fs.readFileSync(filename);
+  const audioBuffer = await decodeAudio(audioFile);
+  const channelData = audioBuffer.getChannelData(0);
+  const base64Chunk = base64EncodeAudio(channelData);
+  ws.send(
+    JSON.stringify({
+      type: 'input_audio_buffer.append',
+      audio: base64Chunk,
+    })
+  );
+}
+
+ws.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
+ws.send(JSON.stringify({ type: 'response.create' }));
+```
+
+**Summary:**
+
+- **PCM Conversion**: The function `floatTo16BitPCM()` converts audio data from Float32Array to PCM16 format.
+- **Base64 Encoding**: The `base64EncodeAudio()` function converts the PCM16 data into a base64-encoded string.
+- **Audio Buffer and WebSocket**: For each audio file, the code reads the file, decodes the audio, converts it to base64, and sends it to a WebSocket connection (ws.send()). After all files are processed, it commits the audio buffer and requests the model to generate a response.
+
+### Session
+
+session refers to a single WebSocket connection between the client and the server.
+
+After the client creates a session, it sends JSON-formatted events containing text and audio chunks. The server will respond with audio containing the speech output, a text transcription of that speech output, and a function call (if the client provided a function).
+
+**Example session object:**
+
+```js
+ {
+   id: "sess_001",
+   object: "realtime.session",
+   ...
+   model: "gpt-4o",
+   voice: "alloy",
+   ...
+ }
+```
+
+### Integration Guide
+
+The real-time API currently supports two audio formats: 24kHz single-channel, little-endian raw 16-bit PCM, and 8kHz G.711 (both u-law and a-law). Additional audio codecs will be supported soon.
+
+Audio data should be provided as base64-encoded chunks of audio frames.
+
+The following Python code example utilizes the `pydub` library to create a valid audio message from the raw bytes of an audio file (assuming the file contains header information). For Node.js, the `audio-decode` library offers tools to process raw audio tracks from various file formats.
+
+```js
+import io
+import json
+from pydub import AudioSegment
+import base64
+
+def audio_to_item_create_event(audio_bytes: bytes) -> str:
+    # Load the audio file from the byte stream
+    audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
+
+    # Resample to 24kHz mono PCM16
+    pcm_audio = audio.set_frame_rate(24000).set_channels(1).set_sample_width(2).raw_data
+
+    # Encode as a base64 string
+    pcm_base64 = base64.b64encode(pcm_audio).decode()
+
+    event = {
+        "type": "conversation.item.create",
+        "item": {
+            "type": "message",
+            "role": "user",
+            "content": [{
+                "type": "input_audio",
+                "audio": pcm_base64
+            }]
+        }
+    }
+    return json.dumps(event)
+```
+
+**Sending an Event**
+
+To send an event to the API, you need to transmit a JSON string containing the event payload. Ensure that you are properly connected to the API before initiating the event.
+
+```js
+// Ensure we are connected
+ws.on('open', () => {
+  // Send an event
+  const event = {
+    type: 'conversation.item.create',
+    item: {
+      type: 'message',
+      role: 'user',
+      content: [
+        {
+          type: 'input_text',
+          text: 'Hello!',
+        },
+      ],
+    },
+  };
+  ws.send(JSON.stringify(event));
+});
+```
+
+**Receive Events**
+
+```js
+ws.on('message', data => {
+  try {
+    const event = JSON.parse(data);
+    console.log(event);
+  } catch (e) {
+    console.error(e);
+  }
+});
+```
+
+**Handling Errors**
+
+All errors are transmitted from the server to the client through events, specifically via the "error" event. These errors arise when the client events are invalid. You can manage these errors as follows:
+
+```js
+const errorHandler = (error) => {
+   console.log('type', error.type);
+   console.log('code', error.code);
+   console.log('message', error.message);
+   console.log('param', error.param);
+   console.log('event_id', error.event_id);
+ };
+ ​
+ ws.on('message', data => {
+   try {
+     const event = JSON.parse(data);
+     if (event.type === 'error') {
+       const { error } = event;
+       errorHandler(error);
+     }
+   } catch (e) {
+     console.error(e);
+   }
+ });
+```
+
+You can send up to [9 client](https://platform.openai.com/docs/api-reference/realtime-client-events) events and listen for [28 server](https://platform.openai.com/docs/api-reference/realtime-server-events) events. For complete details, refer to the API specification on the reference page.
+
+## The Future of Real-Time Translation with OpenAI
+
+he future of the **OpenAI Real-Time Speech API** is bright, with the potential to transform industries that rely heavily on multilingual communication. As AI technology continues to advance, we can expect improvements in accuracy, speed, and the range of supported languages.
+
+Some exciting future developments may include:
+
+- **Improved Natural Language Understanding**: Enhancements in understanding and processing different accents, dialects, and languages with more nuanced context.
+- **Greater Language Support**: Expansion to support even more languages and regional dialects.
+- **Enhanced Customization**: More options for tailoring the API to specific industries, use cases, and organizational needs.
+
+## Conclusion
+
+The OpenAI Real-Time Speech API Beta Version is a powerful tool that introduces new possibilities for document translation, transcription, and speech processing. Whether it’s facilitating live translations at international events or streamlining internal workflows for global corporations, the API offers a fast, efficient, and cost-effective solution to real-time language processing.

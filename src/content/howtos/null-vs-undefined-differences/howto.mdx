@@ -1,0 +1,149 @@
+---
+title: How to Differentiate Between Null and Undefined in JavaScript
+slug: null-vs-undefined-differences
+heading: 'How to Accurately Detect Null vs Undefined in JavaScript'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/null-vs-undefined-differences
+date: 2025-04-03
+author: anton liberant
+category: javascript
+type: howto
+tags: ['null', 'undefined']
+desc: Learn to distinguish between null and undefined in JavaScript with practical examples, type checks, and best practices to avoid common bugs in your code.
+---
+
+In JavaScript, `null` and `undefined` both represent the absence of a value, but they serve different purposes and have distinct behaviors.
+
+## 1. Definition
+
+### Undefined (`undefined`):
+
+- `undefined` is a primitive type that signifies a variable has been declared but not assigned a value.
+- If you access an object property that does not exist, it returns `undefined`.
+- Functions that do not return a value explicitly return `undefined`.
+
+### Null (`null`):
+
+- `null` is an object that explicitly represents the absence of a value.
+- It is often used to intentionally clear a variable or indicate that a property has no value.
+
+## 2. Type Differences
+
+- `typeof undefined` returns `'undefined'`.
+- `typeof null` returns `'object'` (this is a historical bug in JavaScript, but it remains for compatibility reasons).
+
+## 3. Usage Scenarios
+
+### When to Use `undefined`
+
+Declaring a variable without assigning a value:
+
+```js
+let a;
+console.log(a); // Output: undefined
+```
+
+Accessing a non-existent object property:
+
+```js
+const obj = {};
+console.log(obj.property); // Output: undefined
+```
+
+Default return value of functions:
+
+```js
+function test() {}
+console.log(test()); // Output: undefined
+```
+
+### When to Use `null`
+
+Explicitly setting a variable to indicate it has no value:
+
+```js
+let b = null;
+console.log(b); // Output: null
+```
+
+Representing missing or unknown data in objects:
+
+```js
+const user = {
+  name: 'Alice',
+  age: null, // Age might be unknown
+};
+```
+
+Initializing variables for future object assignments:
+
+```js
+let element = null; // Will later be assigned a DOM element
+```
+
+## 4. Key Differences
+
+<table>
+  <thead>
+    <tr>
+      <th>**Feature**</th>
+      <th>**`undefined`**</th>
+      <th>**`null`**</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Type</td>
+      <td>`undefined`</td>
+      <td>`object`</td>
+    </tr>
+    <tr>
+      <td>Default Value</td>
+      <td>Yes, when a variable is declared but unassigned</td>
+      <td>No, must be explicitly assigned</td>
+    </tr>
+    <tr>
+      <td>Boolean Conversion</td>
+      <td>`false`</td>
+      <td>`false`</td>
+    </tr>
+    <tr>
+      <td>Usage</td>
+      <td>Indicates uninitialized state</td>
+      <td>Explicitly assigned to indicate no value</td>
+    </tr>
+  </tbody>
+</table>
+
+## 5. Additional Code Examples
+
+**Checking for Undefined or Null**
+
+```js
+let value;
+if (value === undefined) {
+  console.log('Value is undefined');
+}
+
+let data = null;
+if (data === null) {
+  console.log('Data is null');
+}
+```
+
+**Handling `null` and `undefined` Safely**
+
+```js
+function getValue(input) {
+  return input ?? 'Default Value';
+}
+
+console.log(getValue(undefined)); // Output: Default Value
+console.log(getValue(null)); // Output: Default Value
+console.log(getValue('Hello')); // Output: Hello
+```
+
+## Conclusion
+
+Both `null` and `undefined` indicate an absence of value in JavaScript, but `undefined` is typically used by the JavaScript engine for uninitialized variables and missing properties, while `null` is used intentionally by developers to represent an empty or non-existent value. Understanding their distinctions helps prevent bugs and improves code readability.

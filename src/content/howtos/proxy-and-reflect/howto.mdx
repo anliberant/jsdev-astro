@@ -1,0 +1,132 @@
+---
+title: How to Use Proxy and Reflect in JavaScript
+slug: proxy-and-reflect
+heading: Using Proxy and Reflect in JavaScript
+icon: /icons/javascript.png
+image: ./images/proxy-and-reflect.png
+permalink: howto/proxy-and-reflect
+date: 2024-09-19
+author: anton liberant
+category: javascript
+type: howto
+tags: ['proxy', 'reflect', 'validation']
+desc: Learn JavaScript Proxy and Reflect with step-by-step examples. Discover how to intercept object operations, customize behaviors, and add validation and logging.
+---
+
+![Proxy and Reflect](./images/proxy-and-reflect.png)
+
+In JavaScript, both Proxy and Reflect are powerful features that work together to provide enhanced
+control over object behavior. Here’s a detailed overview of how they work and how you can use them
+effectively.
+
+## 1. Working with Proxy
+
+A **Proxy** is a wrapper around an object that allows you to intercept and redefine operations like
+property access, assignment, and function invocation.
+
+**Basic Syntax**
+
+```js
+const proxy = new Proxy(target, handler);
+```
+
+- **target**: The original object you want to wrap.
+- **handler**: An object defining which operations will be intercepted.
+
+**Example**
+
+Here’s how you can use a proxy to log whenever a property is accessed or modified:
+
+```js
+const target = { message: 'Hello, World!' };
+
+const handler = {
+  get(target, prop) {
+    console.log(`Getting ${prop}`);
+    return target[prop];
+  },
+  set(target, prop, value) {
+    console.log(`Setting ${prop} to ${value}`);
+    target[prop] = value;
+    return true;
+  },
+};
+
+const proxy = new Proxy(target, handler);
+
+// Access and modify the proxy
+console.log(proxy.message); // Logs: Getting message
+proxy.message = 'Hello, Proxy!'; // Logs: Setting message to Hello, Proxy!
+```
+
+**Common Proxy Traps**
+
+- **get(target, prop)**: Traps property access.
+- **set(target, prop, value)**: Traps property assignment.
+- **has(target, prop)**: Traps the in operator.
+- **deleteProperty(target, prop)**: Traps property deletion.
+- **apply(target, thisArg, args)**: Traps function calls.
+- **construct(target, args)**: Traps object instantiation.
+
+## 2. Working with Reflect
+
+The **Reflect** object provides methods for basic operations on objects. It's often used inside
+proxy traps to handle the default behavior.
+
+**Example:**
+
+Here’s how to use **Reflect** to maintain the default behavior within proxy handlers:
+
+```js
+const handler = {
+  get(target, prop) {
+    console.log(`Getting ${prop}`);
+    return Reflect.get(target, prop); // Perform default behavior
+  },
+  set(target, prop, value) {
+    console.log(`Setting ${prop} to ${value}`);
+    return Reflect.set(target, prop, value); // Perform default behavior
+  },
+};
+```
+
+**Common Reflect Methods**
+
+- **Reflect.get(target, prop)**: Retrieves a property from the object.
+- **Reflect.set(target, prop, value)**: Sets a property on the object.
+- **Reflect.has(target, prop)**: Checks if the property exists (like the in operator).
+- **Reflect.deleteProperty(target, prop)**: Deletes a property from the object.
+- **Reflect.apply(target, thisArg, args)**: Calls a function with a specific this context and
+  arguments.
+- **Reflect.construct(target, args)**: Creates a new instance of an object (like new).
+
+## 3. Practical Example: Validation with Proxy and Reflect
+
+You can combine **Proxy** and **Reflect** to create objects that enforce certain rules, such as type
+checking or input validation.
+
+```js
+const validator = {
+  set(target, prop, value) {
+    if (typeof value !== 'string') {
+      throw new Error(`Property ${prop} must be a string`);
+    }
+    return Reflect.set(target, prop, value); // Perform default set operation
+  },
+};
+
+const user = new Proxy({}, validator);
+
+// Valid input
+user.name = 'Margaret';
+
+// Invalid input
+user.age = 45; // Error: Property age must be a string
+```
+
+## Conclusion
+
+**Proxy** and **Reflect** provide a flexible way to customize object behavior in JavaScript.
+**Proxy** allows you to intercept fundamental operations, while **Reflect** ensures you can still
+maintain default behavior when needed. Together, they enable advanced use cases like data
+validation, logging, and more!

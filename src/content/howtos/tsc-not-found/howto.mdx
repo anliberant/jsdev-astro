@@ -1,0 +1,90 @@
+---
+title: 'How to Fix the "tsc Command Not Found" Error in TypeScript'
+slug: tsc-not-found
+heading: "Fixing 'tsc Command Not Found' in TypeScript"
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/tsc-not-found
+date: 2025-01-07
+author: anton liberant
+category: typescript
+type: howto
+tags: ['tsc']
+desc: Learn how to fix the "tsc command not found" error by installing TypeScript globally, checking PATH settings, and troubleshooting common setup problems effectively.
+---
+
+TypeScript’s `tsc` (TypeScript Compiler) is an essential tool for compiling TypeScript code into JavaScript. If you encounter the error "`tsc: command not found`", it typically means TypeScript isn't installed or configured correctly. Here's a step-by-step guide to resolve this issue.
+
+## Common Causes of the Error
+
+1. TypeScript is not installed.
+2. TypeScript is installed locally instead of globally.
+3. The environment variable PATH does not include the TypeScript binary.
+
+## Step-by-Step Solution
+
+### 1. Verify TypeScript Installation
+
+Run the following command in your terminal:
+
+<div className='code-cmd'>tsc --version</div>
+
+If you see an error, it means TypeScript isn’t installed or is not accessible globally.
+
+### 2. Install TypeScript Globally
+
+Install TypeScript globally using npm:
+
+<div className='code-cmd'>npm install -g typescript</div>
+
+After installation, confirm by running:
+
+<div className='code-cmd'>tsc --version</div>
+
+### 3. Add TypeScript to Your PATH
+
+If tsc is installed but not recognized, ensure the installation path is added to your system’s PATH.
+
+**On Windows:**
+
+1. Locate the global node_modules folder (e.g., `C:\Users\<YourUser>\AppData\Roaming\npm`).
+2. Add the folder to your PATH:
+
+- Open "Environment Variables" in System Settings.
+- Edit the `Path` variable and include the directory path.
+
+**On macOS/Linux:**
+
+1. Add the npm global directory to your shell configuration:
+   <div className='code-cmd'>
+     export PATH=$PATH:$(npm config get prefix)/bin
+   </div>
+2. Save and restart your terminal.
+
+### 4. Use npx for Local Installations
+
+If TypeScript is installed locally in a project, you can use `npx` to run the `tsc` command without a global installation:
+
+<div className='code-cmd'>npx tsc --version</div>
+
+### 5. Check Node.js and npm Installation
+
+Ensure you have Node.js and npm installed. You can verify with:
+
+```bash
+node -v
+npm -v
+```
+
+If either is missing, download and install the latest version of Node.js from [https://nodejs.org](https://nodejs.org/).
+
+### 6. Reinstall TypeScript
+
+If issues persist, reinstall TypeScript:
+
+<div className='code-cmd'>npm uninstall -g typescript</div>
+<div className='code-cmd'>npm install -g typescript</div>
+
+## Conclusion
+
+The "`tsc: command not found`" error is commonly due to a missing or misconfigured TypeScript installation. By following these steps, you can ensure that `tsc` works seamlessly on your system, allowing you to compile TypeScript code without interruption.

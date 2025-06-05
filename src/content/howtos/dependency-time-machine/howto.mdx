@@ -1,0 +1,61 @@
+---
+title: How to Update a NodeJs Project with dependency-time-machine
+slug: dependency-time-machine
+heading: Update Node.js Project with dependency-time-machine
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/dependency-time-machine
+date: 2024-11-14
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['npm']
+desc: Learn how to update your Node.js project with dependency-time-machine. Roll back, upgrade, and manage dependencies to maintain a stable, efficient environment easily
+---
+
+To update a project using **dependency-time-machine**, you can follow a straightforward process that automates the task of updating dependencies in your package.json file in chronological order.
+
+## Step 1:Install the Tool
+
+You can use the following command to install dependency-time-machine globally or run it via npx:
+
+<div className='code-cmd'>npx dependency-time-machine --update --install</div>
+
+Alternatively, install it globally using npm:
+
+<div className='code-cmd'>npm install -g dependency-time-machine</div>
+
+## Step 2: Update Dependencies
+
+Once installed, you can run the tool to start updating your dependencies:
+
+<div className='code-cmd'>npx dependency-time-machine --update --install</div>
+
+This command will check for the latest compatible versions of your dependencies and update them one by one, ensuring each version is compatible before proceeding to the next.
+
+## Step 3: Auto-run Tests
+
+To automate testing after each update (using `npm test` by default), you can add the `--auto` flag:
+
+<div className='code-cmd'>
+  npx dependency-time-machine --update --install --auto
+</div>
+
+You can also customize the install and test commands:
+
+<div className='code-cmd'>
+  npx dependency-time-machine --update --install --auto --install-script "yarn
+  install" --test-script "yarn test"
+</div>
+
+## Step 4: Excluding Dependencies
+
+If there are specific dependencies you want to exclude from the update process, use the `--exclude` flag:
+
+<div className='code-cmd'>
+  npx dependency-time-machine --update --install --exclude react,react-dom
+</div>
+
+Read also how to update all dependencies using [npm-check-updates](https://jsdev.space/howto/update-npm-dependencies/).
+
+For more advanced options, such as excluding dependencies via a file or generating a timeline of updates, refer to the detailed documentation on [npm](https://www.npmjs.com/package/dependency-time-machine).

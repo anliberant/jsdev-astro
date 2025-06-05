@@ -1,0 +1,238 @@
+---
+title: 'React Performance: Using Modern Hooks for Smooth UI Interactions'
+slug: react-modern-hooks
+heading: Enhance React Performance with Modern Hooks
+image: ./images/react-modern-hooks.png
+permalink: react-modern-hooks
+date: 2025-01-06
+author: anton liberant
+category: react
+type: post
+tags: ['react-hooks', 'useTransition', 'useDeferredValue', 'useOptimistic']
+desc: Optimize React apps with useTransition, useDeferredValue, and useOptimistic. Learn to prioritize rendering, defer updates, and create smooth optimistic UI.
+---
+
+Modern web applications demand increasing interactivity, responsiveness, and speed. To meet these demands, the React team has developed tools that allow developers to finely control rendering and user experience. If you’re familiar with traditional optimization techniques such as `useMemo`, `useCallback`, memoization with `React.memo`, and other common strategies, the following hooks may intrigue you:
+
+- `useTransition`: Prioritizes rendering by splitting updates into critical and background tasks.
+- `useDeferredValue`: Defers updating heavy computations to prevent UI freezing during data input.
+- `useOptimistic`: Simplifies implementing optimistic updates out of the box.
+
+This article explores the key concepts of these hooks with practical examples to demonstrate how and when to use them.
+
+## `useTransition`: Rendering Prioritization for Smooth UI
+
+### Concept
+
+User actions like typing, switching tabs, or clicking buttons can trigger heavy state updates such as filtering large collections or recalculating complex data. If these updates are processed immediately with high priority, the UI may freeze momentarily, causing delays in user interaction.
+
+Introduced in React 18, `useTransition` allows marking updates as “non-critical” or “transitionary.” This keeps the key UI interactions responsive while heavy updates are processed later in the background.
+
+### Basic Example
+
+In the following example, text input updates the field instantly, ensuring responsiveness, while filtering a large list (`filteredItems`) is wrapped in `startTransition`, enabling React to process it in the background.
+
+```jsx
+import React, { useState, useTransition } from 'react';
+
+function BigList({ items }) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>{item.text}</li>
+      ))}
+    </ul>
+  );
+}
+
+export default function App() {
+  const [text, setText] = useState('');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [isPending, startTransition] = useTransition();
+
+  const allItems = Array.from({ length: 10000 }, (_, i) => ({
+    id: i,
+    text: `Item ${i}`,
+  }));
+
+  const handleInputChange = e => {
+    const value = e.target.value;
+    setText(value);
+
+    startTransition(() => {
+      const filtered = allItems.filter(item =>
+        item.text.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredItems(filtered);
+    });
+  };
+
+  return (
+    <div>
+      <h1>List: {filteredItems.length} items</h1>
+      <input
+        value={text}
+        onChange={handleInputChange}
+        placeholder='Search the list...'
+      />
+      {isPending && <p>Loading...</p>}
+      <BigList items={filteredItems} />
+    </div>
+  );
+}
+```
+
+### How It Works
+
+- **Responsive Input**: The text state updates immediately, ensuring the input field remains responsive.
+- **Background Updates**: The filteredItems update is wrapped in startTransition, allowing React to process it later if the user continues typing.
+- **Loading Indicator**: The isPending state shows an indicator while the transition is in progress.
+
+### Use Cases for useTransition
+
+- Filtering/sorting large lists.
+- Redrawing complex components (e.g., maps with numerous objects).
+- Smooth animations during screen or tab transitions.
+
+### Caveats
+
+- `useTransition` doesn’t cancel computations; it adjusts priority.
+- For extremely heavy logic, consider additional optimizations like memoization or moving computations to a Web Worker.
+- Overusing `useTransition` may lead to noticeable delays in non-critical updates.
+
+## `useDeferredValue`: Lazy Updates for Heavy Data
+
+### Concept
+
+`useDeferredValue`, introduced in React 18, is useful when you want dual states:
+
+- **Immediate State**: Updates immediately, ensuring a responsive UI.
+- **Deferred State**: Updates with lower priority, avoiding unnecessary re-renders during intensive tasks.
+
+**Example**
+
+Here, a text input updates instantly, while a deferred value is passed to a heavy component, minimizing UI lag.
+
+```jsx
+import React, { memo, useDeferredValue, useState } from 'react';
+
+const SearchResults = memo(function SearchResults({ searchTerm }) {
+  const allItems = Array.from({ length: 5000 }, (_, i) => `Item ${i}`);
+
+  const filteredItems = allItems.filter(item =>
+    item.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <ul>
+      {filteredItems.map((item, idx) => (
+        <li key={idx}>{item}</li>
+      ))}
+    </ul>
+  );
+});
+
+export default function App() {
+  const [inputValue, setInputValue] = useState('');
+  const deferredValue = useDeferredValue(inputValue);
+
+  return (
+    <div>
+      <input
+        value={inputValue}
+        onChange={e => setInputValue(e.target.value)}
+        placeholder='Search...'
+      />
+      <SearchResults searchTerm={deferredValue} />
+    </div>
+  );
+}
+```
+
+### How It Works
+
+- `inputValue` updates instantly, keeping the input field responsive.
+- `deferredValue` lags behind, allowing React to optimize rendering.
+
+### Differences from `useDebounce`
+
+- `useDebounce`: Adds a time-based delay before state updates.
+- `useDeferredValue`: Dynamically adjusts rendering priority without explicit time delays.
+
+## `useOptimistic`: Simplifying Optimistic Updates
+
+### Concept
+
+Optimistic updates immediately reflect user actions in the UI while the server processes the changes. If the server fails, the UI reverts to its original state. React 19’s useOptimistic simplifies this process.
+
+### Example
+
+In this example, new orders are optimistically added to the list, giving users instant feedback.
+
+```jsx
+import { useOptimistic, useRef, useState } from 'react';
+
+async function makeOrder(orderName) {
+  await new Promise(res => setTimeout(res, 1500));
+  return orderName;
+}
+
+function Kitchen({ orders, onMakeOrder }) {
+  const formRef = useRef();
+
+  const [optimisticOrders, addOptimisticOrder] = useOptimistic(
+    orders,
+    (state, newOrder) => [...state, { orderName: newOrder, preparing: true }]
+  );
+
+  async function formAction(formData) {
+    const orderName = formData.get('orderName');
+    addOptimisticOrder(orderName);
+    formRef.current.reset();
+    await onMakeOrder(orderName);
+  }
+
+  return (
+    <div>
+      <form action={formAction} ref={formRef}>
+        <input type='text' name='orderName' placeholder='Enter order' />
+        <button type='submit'>Order</button>
+      </form>
+      {optimisticOrders.map((order, index) => (
+        <div key={index}>
+          {order.orderName} {order.preparing ? '(Preparing...)' : '(Ready!)'}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function App() {
+  const [orders, setOrders] = useState([]);
+
+  async function onMakeOrder(orderName) {
+    const sentOrder = await makeOrder(orderName);
+    setOrders(orders => [...orders, { orderName: sentOrder }]);
+  }
+
+  return <Kitchen orders={orders} onMakeOrder={onMakeOrder} />;
+}
+```
+
+### Advantages
+
+- Simplifies optimistic state management.
+- Built-in rollback mechanism for server errors.
+
+### Use Cases
+
+- Instant feedback for comments, likes, or messages.
+- Adding items to a shopping cart.
+
+### Conclusion
+
+- `useTransition`: Marks non-critical updates for background processing.
+- `useDeferredValue`: Defers rendering heavy computations for smoother UI.
+- `useOptimistic`: Simplifies optimistic UI updates with rollback capability.
+
+Understanding and using these hooks effectively can significantly enhance the responsiveness of your React applications.

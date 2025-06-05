@@ -1,0 +1,128 @@
+---
+title: 'How to Elegantly Rewrite localStorage and sessionStorage Methods'
+slug: localstorage-sessionstorage
+heading: 'Mastering Custom Implementations of localStorage and sessionStorage Methods'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/localstorage-sessionstorage
+date: 2024-12-03
+author: anton liberant
+category: javascript
+type: howto
+tags: ['localStorage', 'sessionStorage']
+desc: Learn how to rewrite localStorage and sessionStorage methods with encapsulation for business customization, global monitoring, and data protection.
+---
+
+In front-end development, `localStorage` and `sessionStorage` are common tools for client-side data storage. However, certain business requirements—such as encryption, global monitoring, or preventing unauthorized access—may necessitate customizing their behavior. This article details how to rewrite these methods elegantly while retaining their native functionality.
+
+## Why Rewrite `localStorage` and `sessionStorage`?
+
+Here are scenarios where rewriting can be beneficial:
+
+1. **Business Customization**: Add logic for specific keys, like encryption or validation.
+2. **Global Monitoring**: Track access logs and operation frequency.
+3. **Data Protection**: Safeguard critical keys from unauthorized modifications.
+
+## Core Approach
+
+**1. Retain Native Methods**
+
+Store references to the original methods:
+
+```js
+const _setItem = localStorage.setItem;
+const _getItem = localStorage.getItem;
+```
+
+**2. Proxy Methods**
+
+Rewrite the methods to include custom logic:
+
+```js
+localStorage.setItem = function (key, value) {
+  if (key === 'protectedKey') return; // Prevent modifications
+  _setItem.call(this, key, value);
+};
+
+localStorage.getItem = function (key) {
+  return key === 'protectedKey' ? 'Access denied' : _getItem.call(this, key);
+};
+```
+
+## Flexible Configuration with Hooks
+
+Introduce hooks for customization:
+
+```js
+function proxyStorage(storage, config = {}) {
+  const { beforeSetItem = (k, v) => [k, v], afterGetItem = (k, v) => v } =
+    config;
+  const _setItem = storage.setItem;
+  const _getItem = storage.getItem;
+
+  storage.setItem = function (key, value) {
+    const [newKey, newValue] = beforeSetItem(key, value);
+    _setItem.call(this, newKey, newValue);
+  };
+
+  storage.getItem = function (key) {
+    const value = _getItem.call(this, key);
+    return afterGetItem(key, value);
+  };
+}
+```
+
+### Examples of Usage:
+
+1. **Encrypt Data**: Use a library like CryptoJS to encrypt and decrypt stored data.
+2. **Log Operations**: Record all setItem and getItem calls.
+3. **Intercept Keys**: Block access to specific keys.
+
+### Encapsulation with Singleton Class
+
+Encapsulate the proxy logic in a [singleton](https://jsdev.space/signleton-js/) class for ease of use:
+
+```js
+class StorageProxy {
+  constructor(storage, config) {
+    if (StorageProxy.instance) return StorageProxy.instance;
+    this.init(storage, config);
+    StorageProxy.instance = this;
+  }
+
+  init(storage, config) {
+    this.storage = storage;
+    this.originalSetItem = storage.setItem;
+    this.originalGetItem = storage.getItem;
+    this.config = config;
+
+    this.proxy();
+  }
+
+  proxy() {
+    const {
+      storage,
+      config: { beforeSetItem, afterGetItem },
+    } = this;
+
+    storage.setItem = (key, value) => {
+      const [k, v] = beforeSetItem(key, value);
+      this.originalSetItem.call(storage, k, v);
+    };
+
+    storage.getItem = key => {
+      const value = this.originalGetItem.call(storage, key);
+      return afterGetItem(key, value);
+    };
+  }
+
+  unproxy() {
+    this.storage.setItem = this.originalSetItem;
+    this.storage.getItem = this.originalGetItem;
+  }
+}
+```
+
+## Summary
+
+Rewriting `localStorage` and `sessionStorage` allows for powerful business logic integration, enhanced security, and better data management. Encapsulate this functionality into reusable classes or modules to make your projects more maintainable and secure.

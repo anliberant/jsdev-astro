@@ -1,0 +1,149 @@
+---
+title: Handling Base64 Encoding and Unicode Strings in JavaScript
+slug: base64-unicode
+heading: Base64 Encoding and Unicode Strings in JavaScript
+permalink: base64-unicode
+image: ./images/base64-unicode.png
+date: 2024-11-26
+author: anton liberant
+category: javascript
+type: post
+tags: ['base64', 'unicode']
+desc: Learn how to handle Base64 encoding and decoding in JavaScript, including strategies for managing Unicode strings and avoiding common pitfalls.
+---
+
+Base64 encoding transforms binary data into a text format that’s safe for transmission and storage. It’s commonly used for data URLs, such as inline images, and to address issues like missing favicons in browsers. But how does Base64 handle strings in JavaScript, especially when Unicode is involved? This article explores the key aspects, functions, and challenges of Base64 encoding and decoding in JavaScript.
+
+## The Basics: `btoa()` and `atob()`
+
+JavaScript provides two primary functions for Base64:
+
+- `btoa()` (binary to ASCII): Encodes a string into Base64.
+- `atob()` (ASCII to binary): Decodes a Base64 string back into the original.
+
+**Example:**
+
+```js
+const asciiString = 'hello';
+const encoded = btoa(asciiString);
+console.log(encoded); // aGVsbG8=
+
+const decoded = atob(encoded);
+console.log(decoded); // hello
+```
+
+**Limitation**: These functions work only with ASCII characters. Strings containing Unicode, like emojis or non-Latin characters, throw an error.
+
+### Why Unicode Causes Issues
+
+JavaScript strings use the UTF-16 encoding, which represents characters using one or more 16-bit units. Functions like `btoa()` expect single-byte (8-bit) characters, leading to errors when multi-byte characters are encountered.
+
+**Example:**
+
+```js
+const unicodeString = 'hello❤️';
+try {
+  const encoded = btoa(unicodeString);
+} catch (error) {
+  console.log(error);
+  // DOMException: The string contains characters outside the Latin1 range.
+}
+```
+
+## Handling Unicode with Base64
+
+**Solution: Encode and Decode Using Typed Arrays**
+
+By converting strings to UTF-8 before encoding, we ensure compatibility with `btoa()`.
+
+```js
+function base64ToBytes(base64) {
+  const binString = atob(base64);
+  return Uint8Array.from(binString, char => char.charCodeAt(0));
+}
+
+function bytesToBase64(bytes) {
+  const binString = String.fromCharCode(...bytes);
+  return btoa(binString);
+}
+
+const utf8Encoder = new TextEncoder();
+const utf8Decoder = new TextDecoder();
+
+const unicodeString = 'hello❤️';
+const encoded = bytesToBase64(utf8Encoder.encode(unicodeString));
+console.log(encoded); // Encoded Base64 string
+
+const decoded = utf8Decoder.decode(base64ToBytes(encoded));
+console.log(decoded); // hello❤️
+```
+
+## A Common Edge Case: Lone Surrogates
+
+Lone surrogates, incomplete pairs in UTF-16, are considered malformed and may silently fail or be replaced with the character �.
+
+**Example:**
+
+```js
+const malformedString = 'hello\uDE75'; // Lone surrogate
+const encoded = bytesToBase64(new TextEncoder().encode(malformedString));
+const decoded = new TextDecoder().decode(base64ToBytes(encoded));
+console.log(decoded); // hello�
+```
+
+To detect malformed strings:
+
+```js
+function isWellFormed(str) {
+  try {
+    encodeURIComponent(str);
+    return true;
+  } catch {
+    return false;
+  }
+}
+```
+
+## Full Solution: Handling Base64 with Unicode Safely
+
+Here’s the complete approach for safe Base64 encoding and decoding with Unicode handling:
+
+```js
+function base64ToBytes(base64) {
+  const binString = atob(base64);
+  return Uint8Array.from(binString, char => char.charCodeAt(0));
+}
+
+function bytesToBase64(bytes) {
+  const binString = String.fromCharCode(...bytes);
+  return btoa(binString);
+}
+
+function isWellFormed(str) {
+  try {
+    encodeURIComponent(str);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const input = 'hello❤️';
+
+if (isWellFormed(input)) {
+  const utf8Encoder = new TextEncoder();
+  const utf8Decoder = new TextDecoder();
+
+  const encoded = bytesToBase64(utf8Encoder.encode(input));
+  console.log(`Encoded: ${encoded}`);
+
+  const decoded = utf8Decoder.decode(base64ToBytes(encoded));
+  console.log(`Decoded: ${decoded}`);
+} else {
+  console.error('Invalid string with lone surrogates.');
+}
+```
+
+## Conclusion
+
+Base64 encoding in JavaScript can handle strings effectively, even with Unicode, if you use the right tools. By leveraging `TextEncoder` and `TextDecoder`, you ensure compatibility while avoiding common errors. Always validate your strings to handle malformed cases gracefully.

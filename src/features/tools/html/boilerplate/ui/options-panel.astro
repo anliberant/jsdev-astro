@@ -1,0 +1,100 @@
+---
+import Button from '@/shared/ui/base/button.astro';
+---
+
+<div class='options-panel'>
+  <h2>Customize Your Boilerplate</h2>
+
+  <div class='option-group'>
+    <label for='title'>Page Title:</label>
+    <input
+      type='text'
+      id='title'
+      value='My Website'
+      placeholder='Enter page title'
+    />
+  </div>
+
+  <div class='option-group'>
+    <label for='description'>Meta Description:</label>
+    <textarea id='description' placeholder='Brief description of your page'
+    ></textarea>
+  </div>
+
+  <div class='option-group'>
+    <label for='author'>Author:</label>
+    <input type='text' id='author' placeholder='Your name' />
+  </div>
+
+  <Button variant='default' class='generate-btn' id='generate'>
+    Generate Boilerplate
+  </Button>
+</div>
+
+<style>
+  .options-panel {
+    background: #f5f5f5;
+    padding: 30px;
+    border-right: 2px solid #e2e8f0;
+  }
+
+  .options-panel h2 {
+    margin: 0 0 25px 0;
+    color: hsl(var(--foreground));
+    font-size: 1.4rem;
+  }
+
+  .option-group {
+    margin-bottom: 20px;
+  }
+
+  .option-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: hsl(var(--foreground));
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .option-group input,
+  .option-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid hsl(var(--border));
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    background: white;
+    color: hsl(var(--foreground));
+  }
+
+  .option-group input:focus,
+  .option-group textarea:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  }
+
+  .option-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .generate-btn {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    .options-panel {
+      border-right: none;
+      border-bottom: 2px solid hsl(var(--border));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .options-panel {
+      padding: 20px;
+    }
+  }
+</style>

@@ -1,0 +1,212 @@
+---
+title: Resize and Optimize Images with Node.js Using Sharp
+slug: resize-optimize-images-nodejs
+heading: Efficient Image Processing in Node.js for Content-Heavy Projects
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/resize-optimize-images-nodejs
+date: 2025-06-04
+author: anton liberant
+category: javascript
+type: snippets
+tags: []
+desc: Resize and optimize images in place using Node.js and the Sharp library. Efficiently handle content folders for better performance and storage.
+---
+
+If your project includes a large number of high-resolution images, it's important to optimize them to reduce bandwidth usage and improve page load times. Doing this manually is inefficient and error-prone. This guide shows how to use Node.js and the sharp image processing library to automate the resizing and replacement of images across your entire content structure.
+
+We'll walk through a script that recursively scans directories for image files and replaces each one with a resized version—targeting a maximum width of 800 pixels while maintaining the original file path and structure.
+
+## 📦 Prerequisites
+
+You’ll need:
+
+- Node.js installed (v16 or newer recommended)
+- A project directory containing images (e.g., `content/posts/.../images/*.png`)
+- The Sharp library installed:
+
+<div class="code-cmd">npm install sharp</div>
+
+## 🧠 What This Script Does
+
+- Traverses a nested folder structure (e.g., `content/posts/[slug]/images/`)
+- Finds .png, .jpg, .jpeg, and .webp images
+- Checks the width of each image
+- If the image is wider than 800px, it resizes it and replaces the original file
+- Skips images that are already 800px wide or less
+
+## 🧾 Full Script: `resize-and-replace-images.js`
+
+```js 
+import fs from 'fs/promises';
+import path from 'path';
+import sharp from 'sharp';
+
+const rootDir = path.resolve('content');
+
+async function resizeImage(filePath) {
+	try {
+		console.log(`📸 Found image: ${filePath}`);
+		const image = sharp(filePath);
+		const metadata = await image.metadata();
+
+		if (metadata.width && metadata.width > 800) {
+			const tmpFile = `${filePath}.tmp`;
+
+			await image.resize({ width: 800 }).toFile(tmpFile);
+			await fs.unlink(filePath);
+			await fs.rename(tmpFile, filePath);
+
+			console.log(`✅ Resized to 800px: ${filePath}`);
+		} else {
+			console.log(`➖ Skipped (<=800px): ${filePath}`);
+		}
+	} catch (error) {
+		console.error(`❌ Error resizing ${filePath}:`, error.message);
+	}
+}
+
+async function walkDir(dir) {
+	const entries = await fs.readdir(dir, { withFileTypes: true });
+
+	for (const entry of entries) {
+		const fullPath = path.join(dir, entry.name);
+
+		if (entry.isDirectory()) {
+			await walkDir(fullPath);
+		} else if (entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name)) {
+			await resizeImage(fullPath);
+		}
+	}
+}
+
+await walkDir(rootDir);
+console.log('🎉 Done resizing images.');
+```
+
+### 🛠 How to Run
+
+1. Save this script as `resize-and-replace-images.js`
+2. Update the `rootDir` variable if needed
+3. Run the script with:
+
+<div class="code-cmd">node resize-and-replace-images.js</div>
+
+### 🧪 Tips
+
+- Always back up your images before running destructive scripts.
+- If you want to preserve original images, save resized versions in a separate folder or use a `.resized` suffix.
+- Combine this with an image optimizer like `sharp().jpeg({ quality: 80 })` to further reduce file size.
+
+## 🧩 Extensions
+
+You can adapt this script to:
+
+- Resize only certain image folders (e.g., `images/cover`)
+- Skip GIFs or unsupported formats
+- Use concurrency to speed up processing
+- Log results to a file instead of console
+
+## 🧪 Optimization Script (optimize-images.js)
+
+Once resized, you can **further optimize** the images using Sharp by compressing them.
+
+```js 
+// optimize-images.js
+import fs from 'fs/promises';
+import path from 'path';
+import sharp from 'sharp';
+
+const rootDir = 'content/';
+
+async function optimizeImage(filePath) {
+	try {
+		console.log('✨ Optimizing:', filePath);
+		const ext = path.extname(filePath).toLowerCase();
+		const tempPath = `${filePath}.tmp`;
+
+		let pipeline = sharp(filePath);
+		if (ext === '.jpg' || ext === '.jpeg') {
+			pipeline = pipeline.jpeg({ quality: 80, mozjpeg: true });
+		} else if (ext === '.png') {
+			pipeline = pipeline.png({ compressionLevel: 9 });
+		} else if (ext === '.webp') {
+			pipeline = pipeline.webp({ quality: 80 });
+		} else {
+			console.log('⏩ Unsupported format:', filePath);
+			return;
+		}
+
+		await pipeline.toFile(tempPath);
+		await fs.unlink(filePath);
+		await fs.rename(tempPath, filePath);
+		console.log(`✅ Optimized: ${filePath}`);
+	} catch (err) {
+		console.error('❌ Failed to optimize:', filePath, '\n', err);
+	}
+}
+
+async function walkDir(dir) {
+	const entries = await fs.readdir(dir, { withFileTypes: true });
+
+	for (const entry of entries) {
+		const fullPath = path.join(dir, entry.name);
+		if (entry.isDirectory()) {
+			await walkDir(fullPath);
+		} else if (entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name)) {
+			await optimizeImage(fullPath);
+		}
+	}
+}
+
+await walkDir(rootDir);
+console.log('🎉 Done optimizing images.');
+```
+
+### ✅ Tips & Best Practices
+
+- Run scripts during your build process or as a one-time migration.
+- Combine resizing + optimizing to keep image quality high while reducing size.
+- Use `.tmp` files to prevent overwriting during in-place processing.
+- Consider batching or parallelizing with `Promise.allSettled` for large folders.
+
+## 🧼 Before & After (Example)
+
+<table>
+  <thead>
+    <tr>
+      <th>**File**</th>
+      <th>**Original Size**</th>
+      <th>**After Resize**</th>
+      <th>**After Optimize**</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`hero.png`</td>
+      <td>1.8 MB</td>
+      <td>920 KB</td>
+      <td>420 KB</td>
+    </tr>
+    <tr>
+      <td>`gallery1.jpg`</td>
+      <td>2.2 MB</td>
+      <td>850 KB</td>
+      <td>390 KB</td>
+    </tr>
+    <tr>
+      <td>`step1.webp`</td>
+      <td>780 KB</td>
+      <td>700 KB</td>
+      <td>340 KB</td>
+    </tr>
+  </tbody>
+</table>
+
+## 📎 Summary
+
+By combining Sharp, Node.js, and a recursive folder walker, you can drastically cut down image sizes while retaining quality. This setup is lightweight, efficient, and ideal for static content projects.
+
+Want more automation? Combine these scripts with a file watcher or run them before deployment to ensure optimal performance.
+
+Let me know if you want a single combined script for resizing + optimization!

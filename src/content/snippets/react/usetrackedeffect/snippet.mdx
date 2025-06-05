@@ -1,0 +1,146 @@
+---
+title: Use the useTrackedEffect Hook to Debug React Component
+slug: usetrackedeffect
+heading: Implementing the useTrackedEffect Custom Hook
+icon: /icons/react.png
+image: /icon.png
+permalink: snippets/usetrackedeffect
+date: 2025-02-19
+author: anton liberant
+category: react
+type: snippets
+tags: ['react-hooks']
+desc: Master React performance with the useTrackedEffect hook—track which dependencies trigger re-renders to debug precisely and manage state more efficiently.
+---
+
+Here's the implementation of a useTrackedEffect hook for React:
+
+```jsx
+import { useEffect, useRef } from 'react';
+
+/**
+ * A custom React hook that tracks which dependencies changed between renders
+ *
+ * @param {Function} effect - Effect callback that receives information about changed dependencies
+ * @param {Array} dependencies - Array of dependencies to track
+ */
+const useTrackedEffect = (effect, dependencies) => {
+  const previousDependencies = useRef(dependencies);
+
+  useEffect(() => {
+    // Skip first render
+    if (previousDependencies.current) {
+      // Create an object to track which dependencies changed
+      const changedDeps = dependencies.reduce((acc, dep, index) => {
+        // Compare current dependency with previous one
+        if (dep !== previousDependencies.current[index]) {
+          acc[index] = {
+            from: previousDependencies.current[index],
+            to: dep,
+          };
+        }
+        return acc;
+      }, {});
+
+      // Only run effect if at least one dependency changed
+      if (Object.keys(changedDeps).length > 0) {
+        // Call the effect with changed dependencies info
+        return effect(changedDeps);
+      }
+    }
+
+    // Update previous dependencies for next render
+    previousDependencies.current = dependencies;
+
+    // Return cleanup function from effect (if any)
+    return () => {
+      if (effect.cleanup && typeof effect.cleanup === 'function') {
+        effect.cleanup();
+      }
+    };
+  }, dependencies);
+};
+
+export default useTrackedEffect;
+```
+
+The `useTrackedEffect` hook is a powerful enhancement to React's standard `useEffect`. Here's how it works:
+
+## Core Functionality
+
+The hook tracks which specific dependencies changed between renders, giving you precise information about what triggered your effect. This is incredibly useful for debugging and performance optimization.
+
+## Key Components
+
+### 1. Dependency Tracking:
+
+- Uses `useRef` to store the previous render's dependencies
+- Compares current dependencies with previous ones on each render
+
+### 2. Change Detection Algorithm:
+
+The `reduce` function creates an object that maps:
+
+- The index of each changed dependency
+- Both the previous (`from`) and current (`to`) values
+
+### 3. Conditional Execution:
+
+- Only executes the effect if at least one dependency changed
+- Passes the change information to your effect callback
+
+### 4. Cleanup Handling:
+
+- Supports cleanup functions just like standard `useEffect`
+- Checks if the effect has a `cleanup` property that's a function
+
+## Usage Example
+
+```jsx
+import useTrackedEffect from './useTrackedEffect';
+
+import useTrackedEffect from './useTrackedEffect';
+
+function ProfileComponent({ userId, settings }) {
+  useTrackedEffect(
+    changes => {
+      // Log which specific dependencies changed
+      console.log('Changed dependencies:', changes);
+
+      // You can see exactly what triggered this effect
+      if (changes[0]) {
+        console.log(
+          `User ID changed from ${changes[0].from} to ${changes[0].to}`
+        );
+        // Fetch new user data...
+      }
+
+      if (changes[1]) {
+        console.log(
+          `Settings changed from`,
+          changes[1].from,
+          `to`,
+          changes[1].to
+        );
+        // Apply new settings...
+      }
+
+      // Optional cleanup function
+      return () => {
+        console.log('Cleaning up previous effect');
+      };
+    },
+    [userId, settings]
+  );
+
+  return <div>Profile Content</div>;
+}
+```
+
+### Benefits
+
+- **Precise debugging**: Immediately see which dependency caused a re-render
+- **Performance optimization**: Target your optimizations at the exact dependencies causing unnecessary re-renders
+- **Better control flow**: Make decisions in your effect based on which specific values changed
+
+This hook is especially valuable in complex components with multiple dependencies where standard `useEffect` doesn't provide enough context about what triggered the effect.

@@ -1,0 +1,178 @@
+---
+title: How to Easily Create Images from HTML Content Using JavaScript
+slug: html-image-js
+heading: HTML-to-Image Conversion with JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/html-image-js
+date: 2025-02-20
+author: anton liberant
+category: javascript
+type: howto
+tags: ['html-to-image']
+desc: Learn proven techniques to convert HTML elements into downloadable images using JavaScript. Explore Canvas API, libraries, and tips for optimal performance.
+---
+
+Converting HTML elements into images is a common requirement for tasks like generating screenshots, sharing webpage content, or saving visual data. In JavaScript, two popular libraries — **html2canvas** and **dom-to-image** offer effective solutions. This guide explores both methods, their advantages, and implementation details.
+
+## Method 1: Using html2canvas
+
+### How It Works
+
+html2canvas traverses the DOM structure, captures styles, and renders the content onto a `<canvas>` element before converting it into an image.
+
+### Implementation
+
+Include via CDN:
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+```
+
+HTML Structure:
+
+```html
+<div id="capture" style="padding: 10px; background: #f5da55">
+  <h4>Convert this content</h4>
+  <p>Hello World!</p>
+</div>
+<button onclick="exportToImage()">Generate Image</button>
+```
+
+JavaScript Code:
+
+```html
+<script>
+  async function exportToImage() {
+    const element = document.getElementById('capture');
+    try {
+      const canvas = await html2canvas(element, {
+        allowTaint: true,
+        useCORS: true,
+        scale: 2,
+      });
+      const imgUrl = canvas.toDataURL('image/png');
+      const img = new Image();
+      img.src = imgUrl;
+      document.body.appendChild(img);
+
+      // Download Image
+      const link = document.createElement('a');
+      link.download = 'screenshot.png';
+      link.href = imgUrl;
+      link.click();
+    } catch (err) {
+      console.error('Error converting HTML to image:', err);
+    }
+  }
+</script>
+```
+
+## Method 2: Using dom-to-image
+
+### How It Works
+
+dom-to-image converts HTML elements into PNG, JPEG, or SVG formats using SVG serialization and CSS parsing.
+
+### Implementation
+
+Include via CDN:
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+```
+
+JavaScript Code:
+
+```html
+<script>
+  const element = document.getElementById('capture');
+
+  // Export to PNG
+  domtoimage
+    .toPng(element)
+    .then(imgUrl => {
+      const img = new Image();
+      img.src = imgUrl;
+      document.body.appendChild(img);
+    })
+    .catch(err => console.error(err));
+
+  // Export to JPEG with quality setting
+  domtoimage.toJpeg(element, { quality: 0.95 }).then(imgUrl => {
+    /* Handle image */
+  });
+
+  // Export to SVG
+  domtoimage.toSvg(element).then(svgData => {
+    /* Handle image */
+  });
+</script>
+```
+
+### Key Considerations
+
+**Cross-Domain Resource Issues**
+
+- External images may not be captured unless the server allows CORS (`Access-Control-Allow-Origin`).
+- Use `{ useCORS: true }` when initializing `html2canvas`.
+
+**CSS Compatibility**
+
+- Some properties like `box-shadow` and `filter` may not render accurately.
+- `position: fixed` elements may be ignored.
+
+**Performance Optimization**
+
+- High-resolution exports (`scale: 2` or more) improve quality but increase processing time.
+- Consider using `window.devicePixelRatio` for better adaptation to high-DPI screens.
+
+**Font Rendering**
+
+- Ensure custom fonts are fully loaded before conversion (use **FontFaceObserver** if needed).
+
+## Alternative: Using SVG and Canvas
+
+For native implementation without third-party libraries, an **SVG foreignObject** approach can be used:
+
+```html
+<script>
+  const svgStr = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+    <foreignObject width="100%" height="100%">
+      <div xmlns="http://www.w3.org/1999/xhtml">${document.getElementById('content').innerHTML}</div>
+    </foreignObject>
+  </svg>
+`;
+  const imgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgStr)}`;
+</script>
+```
+
+However, due to browser security restrictions, this method may not support external resources properly.
+
+## Choosing the Right Solution
+
+<table>
+  <thead>
+    <tr>
+      <th>**Requirement**</th>
+      <th>**Recommended Method**</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>General Use</td>
+      <td>`html2canvas`</td>
+    </tr>
+    <tr>
+      <td>High-Quality Exports</td>
+      <td>`dom-to-image` (SVG)</td>
+    </tr>
+    <tr>
+      <td>Cross-Domain Content</td>
+      <td>Ensure CORS settings</td>
+    </tr>
+  </tbody>
+</table>
+
+By following these approaches, you can efficiently convert HTML elements into images using JavaScript while handling common pitfalls effectively.

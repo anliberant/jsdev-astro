@@ -1,0 +1,185 @@
+---
+title: How to Implement Reliable WebSocket Reconnection Logic with Ease
+slug: websocker-reconnection-logic
+heading: How to Reconnect WebSockets Reliably
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/websocker-reconnection-logic
+date: 2024-12-30
+author: anton liberant
+category: javascript
+type: howto
+tags: ['websocket']
+desc: Learn to implement reliable WebSocket reconnection logic with strategies to handle drops, keep data intact, and ensure smooth communication in your web apps.
+---
+
+WebSockets are a powerful tool for real-time communication between a client and a server. However, handling connection interruptions and ensuring reliability can be challenging. This guide demonstrates how to implement a robust WebSocket encapsulation with automatic reconnection, event listeners, and customizable parameters.
+
+## Why Encapsulate WebSocket Logic?
+
+By encapsulating WebSocket logic, you:
+
+- Simplify implementation across your app.
+- Handle reconnection automatically without duplicating code.
+- Improve maintainability and scalability.
+
+## Key Features of the WebSocket Encapsulation
+
+1. **Automatic Reconnection**: Retry connecting after disconnections with configurable parameters.
+2. **Event Listeners**: Add and manage WebSocket events like `open`, `close`, and `error`.
+3. **Customizable Parameters**: Control maximum reconnection attempts, intervals, and timeout limits.
+4. **Error Handling**: Gracefully handle errors and provide feedback.
+
+## Implementation: WebSocketReconnect Class
+
+Below is the complete implementation of a **WebSocketReconnect** class:
+
+```js
+class WebSocketReconnect {
+  constructor(
+    url,
+    maxReconnectAttempts = 3,
+    reconnectInterval = 20000,
+    maxReconnectTime = 180000
+  ) {
+    this.url = url;
+    this.maxReconnectAttempts = maxReconnectAttempts;
+    this.reconnectInterval = reconnectInterval;
+    this.maxReconnectTime = maxReconnectTime;
+    this.reconnectCount = 0;
+    this.reconnectTimeout = null;
+    this.startTime = null;
+    this.socket = null;
+    this.listenerEvents = {};
+
+    if (this.checkWssUrl()) {
+      this.connect();
+    }
+  }
+
+  checkWssUrl(url = this.url) {
+    if (/wss:\/\/.*/.test(url) || /ws:\/\/.*/.test(url)) {
+      return true;
+    } else {
+      console.error('Invalid WebSocket URL');
+      return false;
+    }
+  }
+
+  connect() {
+    console.log('Connecting...');
+    this.socket = new WebSocket(this.url);
+
+    this.socket.onopen = () => {
+      console.log('WebSocket Connection Opened');
+      this.triggerEvent('open');
+      this.clearReconnectTimeout();
+      this.reconnectCount = 0;
+    };
+
+    this.socket.onclose = event => {
+      console.log('WebSocket Connection Closed', event);
+      this.triggerEvent('close');
+      this.handleReconnect();
+    };
+
+    this.socket.onerror = error => {
+      console.error('WebSocket Error', error);
+      this.triggerEvent('error');
+      this.handleReconnect();
+    };
+  }
+
+  triggerEvent(type) {
+    const events = this.listenerEvents[type] || [];
+    events.forEach(callback => callback());
+  }
+
+  addEventListener(type, callback) {
+    if (!this.listenerEvents[type]) {
+      this.listenerEvents[type] = [];
+    }
+    this.listenerEvents[type].push(callback);
+  }
+
+  handleReconnect() {
+    if (
+      this.reconnectCount < this.maxReconnectAttempts &&
+      (!this.startTime || Date.now() - this.startTime < this.maxReconnectTime)
+    ) {
+      this.reconnectCount++;
+      console.log(
+        `Reconnecting (${this.reconnectCount}/${this.maxReconnectAttempts})...`
+      );
+
+      this.reconnectTimeout = setTimeout(() => {
+        this.connect();
+      }, this.reconnectInterval);
+
+      if (!this.startTime) {
+        this.startTime = Date.now();
+      }
+    } else {
+      console.log('Max reconnection attempts reached or timeout exceeded.');
+    }
+  }
+
+  clearReconnectTimeout() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+  }
+
+  close() {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.close();
+    }
+    this.clearReconnectTimeout();
+    this.reconnectCount = 0;
+    this.startTime = null;
+  }
+}
+```
+
+### Example Usage
+
+Here’s how you can use the WebSocketReconnect class:
+
+```js
+import WebSocketReconnect from './WebSocketReconnect';
+
+import WebSocketReconnect from './WebSocketReconnect';
+
+const ws = new WebSocketReconnect('ws://your-websocket-url');
+
+ws.addEventListener('open', () => {
+  console.log('WebSocket opened');
+});
+
+ws.addEventListener('close', () => {
+  console.log('WebSocket closed');
+});
+
+ws.addEventListener('error', () => {
+  console.log('WebSocket encountered an error');
+});
+
+// Close the WebSocket connection when no longer needed
+ws.close();
+```
+
+### Key Methods Explained
+
+1. **connect**: Establishes the WebSocket connection and sets event listeners.
+2. **handleReconnect**: Implements reconnection logic with retry limits.
+3. **addEventListener**: Registers event listeners for WebSocket events.
+4. **close**: Closes the WebSocket connection and clears reconnection timers.
+
+### Benefits of Using This Encapsulation
+
+- **Reduced Boilerplate**: Write less repetitive code for WebSocket management.
+- **Improved Reliability**: Automatically recover from connection disruptions.
+- **Flexibility**: Customize parameters like retry limits and intervals.
+
+By following this guide, you can implement a reliable WebSocket encapsulation that simplifies handling real-time connections in your applications.

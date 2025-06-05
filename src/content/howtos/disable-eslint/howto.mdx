@@ -1,0 +1,147 @@
+---
+title: 'How to Disable Specific ESLint Rules: Inline, Config, or CLI'
+slug: disable-eslint
+heading: 'Disable ESLint Rules: Inline, Config, or CLI'
+icon: /icons/eslint.png
+image: /icon.png
+permalink: howto/disable-eslint
+date: 2024-10-21
+author: anton liberant
+category: javascript
+type: howto
+tags: ['linting', 'code-quality']
+desc: Learn to disable specific ESLint rules in JavaScript using comments, config files, or CLI options. Keep code quality while customizing linting easily.
+---
+
+When working with a large JavaScript project, ESLint is essential for maintaining consistent code quality and catching errors. However, there are cases where you might want to disable certain rules for specific files or sections of your project. Whether you're dealing with legacy code, third-party libraries, or just need a temporary exception, ESLint provides multiple ways to disable or adjust rules for individual files.
+
+In this article, we’ll explore several methods to disable ESLint rules for specific files in your project.
+
+## Why You Might Need to Disable ESLint Rules
+
+There are a few common reasons why developers might want to disable certain ESLint rules for specific files:
+
+1. Third-party libraries or legacy code that don’t conform to your ESLint configuration.
+2. Experimental code or temporary exceptions during development.
+3. Generated files, such as files from code generators, that are not meant to be linted.
+4. Custom scripts or configurations that require different rules.
+
+Now, let’s look at how you can achieve this in ESLint.
+
+## Method 1: Disable ESLint Rules in Specific Files via Configuration
+
+ESLint allows you to specify overrides for particular files in your configuration file. This is a clean and scalable approach, especially for large projects with multiple exceptions.
+
+Here’s how to use this method:
+
+### Step 1: Modify Your `.eslintrc` or `eslint.config.js`
+
+In your ESLint configuration file (usually `.eslintrc.json`, `.eslintrc.js`, or `eslint.config.js`), you can use the `overrides` property to specify rules for particular files. Here's an example:
+
+```json
+{
+  "overrides": [
+    {
+      "files": ["legacy/**/*.js"],
+      "rules": {
+        "no-console": "off",
+        "no-unused-vars": "off"
+      }
+    }
+  ]
+}
+```
+
+In this example:
+
+- ESLint will ignore the `no-console` and `no-unused-vars` rules for all JavaScript files inside the `legacy/` folder.
+
+### Step 2: Run ESLint
+
+After adding the overrides, running ESLint will now skip the specified rules for the target files.
+
+## Method 2: Use Inline ESLint Comments
+
+If you only need to disable ESLint for a specific file or section of a file, you can use inline ESLint comments.
+
+### Disabling ESLint for the Entire File
+
+To disable all ESLint rules for an entire file, add this comment at the top of the file:
+
+```js
+/* eslint-disable */
+```
+
+This tells ESLint to ignore any rules for that file.
+
+### Disabling Specific Rules in a File
+
+You can also disable specific rules by adding the rule name in the comment:
+
+```js
+/* eslint-disable no-console */
+```
+
+This disables only the `no-console` rule for the entire file.
+
+### Re-enabling ESLint
+
+If you only want to disable ESLint for part of the file, you can re-enable it by using the `eslint-enable` comment:
+
+```js
+/* eslint-disable no-console */
+
+// Code where console statements are allowed
+
+/* eslint-enable no-console */
+```
+
+This ensures that the rest of the file follows the normal ESLint rules.
+
+## Method 3: Exclude Files in the ESLint Configuration
+
+Sometimes you might want to completely exclude certain files or directories from being linted. This is especially useful for third-party libraries or large bundles that shouldn't be part of your linting process.
+
+### Step 1: Modify Your `.eslintignore` File
+
+Create or modify a `.eslintignore` file in your project’s root directory. Inside this file, you can specify the paths you want to exclude from linting:
+
+```js
+/build/
+/vendor/
+/legacy/*
+```
+
+This will exclude the `build/`, `vendor/`, and any files in the `legacy/` folder from being linted.
+
+### Step 2: Check with ESLint
+
+Run ESLint as you normally would, and it will skip the files or directories listed in your `.eslintignore` file.
+
+## Method 4: ESLint Disable Rules via Command Line
+
+For quick one-time executions, you can disable ESLint rules directly from the command line when running ESLint.
+
+### Step 1: Use `--rule` Flag
+
+You can disable specific rules when running ESLint from the command line using the `--rule` flag:
+
+```bash
+eslint yourfile.js --rule 'no-console: off'
+```
+
+This disables the `no-console` rule for `yourfile.js` only during that ESLint execution.
+
+## Best Practices for Disabling ESLint Rules
+
+While disabling ESLint rules can be useful, it’s essential to do so carefully. Here are some best practices to follow:
+
+- **Keep rule overrides to a minimum**. Disabling too many rules can make your codebase less maintainable and error-prone.
+- **Use inline comments sparingly**. If you find yourself frequently disabling the same rules in many files, it might be worth adjusting your global ESLint configuration instead.
+- **Document exceptions**. Always leave comments explaining why a rule was disabled, especially in the case of inline comments or large file exclusions. This helps others (and future you) understand the reason for the exception.
+
+## Conclusion
+
+Disabling ESLint rules for specific files is a powerful tool that allows you to tailor linting to your project's unique needs. Whether you’re dealing with legacy code, third-party libraries, or temporary experiments, ESLint provides multiple ways to handle exceptions without compromising the rest of your codebase.
+
+By following the methods outlined above, you can maintain flexibility in your project while still upholding high standards of code quality.

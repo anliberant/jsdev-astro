@@ -1,0 +1,121 @@
+---
+title: How to Install and Use Timesheet.js to Create Cool Timetables
+slug: timesheetjs-timetables
+heading: Installing and Using Timesheet.js for Timetables
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/timesheetjs-timetables
+date: 2025-01-19
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['Timetables', 'Timesheet.js']
+desc: Learn how to install and use Timesheet.js to create stunning, responsive timelines with minimal code. Perfect for web designers and developers.
+---
+
+In modern web design, timelines are widely used to showcase project progress, historical events, personal experiences, and more. Creating a timeline that is visually appealing and functional can be challenging. Fortunately, [Timesheet.js](https://github.com/sbstjn/timesheet.js), a lightweight JavaScript library, simplifies this process by providing an easy and powerful solution.
+
+This article will guide you through the installation and usage of Timesheet.js, including detailed examples to help you create stunning timetables.
+
+## Core Features of Timesheet.js
+
+- **No Dependencies**: Timesheet.js does not rely on external frameworks like jQuery or Angular.js, ensuring simplicity and faster loading times.
+- **Ease of Use**: Timelines can be created with just a few lines of JavaScript.
+- **Highly Customizable**: Developers can use CSS classes to style timelines according to their requirements.
+- **Responsive Design**: The library is mobile-friendly, ensuring optimal display across various screen sizes.
+
+### Official Resources
+
+- [Official Website](https://sbstjn.github.io/timesheet.js/)
+- [GitHub Repository](https://github.com/sbstjn/timesheet.js)
+
+## Installation and Setup
+
+### Step 1: Include Timesheet.js Files
+
+Add the following script and stylesheet to your HTML file:
+
+```html
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/timesheet.js/dist/timesheet.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/timesheet.js/dist/timesheet.min.js"></script>
+```
+
+### Step 2: Create a Container
+
+Create a container in your HTML file where the timetable will be rendered:
+
+```html
+<div id="timeline"></div>
+```
+
+### Step 3: Define Data for the Timeline
+
+Prepare the timeline data in JavaScript. Each entry includes start and end dates, a description, and an optional CSS class:
+
+```js
+const timelineData = [
+  ['09/2018', '06/2019', 'Enrolled & Completed Basic Courses', 'default'],
+  ['09/2019', '06/2020', 'Specialized Course Study', 'highlight'],
+  ['07/2020', '01/2021', 'Summer Internship', 'important'],
+  ['09/2020', '06/2021', 'Advanced Courses', 'default'],
+  ['07/2021', '01/2022', 'Final Project', 'highlight'],
+  ['06/2022', '09/2022', 'Graduation & Employment', 'important'],
+];
+```
+
+### Step 4: Initialize Timesheet.js
+
+Initialize the library with your container ID, start year, end year, and data:
+
+```html
+<script>
+  const timesheet = new Timesheet('timeline', 2018, 2022, timelineData);
+</script>
+```
+
+## Full Example
+
+Combine the above steps into a complete HTML file:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Learn how to use Timesheet.js to create responsive and customizable timelines for web projects."
+    />
+    <title>How to Use Timesheet.js</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/timesheet.js/dist/timesheet.min.css"
+    />
+  </head>
+  <body>
+    <h1>Student Learning Journey</h1>
+    <div id="timeline"></div>
+    <script src="https://cdn.jsdelivr.net/npm/timesheet.js/dist/timesheet.min.js"></script>
+    <script>
+      const timelineData = [
+        ['09/2018', '06/2019', 'Enrolled & Completed Basic Courses', 'default'],
+        ['09/2019', '06/2020', 'Specialized Course Study', 'highlight'],
+        ['07/2020', '01/2021', 'Summer Internship', 'important'],
+        ['09/2020', '06/2021', 'Advanced Courses', 'default'],
+        ['07/2021', '01/2022', 'Final Project', 'highlight'],
+        ['06/2022', '09/2022', 'Graduation & Employment', 'important'],
+      ];
+
+      const timesheet = new Timesheet('timeline', 2018, 2022, timelineData);
+    </script>
+  </body>
+</html>
+```
+
+## Conclusion
+
+Timesheet.js is a versatile JavaScript library that simplifies the creation of visually appealing and functional timelines. With minimal code and rich customization options, it’s perfect for personal projects or enterprise applications. Try incorporating it into your next project to enhance the user experience.

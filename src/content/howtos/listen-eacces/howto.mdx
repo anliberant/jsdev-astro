@@ -1,0 +1,121 @@
+---
+title: How to Solve listen EACCES - permission denied 0.0.0.0:3000
+slug: listen-eacces
+heading: Resolving listen EACCES Permission Denied 0.0.0.0:3000
+icon: /icons/windows.png
+image: ./images/listen-eacces.png
+permalink: howto/listen-eacces
+date: 2023-10-14
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['windows']
+desc: Learn how to fix the 'listen EACCES - permission denied 0.0.0.0:3000' error with practical solutions to resolve permission issues when running your server.
+---
+
+## How to Solve "Error: listen EACCES: Permission Denied 0.0.0.0:3000" in Windows and Node.js
+
+If you're a **Node.js developer**, you've likely encountered the **"Error: listen EACCES: permission
+denied 0.0.0.0:3000"** error message at some point while trying to run your application. This error
+occurs when Node.js is unable to bind to the specified port due to insufficient permissions.
+Fortunately, solving this issue is relatively straightforward, and this article will guide you
+through the steps to resolve it.
+
+### Understanding the Error:
+
+The error message you encounter may look like this:
+
+<span className='code-cmd'>
+  Error: listen EACCES: permission denied 0.0.0.0:3000
+</span>
+
+## Solutions:
+
+### 1. Change the Port:
+
+The simplest solution is to change the port your application is trying to listen on. Ports below
+**1024** require elevated permissions, so you can choose a higher port number, such as **8080** or
+**3001**, which usually don't require special privileges.
+
+**Express.js**
+
+```js
+const PORT = 8080;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+```
+
+**NestJs**
+
+Modify the main.ts file:
+
+```js
+import { AppModule } from './app.module';
+import { NestFactory } from '@nestjs/core';
+
+import { AppModule } from './app.module';
+import { NestFactory } from '@nestjs/core';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3001);
+}
+bootstrap();
+```
+
+**NextJs**
+
+You can set port number using your package.json file, "scripts" section.
+
+```json
+ "scripts": {
+       "dev": "next dev -p 8080",
+       "start": "next start -p 8080",
+},
+```
+
+### 2. Restart the Windows NAT Driver service:
+
+Open Command Prompt or PowerShell as Administrator and run
+
+<span className='code-cmd'>net stop winnat</span>
+
+then
+
+<span className='code-cmd'>
+  netsh int ipv4 set dynamic tcp start=49152 num=16384
+</span>
+
+then
+
+<span className='code-cmd'>
+  netsh int ipv4 set dynamic tcp start=49152 num=16384
+</span>
+
+then
+
+<span className='code-cmd'>
+  netsh int ipv6 set dynamic tcp start=49152 num=16384
+</span>
+
+and
+
+<span className='code-cmd'>net start winnat</span>
+
+#### Conclusion:
+
+The **"Error: listen EACCES: permission denied"** error in **NodeJs** is a common issue that can be
+resolved by changing the port your application listens on, using sudo (though not recommended for
+production), specifying a different user or group, changing port permissions with setcap, or
+utilizing a reverse proxy in production environments. Choose the solution that best fits your use
+case and security requirements to get your Node.js application up and running without encountering
+this error.
+
+<div className='single-post__img-wrapper'>
+  ![Error: listen EACCES: permission denied
+  0.0.0.0:3000](./images/listen-eacces.png)
+  <span className='single-post__img-alt'>
+    Error: listen EACCES: Permission Denied 0.0.0.0:3000
+  </span>
+</div>

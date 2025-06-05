@@ -1,0 +1,271 @@
+---
+title: Create a Custom NextJS Star Rating Component From Scratch
+slug: nextjs-rating
+heading: Build a Star Rating Component in Next.js
+image: ./images/nextjs-rating.png
+permalink: nextjs-rating
+date: 2023-12-14
+author: anton liberant
+category: nextjs
+type: post
+tags: ['rating', 'tailwindcss']
+desc: Easily customize and reuse a star rating component in your Next.js apps to let users rate items with a simple, interactive UI.
+---
+
+Sure, creating a custom **Star Rating** component in **Next.js** involves creating a reusable React
+component that allows users to rate something using stars. Let's create a simple Star Rating
+component from scratch. We'll use React state to manage the rating and handle user interactions.
+
+## Prerequisites:
+
+Before we begin, ensure that you have Node.js and npm (Node Package Manager) installed on your
+system. Additionally, you should have NestJS CLI installed globally. You can install it with the
+following command:
+
+<span className='code-cmd'>npm install -g @nestjs/cli</span>
+
+## Installation
+
+## 1. Setting Up the Project:
+
+<span className='code-cmd'>nest new rating</span>
+
+## 2. Add TailwindCSS:
+
+<span className='code-cmd'>npm install -D tailwindcss</span>
+
+Initialize the tailwind.
+
+<span className='code-cmd'>npx tailwindcss init -p</span>
+
+## 3. Configure your tailwind.config.js file
+
+```js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+
+    // Or if using `src` directory:
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+## 4. Add Tailwind layers to the globals.css
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+## 5. Create a new folder named Rating in the components folder:
+
+<div className='code-cmd'>cd components && mkdir rating</div>
+
+## 6. Create 5 new files for Rating and Star Components:
+
+Rating.tsx <br/> Rating.props.ts <br /> Rating.module.css <br /> Star.tsx <br /> Star.props.ts
+
+## 7. Let's begin with the Star Component:
+
+Modify the Start.props.ts file:
+
+```js
+import { DetailedHTMLProps } from 'react';
+
+export interface StarProps
+  extends DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> {
+  isFilled: boolean;
+}
+```
+
+Here we are extending the DetailedHTMLProps to provide the all necessary props as onClick,
+onMouseEnter, onMouseLeave, TabIndex, and other.
+
+Modify Star.tsx
+
+```js
+/* eslint-disable max-len */
+'use client';
+
+import { StarProps } from './Star.props';
+
+const Star = ({ isFilled = false, className, ...props }: StarProps) => {
+  return (
+    <span className={className}>
+      <svg
+        width='20'
+        height='20'
+        viewBox='0 0 20 20'
+        fill={isFilled ? '#FD7E14' : '#212121'}
+        xmlns='http://www.w3.org/2000/svg'
+        {...props}
+      >
+        <path
+          fillRule='evenodd'
+          clipRule='evenodd'
+          d='M13.4713 17.739C13.649 17.8405 13.8521 17.9167 14.0807 17.9167C14.4107 17.9167 14.7662 17.7643 14.9693 17.485C15.1725 17.2057 15.2486 16.8503 15.1725 16.5202L14.1314 12.0768C14.1314 12.0261 14.1568 11.9753 14.1822 11.9499L17.5084 8.9538C17.8639 8.64911 17.9908 8.16669 17.8385 7.73505C17.6861 7.30341 17.3053 6.99872 16.8482 6.97333L12.5572 6.64325C12.5064 6.64325 12.481 6.61786 12.4557 6.56708L10.856 2.40302C10.6783 1.94598 10.2721 1.66669 9.78964 1.66669C9.30722 1.66669 8.90097 1.94598 8.69785 2.40302L7.09824 6.56708C7.07285 6.61786 7.04746 6.64325 6.99667 6.64325L2.70566 6.97333C2.24863 6.99872 1.86777 7.30341 1.71542 7.73505C1.58847 8.16669 1.71542 8.64911 2.0455 8.9538L5.37167 11.9499C5.42246 11.9753 5.42246 12.0261 5.42246 12.0768L4.40683 16.5202C4.30527 16.8503 4.38144 17.2057 4.60996 17.485C4.81308 17.7643 5.14316 17.9167 5.49863 17.9167C5.72714 17.9167 5.93027 17.8405 6.13339 17.739L9.73886 15.3776C9.78964 15.3522 9.81503 15.3522 9.86582 15.3776L13.4713 17.739Z'
+          fill={isFilled ? '#FD7E14' : 'none'}
+          stroke={isFilled ? '#FD7E14' : '#212121'}
+        />
+      </svg>
+    </span>
+  );
+};
+export default Star;
+```
+
+## 8. Next step: modify the Rating.props.ts file:
+
+```js
+import { DetailedHTMLProps } from 'react';
+
+export interface StarProps
+  extends DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> {
+  isFilled: boolean;
+}
+```
+
+## 9. New let's create the Rating.tsx file:
+
+Rating.module.css
+
+```css
+.rating {
+  @apply flex gap-2;
+}
+.filled {
+  @apply fill-yellow;
+}
+```
+
+Rating.props.ts
+
+```js
+import { DetailedHTMLProps } from 'react';
+
+export interface RatingProps
+  extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+  isEditable: boolean;
+  rating: number;
+  setRating?: (rating: number) => void;
+}
+```
+
+Rating.tsx
+
+```js
+import { useEffect, useState, KeyboardEvent } from 'react';
+
+import { RatingProps } from './Rating.props';
+import styles from './Rating.module.css';
+import Star from './Star';
+
+const Rating = ({
+  isEditable = false,
+  rating,
+  setRating,
+  className,
+  ...props
+}: RatingProps): JSX.Element => {
+  const [ratingArray, setRatingArray] = useState<JSX.Element[]>(new Array(5).fill(<></>));
+
+  const hoverHandle = (idx: number) => {
+    if (!isEditable) {
+      return;
+    }
+    constructRating(idx);
+  };
+  const clickHandle = (idx: number) => {
+    if (!isEditable || !setRating) {
+      return;
+    }
+    setRating(idx);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLSpanElement>, idx: number) => {
+    if (!isEditable || !setRating) {
+      return;
+    }
+    if (e.code !== 'Space') {
+      return;
+    }
+    setRating(idx);
+  };
+
+  const constructRating = (currentRating: number) => {
+    console.log('currentRating', currentRating);
+    const updatedArray = ratingArray.map((ratingItem: JSX.Element, idx: number) => {
+      return (
+        <Star
+          isFilled={idx < currentRating}
+          key={idx}
+          onMouseEnter={() => hoverHandle(idx + 1)}
+          onMouseLeave={() => hoverHandle(rating)}
+          onClick={() => clickHandle(idx + 1)}
+          className={`${className || ''} ${isEditable ? 'cursor-pointer' : ''}`}
+          tabIndex={isEditable ? 0 : -1}
+          onKeyDown={(e: KeyboardEvent<HTMLSpanElement>) => handleKeyDown(e, idx + 1)}
+        />
+      );
+    });
+    setRatingArray(updatedArray);
+  };
+
+  useEffect(() => {
+    constructRating(rating);
+  }, [rating]);
+
+  return (
+    <div className={styles.rating} {...props}>
+      {ratingArray.map((r: JSX.Element, idx) => (
+        <span key={idx}>{r}</span>
+      ))}
+    </div>
+  );
+};
+export default Rating;
+```
+
+## 10. Use the Rating component in your app router. Open app/page.tsx and import and use the component:
+
+We need also to provide the **setRating** function to the component.
+
+```js
+'use client';
+import { useState } from 'react';
+
+import Rating from '@/components/ui/Rating/Rating';
+
+export default function Home(): JSX.Element {
+  const [rating, setRating] = useState(3);
+  return (
+    <main>
+      <Rating isEditable={true} setRating={setRating} rating={rating} />
+      <Rating isEditable={false} rating={4} />
+    </main>
+  );
+}
+```
+
+## 11. Run your Next.js app:
+
+<span className='code-cmd'>npm run dev</span>
+
+<div className='single-post__img-wrapper'>
+  ![React rating component](./images/nextjs-rating-component.png)
+  <span className='single-post__img-alt'>React rating component</span>
+</div>
+
+Visit http://localhost:3000 in your browser, and you should see your custom Star Rating component.
+
+This example is a simple representation of a star rating component. You can customize it further by
+adding styles, animations, and additional features based on your requirements.

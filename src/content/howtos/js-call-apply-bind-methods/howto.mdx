@@ -1,0 +1,166 @@
+---
+title: 'How to Implement call(), apply(), and bind() Methods in JS'
+slug: js-call-apply-bind-methods
+heading: "Mastering JavaScript's Function Context Methods: call(), apply(), and bind()"
+icon: /icons/javascript.png
+image: ./images/javascript-call-apply-bind-methods.png
+permalink: howto/js-call-apply-bind-methods
+date: 2025-04-03
+author: anton liberant
+category: javascript
+type: howto
+tags: ['call()', 'apply()', 'bind()']
+desc: Learn to use JavaScript’s call(), apply(), and bind() methods to control function context, enhancing your code’s flexibility, reusability, and maintainability.
+---
+
+![Understanding call, apply, and bind in JavaScript](./images/javascript-call-apply-bind-methods.png)
+
+## 1. `call()`
+
+**Effect**: Executes a function immediately and sets the `this` context.
+**Syntax**: `function.call(thisArg, arg1, arg2, ...)`
+**Example**:
+
+```js
+function greet(greeting, punctuation) {
+  console.log(greeting + ', ' + this.name + punctuation);
+}
+const obj = { name: 'Alice' };
+greet.call(obj, 'Hello', '!'); // Output: Hello, Alice!
+```
+
+## 2. `apply()`
+
+**Effect**: Similar to `call`, but parameters are passed as an array.
+**Syntax**: `function.apply(thisArg, [argsArray])`
+**Example**:
+
+```js
+function greet(greeting, punctuation) {
+  console.log(greeting + ', ' + this.name + punctuation);
+}
+const obj = { name: 'Bob' };
+greet.apply(obj, ['Hi', '!!']); // Output: Hi, Bob!!
+```
+
+## 3. `bind()`
+
+**Effect**: Returns a new function with `this` permanently bound.
+**Syntax**: `function.bind(thisArg, arg1, arg2, ...)`
+**Example**:
+
+```js
+function greet(greeting, punctuation) {
+  console.log(greeting + ', ' + this.name + punctuation);
+}
+const obj = { name: 'Charlie' };
+const boundGreet = greet.bind(obj, 'Hey');
+boundGreet('!!!'); // Output: Hey, Charlie!!!
+```
+
+## Handwritten Implementations
+
+### Implementing `call()`
+
+**Steps:**
+
+1. Verify that the caller is a function.
+2. Handle the `context` argument (convert `null` or `undefined` to `globalThis`).
+3. Assign a temporary function property to `context`.
+4. Execute the function and return the result.
+5. Clean up the temporary property.
+
+**Implementation:**
+
+```js
+Function.prototype.myCall = function (context, ...args) {
+  if (typeof this !== 'function') {
+    throw new TypeError('Caller is not a function');
+  }
+  context = context == null ? globalThis : Object(context);
+  const key = Symbol('temp');
+  Object.defineProperty(context, key, { value: this, enumerable: false });
+  try {
+    return context[key](...args);
+  } finally {
+    delete context[key];
+  }
+};
+```
+
+## Implementing `apply()`
+
+**Steps:**
+
+1. Verify the caller is a function.
+2. Ensure the second argument is an array.
+3. Handle `context` argument similarly to `call`.
+4. Assign a temporary function property to `context`.
+5. Execute the function with the provided array arguments.
+6. Clean up the temporary property.
+
+**Implementation:**
+
+```js
+Function.prototype.myApply = function (context, args) {
+  if (typeof this !== 'function') {
+    throw new TypeError('Caller is not a function');
+  }
+  if (!Array.isArray(args)) {
+    throw new TypeError('The parameter must be an array');
+  }
+  context = context == null ? globalThis : Object(context);
+  const key = Symbol('temp');
+  context[key] = this;
+  try {
+    return context[key](...args);
+  } finally {
+    delete context[key];
+  }
+};
+```
+
+## Implementing `bind()`
+
+**Steps:**
+
+1. Verify that the caller is a function.
+2. Handle the `context` argument.
+3. Store the original function and predefined arguments.
+4. Return a new function that merges predefined and new arguments.
+5. Ensure the prototype chain is maintained.
+
+**Implementation:**
+
+```js
+Function.prototype.myBind = function (context, ...args) {
+  if (typeof this !== 'function') {
+    throw new TypeError(
+      'Function.prototype.myBind - what is trying to be bound is not callable'
+    );
+  }
+  context = context == null ? globalThis : Object(context);
+  const fn = this;
+  const bound = function (...innerArgs) {
+    const allArgs = args.concat(innerArgs);
+    if (this instanceof bound) {
+      return new fn(...allArgs);
+    } else {
+      return fn.apply(context, allArgs);
+    }
+  };
+  if (fn.prototype) {
+    bound.prototype = Object.create(fn.prototype);
+  }
+  return bound;
+};
+```
+
+## Summary
+
+- `call()` and `apply()` execute functions immediately with a specified `this` `context`.
+- `apply()` differs from `call()` by passing arguments as an array.
+- `bind()` returns a new function with permanently bound `this`, allowing partial application.
+- Handwritten implementations use `Symbol` for temporary property names to avoid conflicts.
+
+By understanding and implementing these methods manually, developers can deepen their grasp of JavaScript's function execution context and scope.

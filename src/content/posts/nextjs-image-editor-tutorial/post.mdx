@@ -1,0 +1,1218 @@
+---
+title: Build a Powerful Image Editor with Next.js and glfx.js
+slug: nextjs-image-editor-tutorial
+heading: Creating a Next.js Image Editor with glfx.js
+image: ./images/nextjs-glfx-image-editor-tutorial.png
+permalink: nextjs-image-editor-tutorial
+date: 2025-04-01
+author: anton liberant
+category: nextjs
+type: post
+tags: ['image-editor', 'glfx', 'tailwindcss', 'shadcn']
+desc: Build a professional image editor in Next.js with glfx.js. Learn setup, filters, UI design, and optimization for a smooth, high-quality user experience.
+---
+
+Modern web applications often require real-time image processing capabilities. With Next.js for performance and glfx.js for GPU-accelerated image effects, we can create a fast and responsive image editor with various filters and transformations.
+
+[Demo](https://image-editor-glfx.vercel.app/) | [Source Code](https://github.com/jsdevspace/image-editor-nextjs)
+
+In this guide, we’ll cover:
+
+- Setting up a Next.js project
+- Integrating glfx.js for real-time image effects
+- Implementing file uploads
+- Adding filters and transformations
+- Optimizing performance
+
+Let’s get started!
+
+## Step 1: Set Up a Next.js Project
+
+First, create a new Next.js project:
+
+<div className='code-cmd'>npx create-next-app@latest next-image-editor</div>
+
+Install glfx.js for image processing:
+
+<div className='code-cmd'>npm install glfx</div>
+
+### Initialize ShadCN UI
+
+To set up ShadCN UI for a modern interface, install it with:
+
+<div className='code-cmd'>npx shadcn-ui@latest init</div>
+
+Then, install the necessary components:
+
+<div className='code-cmd'>
+  npx shadcn-ui@latest add button select slider card label tabs
+</div>
+
+## Step 2: Add glfx Hook and Types
+
+Create `lib/use-glfx.ts` to handle loading `glfx.js` dynamically:
+
+```ts
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export function useGlfx() {
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+    'loading'
+  );
+
+  // Add a function to check if WebGL is supported
+  const isWebGLSupported = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      return !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+      );
+    } catch (e) {
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    // First check if WebGL is supported
+    if (!isWebGLSupported()) {
+      console.error('WebGL is not supported in this browser');
+      setStatus('error');
+      return;
+    }
+
+    // Check if glfx is already loaded
+    if (window.fx) {
+      setStatus('success');
+      return;
+    }
+
+    // Function to load glfx.js directly
+    const loadGlfx = () => {
+      const script = document.createElement('script');
+      script.src = 'https://evanw.github.io/glfx.js/glfx.js';
+      script.async = true;
+
+      script.onload = () => {
+        // Check if window.fx is available after script loads
+        setTimeout(() => {
+          if (window.fx) {
+            setStatus('success');
+          } else {
+            console.error('glfx.js loaded but fx object not available');
+            setStatus('error');
+          }
+        }, 300);
+      };
+
+      script.onerror = () => {
+        console.error('Failed to load glfx.js');
+        setStatus('error');
+      };
+
+      document.body.appendChild(script);
+      return script;
+    };
+
+    // Try to load the script
+    const scriptElement = loadGlfx();
+
+    // Set a timeout for the load attempt
+    const timeout = setTimeout(() => {
+      if (status === 'loading') {
+        console.error('glfx.js load timed out');
+        setStatus('error');
+      }
+    }, 5000);
+
+    return () => {
+      clearTimeout(timeout);
+      if (scriptElement && scriptElement.parentNode) {
+        scriptElement.parentNode.removeChild(scriptElement);
+      }
+    };
+  }, [status]);
+
+  return status;
+}
+```
+
+Create `types/glfx.d.ts` for type safety:
+
+```ts
+declare global {
+  interface Window {
+    fx: {
+      canvas: () => any;
+    };
+  }
+}
+
+export {};
+```
+
+Create `html2canvas.d.ts` to work with the `html2canvas` library:
+
+```ts
+declare module 'html2canvas' {
+  interface Html2CanvasOptions {
+    allowTaint?: boolean;
+    backgroundColor?: string | null;
+    canvas?: HTMLCanvasElement;
+    foreignObjectRendering?: boolean;
+    imageTimeout?: number;
+    ignoreElements?: (element: Element) => boolean;
+    logging?: boolean;
+    onclone?: (document: Document) => void;
+    proxy?: string;
+    removeContainer?: boolean;
+    scale?: number;
+    useCORS?: boolean;
+    width?: number;
+    height?: number;
+    x?: number;
+    y?: number;
+    scrollX?: number;
+    scrollY?: number;
+    windowWidth?: number;
+    windowHeight?: number;
+  }
+
+  function html2canvas(
+    element: HTMLElement,
+    options?: Html2CanvasOptions
+  ): Promise<HTMLCanvasElement>;
+
+  export default html2canvas;
+}
+```
+
+## Step 3: Create the Image Editor Component
+
+Now, create a component to handle image uploads and apply filters.
+
+Create a new file: `components/image-editor.tsx` and add the following code:
+
+```tsx
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { useGlfx } from '@/lib/use-glfx';
+
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { useGlfx } from '@/lib/use-glfx';
+
+// Simplified filter types
+type FilterType =
+  | 'brightness'
+  | 'contrast'
+  | 'saturation'
+  | 'sepia'
+  | 'vignette'
+  | 'swirl'
+  | 'bulgePinch';
+
+const filterConfigs = {
+  brightness: {
+    name: 'Brightness',
+    params: { amount: { min: -1, max: 1, default: 0, step: 0.01 } },
+  },
+  contrast: {
+    name: 'Contrast',
+    params: { amount: { min: -1, max: 1, default: 0, step: 0.01 } },
+  },
+  saturation: {
+    name: 'Saturation',
+    params: { amount: { min: -1, max: 1, default: 0, step: 0.01 } },
+  },
+  sepia: {
+    name: 'Sepia',
+    params: { amount: { min: 0, max: 1, default: 0.5, step: 0.01 } },
+  },
+  vignette: {
+    name: 'Vignette',
+    params: {
+      size: { min: 0, max: 1, default: 0.5, step: 0.01 },
+      amount: { min: 0, max: 1, default: 0.5, step: 0.01 },
+    },
+  },
+  swirl: {
+    name: 'Swirl',
+    params: {
+      angle: { min: -25, max: 25, default: 3, step: 0.1 },
+    },
+  },
+  bulgePinch: {
+    name: 'Bulge / Pinch',
+    params: {
+      strength: { min: -1, max: 1, default: 0.5, step: 0.01 },
+    },
+  },
+};
+
+export default function ImageEditor({ imageUrl }) {
+  const [selectedFilter, setSelectedFilter] =
+    useState<FilterType>('brightness');
+  const [filterParams, setFilterParams] = useState<any>({});
+  const [texture, setTexture] = useState<any>(null);
+  const [canvas, setCanvas] = useState<any>(null);
+  const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(
+    null
+  );
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const glfxStatus = useGlfx();
+
+  // Initialize filter params when filter changes
+  useEffect(() => {
+    const initialParams = {};
+    Object.entries(filterConfigs[selectedFilter].params).forEach(
+      ([key, param]) => {
+        initialParams[key] = param.default;
+      }
+    );
+    setFilterParams(initialParams);
+  }, [selectedFilter]);
+
+  // Initialize canvas when image loads
+  useEffect(() => {
+    if (!imageUrl || glfxStatus !== 'success') return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      setOriginalImage(img);
+
+      if (!window.fx) return;
+
+      try {
+        const glfxCanvas = window.fx.canvas();
+        const glfxTexture = glfxCanvas.texture(img);
+
+        const maxWidth = containerRef.current?.clientWidth || 800;
+        const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+        glfxCanvas.width = Math.floor(img.width * scale);
+        glfxCanvas.height = Math.floor(img.height * scale);
+
+        setTexture(glfxTexture);
+        setCanvas(glfxCanvas);
+
+        if (canvasRef.current?.parentNode) {
+          canvasRef.current.parentNode.replaceChild(
+            glfxCanvas,
+            canvasRef.current
+          );
+          canvasRef.current = glfxCanvas;
+        }
+
+        glfxCanvas.draw(glfxTexture).update();
+      } catch (e) {
+        console.error('Error initializing glfx:', e);
+      }
+    };
+
+    img.src = imageUrl;
+  }, [imageUrl, glfxStatus]);
+
+  // Apply filter when params change
+  useEffect(() => {
+    if (!canvas || !texture) return;
+
+    try {
+      canvas.draw(texture);
+
+      switch (selectedFilter) {
+        case 'brightness':
+          canvas.brightnessContrast(filterParams.amount, 0);
+          break;
+        case 'contrast':
+          canvas.brightnessContrast(0, filterParams.amount);
+          break;
+        case 'saturation':
+          canvas.hueSaturation(0, filterParams.amount);
+          break;
+        case 'sepia':
+          canvas.sepia(filterParams.amount);
+          break;
+        case 'vignette':
+          canvas.vignette(filterParams.size, filterParams.amount);
+          break;
+        case 'swirl':
+          canvas.swirl(
+            canvas.width / 2,
+            canvas.height / 2,
+            canvas.width / 3,
+            filterParams.angle
+          );
+          break;
+        case 'bulgePinch':
+          canvas.bulgePinch(
+            canvas.width / 2,
+            canvas.height / 2,
+            canvas.width / 3,
+            filterParams.strength
+          );
+          break;
+      }
+
+      canvas.update();
+    } catch (e) {
+      console.error('Error applying filter:', e);
+    }
+  }, [filterParams, selectedFilter, canvas, texture]);
+
+  // Screenshot-based save method
+  const handleSaveImage = async () => {
+    if (!editorRef.current) return;
+
+    try {
+      // Use html2canvas to capture what's visible on screen
+      const screenshotCanvas = await html2canvas(
+        editorRef.current.querySelector('.canvas-container'),
+        {
+          useCORS: true,
+          backgroundColor: null,
+          scale: 2, // Higher quality
+        }
+      );
+
+      // Create download link
+      const link = document.createElement('a');
+      link.download = 'edited-image.png';
+      link.href = screenshotCanvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error('Error capturing screenshot:', e);
+      alert('Failed to save. Try the Standard Editor instead.');
+    }
+  };
+
+  return (
+    <div className='flex flex-col gap-4 md:flex-row' ref={editorRef}>
+      <div className='flex-1' ref={containerRef}>
+        <div className='canvas-container overflow-hidden rounded-lg bg-black'>
+          <canvas ref={canvasRef} className='h-auto max-w-full' />
+        </div>
+        <div className='mt-2 flex justify-between'>
+          <div className='text-gray-500 text-xs'>WebGL Editor</div>
+          <Button variant='outline' size='sm' onClick={handleSaveImage}>
+            Save Image
+          </Button>
+        </div>
+      </div>
+
+      <Card className='bg-gray-100 w-full md:w-64'>
+        <div className='p-4'>
+          <div className='mb-4'>
+            <Label htmlFor='filter-select'>Filter:</Label>
+            <Select
+              value={selectedFilter}
+              onValueChange={v => setSelectedFilter(v as FilterType)}
+            >
+              <SelectTrigger id='filter-select'>
+                <SelectValue placeholder='Select a filter' />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(filterConfigs).map(([key, config]) => (
+                  <SelectItem key={key} value={key}>
+                    {config.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className='space-y-4'>
+            {Object.entries(filterConfigs[selectedFilter].params).map(
+              ([param, config]) => (
+                <div key={param} className='space-y-2'>
+                  <div className='flex justify-between'>
+                    <Label htmlFor={`param-${param}`}>{param}:</Label>
+                    <span className='text-sm'>
+                      {filterParams[param]?.toFixed(2)}
+                    </span>
+                  </div>
+                  <Slider
+                    id={`param-${param}`}
+                    min={config.min}
+                    max={config.max}
+                    step={config.step}
+                    value={[filterParams[param] || config.default]}
+                    onValueChange={value =>
+                      setFilterParams({ ...filterParams, [param]: value[0] })
+                    }
+                  />
+                </div>
+              )
+            )}
+          </div>
+
+          <Button
+            variant='outline'
+            className='mt-4 w-full'
+            onClick={() => {
+              const initialParams = {};
+              Object.entries(filterConfigs[selectedFilter].params).forEach(
+                ([key, param]) => {
+                  initialParams[key] = param.default;
+                }
+              );
+              setFilterParams(initialParams);
+            }}
+          >
+            Reset
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+```
+
+### Key Features
+
+- **Uses Next.js and ShadCN UI** for UI components (Select, Slider, Card, etc.).
+- **Loads glfx.js dynamically** using the useGlfx hook.
+- **Applies real-time WebGL filters** like brightness, contrast, sepia, vignette, etc.
+- **Allows users to adjust filter parameters** via sliders.
+- **Supports saving edited images** as PNGs using html2canvas.
+
+### Breakdown of Important Parts
+
+**1. Filter Configuration**
+The `filterConfigs` object defines available filters and their parameters (range, default values).
+
+**2. State Management**
+
+- `selectedFilter` stores the active filter.
+- `filterParams` holds parameter values for the selected filter.
+- `texture` and `canvas` handle WebGL rendering.
+- `originalImage` stores the uploaded image.
+
+**3. Image Initialization (`useEffect`)**
+
+When an image is uploaded, it:
+
+1. Loads into an `<img>` element.
+2. Creates a WebGL canvas using `window.fx.canvas()`.
+3. Converts the image into a `texture`.
+4. Scales the image to fit the editor.
+5. Draws the texture to the canvas.
+
+**4. Applying Filters (`useEffect`)**
+
+- When the user selects a filter or adjusts parameters, `canvas.draw(texture)` applies the filter dynamically.
+- Example: `canvas.brightnessContrast(amount, 0);` adjusts brightness.
+
+**5. Save Feature**
+
+Uses `html2canvas` to take a screenshot of the WebGL editor and save it as an image.
+
+## Step 4: Implement a Fallback Editor
+
+Not all browsers support WebGL. If glfx.js fails to load, we can provide a fallback editor using the standard Canvas API.
+
+Create components/fallback-editor.tsx and add:
+
+```tsx
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+
+export default function FallbackEditor({ imageUrl }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [selectedFilter, setSelectedFilter] = useState('basic');
+  const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(
+    null
+  );
+
+  // Load image and initialize canvas
+  useEffect(() => {
+    if (!imageUrl || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      setOriginalImage(img);
+      canvas.width = img.width;
+      canvas.height = img.height;
+      applyFilters(ctx, img);
+    };
+
+    img.src = imageUrl;
+  }, [imageUrl]);
+
+  // Apply filters when parameters change
+  useEffect(() => {
+    if (!canvasRef.current || !originalImage) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    applyFilters(ctx, originalImage);
+  }, [brightness, contrast, saturation, selectedFilter, originalImage]);
+
+  // Apply filters to canvas
+  const applyFilters = (ctx, img) => {
+    if (!ctx || !img) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    // Build filter string based on selected filter
+    let filterString = '';
+
+    switch (selectedFilter) {
+      case 'basic':
+        filterString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+        break;
+      case 'sepia':
+        filterString = `sepia(${brightness / 100}) contrast(${contrast}%)`;
+        break;
+      case 'grayscale':
+        filterString = `grayscale(${brightness / 100}) contrast(${contrast}%)`;
+        break;
+      case 'invert':
+        filterString = `invert(${brightness / 100}) contrast(${contrast}%)`;
+        break;
+      default:
+        filterString = `brightness(${brightness}%) contrast(${contrast}%)`;
+    }
+
+    // Apply CSS filters
+    ctx.filter = filterString;
+    ctx.drawImage(img, 0, 0);
+    ctx.filter = 'none';
+  };
+
+  // Save the edited image
+  const handleSaveImage = () => {
+    if (!canvasRef.current) return;
+
+    try {
+      const link = document.createElement('a');
+      link.download = 'edited-image.png';
+      link.href = canvasRef.current.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error('Error saving image:', e);
+      alert('Failed to save the image. Please try again.');
+    }
+  };
+
+  return (
+    <div className='flex flex-col gap-4 md:flex-row'>
+      <div className='flex-1'>
+        <div className='overflow-hidden rounded-lg bg-black'>
+          <canvas ref={canvasRef} className='h-auto max-w-full' />
+        </div>
+        <div className='mt-2 flex justify-between'>
+          <div className='text-gray-500 text-xs'>Standard Canvas Editor</div>
+          <Button variant='outline' size='sm' onClick={handleSaveImage}>
+            Save Image
+          </Button>
+        </div>
+      </div>
+
+      <Card className='bg-gray-100 w-full md:w-64'>
+        <div className='p-4'>
+          <div className='mb-4'>
+            <Label htmlFor='filter-select'>Filter Type:</Label>
+            <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+              <SelectTrigger id='filter-select'>
+                <SelectValue placeholder='Select a filter' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='basic'>Basic Adjustments</SelectItem>
+                <SelectItem value='sepia'>Sepia</SelectItem>
+                <SelectItem value='grayscale'>Grayscale</SelectItem>
+                <SelectItem value='invert'>Invert</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <div className='flex justify-between'>
+                <Label htmlFor='brightness'>
+                  {selectedFilter !== 'basic'
+                    ? 'Effect Strength:'
+                    : 'Brightness:'}
+                </Label>
+                <span className='text-sm'>{brightness}%</span>
+              </div>
+              <Slider
+                id='brightness'
+                min={0}
+                max={200}
+                step={1}
+                value={[brightness]}
+                onValueChange={value => setBrightness(value[0])}
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <div className='flex justify-between'>
+                <Label htmlFor='contrast'>Contrast:</Label>
+                <span className='text-sm'>{contrast}%</span>
+              </div>
+              <Slider
+                id='contrast'
+                min={0}
+                max={200}
+                step={1}
+                value={[contrast]}
+                onValueChange={value => setContrast(value[0])}
+              />
+            </div>
+
+            {selectedFilter === 'basic' && (
+              <div className='space-y-2'>
+                <div className='flex justify-between'>
+                  <Label htmlFor='saturation'>Saturation:</Label>
+                  <span className='text-sm'>{saturation}%</span>
+                </div>
+                <Slider
+                  id='saturation'
+                  min={0}
+                  max={200}
+                  step={1}
+                  value={[saturation]}
+                  onValueChange={value => setSaturation(value[0])}
+                />
+              </div>
+            )}
+          </div>
+
+          <Button
+            variant='outline'
+            className='mt-4 w-full'
+            onClick={() => {
+              setBrightness(100);
+              setContrast(100);
+              setSaturation(100);
+            }}
+          >
+            Reset
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+```
+
+`FallbackEditor` is a client-side React component that takes an imageUrl prop and lets users apply various filter effects to that image. It uses the native Canvas API rather than a specialized image editing library.
+
+### Technical Details
+
+- Uses React's `useRef` to access the Canvas DOM element
+- `useEffect` hooks handle image loading and filter reapplication when parameters change
+- TypeScript is being used (notice the `HTMLCanvasElement` and `HTMLImageElement` type annotations)
+- The component is marked with `'use client'` directive, indicating it's meant to run on the client side in Next.js
+
+This is a relatively simple implementation of an image editor that provides basic functionality without requiring external image processing libraries.
+
+## Step 5: Add a Script Loader
+
+Create an `components/script-loader.tsx` file and add:
+
+```tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import { useGlfx } from '@/lib/use-glfx';
+
+import { useGlfx } from '@/lib/use-glfx';
+
+export default function ScriptLoader({ children, fallback }) {
+  const glfxStatus = useGlfx();
+  const [html2canvasLoaded, setHtml2canvasLoaded] = useState(false);
+
+  useEffect(() => {
+    // Check if html2canvas is already loaded
+    if (typeof window !== 'undefined' && window.html2canvas) {
+      setHtml2canvasLoaded(true);
+      return;
+    }
+
+    // Create script element to load html2canvas
+    const script = document.createElement('script');
+    script.src = '/html2canvas.min.js';
+    script.async = true;
+    script.onload = () => setHtml2canvasLoaded(true);
+    document.body.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
+
+  if (glfxStatus === 'error') {
+    return fallback ? (
+      fallback
+    ) : (
+      <div className='p-4 text-center'>
+        <p className='text-red-500'>
+          Failed to load WebGL editor. Please try the Standard Editor instead.
+        </p>
+      </div>
+    );
+  }
+
+  if (glfxStatus === 'loading' || !html2canvasLoaded) {
+    return (
+      <div className='p-4 text-center'>
+        <p>Loading WebGL editor...</p>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+```
+
+Your Next.js image editor depends on external JavaScript libraries like:
+
+- `glfx.js` (for WebGL image effects)
+- `html2canvas` (for converting elements into images)
+
+However, these libraries:
+
+✅ Are not built into Next.js and must be loaded dynamically. \
+✅ Use browser-specific features (like WebGL and the DOM), which won’t work on the server. \
+✅ May fail to load in certain environments, requiring a fallback solution.
+
+### How ScriptLoader Solves These Problems
+
+**1. Prevents Crashes in Non-WebGL Browsers**
+
+- If WebGL is unsupported, `useGlfx()` sets `glfxStatus` to `"error"`.
+- The fallback UI automatically replaces the WebGL editor with the standard canvas-based editor.
+
+**2. Dynamically Loads html2canvas When Needed**
+
+- Instead of bundling html2canvas with your app, it is loaded only when required.
+- This reduces initial page load time and improves performance.
+
+**3. Ensures Scripts Are Fully Loaded Before Rendering**
+
+- Prevents `"html2canvas is not defined"` errors by waiting until the script is ready.
+- Shows a loading message instead of a broken UI while scripts are loading.
+
+### What Happens Without `ScriptLoader`?
+
+❌ The app might crash in browsers without WebGL. \
+❌ html2canvas could be undefined if used before loading. \
+❌ Users would see blank screens instead of a graceful fallback.
+
+## Step 6: Add a Debug Canvas
+
+For debugging purposes, add a DebugCanvas component to visualize image loading and rendering issues.
+
+Create `components/debug-canvas.tsx` and add:
+
+```tsx
+'use client';
+
+import { useEffect, useRef } from 'react';
+
+import { Button } from '@/components/ui/button';
+
+import { Button } from '@/components/ui/button';
+
+interface DebugCanvasProps {
+  imageUrl: string;
+}
+
+export default function DebugCanvas({ imageUrl }: DebugCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!imageUrl || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      console.error('Could not get 2D context');
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      // Set canvas dimensions
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Draw the image
+      ctx.drawImage(img, 0, 0);
+
+      console.log('Image loaded in debug canvas', {
+        width: img.width,
+        height: img.height,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+      });
+    };
+
+    img.onerror = e => {
+      console.error('Error loading image in debug canvas:', e);
+    };
+
+    img.src = imageUrl;
+  }, [imageUrl]);
+
+  const handleSaveImage = () => {
+    if (!canvasRef.current) return;
+
+    try {
+      const link = document.createElement('a');
+      link.download = 'debug-image.png';
+      link.href = canvasRef.current.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error('Error saving debug image:', e);
+    }
+  };
+
+  return (
+    <div className='border-gray-300 mt-4 rounded-lg border p-4'>
+      <h3 className='mb-2 text-lg font-medium'>Debug Canvas</h3>
+      <div className='overflow-hidden rounded-lg bg-black'>
+        <canvas ref={canvasRef} className='h-auto max-w-full' />
+      </div>
+      <div className='mt-2'>
+        <Button variant='outline' size='sm' onClick={handleSaveImage}>
+          Save Debug Image
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+This DebugCanvas component allows you to display an image on a canvas and provides the option to save the canvas as an image file. Here’s a breakdown of how it works:
+
+**1. Component Setup:**
+
+- `Props`: The component accepts an `imageUrl` prop, which is the URL of the image that you want to load and display on the canvas.
+- `Ref`: It uses the `useRef` hook to create a reference (`canvasRef`) to the canvas element, which allows access to the canvas DOM node for drawing.
+
+**2. Effect Hook:**
+
+The `useEffect` hook is used to load and display the image on the canvas when the imageUrl changes.
+
+**3. Image Save Functionality:**
+
+- The `handleSaveImage` function allows you to save the content of the canvas as a PNG image.
+- It creates a temporary `<a>` link with a `download` attribute and sets the `href` to the data URL of the canvas (which is a base64-encoded PNG of the canvas content).
+- The link is programmatically clicked, triggering the download, and then the link is removed from the document.
+
+This component is useful for debugging image loading and manipulation in the browser. It helps you see the exact content of an image on the canvas and provides a way to save that content.
+
+## Step 7: Adding Layout to the Article:
+
+Below is a refined breakdown of your code and how it fits into your article. This layout acts as a global structure around your app, so every page or component rendered as `children` will inherit the layout style:
+
+```tsx
+import type React from 'react';
+
+import './globals.css';
+import { Inter } from 'next/font/google';
+import Script from 'next/script';
+
+import './globals.css';
+import { Inter } from 'next/font/google';
+import Script from 'next/script';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'Image Editor with glfx.js',
+  description: 'A React-based image editor using glfx.js',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang='en'>
+      <head>
+        <Script
+          src='https://evanw.github.io/glfx.js/glfx.js'
+          strategy='afterInteractive'
+        />
+      </head>
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
+}
+```
+
+### Script Loading:
+
+The `Script` component is used to include the `glfx.js` library, which is critical for GPU-accelerated image editing. The `strategy="afterInteractive"` ensures the script loads only after the page becomes interactive, which improves performance.
+
+This `RootLayout` would be used as the wrapper for your image editor app, ensuring consistent layout and styling across all pages in your app. The content of your article (or any other page) would be rendered as the `children` prop, inheriting the layout's properties.
+
+## Step 8: Add the Editor to the Page
+
+Now, modify `page.tsx` to include the image editor. To integrate everything into `page.tsx` and ensure the image editor works correctly with dynamic components like the `ImageEditor`, `FallbackEditor`, and `ScriptLoader`, here’s a step-by-step explanation of the code:
+
+```tsx
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
+import FallbackEditor from '@/components/fallback-editor';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+
+import FallbackEditor from '@/components/fallback-editor';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+
+// Dynamically import components that use browser APIs
+const ImageEditor = dynamic(() => import('@/components/image-editor'), {
+  ssr: false,
+  loading: () => <div className='p-4 text-center'>Loading WebGL editor...</div>,
+});
+
+const ScriptLoader = dynamic(() => import('@/components/script-loader'), {
+  ssr: false,
+});
+
+export default function Home() {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle file selection
+  const handleFileChange = e => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+      setImageUrl(URL.createObjectURL(file));
+    }
+  };
+
+  // Clean up object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
+  }, [imageUrl]);
+
+  return (
+    <main className='bg-gray-900 flex min-h-screen flex-col items-center p-4 text-white md:p-8'>
+      <div className='w-full max-w-5xl'>
+        <div className='mb-8 text-center'>
+          <a href='/'>
+            <h1 className='mb-2 text-4xl font-bold'>Image Editor</h1>
+          </a>
+          <p className='text-gray-300 text-lg'>
+            Edit your images with filters and effects
+          </p>
+        </div>
+
+        <Card className='bg-gray-200 text-gray-900'>
+          <CardHeader>
+            <CardTitle className='text-center'>Image Editor</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!imageUrl ? (
+              <div className='border-gray-400 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12'>
+                <p className='text-gray-600 mb-4'>
+                  Upload an image to get started
+                </p>
+                <Button onClick={() => fileInputRef.current?.click()}>
+                  Select Image
+                </Button>
+                <input
+                  type='file'
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept='image/*'
+                  className='hidden'
+                />
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                <Tabs defaultValue='standard' className='w-full'>
+                  <TabsList className='grid w-full grid-cols-2'>
+                    <TabsTrigger value='standard'>Standard Editor</TabsTrigger>
+                    <TabsTrigger value='webgl'>WebGL Editor</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value='standard'>
+                    <div className='relative'>
+                      <FallbackEditor imageUrl={imageUrl} />
+                      <div className='absolute bottom-2 right-2'>
+                        <Button
+                          variant='secondary'
+                          size='sm'
+                          onClick={() => setImageUrl(null)}
+                        >
+                          Change Image
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value='webgl'>
+                    <ScriptLoader
+                      fallback={<FallbackEditor imageUrl={imageUrl} />}
+                    >
+                      <div className='relative'>
+                        <ImageEditor imageUrl={imageUrl} />
+                        <div className='absolute bottom-2 right-2'>
+                          <Button
+                            variant='secondary'
+                            size='sm'
+                            onClick={() => setImageUrl(null)}
+                          >
+                            Change Image
+                          </Button>
+                        </div>
+                      </div>
+                    </ScriptLoader>
+                  </TabsContent>
+                </Tabs>
+
+                <div className='rounded-lg bg-yellow-100 p-4 text-yellow-800'>
+                  <p className='text-sm'>
+                    <strong>Tip:</strong> If you have trouble saving images from
+                    the WebGL editor, use the Standard Editor which has better
+                    compatibility across browsers.
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+}
+```
+
+### Key Features:
+
+**1. File Selection:**
+
+The `handleFileChange` function manages image selection. Once a file is chosen, it creates an object URL and stores it in `imageUrl`. The URL is revoked after the component unmounts or the image changes, ensuring that no unused URLs are lingering in memory.
+
+**2. Dynamic Imports:**
+
+- The `ImageEditor` and `ScriptLoader` components are dynamically imported with `ssr: false`, ensuring they are only loaded on the client-side. This is critical for components that depend on browser-specific APIs (like WebGL).
+
+- If `ImageEditor` is not loaded yet, the `ScriptLoader` will show a fallback editor (in this case, `FallbackEditor`).
+
+**3. Tabs:**
+
+- The app allows switching between two image editors—`Standard Editor` and `WebGL Editor`—via tabs. This is implemented with the `Tabs` component, where each tab displays a different editor.
+- If WebGL isn't supported or fails to load, the fallback editor will be displayed.
+
+**4. Image Upload:**
+
+If no image is selected (`!imageUrl`), a file input is shown that allows users to upload an image.
+
+### How It All Connects:
+
+**1. Page Flow:**
+
+- The page initially asks the user to upload an image.
+- Once the image is uploaded, the user can toggle between two types of editors (standard and WebGL) using tabs.
+- The `ScriptLoader` dynamically loads the WebGL editor, which is only available after the script (glfx.js) is loaded.
+- If WebGL fails, a fallback editor is shown.
+
+**2. User Experience:**
+
+The UI ensures a smooth experience where the user can easily upload, edit, and switch between different editors.
+
+This setup efficiently manages dynamic loading, browser-specific behavior, and image manipulation in a React app built with Next.js.
+
+## Conclusion
+
+The **Image Editor with glfx.js** provides a powerful, browser-based solution for image manipulation, combining the simplicity of standard image editing with the advanced capabilities of WebGL. By leveraging the power of `glfx.js` for GPU-accelerated filters and effects, users can create stunning edits in real-time. With a smooth and user-friendly interface built using **Next.js** and **TailwindCSS**, this application ensures a seamless experience for both novice and advanced users.
+
+Whether you're working on basic image enhancements or experimenting with creative WebGL-powered filters, this editor offers flexibility and performance. Additionally, the fallback editor ensures compatibility across a wide range of devices, ensuring your image editing experience remains robust and reliable.
+
+Try it out today, and explore the endless possibilities for image manipulation directly in your browser!

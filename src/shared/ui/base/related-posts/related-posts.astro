@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content';
+
+import RelatedCard from './related-card.astro';
+
+export interface Props {
+  slug: string;
+  collection: 'posts' | 'howtos' | 'friday' | 'snippets';
+}
+
+const { slug, collection } = Astro.props;
+
+const allPosts = await getCollection(collection);
+
+const currentPost = allPosts.find(p => p.data.slug === slug);
+
+if (!currentPost) {
+  throw new Error(`Current post not found for slug: ${slug}`);
+}
+
+const currentCategory = currentPost.data.category;
+const currentDate = new Date(currentPost.data.date);
+
+const related = allPosts
+  .filter(
+    post =>
+      post.slug !== slug &&
+      post.data.category === currentCategory &&
+      new Date(post.data.date) < currentDate
+  )
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+  .slice(0, 6);
+---
+
+{
+  related.length > 0 && (
+    <div class='related-wrapper'>
+      <h3 class='related-heading'>More from {currentCategory}</h3>
+      <section class='related-list'>
+        {related.map(post => (
+          <RelatedCard post={post} />
+        ))}
+      </section>
+    </div>
+  )
+}
+
+<style>
+  .related-wrapper {
+    margin-top: 2rem;
+  }
+
+  .related-heading {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .related-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+  }
+</style>

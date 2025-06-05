@@ -1,0 +1,142 @@
+---
+title: Build a Simple Hamburger Menu Using HTML & CSS
+slug: hamburger-menu-css
+heading: 'Create a Hamburger Menu with HTML & CSS'
+permalink: hamburger-menu-css
+image: ./images/hamburger-menu-css.png
+date: 2024-12-19
+author: anton liberant
+category: css
+type: post
+tags: ['hamburger']
+desc: Learn how to build a responsive hamburger menu using only HTML and CSS. Follow this step-by-step guide for a lightweight, modern design without JavaScript.
+---
+
+Hamburger menus are an essential feature of modern web design, providing a compact and user-friendly navigation solution. In this article, we’ll create a fully functional hamburger menu using only HTML and CSS, without relying on JavaScript.
+
+## Step 1: Setting Up the HTML Structure
+
+Start with a simple HTML structure:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hamburger Menu</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="hamburger-menu">
+      <input type="checkbox" id="menu-toggle" />
+      <label for="menu-toggle" class="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+      </label>
+      <ul class="menu">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </body>
+</html>
+```
+
+**Explanation**:
+
+- An `<input>` with type checkbox acts as the toggle for the menu.
+- The `<label>` with class menu-icon serves as the visual representation of the hamburger icon.
+- An unordered list (`<ul>`) contains the menu links.
+
+## Step 2: Styling the Menu With CSS
+
+Create a `styles.css` file and add the following:
+
+```css
+/* General Reset */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Hamburger Menu Container */
+.hamburger-menu {
+  position: relative;
+}
+
+/* Hide the Checkbox */
+#menu-toggle {
+  display: none;
+}
+
+/* Hamburger Icon */
+.menu-icon {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  width: 30px;
+  gap: 5px;
+}
+
+.menu-icon span {
+  background-color: #333;
+  height: 4px;
+  border-radius: 2px;
+  transition:
+    transform 0.3s,
+    background-color 0.3s;
+}
+
+/* Menu Styles */
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: none;
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.menu li {
+  padding: 10px 20px;
+}
+
+.menu li a {
+  text-decoration: none;
+  color: #333;
+}
+
+/* Show Menu on Checkbox Checked */
+#menu-toggle:checked ~ .menu {
+  display: block;
+}
+
+/* Animate Hamburger Icon */
+#menu-toggle:checked + .menu-icon span:nth-child(1) {
+  transform: rotate(45deg) translateY(10px);
+}
+
+#menu-toggle:checked + .menu-icon span:nth-child(2) {
+  background-color: transparent;
+}
+
+#menu-toggle:checked + .menu-icon span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-10px);
+}
+```
+
+**Explanation**:
+
+- The `#menu-toggle:checked` selector is used to toggle the menu visibility and animate the icon.
+- CSS transitions and transforms add smooth animations.
+
+## Conclusion
+
+With just HTML and CSS, you’ve created a responsive hamburger menu. This lightweight solution is perfect for projects where simplicity and speed are crucial. Expand on this by adding custom styles or integrating it into larger layouts.

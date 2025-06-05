@@ -1,0 +1,25 @@
+---
+import Navbar from './ui/navbar.astro';
+---
+
+<header class='header'>
+  <Navbar />
+</header>
+
+<style>
+  .header {
+    display: flex;
+    height: 4rem;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    padding-left: 1rem /* 16px */;
+    padding-right: 1rem /* 16px */;
+  }
+  @media (min-width: 768px) {
+    header {
+      padding-left: 1.5rem /* 24px */;
+      padding-right: 1.5rem /* 24px */;
+    }
+  }
+</style>

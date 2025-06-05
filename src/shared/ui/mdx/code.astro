@@ -1,0 +1,378 @@
+---
+export interface Props {
+  code?: string;
+  language?: string;
+  file?: string;
+  highlights?: string;
+  children?: any;
+  class?: string;
+  'data-language'?: string;
+}
+
+const {
+  code: propCode,
+  language: propLanguage,
+  file,
+  highlights,
+  children,
+  class: className,
+  'data-language': dataLanguage,
+  ...props
+} = Astro.props;
+
+function simpleDecodeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&');
+}
+
+function parseHighlightRanges(raw) {
+  if (!raw) return [];
+  const ranges = raw.split(',');
+  const lineNumbers = [];
+  ranges.forEach(range => {
+    if (range.includes('-')) {
+      const [start, end] = range.split('-').map(Number);
+      for (let i = start; i <= end; i++) {
+        lineNumbers.push(i);
+      }
+    } else {
+      lineNumbers.push(Number(range));
+    }
+  });
+  return lineNumbers;
+}
+
+let finalCode = '';
+let language = propLanguage || dataLanguage || 'javascript';
+
+if (propCode) {
+  finalCode = simpleDecodeHtml(propCode);
+} else if (children) {
+  if (typeof children === 'string') {
+    finalCode = children.trim();
+  } else if (children && typeof children === 'object') {
+    if (children.children) {
+      finalCode = typeof children.children === 'string' ? children.children.trim() : '';
+    }
+  }
+
+  if (finalCode.includes('span class="line"') || finalCode.includes('span style="color:')) {
+    try {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = finalCode;
+      finalCode = tempDiv.textContent || tempDiv.innerText || '';
+    } catch (e) {
+      console.log('Failed to extract clean text, using original');
+    }
+  }
+
+  finalCode = simpleDecodeHtml(finalCode);
+} else {
+  try {
+    const slotContent = await Astro.slots.render('default');
+    if (slotContent) {
+      finalCode = slotContent.replace(/<[^>]*>/g, '').trim();
+      finalCode = simpleDecodeHtml(finalCode);
+    }
+  } catch (e) {
+    console.log('Could not render slot');
+  }
+}
+
+if (!finalCode || finalCode.trim() === '') {
+  finalCode = `function example() {
+  return "Hello World";
+}`;
+}
+
+const highlightedLines = parseHighlightRanges(highlights || '');
+const codeLines = finalCode.split('\n');
+---
+
+<div class='code-block'>
+  <div class='code-header'>
+    <div class='language-badge'>{language}</div>
+    {file && <div class='file-name'>{file}</div>}
+    <div class='spacer'></div>
+    <button class='copy-button'>
+      <span class='copy-text'>Copy</span>
+      <span class='copied-text'>Copied!</span>
+    </button>
+  </div>
+
+  <div class='code-content'>
+    <div class='line-numbers'>
+      {codeLines.map((line, index) => <span class='line-number'>{index + 1}</span>)}
+    </div>
+    <pre class='code-pre'
+      ><code class="simple-code" data-lang={language} data-raw={finalCode} data-fallback={children}>{children || finalCode}</code></pre
+    >
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.Prism) {
+      window.Prism = null;
+    }
+
+    const copyButtons = document.querySelectorAll('.copy-button');
+    copyButtons.forEach(button => {
+      button.addEventListener('click', async function () {
+        const codeBlock = this.closest('.code-block');
+        const codeElement = codeBlock.querySelector('.simple-code');
+        const rawCode = codeElement.getAttribute('data-raw');
+
+        try {
+          await navigator.clipboard.writeText(rawCode);
+          this.classList.add('copied');
+          setTimeout(() => this.classList.remove('copied'), 1000);
+        } catch (err) {
+          console.error('Copy failed:', err);
+        }
+      });
+    });
+
+    function simpleHighlight(code, lang) {
+      if (!code) return 'No code';
+
+      let result = code;
+
+      result = result.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      if (lang === 'javascript' || lang === 'typescript' || lang === 'jsx' || lang === 'tsx') {
+        const tokens = [];
+
+        let match;
+        const commentRegex = /\/\/.*$/gm;
+        while ((match = commentRegex.exec(result)) !== null) {
+          tokens.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            type: 'comment',
+            color: '#6a9955',
+            style: 'font-style: italic;',
+          });
+        }
+
+        const stringRegex = /"[^"]*"/g;
+        while ((match = stringRegex.exec(result)) !== null) {
+          tokens.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            type: 'string',
+            color: '#ce9178',
+            style: '',
+          });
+        }
+
+        const stringRegex2 = /'[^']*'/g;
+        while ((match = stringRegex2.exec(result)) !== null) {
+          tokens.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            type: 'string',
+            color: '#ce9178',
+            style: '',
+          });
+        }
+
+        const keywordRegex =
+          /\b(function|return|const|let|var|import|export|from|default|async|await|if|else|class|new|this|true|false|null|undefined)\b/g;
+        while ((match = keywordRegex.exec(result)) !== null) {
+          tokens.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            type: 'keyword',
+            color: '#569cd6',
+            style: 'font-weight: 600;',
+          });
+        }
+
+        tokens.sort((a, b) => a.start - b.start);
+
+        const validTokens = [];
+        let lastEnd = 0;
+
+        tokens.forEach(token => {
+          if (token.start >= lastEnd) {
+            validTokens.push(token);
+            lastEnd = token.end;
+          }
+        });
+
+        validTokens.reverse().forEach(token => {
+          const before = result.substring(0, token.start);
+          const content = result.substring(token.start, token.end);
+          const after = result.substring(token.end);
+
+          result =
+            before +
+            `<span style="color: ${token.color}; ${token.style}">${content}</span>` +
+            after;
+        });
+      }
+
+      return result;
+    }
+
+    const codeElements = document.querySelectorAll('.simple-code');
+
+    codeElements.forEach((element, index) => {
+      let rawCode = element.getAttribute('data-raw');
+      const fallback = element.getAttribute('data-fallback');
+      const lang = element.getAttribute('data-lang');
+
+      if (!rawCode || rawCode.includes('span class=') || rawCode.includes('span style=')) {
+        const elementContent = element.textContent || element.innerText || '';
+
+        if (elementContent && !elementContent.includes('PLACEHOLDER')) {
+          if (!elementContent.includes('span class=') && !elementContent.includes('span style=')) {
+            rawCode = elementContent;
+          } else {
+            rawCode = elementContent
+              .replace(/<[^>]*>/g, '')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&amp;/g, '&')
+              .trim();
+          }
+        }
+      }
+
+      if (rawCode && rawCode.trim()) {
+        const highlighted = simpleHighlight(rawCode, lang);
+        element.innerHTML = highlighted;
+      } else {
+        element.innerHTML = 'Error: No code to highlight';
+      }
+    });
+  });
+</script>
+
+<style>
+  .code-block {
+    background-color: #0f0f0f;
+    color: #ffffff;
+    border-radius: var(--radius);
+    margin: 2rem 0;
+    overflow: hidden;
+    max-width: 80%;
+    border: 1px solid #333;
+    /* font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace; */
+    font-family: var(--font-mono);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #333;
+  }
+
+  .language-badge {
+    background-color: #333;
+    color: #ffffff;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .file-name {
+    color: #888;
+    font-size: 0.875rem;
+    font-style: italic;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .copy-button {
+    background-color: hsl(var(--primary, #0f172a));
+    color: hsl(var(--primary-foreground, #ffffff));
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .copy-button:hover {
+    background-color: var(--primary-hover, rgba(15, 23, 42, 0.9));
+  }
+  :global(.dark) .copy-button:hover {
+    color: white;
+  }
+
+  .copy-button .copied-text {
+    display: none;
+  }
+
+  .copy-button.copied {
+    background-color: #10b981;
+  }
+
+  .copy-button.copied .copy-text {
+    display: none;
+  }
+
+  .copy-button.copied .copied-text {
+    display: inline;
+  }
+
+  .code-content {
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+    display: flex;
+    position: relative;
+  }
+
+  .line-numbers {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0.1rem 1rem 1rem;
+    background-color: transparent;
+    border-right: 1px solid #333;
+    user-select: none;
+  }
+
+  .line-number {
+    display: block;
+    width: 2.5rem;
+    text-align: right;
+    color: #666;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    font-family: inherit;
+  }
+
+  .code-pre {
+    margin: 0;
+    padding: 1rem;
+    background-color: transparent;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    flex: 1;
+    overflow: visible;
+  }
+
+  .simple-code {
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    white-space: pre;
+    display: block;
+  }
+</style>

@@ -1,0 +1,241 @@
+---
+title: How to Remove Elements from Arrays in JavaScript (9 Ways)
+slug: remove-from-array
+heading: 9 Ways to Remove Elements from Arrays in JavaScript
+icon: /icons/javascript.png
+image: ./images/remove-from-array.png
+permalink: howto/remove-from-array
+date: 2024-08-06
+author: anton liberant
+category: javascript
+type: howto
+tags: ['arrays']
+desc: Explore 9 effective ways to remove elements from JavaScript arrays. Learn different methods to efficiently manipulate arrays in your projects with clear examples.
+---
+
+<div className="single-post__img-wrapper">
+![How to Remove Elements from Arrays in JavaScript](./images/remove-from-array.png)
+
+  <span className="single-post__img-alt">Removing elements from arrays in JavaScript</span>
+</div>
+
+**Removing elements from arrays in JavaScript** can be done using various methods, depending on
+whether you want to modify the original array or create a new one without certain elements. Here are
+nine common ways to remove elements from arrays in JavaScript:
+
+## 1. Using splice method
+
+The **`splice(start, deleteCount, item1ToAdd, item2ToAdd, ...)`** method changes the contents of an
+array by removing or replacing existing elements and/or adding new elements in place.
+
+**Example: Remove elements at specific index:**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove one element starting at index 1
+colors.splice(1, 1);
+
+// Output: ['blue', 'yellow', 'green']
+console.log(colors);
+```
+
+**Example: Remove elements and replace with new elements:**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove 1 elements starting at index 1 and replace with 'purple' and 'orange'
+colors.splice(1, 1, 'purple', 'orange');
+
+// Output: ['blue', 'purple', 'orange', 'yellow', 'green']
+console.log(colors);
+```
+
+## 2. Using pop method
+
+The **`pop()`** method removes the last element from an array and returns that element. This method
+changes the length of the array.
+
+**Example: Remove the last element:**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove 1 elements starting at index 1 and replace with 'purple' and 'orange'
+const removed = colors.pop();
+
+// Output: 'green'
+console.log(removed);
+// Output: ['blue', 'red', 'yellow']
+console.log(colors);
+```
+
+## 3. Using shift method
+
+The **`shift()`** method removes the first element from an array and returns that removed element.
+This method changes the length of the array.
+
+**Example: Remove the first element:**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove 1 elements starting at index 1 and replace with 'purple' and 'orange'
+const removed = colors.shift();
+
+// Output: 'blue'
+console.log(removed);
+// Output: ['red', 'yellow', 'green']
+console.log(colors);
+```
+
+## 4. Using filter method
+
+The **`filter(callback(element[, index, array]), thisArg)`** method creates a new array with all
+elements that pass the test implemented by the provided function. It does not modify the original
+array; instead, it returns a new array containing only the elements that satisfy the condition.
+
+**Example: Remove elements based on condition:**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove 1 elements starting at index 1 and replace with 'purple' and 'orange'
+const removed = colors.filter(color => color !== 'red');
+
+// Output: ['blue', 'yellow', 'green'] NEW ARRAY!
+console.log(removed);
+// Output: ['blue', 'red', 'yellow', 'green'] Old array
+console.log(colors);
+```
+
+## 5. Using slice method
+
+The **`slice(start, end)`** method returns a shallow copy of a portion of an array into a new array
+object selected from **begin** to **end** (end not included). This method does not modify the
+original array.
+
+**Example: Create a new array without the second element:**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Create a new array without the element at index 1
+const newColors = colors.slice(0, 1).concat(colors.slice(2));
+
+// Output: ['blue', 'yellow', 'green']
+console.log(newColors);
+```
+
+## 6. Using map method
+
+The **`map(function callback(currentValue, index, array))`** function transforms each element of an
+array based on the provided callback function. If you want to remove elements, you can conditionally
+return undefined or an empty array ([]) for those elements you wish to exclude.
+
+**Example: Remove the red color(s) from an array**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove the red color(s)
+const newColors = colors
+  .map(color => {
+    if (color === 'red') {
+      return undefined;
+    } else {
+      return color;
+    }
+  })
+  .filter(color => color !== undefined);
+
+// Output: ['blue', 'yellow', 'green']
+console.log(newColors);
+```
+
+**In this example:**
+
+**map** is used to iterate over each element (num) in the numbers array.
+
+If color is red **`(color === 'red')`**, it is returned to keep it in the resulting array.
+
+If color is red, undefined is returned, effectively removing it from the array.
+
+**filter** is then used to remove all undefined values from the resulting array.
+
+## 7. Using flatMap method
+
+The **`flatMap()`** method first maps each element using a mapping function, then flattens the
+result into a new array. Similar to map(), you can conditionally return empty arrays ([]) for
+elements you want to remove.
+
+**Example: Remove elements containing 'yellow'**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove the yellow color(s)
+const newColors = colors.flatMap(color => {
+  if (color === 'yellow') {
+    return [];
+  } else {
+    return [color];
+  }
+});
+
+// Output: ['blue', 'red', 'green']
+console.log(newColors);
+```
+
+## 8. Using delete operator
+
+In JavaScript, the **delete** operator is used to remove a property from an object or an element
+from an array. However, its behavior differs slightly depending on what you are trying to delete.
+
+**Example: Remove element with delete operator:**
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+
+// Remove the second element
+delete colors[1];
+
+// Output: ['blue', 'yellow', 'green']
+console.log(colors);
+```
+
+## 9. Using spread operator
+
+The spread operator **`(...)`** is a convenient way to copy or combine arrays and objects, but it
+doesn’t directly delete elements from an array. However, you can use the spread operator in
+combination with other methods to effectively remove elements from an array and create a new array
+without those elements.
+
+You can use the spread operator along with **`slice()`** or **`filter()`** to create a new array
+without a specific element.
+
+```js
+const colors = ['blue', 'red', 'yellow', 'green'];
+const indexToRemove = 2;
+
+// The spread operator ... combines these two slices into a new array.
+const newColors = [
+  //  Extracts elements before the index to remove.
+  ...colors.slice(0, indexToRemove),
+  // Extracts elements after the index to remove.
+  ...colors.slice(indexToRemove + 1),
+];
+
+// Output: ['blue', 'red', 'green']
+console.log(newColors);
+```
+
+Using spread operator allows you to handle array element removal in a functional and immutable way,
+maintaining clean and readable code.
+
+## Conclusion:
+
+Each method has its own use case and benefits, depending on whether you need to modify the original
+array or create a new one, and whether you need to remove elements based on their value, index, or a
+condition.

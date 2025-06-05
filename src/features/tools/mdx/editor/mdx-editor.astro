@@ -1,0 +1,46 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+import EditorContent from './ui/editor-content.astro';
+import EditorHeader from './ui/editor-header.astro';
+import EditorToolbar from './ui/editor-toolbar.astro';
+
+const breadcrumbItems = generateToolsBreadcrumbs('MDX Editor');
+---
+
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
+
+<HeadingBlock
+  title='MDX Editor'
+  description='Edit and preview Markdown content with live HTML output'
+  class='mt-0'
+/>
+
+<div class='mdx-editor'>
+  <EditorHeader />
+  <EditorToolbar />
+  <EditorContent />
+</div>
+
+<script>
+  import { MdxEditorController } from './lib/editor-controller';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    new MdxEditorController();
+  });
+</script>
+
+<style>
+  .mdx-editor {
+    margin-top: 2.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: white;
+    overflow: hidden;
+  }
+</style>

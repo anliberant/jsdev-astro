@@ -1,0 +1,56 @@
+---
+title: Extract PDF images with JavaScript
+slug: exptract-pdf-images
+heading: Extract Images from PDF
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/exptract-pdf-images
+date: 2024-11-14
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['pdf']
+desc: Learn how to extract images from PDFs using JavaScript and pdf.js. Follow a step-by-step guide to retrieve and display embedded images with canvas rendering.
+---
+
+To extract images from a PDF using [pdf.js](https://github.com/mozilla/pdf.js) in JavaScript, follow these steps:
+
+1. **Load the PDF**: Initialize pdf.js and load the PDF document.
+2. **Access Each Page**: For each page, use page.getOperatorList() to access its operators.
+3. **Extract Images**: Check the operators for paintImageXObject commands, where embedded images are stored.
+4. **Render Image**: Render the images onto a canvas for display or extraction.
+
+Here’s an example setup using `pdf.js`:
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+<canvas id="imageCanvas"></canvas>
+<script>
+  const url = 'path/to/your.pdf';
+
+  pdfjsLib.getDocument(url).promise.then(async pdf => {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const operatorList = await page.getOperatorList();
+
+      operatorList.fnArray.forEach((fn, i) => {
+        if (fn === pdfjsLib.OPS.paintImageXObject) {
+          const imgName = operatorList.argsArray[i][0];
+          const img = page.objs.get(imgName);
+          renderImageToCanvas(img);
+        }
+      });
+    }
+  });
+
+  function renderImageToCanvas(img) {
+    const canvas = document.getElementById('imageCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.putImageData(img, 0, 0); // Render the image data onto canvas
+  }
+</script>
+```
+
+This script locates and renders images in the PDF as separate canvases.

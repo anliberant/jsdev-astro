@@ -1,0 +1,295 @@
+---
+title: 'Code Like a Pro: Implementing SOLID Design in React Ecosystem'
+slug: solid-design-react
+heading: Master SOLID Principles in the React Ecosystem
+image: ./images/solid-design-react.png
+permalink: solid-design-react
+date: 2025-02-03
+author: anton liberant
+category: react
+type: post
+tags: ['solid']
+desc: Master advanced SOLID principles in React and React Native. Write clean, maintainable, and scalable code with practical examples that elevate your development skills
+---
+
+Applying SOLID principles in React and React Native ensures better maintainability, scalability, and code clarity. Let's break down each principle with refined code examples and enhanced comments for clarity.
+
+## 1. Single Responsibility Principle (SRP)
+
+**Definition**: Each component should have a single responsibility, meaning it should handle only one concern.
+
+**Bad Example (Violating SRP)**
+
+In this example, the `UserList` component is responsible for both fetching and displaying user data, violating SRP.
+
+```tsx
+import React, { useEffect, useState } from 'react';
+
+const UserList = () => {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch('https://api.example.com/users')
+      .then(res => res.json())
+      .then(data => setUsers(data))
+      .catch(err => console.error(err));
+  }, []);
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+};
+
+export default UserList;
+```
+
+**Improved Example (Following SRP)**
+
+**We separate concerns**: `UserService` handles data fetching, while `UserList` is responsible only for rendering.
+
+```tsx
+// UserService.ts - Responsible for fetching user data
+export const fetchUsers = async () => {
+  try {
+    const response = await fetch('https://api.example.com/users');
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    return [];
+  }
+};
+```
+
+```tsx
+// UserList.tsx - Responsible only for rendering users
+import React, { useEffect, useState } from 'react';
+
+import { fetchUsers } from './UserService';
+
+import { fetchUsers } from './UserService';
+
+const UserList = () => {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetchUsers().then(setUsers);
+  }, []);
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+};
+
+export default UserList;
+```
+
+Why this is better?
+
+✅ `UserService.ts` handles data fetching, making UserList.tsx cleaner. \
+✅ Improves testability—fetching logic can be tested separately.
+
+## 2. Open-Closed Principle (OCP)
+
+**Definition**: Components should be open for extension but closed for modification.
+
+**Bad Example (Violating OCP)**
+
+This button component is not extendable; we need to modify it whenever we add a new button style.
+
+```tsx
+const Button = ({ label, type }) => {
+  let className = 'btn';
+
+  if (type === 'primary') className += ' btn-primary';
+  else if (type === 'secondary') className += ' btn-secondary';
+
+  return <button className={className}>{label}</button>;
+};
+```
+
+**Improved Example (Following OCP)**
+
+We use `className` as a prop, allowing new styles without modifying existing code.
+
+```tsx
+const Button = ({ label, className = "" }) => {
+  return <button className={`btn ${className}`}>{label}</button>;
+};
+
+// Usage examples:
+<Button label="Save" className="btn-primary" />
+<Button label="Cancel" className="btn-secondary" />
+<Button label="Custom" className="btn-custom" />
+```
+
+Why this is better?
+
+✅ New button styles can be added without modifying the core component. \
+✅ More flexible for future design changes.
+
+## 3. Liskov Substitution Principle (LSP)
+
+**Definition**: Subtypes must be substitutable for their base types without breaking functionality.
+
+**Bad Example (Violating LSP)**
+
+Here, `SquareButton` extends `Button` but removes necessary props (`label`), breaking the contract.
+
+```tsx
+const Button = ({ label }) => <button>{label}</button>;
+
+const SquareButton = () => <button>🔲</button>; // Violates LSP
+```
+
+**Improved Example (Following LSP)**
+
+Now, `SquareButton` properly extends `Button` and can be used interchangeably.
+
+```tsx
+const Button = ({ label, children }) => (
+  <button>{label || children}</button>
+);
+
+const SquareButton = ({ children }) => (
+  <Button>{children || "🔲"}</Button>
+);
+
+// Usage:
+<Button label="Click me" />
+<SquareButton />
+```
+
+Why this is better?
+
+✅ `SquareButton` can replace Button anywhere without breaking the UI.
+
+## 4. Interface Segregation Principle (ISP)
+
+**Definition**: Components should not be forced to depend on unnecessary props.
+
+**Bad Example (Violating ISP)**
+
+This form input component has too many props, forcing consumers to provide unnecessary ones.
+
+```tsx
+const Input = ({
+  value,
+  onChange,
+  placeholder,
+  type,
+  errorMessage,
+  maxLength,
+}) => {
+  return (
+    <div>
+      <input
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        type={type}
+        maxLength={maxLength}
+      />
+      {errorMessage && <span className='error'>{errorMessage}</span>}
+    </div>
+  );
+};
+```
+
+**Improved Example (Following ISP)**
+
+We split the logic into separate components to ensure they only receive necessary props.
+
+```tsx
+const TextInput = ({ value, onChange, placeholder }) => (
+  <input
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    type='text'
+  />
+);
+
+const PasswordInput = ({ value, onChange }) => (
+  <input value={value} onChange={onChange} type='password' />
+);
+
+const ErrorMessage = ({ message }) =>
+  message ? <span className='error'>{message}</span> : null;
+```
+
+Why this is better?
+
+✅ Each component has only the required props. \
+✅ Easier to maintain and extend.
+
+## 5. Dependency Inversion Principle (DIP)
+
+**Definition**: High-level modules should not depend on low-level modules; both should depend on abstractions.
+
+**Bad Example (Violating DIP)**
+
+Here, `UserList` directly calls `fetch`, making it tightly coupled to the API.
+
+```tsx
+const UserList = () => {
+  useEffect(() => {
+    fetch('https://api.example.com/users') // Hardcoded dependency
+      .then(res => res.json())
+      .then(setUsers);
+  }, []);
+};
+```
+
+**Improved Example (Following DIP)**
+
+We inject the fetching function, making `UserList` independent of API implementation.
+
+```tsx
+const UserList = ({ fetchUsers }) => {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetchUsers().then(setUsers);
+  }, [fetchUsers]);
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+};
+
+// Inject fetch function
+const fetchUsersFromAPI = async () => {
+  const response = await fetch('https://api.example.com/users');
+  return await response.json();
+};
+
+// Usage
+<UserList fetchUsers={fetchUsersFromAPI} />;
+```
+
+Why this is better?
+
+✅ UserList no longer depends on how users are fetched. \
+✅ We can easily swap the API without changing UserList.
+
+## Conclusion
+
+Applying SOLID principles in React and React Native improves:
+
+✔ **Maintainability** – Code is easier to update and debug. \
+✔ **Scalability** – Components are reusable and extendable. \
+✔ **Testability** – Logic is modular and isolated.
+
+By structuring your components correctly, you ensure a cleaner, more efficient codebase. 🚀

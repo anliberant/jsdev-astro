@@ -1,0 +1,73 @@
+---
+title: 'getCookie vs document.cookie: Understanding the Differences'
+slug: getcookie-documentcookie
+heading: Understanding the Differences Between getCookie and document.cookie
+permalink: getcookie-documentcookie
+image: ./images/getcookie-documentcookie.png
+date: 2025-01-07
+author: anton liberant
+category: javascript
+type: post
+tags: ['cookie']
+desc: Compare getCookie and document.cookie in JavaScript. Learn their differences, use cases, and which method is better suited for managing cookies in web development.
+---
+
+The key difference between `getCookie` (a custom JavaScript function) and `document.cookie` lies in their purpose and functionality:
+
+## 1. `document.cookie`
+
+- **What It Is**: A built-in JavaScript property to interact with cookies on a webpage.
+- **Purpose**: Provides raw access to all cookies in a single string.
+- **Format**: A semicolon-separated list of key-value pairs.
+  ```js
+  console.log(document.cookie);
+  // Output: "key1=value1; key2=value2; key3=value3"
+  ```
+- **Use Case**: Directly read or modify cookies.
+- **Limitations:**
+  - Reading requires manual parsing to extract specific values.
+  - Writing cookies needs careful handling of attributes like `path`, `expires`, and `secure`.
+  ```js
+  // Setting a cookie
+  document.cookie =
+    'username=JohnDoe; path=/; expires=Fri, 31 Dec 2025 23:59:59 GMT';
+  ```
+
+## 2. `getCookie`
+
+- **What It Is**: A custom user-defined function (not built-in).
+- **Purpose**: Simplifies extracting a specific cookie value from document.cookie.
+- **How It Works**: Parses the cookie string and retrieves the value of a specified key.
+
+**Example Implementation:**
+
+```js
+function getCookie(name) {
+  const cookies = document.cookie.split('; ');
+  for (const cookie of cookies) {
+    const [key, value] = cookie.split('=');
+    if (key === name) return decodeURIComponent(value);
+  }
+  return null;
+}
+
+// Usage
+console.log(getCookie('username')); // Output: "JohnDoe"
+```
+
+## Key Differences Between `document.cookie` and `getCookie`
+
+The `document.cookie` property and the `getCookie` function serve different purposes when working with cookies in JavaScript.
+
+1. **Type**: `document.cookie` is a built-in JavaScript property, while `getCookie` is typically a custom user-defined function.
+2. **Purpose**: `document.cookie` provides access to all cookies as a single string, whereas `getCookie` is designed to retrieve the value of a specific cookie.
+3. **Ease of Use**: Using `document.cookie` requires manual parsing to extract individual cookie values. On the other hand, `getCookie` simplifies the process by returning only the value of the desired cookie.
+4. **Functionality**: With `document.cookie`, you can read, write, and delete cookies, offering full control. `getCookie` is usually limited to reading specific cookies.
+5. **Flexibility**: While `document.cookie` gives complete access to manage cookies, `getCookie` is more focused and less versatile, catering to specific retrieval needs.
+
+## Which to Use?
+
+- Use `document.cookie` for advanced cookie handling (e.g., creating, updating, deleting).
+- Use `getCookie` for convenience when you only need to read specific cookie values.
+
+By combining both, you can handle cookies more efficiently in your JavaScript projects.

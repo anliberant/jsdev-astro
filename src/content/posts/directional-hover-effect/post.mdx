@@ -1,0 +1,251 @@
+---
+title: Pure CSS Directional Hover Effect for Grouped Elements
+slug: directional-hover-effect
+heading: Create a Directional Hover Effect with Pure CSS
+image: ./images/directional-hover-effect.png
+permalink: directional-hover-effect
+date: 2024-10-31
+author: anton liberant
+category: css
+type: post
+tags: ['pure-css', 'hover']
+desc: Create smooth directional hover effects for grouped elements with pure CSS. Step-by-step guide to add interactive, direction-aware animations that enhance UX.
+---
+
+In this step-by-step guide, you'll learn how to add a Directional Hover Effect to grouped HTML elements, creating a smooth and engaging interaction as users hover over each item. This effect uses pure CSS to detect the cursor's entry direction and animates accordingly, adding visual interest to your design. Let's dive in and build it from scratch!
+
+<Codepen id='OJKZoBp' />
+
+## Key Features
+
+- **Direction-Aware Animation**: The animation adapts depending on the direction of cursor entry or exit.
+- **Smooth Transitions**: Background or overlay effect slides in and out from the edge closest to the cursor, creating a natural, flowing animation.
+- **Pure CSS Implementation**: No JavaScript required, making it a lightweight solution.
+
+## Steps to Create the Effect
+
+**1. HTML Structure**: Start with a simple HTML layout of grouped elements.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav>
+      <ul class="nav" aria-label="Navigation">
+        <li class="nav__item">
+          <span class="nav__item-pill" aria-hidden="true"></span>
+          <a href="#!" class="nav__item-link">Categories</a>
+        </li>
+        <li class="nav__item">
+          <span class="nav__item-pill" aria-hidden="true"></span>
+          <a href="#!" class="nav__item-link">Howtos</a>
+        </li>
+        <li class="nav__item">
+          <span class="nav__item-pill" aria-hidden="true"></span>
+          <a href="#!" class="nav__item-link">Snippets</a>
+        </li>
+        <li class="nav__item">
+          <span class="nav__item-pill" aria-hidden="true"></span>
+          <a href="#!" class="nav__item-link">Friday</a>
+        </li>
+      </ul>
+    </nav>
+  </body>
+</html>
+```
+
+**2. CSS Styling**: Style the list and elements to achieve a uniform look and set the foundation for the directional effect.
+
+```css
+.nav {
+  display: flex;
+  justify-content: center;
+}
+.nav__list {
+  list-style: none;
+  display: flex;
+}
+
+.nav__item {
+  position: relative;
+  display: inline-flex;
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+.nav__item-link {
+  position: relative;
+  text-decoration: none;
+  color: black;
+}
+
+.nav__item-pill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.nav__item-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: #f1f5f9;
+  border-radius: 0.25rem;
+  opacity: 0;
+  visibility: hidden;
+  transition-property: visibility, opacity, transform;
+  transition-duration: 0.3s;
+}
+```
+
+**3. Directional Hover Effect**: Use CSS ::before pseudo-element to create the sliding background effect. The transform property controls the entry direction.
+
+```css
+.nav__item:hover > .nav__item-pill::before {
+  opacity: 1;
+  visibility: visible;
+}
+.nav__item:hover > .nav__item-link {
+  color: #0f172a;
+}
+.nav__item:has(~ .nav__item:hover) > .nav__item-pill::before {
+  opacity: 1;
+  transform: translateX(100%);
+}
+
+.nav__item:hover ~ .nav__item > .nav__item-pill::before {
+  opacity: 1;
+  transform: translateX(-100%);
+}
+.nav__item:has(~ .nav__item + .nav__item:hover) > .nav__item-pill::before {
+  transition: none;
+}
+
+.nav__item:hover + .nav__item ~ .nav__item > .nav__item-pill::before {
+  transition: none;
+}
+```
+
+## Explanation
+
+- **Pseudo-Elements**: ::before acts as a background overlay that slides based on the cursor direction.
+- **Transform Transitions**: Adjusting transform: translate on hover allows the effect to slide in from the nearest edge.
+
+This CSS code applies a directional hover effect to a navigation bar, with a "pill" background that smoothly moves behind each item in the navbar as the user hovers over them. Here’s a breakdown of how each part works:
+
+### 1. General Styles
+
+```css
+body {
+  font-family: sans-serif;
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+}
+```
+
+- Sets a sans-serif font for the page.
+- The `.nav` class centers the navigation items horizontally.
+
+### 2. Navigation List and Items
+
+```css
+.nav__list {
+  list-style: none;
+  display: flex;
+}
+
+.nav__item {
+  position: relative;
+  display: inline-flex;
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+  color: inherit;
+}
+```
+
+- `.nav__list` removes the default list style and arranges items in a row.
+- `.nav__item` centers each item, adds padding, and positions it relative so child elements can be positioned absolutely.
+
+### 3. Links and Hover Styles
+
+```css
+.nav__item-link {
+  position: relative;
+  text-decoration: none;
+  color: black;
+}
+```
+
+- The links (`.nav__item-link`) are set to have no text decoration and inherit a black color by default.
+
+### 4. Pill Background Element
+
+```css
+.nav__item-pill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.nav__item-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: #f1f5f9;
+  border-radius: 0.25rem;
+  opacity: 0;
+  visibility: hidden;
+  transition-property: visibility, opacity, transform;
+  transition-duration: 0.3s;
+}
+```
+
+- `.nav__item-pill` is a container for the animated background "pill" and is positioned to cover the link area entirely.
+- `.nav__item-pill::before` applies a pill-shaped background with opacity, visibility, and transform properties, allowing for smooth transitions on hover.
+
+### 5. Hover Effect for the Pill Background
+
+```css
+.nav__item:hover > .nav__item-pill::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.nav__item:hover > .nav__item-link {
+  color: #0f172a;
+}
+```
+
+- When hovering over `.nav__item`, the `::before` background fades in, making the pill background visible.
+- The link text color changes to a dark shade on hover.
+
+### 6. Directional Hover Effect
+
+```css
+.nav__item:has(~ .nav__item:hover) > .nav__item-pill::before {
+  opacity: 1;
+  transform: translateX(100%);
+}
+
+.nav__item:hover ~ .nav__item > .nav__item-pill::before {
+  opacity: 1;
+  transform: translateX(-100%);
+}
+```
+
+- The transform: `translateX()` moves the pill left or right when hovering over a different link.
+- `.nav__item:has(~ .nav__item + .nav__item:hover) > .nav__item-pill::before { transition: none; }` optimizes the transition to avoid visual artifacts when hovering quickly.
+
+In summary, this code creates a smooth directional hover effect, making the background "pill" appear to follow the mouse across links by transitioning between the elements.
+
+With this CSS-only approach, you can create a fluid and dynamic directional hover effect that enhances the interactivity of grouped elements without the need for JavaScript.

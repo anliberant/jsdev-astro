@@ -1,0 +1,107 @@
+---
+import { getCategoryInfo } from '@/shared/helpers/category.helpers';
+
+export interface Props {
+  categoryName: string;
+  count: number;
+}
+
+const { categoryName, count } = Astro.props;
+const { name, heading, description, metaDescription } = getCategoryInfo(
+  categoryName,
+  'post'
+);
+---
+
+<div class='category-card'>
+  <div class='category-card__content'>
+    <h2 class='category-card__title'>
+      {name}
+    </h2>
+    <p class='category-card__description'>
+      {description.substring(0, 700) + '...'}
+    </p>
+    <a href={`/${categoryName.toLowerCase()}/`} class='category-card__link'>
+      <button class='category-card__button'>
+        Explore {count} posts in {categoryName} Category
+      </button>
+    </a>
+  </div>
+</div>
+
+<style>
+  .category-card {
+    position: relative;
+    max-width: 42rem;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background-color: rgba(231, 246, 242, 0.7);
+    box-shadow:
+      0 1px 3px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .category-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    width: 0.375rem;
+    border-radius: 0.375rem;
+    background: linear-gradient(to right, #64748b, #1e293b);
+  }
+
+  .category-card__content {
+    padding: 1rem;
+  }
+
+  .category-card__title {
+    font-family: 'PT Serif', serif;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .category-card__description {
+    margin-top: 0.25rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin: 0;
+    margin-top: 0.25rem;
+  }
+
+  .category-card__link {
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .category-card__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    padding: 1rem 1rem;
+    border: 1px solid #d1d5db;
+    background-color: var(--gradient-to);
+  }
+
+  .category-card__button:hover {
+    background-color: hsl(var(--accent));
+  }
+
+  /* Dark mode styles */
+  :global(.dark) .category-card {
+    background-color: #2f4858;
+  }
+
+  :global(.dark) .category-card::before {
+    background: linear-gradient(to right, #cbd5e1, #64748b);
+  }
+</style>

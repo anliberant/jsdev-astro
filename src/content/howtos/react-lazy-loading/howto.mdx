@@ -1,0 +1,153 @@
+---
+title: How to Use Lazy Loading in React
+slug: react-lazy-loading
+heading: Implementing Lazy Loading in React
+icon: /icons/react.png
+image: ./images/react-lazy-loading.png
+permalink: howto/react-lazy-loading
+date: 2024-09-22
+author: anton liberant
+category: react
+type: howto
+tags: ['lazy-loading', 'suspense', 'React.lazy()']
+desc: Learn how to use React.lazy() and Suspense for lazy loading components to boost app performance by loading parts only when needed for faster user experience.
+---
+
+![How to Use Lazy Loading in React](./images/react-lazy-loading.png)
+
+React lazy loading allows components to be loaded only when they are needed, improving the
+performance of your application by reducing the initial bundle size. It’s especially useful for
+optimizing larger applications where you don’t want to load everything upfront.
+
+Here’s a step-by-step guide on how to implement lazy loading in React:
+
+## 1. Using React.lazy()
+
+React provides a built-in function, **React.lazy()**, that lets you dynamically import a component.
+This method tells React to only load the component when it’s actually rendered.
+
+**Example:**
+
+```js
+import React, { Suspense } from 'react';
+
+const LazyComponent = React.lazy(() => import('./LazyComponent'));
+
+function App() {
+  return (
+    <div>
+      <h1>Main App</h1>
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>
+    </div>
+  );
+}
+
+export default App;
+```
+
+- ** React.lazy(() => import('./LazyComponent'))** dynamically imports the **LazyComponent**.
+- **The Suspense component** is used to show a fallback (like a loading spinner) while the lazy
+  component is loading.
+
+## 2. Using Suspense for Fallback
+
+The **Suspense** component is crucial for lazy loading because it provides a fallback UI while
+waiting for the lazy-loaded component. The **fallback** prop allows you to define what will be
+displayed while the component is being loaded, such as a loading spinner or text.
+
+```js
+<Suspense fallback={<div>Loading component...</div>}>
+  <LazyComponent />
+</Suspense>
+```
+
+Without the **Suspense** component, React will not know how to handle the loading state, and it will
+throw an error.
+
+## 3. Lazy Loading Routes
+
+Lazy loading is especially useful when working with routes in React. By lazily loading route
+components, you can reduce the amount of code that needs to be loaded upfront, speeding up the
+initial render.
+
+**Example with React Router:**
+
+```js
+import React, { Suspense } from 'react';
+import { Route, BrowserRouter as Router, Switch } from 'react-router-dom';
+
+const Home = React.lazy(() => import('./Home'));
+const About = React.lazy(() => import('./About'));
+
+function App() {
+  return (
+    <Router>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Switch>
+          <Route exact path='/' component={Home} />
+          <Route path='/about' component={About} />
+        </Switch>
+      </Suspense>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+In this example:
+
+- The **Home** and **About** components are lazily loaded when their respective routes are accessed.
+- The fallback UI is displayed while the components are being loaded.
+
+## 4. Code Splitting
+
+React lazy loading works hand-in-hand with code splitting. By splitting the code into smaller
+bundles and only loading them when needed, you can significantly improve your app’s performance.
+
+Webpack automatically supports code splitting with **import()** syntax, and using **React.lazy()**
+enables this in your React applications.
+
+## 5. Error Boundaries for Lazy Components
+
+If your lazy-loaded component fails to load due to network issues or other problems, you should
+handle these errors using **Error Boundaries**. Error boundaries are React components that catch
+JavaScript errors anywhere in the component tree.
+
+**Example:**
+
+```js
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong!</h1>;
+    }
+    return this.props.children;
+  }
+}
+
+// Wrap the Suspense component with ErrorBoundary
+<ErrorBoundary>
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyComponent />
+  </Suspense>
+</ErrorBoundary>;
+```
+
+## Conclusion
+
+React lazy loading, along with **Suspense**, allows you to optimize your application by loading
+components only when they are needed. By using lazy loading, especially for routes and larger
+components, you can significantly reduce the initial bundle size, speeding up your app's load time
+and enhancing the user experience.

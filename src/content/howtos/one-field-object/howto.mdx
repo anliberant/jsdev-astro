@@ -1,0 +1,101 @@
+---
+title: How to Choose Exactly One Mandatory Field in an Object
+slug: one-field-object
+heading: Selecting Exactly One Mandatory Field in an Object
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/one-field-object
+date: 2025-01-16
+author: anton liberant
+category: typescript
+type: howto
+tags: ['object', 'validation']
+desc: Learn how to enforce exactly one required property in a TypeScript object. Improve type safety with types that ensure only one key is selected at a time.
+---
+
+When working with TypeScript, you might encounter scenarios where you need to ensure that exactly one field from an object is selected, and this field must be mandatory. This often happens in situations such as API requests, where you want to restrict the input to a single option.
+
+In this article, we'll explore how to implement this using TypeScript's type system.
+
+## Problem Statement
+
+Imagine you have an object representing a request that allows you to choose between `projectId`, `taskId`, or `userAccountId`, but only one of these fields should be selected. The initial TypeScript type might look like this:
+
+```ts
+type FetchMessages = {
+  projectId?: string;
+  taskId?: string;
+  userAccountId?: string;
+};
+```
+
+The goal is to create a type that:
+
+- Ensures **exactly one** of these fields is selected.
+- Ensures **none** of the other fields are included.
+- Utilizes TypeScript’s type system to avoid manual validation.
+
+## Solution Steps
+
+### 1. Single Field Extraction:
+
+Start by defining a helper type that extracts exactly one field and removes undefined values:
+
+```ts
+type SelectOneField<T, K extends keyof T> = Record<K, Exclude<T[K], undefined>>;
+```
+
+This type ensures that only one key (`projectId`, `taskId`, or `userAccountId`) is mandatory.
+
+### 2. Combining Multiple Fields:
+
+To ensure this works for all three fields (`projectId`, `taskId`, `userAccountId`), map over each key and combine them:
+
+```ts
+type SelectOnlyOne<T> = {
+  [K in keyof T]: SelectOneField<T, K>;
+}[keyof T];
+```
+
+### 3.Ensuring Non-Optional:
+
+By default, TypeScript's mapped types can make the result optional. To make sure the result is mandatory, remove the ?:
+
+```ts
+type SelectOnlyOne<T> = {
+  [K in keyof T]-?: SelectOneField<T, K>;
+}[keyof T];
+```
+
+This results in a type where exactly one of the fields (`projectId`, `taskId`, or `userAccountId`) must be selected.
+
+### Example Usage
+
+```ts
+type FetchMessages = {
+  projectId?: string;
+  taskId?: string;
+  userAccountId?: string;
+};
+
+// Ensures exactly one field is selected and non-optional
+type TestMessages = SelectOnlyOne<FetchMessages>;
+
+// Valid examples:
+const example1: TestMessages = { projectId: 'p1' }; // ✅ valid
+const example2: TestMessages = { taskId: 't1' }; // ✅ valid
+const example3: TestMessages = { userAccountId: 'u1' }; // ✅ valid
+
+// Invalid example: more than one field selected
+const example4: TestMessages = { projectId: 'p1', taskId: 't1' }; // ❌ invalid
+```
+
+### Benefits of This Approach:
+
+- **Type Safety**: Ensures only one field is selected, with TypeScript catching invalid cases.
+- **Error Prevention**: Eliminates the need for manual runtime validation.
+- **Cleaner Code**: Using auto-generated types simplifies your solution and makes it easier to maintain.
+
+## Conclusion
+
+By leveraging TypeScript's type system, you can create robust and safe types that enforce exactly one field to be selected in an object. This approach improves the clarity, safety, and maintainability of your code.

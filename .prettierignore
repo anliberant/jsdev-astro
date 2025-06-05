@@ -1,0 +1,11 @@
+# .prettierignore - поместить в корень проекта
+dist/
+.astro/
+node_modules/
+*.min.js
+public/
+coverage/
+.turbo/
+pnpm-lock.yaml
+package-lock.json
+src/content/

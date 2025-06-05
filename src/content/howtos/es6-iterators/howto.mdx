@@ -1,0 +1,249 @@
+---
+title: 'How to Use ES6 Iterators: Guide to Writing Clean JavaScript Code'
+slug: es6-iterators
+heading: Master ES6 Iterators for Clean JavaScript Code
+permalink: howto/es6-iterators
+icon: /icons/javascript.png
+image: /icon.png
+date: 2025-02-09
+author: anton liberant
+category: javascript
+type: howto
+tags: ['eslint', 'prettier']
+desc: Master ES6 iterators in JavaScript with clear examples. Learn custom iterators, generators, and performance tips to improve iteration patterns in your code.
+---
+
+ES6 introduced the Iterator interface, enabling sequential access to iterable objects like Arrays, Sets, Maps, Strings, arguments, and custom objects. Iterators provide a standardized way to traverse data structures and are essential for `for...of` loops. In this guide, you'll learn how to use ES6 iterators to write clean, efficient JavaScript code. We'll cover the basics of iterators, how to create custom iterators, and how to use generator functions to simplify iteration patterns. Let's get started!
+
+## 1. What is an Iterator?
+
+An iterator is an object with a `next()` method that returns:
+
+```js
+{ value: currentValue, done: true/false }
+```
+
+- `done: false` → More values remain.
+- `done: true` → Iteration is complete.
+
+### Iteration Process:
+
+1. Create an iterator pointing to the start of the data structure.
+2. Call `next()` to move to the first element.
+3. Keep calling `next() `to traverse through elements.
+4. Stops when `done: true` is returned.
+
+## 2. How to Create an Iterator
+
+### (1) Manually Implement an Iterator
+
+```js
+function createIterator(arr) {
+  let index = 0;
+  return {
+    next: function () {
+      return index < arr.length
+        ? { value: arr[index++], done: false }
+        : { value: undefined, done: true };
+    },
+  };
+}
+
+let iterator = createIterator(['a', 'b', 'c']);
+console.log(iterator.next()); // { value: 'a', done: false }
+console.log(iterator.next()); // { value: 'b', done: false }
+console.log(iterator.next()); // { value: 'c', done: false }
+console.log(iterator.next()); // { value: undefined, done: true }
+```
+
+📌 Each call to `next()` returns a value and moves forward.
+
+### (2) Use `Symbol.iterator` for Built-in Iterables
+
+All iterable objects (`Array`, `Set`, `Map`, `String`) have a default iterator accessible via `Symbol.iterator`.
+
+📌 Arrays, Strings, Sets, and Maps can be iterated directly.
+
+### (3) Create an Iterator for a Custom Object
+
+Ordinary objects are not iterable by default but can be made iterable using `Symbol.iterator`.
+
+```js
+let myObj = {
+  data: [10, 20, 30],
+  [Symbol.iterator]: function () {
+    let index = 0;
+    return {
+      next: () => {
+        return index < this.data.length
+          ? { value: this.data[index++], done: false }
+          : { value: undefined, done: true };
+      },
+    };
+  },
+};
+
+let iter = myObj[Symbol.iterator]();
+console.log(iter.next()); // { value: 10, done: false }
+console.log(iter.next()); // { value: 20, done: false }
+console.log(iter.next()); // { value: 30, done: false }
+console.log(iter.next()); // { value: undefined, done: true }
+```
+
+📌 Objects require `Symbol.iterator` to be iterable with `for...of`.
+
+### 3. How to Use `for...of` for Iteration
+
+All objects implementing `Symbol.iterator` can be traversed using `for...of`.
+
+```js
+let arr = ['A', 'B', 'C'];
+for (let char of arr) {
+  console.log(char);
+}
+// A
+// B
+// C
+```
+
+📌 Unlike `forEach()`, `for...of` allows `break` and `continue`.
+
+## 4. What Are Iterable Objects?
+
+✅ Objects supporting `for...of` via `Symbol.iterator`:
+
+- `Array`
+- `String`
+- `Set`
+- `Map`
+- `arguments`
+- `NodeList`
+- Custom objects (with `Symbol.iterator` implemented)
+
+## 5. How to Iterate Over `Set` and `Map`
+
+### (1) Iterate Over a `Set`
+
+```js
+let mySet = new Set(['apple', 'banana', 'cherry']);
+let setIter = mySet[Symbol.iterator]();
+
+console.log(setIter.next()); // { value: 'apple', done: false }
+console.log(setIter.next()); // { value: 'banana', done: false }
+console.log(setIter.next()); // { value: 'cherry', done: false }
+console.log(setIter.next()); // { value: undefined, done: true }
+```
+
+📌 Set maintains insertion order and ensures unique values.
+
+### (2) Iterate Over a `Map`
+
+```js
+let myMap = new Map([
+  ['name', 'Alice'],
+  ['age', 25],
+]);
+
+for (let [key, value] of myMap) {
+  console.log(key, value);
+}
+// name Alice
+// age 25
+```
+
+📌 `Map` iteration returns `[key, value]` pairs.
+
+## 6. How Iterators Compare to Generators
+
+The key differences between Iterators and Generators lie in their creation and execution patterns. For creation, Iterators require manual implementation of the `next()` function and `Symbol.iterator`, making them more verbose to write. Generators, on the other hand, use the function\* syntax which automatically generates these implementations, significantly reducing boilerplate code.
+
+When it comes to execution, Iterators run without pausing – they process their elements continuously until completion. In contrast, Generators support the yield keyword, allowing them to pause execution and resume later. This makes Generators particularly useful for controlling flow and managing memory in large datasets or infinite sequences.
+
+### Example: Using a Generator
+
+```js
+function* generatorFunction() {
+  yield 'A';
+  yield 'B';
+  yield 'C';
+}
+
+let gen = generatorFunction();
+console.log(gen.next()); // { value: 'A', done: false }
+console.log(gen.next()); // { value: 'B', done: false }
+console.log(gen.next()); // { value: 'C', done: false }
+console.log(gen.next()); // { value: undefined, done: true }
+```
+
+📌 Generators simplify iteration with `yield` and can pause execution.
+
+## 7. Best Practices for Using Iterators
+
+### (1) Implement Iterators in a Class
+
+```js
+class Collection {
+  constructor() {
+    this.items = [];
+  }
+
+  add(item) {
+    this.items.push(item);
+  }
+
+  *[Symbol.iterator]() {
+    for (let item of this.items) {
+      yield item;
+    }
+  }
+}
+
+let collection = new Collection();
+collection.add('foo');
+collection.add('bar');
+
+for (let value of collection) {
+  console.log(value);
+}
+// foo
+// bar
+```
+
+### (2) Use Asynchronous Iterators (ES2018)
+
+```js
+const asyncIterable = {
+  async *[Symbol.asyncIterator]() {
+    yield 'hello';
+    yield 'async';
+    yield 'iteration';
+  },
+};
+
+(async () => {
+  for await (const x of asyncIterable) {
+    console.log(x);
+  }
+})();
+// hello
+// async
+// iteration
+```
+
+## 8. When to Use Iterators
+
+✅ Iterators are useful for:
+
+- Traversing arrays, strings, sets, and maps
+- Creating custom iterable objects
+- Handling streaming data (e.g., paginated API responses)
+- Avoiding memory-heavy operations by using generators
+
+## 9. Conclusion
+
+- **Iterators** `(Symbol.iterator`) provide a structured way to access collections.
+- `for...of` simplifies iteration over iterable objects.
+- **Generators** (`function*`) create iterators effortlessly with yield.
+- **Asynchronous Iterators** (`Symbol.asyncIterator`) handle streaming data efficiently.
+
+Mastering iterators will make your JavaScript code more efficient and readable! 🚀

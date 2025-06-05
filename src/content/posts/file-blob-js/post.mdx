@@ -1,0 +1,185 @@
+---
+title: Understanding the Difference Between File and Blob Objects
+slug: file-blob-js
+heading: 'File vs Blob Objects: Key Differences Explained'
+image: ./images/file-blob-js.png
+permalink: file-blob-js
+date: 2024-10-14
+author: anton liberant
+category: javascript
+type: post
+tags: ['file', 'blob', 'immutable']
+desc: Learn the key differences between File and Blob in JavaScript. Understand their properties, uses, and when to use each for handling file data in web apps.
+---
+
+In JavaScript, both `File` and `Blob` objects are used to represent binary data, but they serve different purposes and have some distinct characteristics. Here’s a breakdown of their differences:
+
+## Blob
+
+In JavaScript, a **Blob** (Binary Large Object) is a data structure that represents a collection of binary data as an immutable object. Blobs are commonly used for handling and manipulating raw binary data, such as files, images, videos, and other non-text data.
+
+### Key Characteristics of Blobs:
+
+**1. Immutable**: Once created, a Blob cannot be modified. You can create new Blobs by combining existing data, but you cannot change the content of a Blob itself.
+
+**2. Data Representation**: Blobs can contain any type of data, including text, images, audio, or video. They allow developers to work with binary data in web applications.
+
+**3. Size and Type**: Blobs have two main properties:
+
+- **size**: The size of the Blob in bytes.
+- **type**: The MIME type of the data (e.g., image/png, text/plain).
+- **Usage with APIs**: Blobs are commonly used with various Web APIs.
+
+**4. File API**: To handle files uploaded by users.
+
+- Canvas API: To create images from canvas elements.
+- Fetch API: To send and receive binary data.
+
+**5. Creating Blobs**: You can create a Blob using the Blob constructor:
+
+```js
+const myBlob = new Blob(['Hello, world!'], { type: 'text/plain' });
+```
+
+**6. Creating Object URLs**: You can create a temporary URL for a Blob using the `URL.createObjectURL()` method. This allows you to create links to the Blob data that can be used in the browser:
+
+```js
+const url = URL.createObjectURL(myBlob);
+const link = document.createElement('a');
+link.href = url;
+link.download = 'hello.txt'; // Specify a default file name for download
+link.textContent = 'Download Blob';
+document.body.appendChild(link);
+```
+
+**7. Working with Blobs**: You can use Blobs with the `FileReader` API to read the contents of a Blob, and you can send them in requests, such as with `fetch` or `XMLHttpRequest`.
+
+### Example of Using Blobs
+
+```js
+// Create a Blob
+const myBlob = new Blob(['This is a sample text.'], { type: 'text/plain' });
+
+// Create a URL for the Blob
+const url = URL.createObjectURL(myBlob);
+
+// Create a link to download the Blob
+const downloadLink = document.createElement('a');
+downloadLink.href = url;
+downloadLink.download = 'sample.txt'; // Specify the file name
+downloadLink.textContent = 'Download Sample Text';
+
+// Append the link to the document
+document.body.appendChild(downloadLink);
+```
+
+In summary, a `Blob` in JavaScript is a versatile object used to handle raw binary data. It provides a way to work with files and binary content in web applications, enabling functionalities like file uploads, downloads, and data manipulation.
+
+## File
+
+File object represents a file from the user's filesystem. It is a specific type of `Blob` that contains information about the file, including its name, size, type, and last modified date. The `File` object is primarily used in web applications to handle file uploads and manage user-generated content.
+
+### Key Characteristics of File Objects:
+
+**1. Inheritance from Blob:**
+
+- The `File` object extends the Blob interface, meaning it inherits properties and methods from `Blob`. This allows File objects to be treated as blobs of binary data while also providing additional file-specific information.
+
+**2. Properties:**
+
+A File object has several important properties:
+
+- **name**: The name of the file (including the file extension).
+- **size**: The size of the file in bytes.
+- **type**: The MIME type of the file (e.g., image/png, application/pdf).
+- **lastModified**: The timestamp indicating the last time the file was modified (in milliseconds since the Unix epoch).
+- **webkitRelativePath**: The path relative to a directory, primarily used when selecting multiple files from a directory.
+
+**3. Creation:**
+
+- File objects are typically created when a user selects a file through an HTML file input element (`<input type="file">)`. You can access the selected file(s) via the files property of the input element.
+
+**4. FileReader API:**
+
+- The `FileReader` API is often used to read the contents of a `File` object asynchronously. This allows you to read the file's data as text or binary data, enabling you to display or process the file's content.
+
+**5. Usage with APIs:**
+
+- `File` objects can be sent to a server using APIs like `fetch` or `XMLHttpRequest`, making them essential for handling file uploads in web applications.
+
+### Example of Using File Objects
+
+Here’s an example that demonstrates how to use the `File` object to allow users to upload a file and read its contents:
+
+```js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Example</title>
+</head>
+<body>
+
+<input type="file" id="fileInput" />
+<pre id="fileContent"></pre>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const fileContent = document.getElementById('fileContent');
+
+    fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0]; // Get the first selected file
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                fileContent.textContent = e.target.result; // Display the file content
+            };
+
+            reader.readAsText(file); // Read the file as text
+        }
+    });
+</script>
+
+</body>
+</html>
+```
+
+In summary, a `File` object in JavaScript is a powerful representation of a file from the user's filesystem. It provides essential properties for file handling and is commonly used in web applications for file uploads and processing. By utilizing `File` objects along with the `FileReader API`, developers can easily manage user-generated content in a web environment.
+
+## Use Cases
+
+**Blob**
+
+Blobs are commonly used for handling data in memory, creating URL representations of binary data using `URL.createObjectURL()`, and sending binary data through APIs (like fetch or `XMLHttpRequest`).
+
+**File**
+
+File objects are primarily used when dealing with user-uploaded files, reading file content using the `FileReader` API, and interacting with file-related APIs in web applications.
+
+**Example:**
+
+Here’s an example demonstrating the use of both `Blob` and `File`:
+
+```js
+// Create a Blob
+const myBlob = new Blob(['Hello, world!'], { type: 'text/plain' });
+
+// Create a URL for the Blob
+const blobUrl = URL.createObjectURL(myBlob);
+console.log(blobUrl); // URL representation of the blob
+
+// Handle File input
+const fileInput = document.querySelector('input[type="file"]');
+fileInput.addEventListener('change', event => {
+  const file = event.target.files[0]; // Access the first selected file
+  console.log(file.name); // Log the file name
+  console.log(file.size); // Log the file size
+});
+```
+
+## Summary
+
+In summary, while both `File` and `Blob` objects are used for handling binary data in JavaScript, File is a specialized type of Blob that includes additional properties related to files. Use Blob for general binary data handling and File when working with files selected by the user.

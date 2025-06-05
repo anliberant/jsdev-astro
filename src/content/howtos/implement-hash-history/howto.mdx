@@ -1,0 +1,141 @@
+---
+title: How to Implement Routing with Hash and History API in JavaScript
+slug: implement-hash-history
+heading: 'JavaScript Routing with Hash and History API'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/implement-hash-history
+date: 2025-02-25
+author: anton liberant
+category: javascript
+type: howto
+tags: ['hash', 'history', 'routing']
+desc: Learn to build robust client-side routing in JavaScript using Hash routing and the History API. Explore differences, performance tips, and SPA best practices.
+---
+
+Routing in JavaScript is about updating the URL and displaying the corresponding content without reloading the page. This improves the user experience by preventing unnecessary page refreshes and preserving application state. There are two common methods for implementing client-side routing: **hash-based routing** and **history-based routing**.
+
+## Hash-Based Routing
+
+The hash portion of a URL (`#`) does not cause a full-page reload when changed. This makes it useful for implementing simple client-side routing.
+
+### Basic Implementation
+
+To use hash-based routing:
+
+1. Update the URL with a hash value (`#path`).
+2. Listen for hash changes using `window.addEventListener('hashchange', callback)`.
+3. Display the corresponding content when the hash changes.
+
+Here's an example:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hash Routing</title>
+  </head>
+  <body>
+    <ul>
+      <li><a href="#/home">Home</a></li>
+      <li><a href="#/about">About</a></li>
+    </ul>
+    <div id="app"></div>
+
+    <script>
+      const routes = {
+        '/home': '<h2>Home Page</h2>',
+        '/about': '<h3>About Page</h3>',
+      };
+
+      function routerView() {
+        const hash = location.hash.substring(1) || '/home';
+        document.getElementById('app').innerHTML =
+          routes[hash] || '<h2>404 Not Found</h2>';
+      }
+
+      window.addEventListener('DOMContentLoaded', routerView);
+      window.addEventListener('hashchange', routerView);
+    </script>
+  </body>
+</html>
+```
+
+### Explanation
+
+- The hash (`#`) is used to track changes in the URL without reloading the page.
+- `location.hash.substring(1)` retrieves the current hash value.
+- The `routerView` function updates the content dynamically based on the hash.
+
+## History-Based Routing
+
+The History API (`history.pushState` and `history.replaceState`) allows modifying the URL without causing a page reload, enabling more modern single-page application (SPA) behavior.
+
+### Basic Implementation
+
+- Override the default behavior of `<a>` tags using `preventDefault()`.
+- Use `history.pushState()` to update the URL.
+- Listen for `popstate` events to detect browser navigation (back/forward buttons).
+
+Here's an example:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>History API Routing</title>
+  </head>
+  <body>
+    <ul>
+      <li><a href="/home" class="nav-link">Home</a></li>
+      <li><a href="/about" class="nav-link">About</a></li>
+    </ul>
+    <div id="app"></div>
+
+    <script>
+      const routes = {
+        '/home': '<h2>Home Page</h2>',
+        '/about': '<h3>About Page</h3>',
+      };
+
+      function routerView() {
+        const path = location.pathname;
+        document.getElementById('app').innerHTML =
+          routes[path] || '<h2>404 Not Found</h2>';
+      }
+
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          history.pushState(null, '', this.getAttribute('href'));
+          routerView();
+        });
+      });
+
+      window.addEventListener('popstate', routerView);
+      window.addEventListener('DOMContentLoaded', routerView);
+    </script>
+  </body>
+</html>
+```
+
+### Explanation
+
+- Clicking a link updates the URL without a page refresh.
+- `history.pushState(null, '', href)` modifies the browser history.
+- The `popstate` event ensures correct navigation when using the browser's back/forward buttons.
+- The `routerView` function updates the page content based on the current path.
+
+## Summary
+
+To implement client-side routing:
+
+1. **Prevent page refresh** when changing the URL.
+2. **Listen for URL changes** (via `hashchange` or `popstate`).
+3. **Update the page dynamically** based on the new URL.
+
+By mastering both **hash-based** and **history-based** routing, you can implement robust single-page applications in JavaScript.

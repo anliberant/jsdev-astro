@@ -1,0 +1,68 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import ConverterHeader from '@/shared/ui/converters/converter-header.astro';
+import ConverterPanel from '@/shared/ui/converters/converter-panel.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+const breadcrumbItems = generateToolsBreadcrumbs('HTML to Astro Converter');
+
+const converterOptions = [
+  { id: 'prettifyOption', label: 'Prettify', checked: true },
+  { id: 'camelCaseOption', label: 'camelCase Props', checked: true },
+  { id: 'fragmentOption', label: 'Use Fragment', checked: false },
+];
+---
+
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
+
+<HeadingBlock
+  title='HTML to Astro Converter'
+  description='Quickly convert HTML to Astro component syntax with this handy HTML to Astro converter.'
+  class='mt-0'
+/>
+
+<ConverterHeader
+  options={converterOptions}
+  class='mt-10'
+/>
+
+<div class='main-content'>
+  <ConverterPanel
+    type='input'
+    title='HTML Input'
+    icon='📝'
+    textareaId='htmlInput'
+    placeholder='Paste your HTML code here...'
+    showSampleButton={true}
+    showStats={true}
+  />
+
+  <ConverterPanel
+    type='output'
+    title='Astro Output'
+    icon='🚀'
+    textareaId='astroOutput'
+    placeholder='Converted Astro code will appear here...'
+    readonly={true}
+    showStats={true}
+  />
+</div>
+
+<script>
+  import { HtmlToAstroConverterController } from './lib/converter-controller';
+
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM loaded, initializing HTML to Astro converter...');
+
+    try {
+      const controller = new HtmlToAstroConverterController();
+      console.log('Converter initialized successfully');
+    } catch (error) {
+      console.error('Error initializing converter:', error);
+    }
+  });
+</script>

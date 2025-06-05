@@ -1,0 +1,271 @@
+---
+title: 'JavaScript Generators: A Complete Guide to Yield and Iterators'
+slug: js-generators-guide
+heading: 'Understanding JavaScript Generator Functions and Yield Operations'
+permalink: js-generators-guide
+image: ./images/js-generators-guide.png
+date: 2025-02-17
+author: anton liberant
+category: javascript
+type: post
+tags: ['yield', 'iterator', 'generator']
+desc: Master JavaScript generators with practical examples. Learn yield syntax, iterators, and advanced use cases for writing efficient, readable asynchronous code.
+---
+
+Generators are special functions in JavaScript that return an iterator and allow execution to be paused using the `yield` keyword. Unlike regular functions that run to completion when called, generators can be paused and resumed, making them useful for lazy execution and handling large datasets.
+
+## Basic Function vs Generator
+
+```js
+// Regular function
+function normalFunction() {
+  return 'Hello, World!';
+}
+
+console.log(normalFunction()); // Output: "Hello, World!"
+
+// Generator function
+function* simpleGenerator() {
+  yield 'Hello';
+  yield 'World';
+}
+
+const iterator = simpleGenerator();
+console.log(iterator.next().value); // Output: "Hello"
+console.log(iterator.next().value); // Output: "World"
+console.log(iterator.next().done); // Output: true
+```
+
+Generators return values step by step, making them ideal for handling large or streaming data without consuming too much memory.
+
+## Why Use Generators?
+
+- **Lazy Execution**: Code runs only when needed.
+- **Better Readability & Maintainability**: Helps manage complex stateful logic.
+- **Efficient Data Handling**: Useful for processing large datasets or infinite sequences.
+
+## Generator Syntax
+
+A generator function is declared with an asterisk (`*`) after the function keyword. Instead of returning a value immediately, it uses `yield` to pause execution.
+
+### Ways to Define a Generator
+
+**1. Function Declaration**
+
+```js
+function* numberGenerator() {
+  yield 1;
+  yield 2;
+  yield 3;
+}
+```
+
+**2. Function Expression**
+
+```js
+const wordGenerator = function* () {
+  yield 'Hello';
+  yield 'World';
+};
+```
+
+**3. Generator as an Object Method**
+
+```js
+const obj = {
+  *charGenerator() {
+    yield 'A';
+    yield 'B';
+  },
+};
+```
+
+**4. Generator in a Class**
+
+```js
+class GeneratorClass {
+  *stringGenerator() {
+    yield 'X';
+    yield 'Y';
+  }
+}
+```
+
+## How Generators Work
+
+Generators execute step by step and pause at each `yield` statement. The execution resumes when `next()` is called.
+
+```js
+function* simpleCounter() {
+  yield 1;
+  yield 2;
+  return 3;
+}
+
+const counter = simpleCounter();
+console.log(counter.next()); // { value: 1, done: false }
+console.log(counter.next()); // { value: 2, done: false }
+console.log(counter.next()); // { value: 3, done: true }
+console.log(counter.next()); // { value: undefined, done: true }
+```
+
+### Understanding next() Method
+
+- **value**: The yielded value.
+- **done**: Boolean indicating whether the generator is finished.
+
+## Practical Use Cases
+
+Generators shine in scenarios requiring step-by-step execution, state retention, or lazy evaluation.
+
+### 1. Countdown Timer
+
+```js
+function* countdown(start) {
+  while (start > 0) {
+    yield start--;
+  }
+  return 'Done!';
+}
+
+const timer = countdown(5);
+console.log(timer.next().value); // 5
+console.log(timer.next().value); // 4
+console.log(timer.next().value); // 3
+```
+
+### 2. Infinite Number Sequence
+
+```js
+function* infiniteNumbers(start = 1) {
+  let num = start;
+  while (true) {
+    yield num++;
+  }
+}
+
+const numGen = infiniteNumbers();
+console.log(numGen.next().value); // 1
+console.log(numGen.next().value); // 2
+console.log(numGen.next().value); // 3
+```
+
+### 3. Fibonacci Sequence
+
+```js
+function* fibonacci() {
+  let [prev, curr] = [0, 1];
+  while (true) {
+    yield prev;
+    [prev, curr] = [curr, prev + curr];
+  }
+}
+
+const fibGen = fibonacci();
+console.log(fibGen.next().value); // 0
+console.log(fibGen.next().value); // 1
+console.log(fibGen.next().value); // 1
+console.log(fibGen.next().value); // 2
+```
+
+### 4. Paginated Data Fetching
+
+```js
+function* paginate(array, size) {
+  for (let i = 0; i < array.length; i += size) {
+    yield array.slice(i, i + size);
+  }
+}
+
+const items = [10, 20, 30, 40, 50, 60];
+const pages = paginate(items, 2);
+
+console.log(pages.next().value); // [10, 20]
+console.log(pages.next().value); // [30, 40]
+console.log(pages.next().value); // [50, 60]
+```
+
+## Advanced Generator Features
+
+Generators also support advanced interactions such as bidirectional communication and exception handling.
+
+**1. Sending Values to Generators (`next(value)`)**
+
+Values can be sent into a generator, which becomes the result of the last `yield` statement.
+
+```js
+function* mathOperations() {
+  const a = yield 'Enter first number';
+  const b = yield 'Enter second number';
+  return `Sum: ${a + b}`;
+}
+
+const mathGen = mathOperations();
+console.log(mathGen.next().value); // "Enter first number"
+console.log(mathGen.next(5).value); // "Enter second number"
+console.log(mathGen.next(10).value); // "Sum: 15"
+```
+
+**2. Handling Errors in Generators**
+
+```js
+function* errorHandlingGen() {
+  try {
+    yield 'Step 1';
+    yield 'Step 2';
+  } catch (err) {
+    console.log('Caught error:', err.message);
+  }
+}
+
+const errGen = errorHandlingGen();
+console.log(errGen.next().value); // "Step 1"
+errGen.throw(new Error('Something went wrong')); // "Caught error: Something went wrong"
+console.log(errGen.next().done); // true
+```
+
+**3. Prematurely Stopping a Generator (`return()`)**
+
+```js
+function* countDown(n) {
+  while (n > 0) {
+    yield n--;
+  }
+  return 'Finished!';
+}
+
+const counter = countDown(3);
+console.log(counter.next().value); // 3
+console.log(counter.return('Stopped early').value); // "Stopped early"
+console.log(counter.next()); // { value: undefined, done: true }
+```
+
+**4. Delegating Execution to Another Generator (`yield*`)**
+
+```js
+function* subGenerator() {
+  yield 'Sub-task 1';
+  yield 'Sub-task 2';
+}
+
+function* mainGenerator() {
+  yield 'Main task';
+  yield* subGenerator();
+  yield 'Main task resumed';
+}
+
+const task = mainGenerator();
+console.log([...task]);
+// ["Main task", "Sub-task 1", "Sub-task 2", "Main task resumed"]
+```
+
+## Conclusion
+
+Generators are a powerful tool in JavaScript for handling sequences, stateful logic, and lazy computations. They provide greater control over execution flow and are especially useful in scenarios like:
+
+- **Iterating over large datasets efficiently**
+- **Generating infinite sequences**
+- **Managing asynchronous flows**
+- **Handling complex logic in a readable way**
+
+By leveraging advanced generator features like `yield*`, `next(value)`, `throw()`, and `return()`, you can write cleaner, more efficient code. 🚀

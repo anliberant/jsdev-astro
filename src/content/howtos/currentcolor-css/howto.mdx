@@ -1,0 +1,84 @@
+---
+title: How to Combine currentcolor with Relative Color Syntax in CSS
+slug: currentcolor-css
+heading: Using currentcolor with Relative Color Syntax in CSS
+permalink: howto/currentcolor-css
+icon: /icons/css.png
+image: /icon.png
+date: 2025-02-09
+author: anton liberant
+category: css
+type: howto
+tags: ['currentcolor']
+desc: Combine currentColor with relative color syntax in CSS using color-mix() to create dynamic, flexible styles that adapt to text color for better maintainability.
+---
+
+CSS offers powerful color manipulation techniques, and combining `currentcolor` with relative color syntax enhances design flexibility. This guide explores how to use them together for dynamic and maintainable styles.
+
+## Example: Using `currentcolor` for Borders and Shadows
+
+```css
+.button {
+  color: blue; /* Text color */
+  border: 2px solid currentcolor; /* Border inherits text color */
+  box-shadow: 0 4px 10px currentcolor; /* Shadow matches text color */
+}
+```
+
+📌 **Benefit**: When `color` changes, all dependent properties update automatically.
+
+## 2. Introduction to Relative Color Syntax
+
+Relative color syntax (`color-mix()`, `color-contrast()`, and `color-mod()`) allows modification of existing colors.
+
+### Example: Adjusting `currentcolor` with `color-mix()`
+
+```css
+.button {
+  color: blue;
+  background-color: color-mix(in srgb, currentcolor 50%, white);
+}
+```
+
+🔹 This makes the background 50% lighter than the text color.
+
+## 3. Practical Use Cases
+
+### (1) Darker Borders Using `color-mix()`
+
+```css
+.card {
+  color: teal;
+  border: 2px solid color-mix(in srgb, currentcolor 80%, black);
+}
+```
+
+📌 The border becomes darker than the text color.
+
+### (2) Background Tints Based on Text Color
+
+```css
+.alert {
+  color: red;
+  background-color: color-mix(in srgb, currentcolor 30%, white);
+}
+```
+
+```css
+.alert {
+  color: red;
+  background-color: color-mix(in srgb, currentcolor 30%, white);
+}
+```
+
+📌 The background is a lighter shade of the text color.
+
+## Conclusion
+
+✅ Use currentcolor for consistent, theme-adaptive styling.
+
+✅ Apply color-mix() to modify currentcolor dynamically.
+
+✅ Ensure accessibility by using color-contrast().
+
+By combining currentcolor with relative color syntax, you can create responsive and maintainable styles with ease! 🚀

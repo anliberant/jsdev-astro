@@ -1,0 +1,145 @@
+---
+title: How to Apply the Open/Closed Principle in TypeScript
+slug: open-closed-ts
+heading: Applying the Open/Closed Principle in TypeScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/open-closed-ts
+date: 2024-11-22
+author: anton liberant
+category: javascript
+type: howto
+tags: ['patterns']
+desc: Learn how to implement the Open/Closed Principle in software design using strategy patterns. Improve code extensibility while minimizing modifications.
+---
+
+Expanding existing functionality in software can become a challenge if the system is not designed to accommodate changes efficiently. The **Open/Closed Principle (OCP)**, a core concept of the SOLID principles in object-oriented programming, offers a solution by advocating for designs that are open to extensions but closed to modifications. This ensures ease of scalability while preserving existing functionality.
+
+In this article, we’ll explore the Open/Closed Principle, highlight its importance, and demonstrate its application using the Strategy Pattern.
+
+## Understanding the Open/Closed Principle
+
+The Open/Closed Principle, introduced by Bertrand Meyer, emphasizes:
+
+1. **Open to Extension**: New functionality should be added without altering the existing code.
+2. **Closed to Modification**: Existing code should not need to be changed when extending behavior.
+
+This principle ensures that systems remain robust and maintainable, even as new requirements emerge.
+
+## A Problematic Example: Violating the Open/Closed Principle
+
+Consider a basic calculator function that performs operations like addition and subtraction. Using a `switch` statement to handle operations violates the Open/Closed Principle because every new operation requires changes to the existing function:
+
+```ts
+function calculate(
+  operand1: number,
+  operand2: number,
+  operation: string
+): number {
+  switch (operation) {
+    case 'add':
+      return operand1 + operand2;
+    case 'subtract':
+      return operand1 - operand2;
+    default:
+      throw new Error('Unsupported operation');
+  }
+}
+```
+
+**Why It’s Problematic:**
+
+Adding a new operation, such as multiplication, requires modifying the calculate function. This approach tightly couples the logic and makes the code harder to maintain or test.
+
+## A Better Approach: Following the Open/Closed Principle
+
+Using the **Strategy Pattern**, we can design the calculator in a way that supports new operations without modifying existing code.
+
+### Implementation
+
+**1. Define a Strategy Interface**
+
+Create an interface for calculation strategies.
+
+```ts
+interface CalculationStrategy {
+  execute(operand1: number, operand2: number): number;
+}
+```
+
+**2. Implement Strategy Classes**
+
+Define classes for specific operations like addition and subtraction.
+
+```ts
+class AddStrategy implements CalculationStrategy {
+  execute(operand1: number, operand2: number): number {
+    return operand1 + operand2;
+  }
+}
+
+class SubtractStrategy implements CalculationStrategy {
+  execute(operand1: number, operand2: number): number {
+    return operand1 - operand2;
+  }
+}
+```
+
+**3. Create a Calculator Class**
+
+Use the strategy interface within the `Calculator` class to perform operations.
+
+```ts
+class Calculator {
+  private strategy: CalculationStrategy;
+
+  constructor(strategy: CalculationStrategy) {
+    this.strategy = strategy;
+  }
+
+  setStrategy(strategy: CalculationStrategy) {
+    this.strategy = strategy;
+  }
+
+  calculate(operand1: number, operand2: number): number {
+    return this.strategy.execute(operand1, operand2);
+  }
+}
+```
+
+**4. Adding New Operations**
+
+When a new operation is required, simply create a new strategy class without altering the existing code. For example:
+
+```ts
+class MultiplyStrategy implements CalculationStrategy {
+  execute(operand1: number, operand2: number): number {
+    return operand1 * operand2;
+  }
+}
+```
+
+**5. Usage Example**
+
+```ts
+const calculator = new Calculator(new AddStrategy());
+console.log(calculator.calculate(5, 3)); // Output: 8
+
+calculator.setStrategy(new SubtractStrategy());
+console.log(calculator.calculate(5, 3)); // Output: 2
+
+calculator.setStrategy(new MultiplyStrategy());
+console.log(calculator.calculate(5, 3)); // Output: 15
+```
+
+## Benefits of Following the Open/Closed Principle
+
+1. **Extensibility**: New features can be added with minimal effort.
+2. **Maintainability**: Existing code remains unchanged, reducing the risk of introducing bugs.
+3. **Reusability**: Strategy classes can be reused across different projects.
+
+## Conclusion
+
+The **Open/Closed Principle** promotes robust, scalable, and maintainable software design. By leveraging patterns like the Strategy Pattern, you can design systems that adapt easily to new requirements without modifying existing functionality. Implementing this principle ensures your code remains future-proof, reducing development overhead and enhancing reliability.
+
+Start applying the Open/Closed Principle today to create cleaner, more modular code!

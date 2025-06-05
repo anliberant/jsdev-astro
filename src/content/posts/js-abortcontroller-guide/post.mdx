@@ -1,0 +1,253 @@
+---
+title: 'JavaScript AbortController: Master Async Task Cancellation'
+slug: js-abortcontroller-guide
+heading: 'How to Use AbortController to Manage Cancelable Asynchronous Tasks in JavaScript'
+permalink: js-abortcontroller-guide
+image: ./images/javascript-abortcontroller.png
+date: 2025-03-18
+author: anton liberant
+category: javascript
+type: post
+tags: ['AbortController']
+desc: Cancel fetch requests, timers, and async operations in JavaScript with AbortController. Improve performance and user experience by managing async tasks properly.
+---
+
+`AbortController` is a powerful tool in JavaScript that allows you to cancel asynchronous operations at any time. It is particularly useful for network requests, timers, and data streaming. This article will explore how AbortController works, its use cases, and potential pitfalls.
+
+## What is AbortController?
+
+AbortController provides a way to forcefully stop async operations in JavaScript. Some common use cases include:
+
+1. **Canceling a fetch()** request if it's no longer needed.
+2. **Stopping a timer** (`setTimeout()`, `setInterval()`).
+3. **Aborting data streaming** (`ReadableStream`).
+
+## How AbortController Works
+
+1. Create an AbortController instance:
+   - ```js
+     const abortHandler = new AbortController();
+     ```
+2. Retrieve the signal from the controller:
+   - ```js
+     const abortSignal = abortHandler.signal;
+     ```
+3. Pass the signal to an asynchronous operation (`fetch`, `setTimeout`, etc.).
+4. Call `.abort()` to terminate the operation when needed.
+
+## Key Methods of AbortController
+
+### `AbortController.signal`
+
+Returns an `AbortSignal` object that tracks when an async operation should be aborted.
+
+```js
+const abortHandler = new AbortController();
+console.log(abortHandler.signal); // AbortSignal { aborted: false }
+```
+
+### `AbortController.abort()`
+
+Cancels all operations linked to the signal. After calling `.abort()`, `signal.aborted` becomes `true`.
+
+```js
+const abortHandler = new AbortController();
+abortHandler.abort();
+console.log(abortHandler.signal.aborted); // true
+```
+
+### `signal.addEventListener("abort", callback)`
+
+Executes a function when an operation is aborted.
+
+```js
+const abortHandler = new AbortController();
+abortHandler.signal.addEventListener('abort', () =>
+  console.log('Operation aborted')
+);
+
+setTimeout(() => abortHandler.abort(), 2000);
+```
+
+### Canceling `fetch()` Requests
+
+**Without AbortController (Not Recommended)**
+
+```js
+async function loadData() {
+  const response = await fetch('https://api.example.com/data');
+  const result = await response.json();
+  console.log(result);
+}
+
+loadData();
+setTimeout(() => console.log('What if the request is no longer needed?'), 1000);
+```
+
+This request cannot be stopped, consuming unnecessary resources.
+
+**With AbortController (Recommended)**
+
+```js
+const abortHandler = new AbortController();
+const abortSignal = abortHandler.signal;
+
+async function loadData() {
+  try {
+    const response = await fetch('https://api.example.com/data', {
+      signal: abortSignal,
+    });
+    const result = await response.json();
+    console.log(result);
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log('Request was canceled!');
+    } else {
+      console.error('Error:', err);
+    }
+  }
+}
+
+loadData();
+setTimeout(() => abortHandler.abort(), 1000);
+```
+
+This ensures that if a request is no longer needed, resources are freed up immediately.
+
+## Additional Example: Canceling Multiple Fetch Requests
+
+```js
+const fetchControllers = new Map();
+
+async function fetchWithCancel(url, requestId) {
+  if (fetchControllers.has(requestId)) {
+    fetchControllers.get(requestId).abort();
+  }
+
+  const newAbortHandler = new AbortController();
+  fetchControllers.set(requestId, newAbortHandler);
+
+  try {
+    const response = await fetch(url, { signal: newAbortHandler.signal });
+    const data = await response.json();
+    console.log('Fetched Data:', data);
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log(`Request ${requestId} was canceled`);
+    } else {
+      console.error('Error:', err);
+    }
+  }
+}
+
+fetchWithCancel('https://api.example.com/data', 'request1');
+setTimeout(
+  () => fetchWithCancel('https://api.example.com/data', 'request1'),
+  500
+);
+```
+
+## Use Cases for AbortController
+
+### 1. Canceling Search Requests in Input Fields
+
+When users type in a search box, multiple API calls can be triggered. We can cancel previous calls to save resources.
+
+```js
+let searchAbortHandler;
+
+async function search(query) {
+  if (searchAbortHandler) searchAbortHandler.abort(); // Cancel previous request
+
+  searchAbortHandler = new AbortController();
+  const abortSignal = searchAbortHandler.signal;
+
+  try {
+    const response = await fetch(`https://api.example.com/search?q=${query}`, {
+      signal: abortSignal,
+    });
+    const result = await response.json();
+    console.log('Results:', result);
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log('Previous request canceled');
+    } else {
+      console.error('Error:', err);
+    }
+  }
+}
+
+document.querySelector('#search').addEventListener('input', e => {
+  search(e.target.value);
+});
+```
+
+### 2. Stopping Timers and Background Tasks
+
+AbortController can manage `setTimeout()` and cancel tasks before execution.
+
+```js
+const timerAbortHandler = new AbortController();
+const timerAbortSignal = timerAbortHandler.signal;
+
+function executeDelayedTask() {
+  if (timerAbortSignal.aborted) {
+    console.log('Timer canceled');
+    return;
+  }
+
+  setTimeout(() => {
+    if (!timerAbortSignal.aborted) {
+      console.log('Task executed');
+    }
+  }, 5000);
+}
+
+setTimeout(() => timerAbortHandler.abort(), 2000);
+executeDelayedTask();
+```
+
+### 3. Canceling File Downloads (Streaming Data)
+
+```js
+const downloadAbortHandler = new AbortController();
+const downloadAbortSignal = downloadAbortHandler.signal;
+
+async function downloadLargeFile() {
+  try {
+    const response = await fetch('https://example.com/largefile.zip', {
+      signal: downloadAbortSignal,
+    });
+    const reader = response.body.getReader();
+    let receivedBytes = 0;
+    let chunks = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      receivedBytes += value.length;
+      console.log(`Downloaded ${receivedBytes} bytes`);
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log('Download canceled');
+    } else {
+      console.error('Error:', err);
+    }
+  }
+}
+
+document
+  .querySelector('#startDownload')
+  .addEventListener('click', downloadLargeFile);
+document
+  .querySelector('#cancelDownload')
+  .addEventListener('click', () => downloadAbortHandler.abort());
+```
+
+## Conclusion
+
+AbortController is a valuable tool for managing asynchronous operations efficiently in JavaScript. By integrating it into your code, you can improve performance, reduce resource waste, and enhance user experience.
+
+What are your experiences with AbortController? Share your thoughts in the comments!

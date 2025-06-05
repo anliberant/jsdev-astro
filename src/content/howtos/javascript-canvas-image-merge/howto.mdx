@@ -1,0 +1,224 @@
+---
+title: How to Combine Two Images Using Canvas in Pure JavaScript
+slug: javascript-canvas-image-merge
+heading: 'Mastering Image Combination with JavaScript Canvas'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/javascript-canvas-image-merge
+date: 2025-04-03
+author: anton liberant
+category: javascript
+type: howto
+tags: ['canvas']
+desc: Learn how to merge multiple images using the HTML5 Canvas API and pure JavaScript. No libraries needed! This tutorial includes code examples and performance tips.
+---
+
+The HTML5 `<canvas>` element is a powerful tool for image manipulation in front-end development. This article will show you how to use JavaScript and Canvas to allow users to upload two images, merge them into one, and save the result.
+
+## 1. Create the HTML Structure
+
+We need a simple HTML page with:
+
+✅ Two file inputs for image uploads \
+✅ A `<canvas>` element to display the merged image \
+✅ A button to download the final image
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas Image Merger</title>
+    <style>
+      #canvas {
+        border: 1px solid #ccc;
+        display: block;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Upload Two Images to Merge</h2>
+    <input type="file" id="upload1" accept="image/*" />
+    <input type="file" id="upload2" accept="image/*" />
+    <br /><br />
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <br />
+    <button id="saveButton">Save Merged Image</button>
+
+    <script src="app.js"></script>
+  </body>
+</html>
+```
+
+## 2. Handle Image Uploads in JavaScript
+
+When a user selects an image, we read the file using `FileReader` and set it as the source for an `Image` object.
+
+```js
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let image1 = new Image();
+let image2 = new Image();
+let imagesLoaded = 0;
+
+function handleImageUpload(event, image) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      image.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+document.getElementById('upload1').addEventListener('change', event => {
+  handleImageUpload(event, image1);
+});
+
+document.getElementById('upload2').addEventListener('change', event => {
+  handleImageUpload(event, image2);
+});
+```
+
+## 3. Draw and Merge Images on Canvas
+
+Once both images are loaded, we draw the first image as the background and overlay the second image with 50% transparency.
+
+```js
+image1.onload = () => {
+  imagesLoaded++;
+  if (imagesLoaded === 2) drawImages();
+};
+
+image2.onload = () => {
+  imagesLoaded++;
+  if (imagesLoaded === 2) drawImages();
+};
+
+function drawImages() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(image1, 0, 0, canvas.width, canvas.height);
+
+  // Set transparency for the second image
+  ctx.globalAlpha = 0.5;
+  ctx.drawImage(image2, 50, 50, canvas.width - 100, canvas.height - 100);
+  ctx.globalAlpha = 1.0;
+}
+```
+
+## 4. Save the Merged Image
+
+Use `canvas.toDataURL()` to generate a downloadable PNG file.
+
+```js
+document.getElementById('saveButton').onclick = saveImage;
+
+function saveImage() {
+  const link = document.createElement('a');
+  link.href = canvas.toDataURL('image/png');
+  link.download = 'merged_image.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+```
+
+## 5. Full Working Example
+
+Here’s the complete code in one place:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas Image Merger</title>
+    <style>
+      #canvas {
+        border: 1px solid #ccc;
+        display: block;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Upload Two Images to Merge</h2>
+    <input type="file" id="upload1" accept="image/*" />
+    <input type="file" id="upload2" accept="image/*" />
+    <br /><br />
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <br />
+    <button id="saveButton">Save Merged Image</button>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      let image1 = new Image();
+      let image2 = new Image();
+      let imagesLoaded = 0;
+
+      function handleImageUpload(event, image) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            image.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      document.getElementById('upload1').addEventListener('change', event => {
+        handleImageUpload(event, image1);
+      });
+
+      document.getElementById('upload2').addEventListener('change', event => {
+        handleImageUpload(event, image2);
+      });
+
+      image1.onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === 2) drawImages();
+      };
+
+      image2.onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === 2) drawImages();
+      };
+
+      function drawImages() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image1, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(image2, 50, 50, canvas.width - 100, canvas.height - 100);
+        ctx.globalAlpha = 1.0;
+      }
+
+      document.getElementById('saveButton').onclick = saveImage;
+
+      function saveImage() {
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'merged_image.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    </script>
+  </body>
+</html>
+```
+
+## 6. Key Takeaways
+
+✅ Users can upload two images dynamically. \
+✅ The second image is overlayed with 50% transparency. \
+✅ The merged image can be saved as a PNG file.
+
+> 🎨 This is a flexible approach that allows users to combine images dynamically using JavaScript and Canvas. You can further enhance it by adding controls to adjust transparency and positioning.

@@ -1,0 +1,169 @@
+---
+title: How to Convert Seconds to Readable Time Formats in JavaScript
+slug: convert-seconds-js
+heading: Convert Seconds to Time Format in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/convert-seconds-js
+date: 2025-02-13
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn how to convert seconds into readable time formats in JavaScript. Step-by-step guide with examples for hours, minutes, and seconds in timers and video players.
+---
+
+During development, we often deal with time values returned from backend services in seconds (e.g., `45000` seconds). To enhance readability, we convert these values into a more human-friendly format, such as `12:30:00` or `12 hours 30 minutes 00 seconds`. This is useful for scenarios like timers, task durations, and video playback time displays.
+
+This article introduces methods to convert seconds into two common formats: `HH:MM:SS` and `HH hours MM minutes SS seconds` using JavaScript.
+
+## 1. Convert Seconds to "HH hours MM minutes SS seconds" Format
+
+First, we create a function that transforms seconds into a structured format, ensuring zero-padding where necessary.
+
+**Implementation:**
+
+```js
+const formatSeconds = seconds => {
+  if (isNaN(seconds) || seconds < 0) return '00 hours 00 minutes 00 seconds';
+
+  let secondTime = parseInt(seconds);
+  let minuteTime = Math.floor(secondTime / 60);
+  let hourTime = Math.floor(minuteTime / 60);
+
+  secondTime %= 60;
+  minuteTime %= 60;
+
+  return (
+    `${hourTime.toString().padStart(2, '0')} hours ` +
+    `${minuteTime.toString().padStart(2, '0')} minutes ` +
+    `${secondTime.toString().padStart(2, '0')} seconds`
+  );
+};
+
+// Test
+console.log(formatSeconds(45000)); // Output: 12 hours 30 minutes 00 seconds
+```
+
+**Code Analysis:**
+
+- **Time conversion**: Extracts hours, minutes, and seconds from total seconds.
+- **Zero padding**: Ensures values always have two digits for consistency.
+- **Readable formatting**: Constructs a well-structured output string.
+
+## 2. Convert Seconds to "HH:MM:SS" Format
+
+Another widely used format separates hours, minutes, and seconds with colons (`:`), making it suitable for digital clocks and video players.
+
+**Implementation:**
+
+```js
+const getSeconds = seconds => {
+  if (isNaN(seconds) || seconds < 0) return '00:00:00';
+
+  let secondTime = parseInt(seconds);
+  let minuteTime = Math.floor(secondTime / 60);
+  let hourTime = Math.floor(minuteTime / 60);
+
+  secondTime %= 60;
+  minuteTime %= 60;
+
+  return (
+    `${hourTime.toString().padStart(2, '0')}:` +
+    `${minuteTime.toString().padStart(2, '0')}:` +
+    `${secondTime.toString().padStart(2, '0')}`
+  );
+};
+
+// Test
+console.log(getSeconds(45000)); // Output: 12:30:00
+```
+
+**Code Analysis:**
+
+- Same conversion logic as `formatSeconds` but uses `:` as the separator.
+- Zero padding ensures a consistent display (e.g., `08:03:09`).
+
+## 3. Optimized Universal Conversion Function
+
+To improve maintainability and avoid code duplication, we can consolidate the logic into a single function with customizable formatting options.
+
+**Implementation:**
+
+```js
+const convertTime = (seconds, format = 'colon') => {
+  if (isNaN(seconds) || seconds < 0)
+    return format === 'colon' ? '00:00:00' : '00 hours 00 minutes 00 seconds';
+
+  let secondTime = parseInt(seconds);
+  let minuteTime = Math.floor(secondTime / 60);
+  let hourTime = Math.floor(minuteTime / 60);
+
+  secondTime %= 60;
+  minuteTime %= 60;
+
+  if (format === 'colon') {
+    return (
+      `${hourTime.toString().padStart(2, '0')}:` +
+      `${minuteTime.toString().padStart(2, '0')}:` +
+      `${secondTime.toString().padStart(2, '0')}`
+    );
+  } else {
+    return (
+      `${hourTime.toString().padStart(2, '0')} hours ` +
+      `${minuteTime.toString().padStart(2, '0')} minutes ` +
+      `${secondTime.toString().padStart(2, '0')} seconds`
+    );
+  }
+};
+
+// Tests
+console.log(convertTime(45000, 'colon')); // Output: 12:30:00
+console.log(convertTime(45000, 'text')); // Output: 12 hours 30 minutes 00 seconds
+```
+
+**Optimizations:**
+
+- **Custom format selection**: Allows flexible output.
+- **Code reuse**: Eliminates duplicate logic.
+- **Validation**: Ensures input is a valid number.
+
+## 4. Additional Examples
+
+### Example 1: Convert User Input Seconds
+
+```js
+const userSeconds = prompt('Enter seconds:');
+console.log(convertTime(parseInt(userSeconds), 'colon'));
+```
+
+### Example 2: Display Countdown Timer
+
+```js
+const startCountdown = totalSeconds => {
+  let interval = setInterval(() => {
+    console.log(convertTime(totalSeconds, 'colon'));
+    if (totalSeconds <= 0) clearInterval(interval);
+    totalSeconds--;
+  }, 1000);
+};
+
+startCountdown(15); // Starts a countdown from 15 seconds
+```
+
+## 5. Application Scenarios
+
+- **Timers**: Countdown or elapsed time tracking.
+- **Video Players**: Display playback progress.
+- **Task Durations**: Show processing times.
+- **Log Systems**: Track system uptime or request durations.
+
+## 6. Conclusion
+
+This article covered multiple ways to convert seconds into human-readable time formats in JavaScript. We provided:
+
+- Two formatting functions: `HH:MM:SS` and `HH hours MM minutes SS` seconds.
+- An optimized function for flexible conversions.
+- Practical usage examples, including a countdown timer.
+
+This approach enhances code maintainability, user experience, and readability in various applications.

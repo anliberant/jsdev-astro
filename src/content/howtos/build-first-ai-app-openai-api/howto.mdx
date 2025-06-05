@@ -1,0 +1,195 @@
+---
+title: "How to Create Your First AI-Powered Application with OpenAI's API"
+slug: build-first-ai-app-openai-api
+heading: "Complete Beginner's Guide to Creating AI Applications with OpenAI"
+icon: /icons/nodejs.png
+image: ./images/first-ai-app.png
+permalink: howto/build-first-ai-app-openai-api
+date: 2025-05-29
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['OpenAI', 'ai']
+desc: Build your first AI app with OpenAI's API. Follow a step-by-step guide covering setup, authentication, API usage, and deployment with beginner-friendly examples.
+---
+
+The rapid evolution of artificial intelligence has made advanced tools more accessible than ever. Thanks to OpenAI’s API, any developer can now harness powerful language models like GPT-4 with just a few lines of code. In this guide, you'll learn how to build a simple AI app from scratch using Node.js and the [OpenAI JavaScript SDK](https://github.com/openai/openai-node).
+
+![Create AI-Powered Application with OpenAI's API](./images/first-ai-app.png)
+
+## 1. What Is the OpenAI API?
+
+The OpenAI API allows you to interact with large language models (LLMs) such as GPT-4 via HTTP requests. These models can:
+
+- Understand and generate human-like text
+- Handle multi-turn conversations
+- Summarize and analyze information
+- Explain or generate code
+- Support multiple languages
+
+Unlike the ChatGPT website, the API gives you full control over inputs, outputs, and integration into your own apps.
+
+## 2. Setup: Environment Preparation
+
+### 2.1 Install Node.js
+
+First, install [Node.js](https://nodejs.org/en) (LTS version) from the official site.
+
+Then verify installation:
+
+```bash
+node -v
+npm -v
+```
+
+### 2.2 Initialize Your Project
+
+Create a folder for your project:
+
+```bash
+mkdir my-ai-app
+cd my-ai-app
+npm init -y
+```
+
+This generates a basic `package.json`.
+
+## 3. Install the OpenAI SDK
+
+Run the following command to install the OpenAI JavaScript SDK:
+
+<div className='code-cmd'>npm install openai</div>
+
+This adds the package to your project’s dependencies.
+
+## 4. Get Your OpenAI API Key
+
+To authenticate your requests:
+
+1. Log into [OpenAI](https://openai.com/)’s platform.
+2. Go to your profile → View API keys.
+3. Click Create new secret key.
+4. Copy and store the key safely (you won't see it again!).
+
+**Security tip**: Store your key in an environment variable—never hard-code it.
+
+## 5. Write Your First AI Script
+
+Create a file called `index.js`:
+
+```js
+// Load environment variables
+require('dotenv').config();
+const OpenAI = require('openai');
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+async function run() {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: 'How do I reverse a string in JavaScript?' },
+      ],
+      temperature: 0.7,
+    });
+
+    console.log('AI response:\n', response.choices[0].message.content);
+  } catch (err) {
+    console.error('API Error:', err);
+  }
+}
+
+run();
+```
+
+Create a `.env` file in the root of your project:
+
+```js
+OPENAI_API_KEY = your_api_key_here;
+```
+
+## 6. How the Code Works
+
+### 6.1 Client Initialization
+
+```js
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+```
+
+This authenticates your requests.
+
+## 6.2 Create a Chat Completion
+
+```js
+await openai.chat.completions.create({ ... });
+```
+
+- `model`: GPT version to use
+- `messages`: Conversation history
+- `temperature`: Randomness of output
+
+## 6.3 Output AI Response
+
+```js
+console.log(response.choices[0].message.content);
+```
+
+This prints the assistant's reply to the terminal.
+
+## 7. Run the App
+
+Execute the script:
+
+<div className='code-cmd'>node index.js</div>
+
+Example output:
+
+```js
+// You can reverse a string in JavaScript like this:
+const str = 'hello';
+const reversed = str.split('').reverse().join('');
+console.log(reversed); // "olleh"
+```
+
+## 8. Going Further
+
+### 8.1 Secure API Keys with dotenv
+
+Install the `dotenv` package:
+
+<div className='code-cmd'>npm install dotenv</div>
+
+Load it at the top of your script:
+
+```js
+require('dotenv').config();
+```
+
+### 8.2 Stream AI Responses
+
+Stream long replies in real-time:
+
+```js
+const stream = await openai.chat.completions.create({
+  model: 'gpt-3.5-turbo',
+  messages: [{ role: 'user', content: 'Tell me a long story.' }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+}
+```
+
+## Conclusion
+
+You’ve just built your first AI-powered CLI app using OpenAI’s API! From here, you can integrate LLMs into chatbots, productivity tools, content generators, and more.
+
+As AI continues to evolve, your ability to build with it is a valuable skill. Keep experimenting and refining—this is just the beginning.
+
+Ready to build the future? 🚀

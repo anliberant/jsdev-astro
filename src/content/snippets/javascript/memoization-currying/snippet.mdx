@@ -1,0 +1,84 @@
+---
+title: Memoization and Currying with Closures
+slug: memoization-currying
+heading: Memoization and Currying Using Closures
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/memoization-currying
+date: 2024-12-30
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['memoization', 'currying']
+desc: Learn how to optimize JavaScript performance with memoization and currying using closures. Cache results and transform functions for efficient, flexible code.
+---
+
+## 1. Memoization with Closures
+
+Memoization is a technique to optimize performance by caching the results of expensive function calls. The `memoize` function uses a closure to store a cache object that maps arguments to results. This reduces redundant computations, especially in recursive functions like `fibonacci`.
+
+## 2. Function Currying with Closures
+
+Currying transforms a function with multiple arguments into a sequence of functions, each taking a single argument. The `curry` function creates a closure that accumulates arguments until all required arguments are provided. This enables partial application of functions.
+
+Here’s the combined code snippet, including both `memoize` and `curry` utilities:
+
+```js
+// Memoization Utility
+function memoize(fn) {
+  const cache = {};
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache[key] !== undefined) {
+      return cache[key];
+    }
+    const result = fn(...args);
+    cache[key] = result;
+    return result;
+  };
+}
+
+// Fibonacci Function
+function fibonacci(n) {
+  if (n <= 1) {
+    return n;
+  }
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Memoized Fibonacci
+const memoizedFibonacci = memoize(fibonacci);
+
+console.log(memoizedFibonacci(10)); // 55
+console.log(memoizedFibonacci(20)); // 6765
+
+// Currying Utility
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn(...args);
+    }
+    return function (...nextArgs) {
+      return curried(...args, ...nextArgs);
+    };
+  };
+}
+
+// Example Function for Currying
+function sum(a, b, c) {
+  return a + b + c;
+}
+
+// Curried Sum
+const curriedSum = curry(sum);
+
+console.log(curriedSum(1)(2)(3)); // 6
+console.log(curriedSum(1, 2)(3)); // 6
+```
+
+## Key Takeaways
+
+1. **Memoization** improves performance by caching results of function calls using closures.
+2. **Currying** enables flexible function invocation by accumulating arguments over time.
+3. Both techniques leverage closures, highlighting their utility in JavaScript for functional programming and optimization.

@@ -1,0 +1,381 @@
+---
+title: 10 Essential Custom React Hooks to Supercharge Your Projects
+slug: 10-custom-react-hooks
+heading: 10 Must-Know Custom React Hooks for Your Projects
+image: ./images/10-custom-react-hooks.png
+permalink: 10-custom-react-hooks
+date: 2025-01-28
+author: anton liberant
+category: react
+type: post
+tags: ['react-hooks']
+desc: Explore 10 custom React Hooks like useFetch and useDarkMode to simplify data fetching, manage themes, and boost performance in your projects.
+---
+
+React has revolutionized web development with its declarative and component-based approach. While built-in Hooks like `useState` and `useEffect` are indispensable, custom Hooks allow developers to encapsulate reusable logic, making codebases cleaner, modular, and easier to maintain.
+
+This article dives into **10 powerful custom React Hooks** that every developer should have in their toolkit. These Hooks will optimize your workflow, improve app performance, and simplify complex logic.
+
+## Why Use Custom Hooks?
+
+Custom Hooks make your React development process seamless by:
+
+- **Promoting Reusability**: Share logic across components with ease.
+- **Enhancing Readability**: Declutter your components by offloading logic to custom Hooks.
+- **Improving Testability**: Test Hooks independently for more robust applications.
+- **Encouraging Separation of Concerns:** Keep business logic separate from UI components.
+
+## 1. `useFetch` 🎣
+
+A custom Hook for fetching data, managing loading state, and handling errors.
+
+**Code:**
+
+```jsx
+import { useEffect, useState } from 'react';
+
+const useFetch = url => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network error');
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error };
+};
+
+export default useFetch;
+```
+
+**Usage:**
+
+```jsx
+const MyComponent = () => {
+  const { data, loading, error } = useFetch('https://api.example.com/data');
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  return <pre>{JSON.stringify(data, null, 2)}</pre>;
+};
+```
+
+## 2. `useLocalStorage` 💾
+
+Easily sync state with the browser's localStorage.
+
+**Code:**
+
+```jsx
+import { useState } from 'react';
+
+const useLocalStorage = (key, initialValue) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
+
+  const setValue = value => {
+    try {
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return [storedValue, setValue];
+};
+
+export default useLocalStorage;
+```
+
+**Usage:**
+
+```jsx
+const MyComponent = () => {
+  const [name, setName] = useLocalStorage('name', 'John Doe');
+
+  return (
+    <input type='text' value={name} onChange={e => setName(e.target.value)} />
+  );
+};
+```
+
+## 3. `useDarkMode` 🌙
+
+Seamlessly switch between light and dark themes.
+
+**Code:**
+
+```jsx
+import { useEffect, useState } from 'react';
+
+const useDarkMode = () => {
+  const [isDarkMode, setIsDarkMode] = useState(
+    () =>
+      localStorage.theme === 'dark' ||
+      (!('theme' in localStorage) &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches)
+  );
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.theme = isDarkMode ? 'dark' : 'light';
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+
+  return { isDarkMode, toggleDarkMode };
+};
+
+export default useDarkMode;
+```
+
+## 4. `useWindowSize` 📏
+
+Track window dimensions for responsive design.
+
+**Code:**
+
+```jsx
+import { useEffect, useState } from 'react';
+
+const useWindowSize = () => {
+  const [size, setSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  useEffect(() => {
+    const handleResize = () =>
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return size;
+};
+
+export default useWindowSize;
+```
+
+## 5. useDebounce ⏳
+
+Delay updates to optimize performance.
+
+**Code:**
+
+```jsx
+import { useEffect, useState } from 'react';
+
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+export default useDebounce;
+```
+
+## 6. `useClickOutside` 🖱️
+
+Detect clicks outside an element (e.g., dropdowns, modals).
+
+**Code:**
+
+```jsx
+import { useEffect } from 'react';
+
+const useClickOutside = (ref, callback) => {
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (ref.current && !ref.current.contains(event.target)) callback();
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [ref, callback]);
+};
+
+export default useClickOutside;
+```
+
+## 7. `usePrevious` 🔙
+
+Track the previous value of a state or prop.
+
+**Code:**
+
+```jsx
+import { useEffect, useRef } from 'react';
+
+const usePrevious = value => {
+  const ref = useRef();
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref.current;
+};
+
+export default usePrevious;
+```
+
+## 8. `useOnlineStatus` 📶
+
+Monitor the user's online/offline status.
+
+**Code:**
+
+```jsx
+import { useEffect, useState } from 'react';
+
+const useOnlineStatus = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const updateOnlineStatus = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    return () => {
+      window.removeEventListener('online', updateOnlineStatus);
+      window.removeEventListener('offline', updateOnlineStatus);
+    };
+  }, []);
+
+  return isOnline;
+};
+
+export default useOnlineStatus;
+```
+
+**Usage:**
+
+```jsx
+const MyComponent = () => {
+  const isOnline = useOnlineStatus();
+
+  return <p>{isOnline ? 'Online' : 'Offline'}</p>;
+};
+```
+
+## 9. `useOnlineStatus` 🌐
+
+Knowing if the user is online or offline is crucial for apps with real-time data or offline functionality. The `useOnlineStatus` hook provides real-time updates of the user's network status.
+
+**Code:**
+
+```jsx
+import { useEffect, useState } from 'react';
+
+const useOnlineStatus = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+};
+
+export default useOnlineStatus;
+```
+
+**Usage:**
+
+```jsx
+const MyComponent = () => {
+  const isOnline = useOnlineStatus();
+
+  return (
+    <div>
+      <p>Status: {isOnline ? 'Online' : 'Offline'}</p>
+    </div>
+  );
+};
+```
+
+It provides a seamless way to detect network changes, improving user experience in offline-first or real-time applications.
+
+## 10. `useTimeout` 🕒
+
+The `useTimeout` hook allows you to set up a timeout and clean it up automatically. It's perfect for handling delayed actions like showing or hiding a component after a specific time.
+
+**Code:**
+
+```jsx
+import { useEffect, useRef } from 'react';
+
+const useTimeout = (callback, delay) => {
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (delay === null) return;
+
+    timeoutRef.current = setTimeout(callback, delay);
+
+    return () => clearTimeout(timeoutRef.current);
+  }, [callback, delay]);
+
+  return () => clearTimeout(timeoutRef.current);
+};
+
+export default useTimeout;
+```
+
+**Usage:**
+
+```jsx
+const MyComponent = () => {
+  const showMessage = () => alert('Timeout triggered!');
+  const clearTimeout = useTimeout(showMessage, 5000);
+
+  return <button onClick={clearTimeout}>Cancel Timeout</button>;
+};
+```
+
+It simplifies managing timeouts in functional components, reducing the risk of memory leaks or stale references.
+
+## Final Thoughts
+
+These 10 custom React Hooks will not only save you time but also make your code more efficient and maintainable. Whether you're handling data fetching, managing themes, or optimizing performance, these Hooks are essential for modern React development.
+
+Start using these Hooks today, or create your own to tackle unique challenges! 🚀

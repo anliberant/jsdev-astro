@@ -1,0 +1,163 @@
+---
+title: 'PGlite: Run PostgreSQL in Browser & Node.js - No Server Required'
+slug: pglite-postgresql-browser
+heading: Run PostgreSQL in Browser & Node.js with PGlite
+image: ./images/pglite-postgresql-browser.png
+permalink: pglite-postgresql-browser
+date: 2025-01-17
+author: anton liberant
+category: javascript
+type: post
+tags: ['pglite', 'postgresql', 'browser', 'database']
+desc: Run a full PostgreSQL database in your browser or Node.js with PGlite. No server setup needed—ideal for prototyping, serverless apps, and edge computing.
+---
+
+[PGlite](https://pglite.dev/) represents a groundbreaking advancement in database technology, bringing the robust capabilities of PostgreSQL directly to your browser and Node.js applications without requiring a traditional server setup. This innovative solution empowers developers to harness PostgreSQL's full potential in environments where running a dedicated database server was previously impossible or impractical.
+
+## What is PGlite?
+
+![PGlite](./images/PGlite.svg)
+
+PGlite is a PostgreSQL server compiled to WebAssembly (WASM), enabling it to run directly in browsers or Node.js environments without needing a standalone server or Linux-based image. At just 3MB (compressed), it supports key extensions like pgvector and offers seamless integration with JavaScript/TypeScript libraries.
+
+## Key Features
+
+- **Lightweight**: Minimal 3MB compressed size.
+- **Easy API**: Import the library and call methods like any ORM (e.g., Drizzle, TypeORM).
+- **Extension Support**: Pre-packaged with popular plugins like pgvector.
+- **Storage Options**: Use as an in-memory database or enable persistent storage via IndexedDB (browser) or file system (Node.js/Bun/Deno).
+
+### Browser-Native Operation
+
+PGlite leverages WebAssembly to run PostgreSQL directly in modern web browsers, enabling developers to create sophisticated database-driven applications that operate entirely on the client side. This approach significantly reduces deployment complexity and eliminates the need for backend infrastructure for many use cases.
+
+### Node.js Integration
+
+Beyond the browser, PGlite seamlessly integrates with Node.js applications, providing a consistent database experience across different JavaScript environments. This versatility makes it an excellent choice for full-stack JavaScript applications.
+
+### Zero Configuration Required
+
+Getting started with PGlite is remarkably straightforward. There's no need for complex server setup, database installation, or configuration files. Simply import the library and begin working with PostgreSQL immediately.
+
+## How It Works
+
+PGlite leverages PostgreSQL’s single-user mode, originally intended for recovery tasks. By adapting its I/O and runtime for WebAssembly, it runs as a library in a single thread, supporting one connection and one user.
+
+## Getting Started
+
+**In Browsers**
+
+Install the package or import it:
+
+<div className='code-cmd'>npm install @electric-sql/pglite</div>
+
+```js
+import { PGlite } from '@electric-sql/pglite';
+
+import { PGlite } from '@electric-sql/pglite';
+
+async function initDatabase() {
+  // Create a new PGlite instance
+  const pglite = new PGlite();
+
+  // Initialize the database
+  await pglite.query(`
+    CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL
+    );
+  `);
+
+  // Insert sample data
+  await pglite.query(`
+    INSERT INTO users (name, email) 
+    VALUES ('John Doe', 'john@example.com');
+  `);
+
+  // Query the data
+  const result = await pglite.query('SELECT * FROM users');
+  console.log(result.rows);
+}
+
+initDatabase().catch(console.error);
+```
+
+**In Node.js/Bun/Deno**
+
+```js
+const { PGlite } = require('@electric-sql/pglite');
+
+async function main() {
+  // Initialize PGlite
+  const db = new PGlite();
+  await db.connect();
+
+  // Create a sample table
+  await db.execute(`
+    CREATE TABLE products (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      price DECIMAL(10,2)
+    );
+  `);
+
+  // Perform batch operations
+  await db.transaction(async client => {
+    await client.execute(`
+      INSERT INTO products (name, price) VALUES
+      ('Product A', 29.99),
+      ('Product B', 49.99),
+      ('Product C', 19.99);
+    `);
+  });
+}
+
+main().catch(console.error);
+```
+
+For persistent storage in Node.js:
+
+```js
+const db = new PGlite('./path/to/pgdata');
+```
+
+### Use Cases
+
+1. **Rapid Prototyping and Testing**: Ideal for unit tests or mock databases without the overhead of Docker/Postgres setups.
+2. **Demos and Educational Projects**: Showcase database functionality without requiring additional software installations.
+3. **Local-First Apps**: Store data locally (e.g., in a browser) and sync it with external databases when online.
+4. **Sandbox Environments**: Run isolated SQL scripts or experiments without impacting production systems.
+
+### Code Examples
+
+**Creating a Table and Querying Data**
+
+```js
+await db.query(`
+  CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL
+  );
+`);
+
+await db.query("INSERT INTO users (name) VALUES ('Alice'), ('Bob')");
+
+const { rows } = await db.query('SELECT * FROM users');
+console.log(rows);
+// Output: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }]
+```
+
+### Performance Considerations
+
+While PGlite provides impressive functionality, it's important to understand its limitations:
+
+- **Memory Usage**: As the database runs entirely in memory, applications should be mindful of data size and memory consumption.
+- **Complex Queries**: While PGlite supports most PostgreSQL features, very complex queries might perform differently compared to a traditional server setup.
+- **Data Persistence**: Additional implementation is required to persist data between sessions when running in the browser.
+
+## Conclusion
+
+PGlite provides a straightforward way to integrate the full power of PostgreSQL into your JavaScript applications without the overhead of traditional database setups. Whether you’re prototyping, running demos, or building local-first apps, PGlite is a lightweight yet robust solution that fits seamlessly into modern development workflows.
+
+Explore the [repository](https://github.com/electric-sql/pglite) and dive into the codebase to learn more about this innovative approach to PostgreSQL in WASM.

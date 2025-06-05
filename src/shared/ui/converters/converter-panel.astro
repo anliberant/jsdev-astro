@@ -1,0 +1,98 @@
+---
+import type { ConverterPanelProps } from '@/shared/types';
+import Button from '@/shared/ui/base/button.astro';
+
+export type Props = ConverterPanelProps & { class?: string };
+
+const {
+  type,
+  title,
+  icon = '',
+  textareaId,
+  placeholder = '',
+  readonly = false,
+  showSampleButton = false,
+  showStats = false,
+  class: className = '',
+} = Astro.props;
+
+const panelClass = `converter-panel ${type} ${className}`;
+---
+
+<div class={panelClass}>
+  <div class='pane-header'>
+    <div class='pane-title'>
+      {icon && <span>{icon}</span>}
+      {title}
+    </div>
+    {
+      showSampleButton && (
+        <Button
+          variant='sample'
+          size='sm'
+          id='sampleBtn'
+          type='button'>
+          Sample
+        </Button>
+      )
+    }
+  </div>
+
+  {
+    type === 'output' && (
+      <>
+        <div
+          id='errorMessage'
+          class='error-message hidden'
+        />
+        <div
+          id='successMessage'
+          class='success-message hidden'
+        />
+      </>
+    )
+  }
+
+  <textarea
+    class={`textarea ${type === 'output' ? 'output' : ''} ${readonly ? 'readonly' : ''}`}
+    id={textareaId}
+    placeholder={placeholder}
+    readonly={readonly}
+    spellcheck='false'
+  ></textarea>
+
+  {
+    showStats && (
+      <div class='stats'>
+        <span id={`${type}Stats`}>Lines: 0, Characters: 0</span>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .input-pane,
+  .output-pane {
+    width: 50%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .input-pane {
+    border-right: 1px solid #e2e8f0;
+  }
+
+  @media (max-width: 768px) {
+    .input-pane,
+    .output-pane {
+      width: 100%;
+      height: 50vh;
+    }
+
+    .input-pane {
+      border-right: none;
+      border-bottom: 1px solid #e2e8f0;
+    }
+  }
+</style>

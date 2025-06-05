@@ -1,0 +1,83 @@
+---
+title: How to Update All Dependencies in a Node.js Project
+slug: update-npm-dependencies
+heading: Updating All Dependencies in Node.js
+icon: /icons/npm.png
+image: /icon.png
+permalink: howto/update-npm-dependencies
+date: 2023-10-10
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['npm']
+desc: Learn how to update all dependencies in your Node.js project with easy steps to keep packages current, secure, and compatible for smooth development and maintenance.
+---
+
+Keeping your **Node.js** project up-to-date is crucial to ensure security, stability, and access to
+the latest features of the packages you rely on. In this article, we'll walk through the steps to
+update all dependencies in your **Node.js project**, using npm as the package manager.
+
+## Step 1: Backup Your Project
+
+Before making any changes, it's a good practice to create a backup of your project. This ensures
+that you can easily revert to the previous state if anything goes wrong during the update process.
+You can copy your project folder to create a backup or use version control systems like **Git** to
+commit your current changes.
+
+## Step 2: Check for Outdated Dependencies
+
+To see which **dependencies** in your project are outdated, open your terminal and navigate to your
+project's root directory. Then run:
+
+<span className='code-cmd'>npm outdated</span>
+
+This command will display a list of outdated packages along with their current and latest versions.
+It's essential to know which packages need updating before proceeding.
+
+## Step 3: Update Your Dependencies
+
+To update all dependencies to their latest versions, run the following command:
+
+<span className='code-cmd'>npm update</span>
+
+This command will update packages according to the version constraints specified in your
+**package.json** file. It's worth noting that it won't update to major versions if you have
+specified a specific major version in your **package.json**.
+
+## Step 4: Update Major Versions (Optional)
+
+If you want to update to the latest major versions of your dependencies, you can use a tool like
+**npm-check-updates**. Install it globally using:
+
+<span className='code-cmd'>npm install -g npm-check-updates</span>
+
+Then run:
+
+<span className='code-cmd'>ncu -u</span>
+
+This command will update the **package.json** file to set all dependencies to their latest major
+versions. After running this command, you should run **npm install** again to update your project's
+dependencies.
+
+## Step 5: Test Your Project
+
+After updating your dependencies, it's crucial to thoroughly test your project. Changes in
+dependencies could introduce breaking changes or compatibility issues with your existing code.
+Running your project's test suite and manually checking for any issues is a good practice.
+
+## Step 6: Commit and Push Changes (If Using Git)
+
+If you're using **Git** for version control, commit your changes to your repository. This helps you
+keep track of when and which dependencies were updated. Use descriptive commit messages to make it
+clear what changes were made.
+
+<span className='code-cmd'>git add package.json package-lock.json</span>
+<span className='code-cmd'>git commit -m "Update dependencies"</span>
+<span className='code-cmd'>git push</span>
+
+### Conclusion:
+
+**Updating dependencies in your Node.js project** is essential for maintaining a healthy and secure
+codebase. By following these steps, you can keep your project up-to-date with the latest features
+and security patches while minimizing the risk of breaking changes. Always remember to test your
+project thoroughly after updating dependencies to ensure everything works as expected.

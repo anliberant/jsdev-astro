@@ -1,0 +1,129 @@
+---
+title: 'How to Create Full-Screen Particle Animations with CSS3 and JS'
+slug: full-screen-particle
+heading: Create Full-Screen Particle Animations with CSS3 & JS
+icon: /icons/css.png
+image: /icon.png
+permalink: howto/full-screen-particle
+date: 2025-01-07
+author: anton liberant
+category: css
+type: howto
+tags: ['full-screen', 'particle']
+desc: Learn to create stunning full-screen particle animations using CSS3 and JavaScript, enhancing visual appeal and user engagement on your website.
+---
+
+In modern web design, animations can significantly enhance user experience by adding dynamic visual effects. This guide demonstrates how to use CSS3 and JavaScript to create a full-screen particle animation, perfect for backgrounds or interactive elements.
+
+## Step 1: Setting Up the HTML Structure
+
+Start with a basic HTML layout:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Full-Screen Particle Animation</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="particles"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
+```
+
+## Step 2: Adding Base CSS Styles
+
+In `styles.css`, define the basic styles for the body and the container:
+
+```css
+body {
+  margin: 0;
+  overflow: hidden; /* Hide scrollbars */
+  background-color: #000; /* Black background */
+}
+
+.particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Prevent interactions */
+}
+```
+
+## Step 3: Creating Particles with JavaScript
+
+Use `script.js` to dynamically generate and animate particles:
+
+```js
+const particlesContainer = document.querySelector('.particles');
+
+function createParticle() {
+  const particle = document.createElement('div');
+  particle.className = 'particle';
+
+  // Random position
+  particle.style.left = Math.random() * window.innerWidth + 'px';
+  particle.style.top = Math.random() * window.innerHeight + 'px';
+
+  // Random size and opacity
+  const size = Math.random() * 5 + 5;
+  particle.style.width = `${size}px`;
+  particle.style.height = `${size}px`;
+  particle.style.opacity = Math.random();
+
+  // Add particle to the container
+  particlesContainer.appendChild(particle);
+
+  // Apply animation
+  setTimeout(() => {
+    particle.style.transform = `translateY(${Math.random() * 100 + 50}px)`;
+    particle.style.opacity = 0;
+  }, 50);
+
+  // Remove particle after animation
+  setTimeout(() => {
+    particlesContainer.removeChild(particle);
+  }, 2000);
+}
+
+// Generate a particle every 100ms
+setInterval(createParticle, 100);
+```
+
+## Step 4: Styling Particles
+
+In `styles.css`, add styles for the particles:
+
+```css
+.particle {
+  position: absolute;
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.8
+  ); /* White with slight transparency */
+  border-radius: 50%; /* Circular shape */
+  transition:
+    transform 2s ease-out,
+    opacity 2s ease-out; /* Smooth animation */
+}
+```
+
+## Step 5: Enhancing the Animation
+
+Here’s how you can further improve the animation:
+
+1. **Use Canvas**: For better performance with a large number of particles, consider drawing particles on a canvas.
+2. **Add Interaction**: Make the animation interactive by generating particles on mouse movement or clicks.
+3. **Customize Shapes**: Use CSS3’s clip-path or SVG to create custom particle shapes.
+
+## Conclusion
+
+By combining CSS3 and JavaScript, you can create engaging full-screen particle animations that add a professional touch to your web design. This effect not only enhances visual appeal but also improves user engagement. Experiment with sizes, colors, and interactions to suit your project’s needs.

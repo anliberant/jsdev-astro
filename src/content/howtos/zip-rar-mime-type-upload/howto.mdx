@@ -1,0 +1,208 @@
+---
+title: How to Handle ZIP and RAR Uploads with MIME Type Differences
+slug: zip-rar-mime-type-upload
+heading: "Understanding File Upload Pitfalls: ZIP and RAR MIME Types"
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/zip-rar-mime-type-upload
+date: 2025-06-05
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Ensure reliable file uploads by accounting for MIME type inconsistencies of ZIP and RAR files across browsers and operating systems.
+---
+
+Uploading files in web applications sounds simple—until it isn’t. While common formats like `.pdf`, `.png`, or `.txt` behave consistently, compressed archives such as `.zip` and `.rar` introduce unexpected variability. This article explains how to robustly handle these file uploads, explores MIME type inconsistencies across systems, and provides best practices to avoid pitfalls.
+
+## The Problem: ZIP and RAR MIME Type Inconsistency
+
+In a real-world project, a feature was introduced to allow users to upload ZIP and RAR files. Everything seemed straightforward—until the uploads started failing for some users.
+
+**Initial Assumptions**
+
+You’d typically define MIME types for validation like this:
+
+```js 
+export const MINE_TYPE = {
+  RAR: 'application/vnd.rar',
+  ZIP: 'application/zip',
+};
+```
+
+These are the “official” MIME types for `.rar` and `.zip`. However, during testing, inconsistencies appeared:
+
+- **RAR** files returned MIME types like:
+  - `application/x-rar-compressed`
+  - `application/vnd.rar`
+  - Or even an empty string `''`
+- **ZIP** files could be identified as:
+  - `application/zip`
+  - `application/x-zip-compressed`
+  - `application/x-zip`
+
+These discrepancies were browser- and OS-dependent.
+
+## Why This Happens
+
+1. **MIME type is determined by the browser**, not the file itself.
+2. Browsers rely on the OS or built-in heuristics to guess the MIME type.
+3. Some browsers (especially Chromium-based) are more precise than others.
+4. On some systems, especially with unknown file extensions, the MIME type can be an empty string.
+
+## The Solution: Hybrid Type + Extension Detection
+
+We need to enhance our MIME type detection strategy to support both:
+
+- `file.type` from the browser
+- File extension fallback (e.g., `.zip`, `.rar`)
+
+## Improved MIME Type Map
+
+Update your MIME type mapping to include all known values:
+
+```js 
+export const MINE_TYPE = {
+  ZIP: 'application/zip',
+  ZIP2: 'application/x-zip-compressed',
+  ZIP3: 'application/x-zip',
+  RAR: 'application/vnd.rar',
+  RAR2: 'application/x-rar-compressed',
+  // Add other common types here
+};
+```
+
+## Helper Functions
+
+**1. Get File Extension**
+
+```ts 
+const getFileSuffix = (filename: string): string | false => {
+  const index = filename.lastIndexOf('.');
+  return index !== -1 ? filename.slice(index + 1).toUpperCase() : false;
+};
+```
+
+**2. Check File Type**
+
+```ts 
+import { invert } from 'lodash';
+
+export const checkTypes = (
+  file: File,
+  typeList: string[],
+  forceSuffix = false
+): boolean => {
+  if (file.type && !forceSuffix) {
+    return typeList.includes(file.type);
+  }
+
+  const suffix = getFileSuffix(file.name);
+  if (suffix) {
+    const reversed = invert(MINE_TYPE);
+    return typeList.some(type => suffix === reversed[type]);
+  }
+
+  return false;
+};
+```
+
+**3. Convert Size and Check Limits**
+
+```ts 
+export const transSize = (limit: number, unit = 'MB'): string => {
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = sizes.indexOf(unit.toUpperCase());
+  const bytes = limit * 1024 ** i;
+  const sizeIndex = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / 1024 ** sizeIndex).toPrecision(3)} ${sizes[sizeIndex]}`;
+};
+
+export const checkMaxSize = (size: number, maxSizeMB: number): boolean => {
+  return size / 1024 / 1024 < maxSizeMB;
+};
+```
+
+## Robust Upload Validation
+
+```ts 
+export const asyncBeforeUpload = async (file: File, config: {
+  mineType?: string[],
+  maxSize?: number,
+}): Promise<boolean> => {
+  const { mineType, maxSize } = config;
+  let validType = true;
+  let validSize = true;
+
+  const suffix = getFileSuffix(file.name);
+  const specialFiles = ['RAR', 'ZIP'];
+  const isSpecial = suffix && specialFiles.includes(suffix);
+
+  if (mineType) {
+    validType = checkTypes(file, mineType, isSpecial);
+    if (!validType) {
+      console.error('Unsupported file type. Please check and retry.');
+    }
+  }
+
+  if (maxSize) {
+    validSize = checkMaxSize(file.size, maxSize);
+    if (!validSize) {
+      console.error(`File size must be less than ${transSize(maxSize, 'MB')}`);
+    }
+  }
+
+  return validType && validSize;
+};
+```
+
+## HTML File Upload Input
+
+```html
+<input
+  type="file"
+  accept=".zip,.rar"
+  onchange="handleUpload(event)"
+/>
+```
+
+```ts
+const handleUpload = async (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const success = await asyncBeforeUpload(file, {
+    mineType: [MINE_TYPE.ZIP, MINE_TYPE.ZIP2, MINE_TYPE.ZIP3, MINE_TYPE.RAR, MINE_TYPE.RAR2],
+    maxSize: 10, // MB
+  });
+
+  if (success) {
+    console.log('File validated. Proceed to upload.');
+  }
+};
+```
+
+## Additional Example: Using with React Upload Library
+
+```ts 
+<Upload
+  beforeUpload={file => asyncBeforeUpload(file, {
+    mineType: [
+      MINE_TYPE.ZIP, MINE_TYPE.ZIP2, MINE_TYPE.ZIP3,
+      MINE_TYPE.RAR, MINE_TYPE.RAR2
+    ],
+    maxSize: 5,
+  })}
+  accept=".zip,.rar"
+/>
+```
+
+## Conclusion
+
+File uploads are deceptively tricky. While file extensions seem universal, MIME type detection varies wildly depending on browser and OS. To create robust file validation:
+
+- Accept multiple MIME types for ZIP and RAR.
+- Fallback to file extensions when MIME type is missing or wrong.
+- Don’t rely solely on `file.type`.
+
+With these techniques, you can build a user-friendly upload interface that just works—regardless of the quirks underneath.

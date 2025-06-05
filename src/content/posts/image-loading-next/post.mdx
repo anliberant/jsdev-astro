@@ -1,0 +1,206 @@
+---
+title: 'Optimize Progressive Image Loading in Next.js: A Complete Guide'
+slug: image-loading-next
+heading: Master Progressive Image Loading in Next.js
+image: ./images/image-loading-next.png
+permalink: image-loading-next
+date: 2024-11-22
+author: anton liberant
+category: nextjs
+type: post
+tags: ['nextjs-tips', 'image-loading']
+desc: Learn how to optimize progressive image loading in Next.js using blur effects, color placeholders, thumbnails, and built-in features for enhanced performance.
+---
+
+Progressive image loading is a critical feature in modern web applications, enhancing user experience by delivering smooth transitions from placeholders to fully loaded images. Next.js, with its powerful `next/image` component, provides advanced capabilities to implement progressive loading efficiently.
+
+This guide covers five effective strategies for optimizing image loading in Next.js, including using dominant colors, custom thumbnails, and advanced blur techniques. By applying these methods, you can create visually appealing and high-performance applications.
+
+## 1. Using the Main Color of the Image
+
+Extracting the dominant color from an image and using it as a placeholder offers a seamless transition before the image fully loads. In Next.js, this can be achieved by generating a `blurDataURL`.
+
+**Implementation Example:**
+
+```tsx
+import Image from 'next/image';
+
+import Image from 'next/image';
+
+// Utility to generate a data URL with the main color
+const rgbDataURL = (r, g, b) =>
+  `data:image/gif;base64,R0lGODlhAQABAPAA${btoa(
+    String.fromCharCode(r) + String.fromCharCode(g) + String.fromCharCode(b)
+  )}/yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==`;
+
+const ColorPlaceholderExample = () => (
+  <div>
+    <h1>Using Main Color as Placeholder</h1>
+    <Image
+      src='/dog.jpg'
+      alt='Dog'
+      placeholder='blur'
+      blurDataURL={rgbDataURL(237, 181, 6)} // Dominant yellow
+      width={750}
+      height={1000}
+    />
+    <Image
+      src='/cat.jpg'
+      alt='Cat'
+      placeholder='blur'
+      blurDataURL={rgbDataURL(2, 129, 210)} // Dominant blue
+      width={750}
+      height={1000}
+    />
+  </div>
+);
+
+export default ColorPlaceholderExample;
+```
+
+## 2. Using a Solid Background Color
+
+A simple yet effective approach is to use a predefined solid background color as the placeholder. This can be configured in `next.config.js`.
+
+**Setup in next.config.js:**
+
+```js
+module.exports = {
+  images: {
+    placeholder: 'color',
+    backgroundColor: '#f4f4f4', // Light gray
+  },
+};
+```
+
+**Usage Example:**
+
+```tsx
+<Image
+  src='/path/to/image.jpg'
+  alt='Sample Image'
+  width={500}
+  height={500}
+  placeholder='color'
+/>
+```
+
+## 3. Displaying Low-Resolution Thumbnails
+
+Using low-resolution thumbnails as placeholders before the high-quality image loads ensures faster visual feedback. Add a blur effect for a smoother transition.
+
+**Example Implementation:**
+
+```html
+<div class="placeholder">
+  <img src="low-res-thumbnail.jpg" class="img-small" />
+</div>
+<style>
+  .img-small {
+    filter: blur(10px);
+    transition: opacity 0.5s ease-out;
+  }
+  .img-small.loaded {
+    opacity: 1;
+    filter: blur(0);
+  }
+</style>
+<script>
+  const img = document.querySelector('.img-small');
+  img.onload = () => img.classList.add('loaded');
+</script>
+```
+
+## 4. Combining Blur and Compression
+
+This technique involves displaying a blurred, highly compressed image while the full-resolution image loads. In Next.js, you can leverage libraries like `browser-image-compression` to achieve this.
+
+**Custom Component Example:**
+
+```tsx
+'use client';
+
+import React, { useEffect, useState } from 'react';
+
+import imageCompression from 'browser-image-compression';
+
+import imageCompression from 'browser-image-compression';
+
+const ProgressiveImage = ({ src, alt, width, height }) => {
+  const [currentSrc, setCurrentSrc] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      const response = await fetch(src);
+      const blob = await response.blob();
+      const compressedBlob = await imageCompression(blob, {
+        maxSizeMB: 0.0002,
+        maxWidthOrHeight: 16,
+      });
+
+      const tinyUrl = URL.createObjectURL(compressedBlob);
+      setCurrentSrc(tinyUrl);
+
+      const fullImage = new Image();
+      fullImage.src = src;
+      fullImage.onload = () => {
+        setCurrentSrc(src);
+        setIsLoading(false);
+      };
+    };
+
+    loadImage();
+  }, [src]);
+
+  return (
+    <img
+      src={currentSrc}
+      alt={alt}
+      width={width}
+      height={height}
+      style={{
+        filter: isLoading ? 'blur(10px)' : 'none',
+        transition: 'filter 0.5s ease-in-out',
+      }}
+    />
+  );
+};
+
+export default ProgressiveImage;
+```
+
+## 5. Leveraging Built-in Placeholders with Next.js
+
+Next.js's `next/image` component provides a built-in `blur` placeholder option for static images. This feature generates a low-quality preview of the image automatically.
+
+**Usage Example:**
+
+```tsx
+import mountains from '/public/mountains.jpg';
+import Image from 'next/image';
+
+import mountains from '/public/mountains.jpg';
+import Image from 'next/image';
+
+const BlurPlaceholderExample = () => (
+  <div>
+    <h1>Image Placeholder with Blur</h1>
+    <Image
+      src={mountains}
+      alt='Mountains'
+      placeholder='blur'
+      width={700}
+      height={475}
+    />
+  </div>
+);
+
+export default BlurPlaceholderExample;
+```
+
+**Note**: This feature requires static images for pre-processing during build time.
+
+## Conclusion
+
+Progressive image loading is a vital part of optimizing web performance and enhancing user experience. By leveraging the built-in features of Next.js alongside advanced techniques like blur effects and thumbnails, you can significantly improve the visual appeal and responsiveness of your application. Start implementing these strategies today to create better, faster, and more engaging web experiences!

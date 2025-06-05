@@ -1,0 +1,984 @@
+---
+title: Build a ShadCN UI Button Clone Component Using Vanilla JavaScript
+slug: btn-component-js
+heading: Create a ShadCN UI Button Clone with Vanilla JavaScript
+permalink: btn-component-js
+image: ./images/btn-component-js.png
+date: 2024-11-11
+author: anton liberant
+category: javascript
+type: post
+tags: ['shadcnui', 'web-components', 'button', 'animations', 'no-dependencies']
+desc: Build a ShadcnUI-style button with vanilla JavaScript—featuring variants, states, animations, and a ripple effect. Fully customizable with zero dependencies.
+---
+
+In this tutorial, we'll create a custom button component that replicates the sleek design and functionality of ShadcnUI buttons using only vanilla JavaScript. We'll implement multiple variants, states, and even add a smooth ripple effect – all without any dependencies. This is perfect for projects where you want the polished look of ShadcnUI but need to stick with vanilla JavaScript.
+
+**What We'll Create**:
+
+- Multiple button variants (Default, Primary, Secondary, Destructive, Outline, Ghost)
+- Interactive states (Hover, Active, Disabled, Loading)
+- Different rounded borders
+- Sizes of button (sm, md, lg)
+- Transform effect animation
+- Fully responsive design
+- A reusable JavaScript class
+
+Let's dive in and build this component step by step!
+
+We’ll break down this tutorial into three parts:
+
+1. **Part One**: We’ll start by creating a button styled to look like a Shadcn button using only HTML and CSS. Then, we’ll connect this button to our page with a simple JavaScript script.
+2. **Part Two**: In this section, we’ll develop a fully functional button component that can be easily used by adding a CSS class directly within any HTML file.
+3. **Part Three**: Finally, we’ll create a complete web component. This component will be fully encapsulated and can be integrated simply by adding the `<shadcn-button>click me</shadcn-button>` tag in your HTML.
+
+To make the article more engaging, we’ll apply slightly different button styles in each section.
+
+## Part 1: Create a ShadCN-like button
+
+To create a ShadCN UI-style button clone using pure JavaScript, you'll need to replicate the design and interactivity features, such as hover effects, transitions, and focus states. Here's an example of how you can create a simple button with a ShadCN-inspired style using only JavaScript and CSS:
+
+### HTML
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShadCN UI Button Clone</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="button-container"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
+```
+
+### CSS (styles.css)
+
+```css
+/* Base Button Styling */
+.shadcn-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  background-color: #4caf50;
+  color: white;
+  border: 2px solid transparent;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+/* Hover and Focus Effects */
+.shadcn-btn:hover,
+.shadcn-btn:focus {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Active Button Effect */
+.shadcn-btn:active {
+  background-color: #388e3c;
+  transform: translateY(0);
+}
+
+/* Disabled Button Effect */
+.shadcn-btn:disabled {
+  background-color: #9e9e9e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+```
+
+### JavaScript (script.js)
+
+```js
+// Creating the button element
+const buttonContainer = document.getElementById('button-container');
+const button = document.createElement('button');
+
+// Adding class and text to the button
+button.classList.add('shadcn-btn');
+button.textContent = 'Click Me';
+
+// Append the button to the container
+buttonContainer.appendChild(button);
+
+// Add click event listener (optional functionality)
+button.addEventListener('click', () => {
+  alert('Button clicked!');
+});
+```
+
+### Explanation:
+
+**HTML**:
+
+- The HTML contains a `<div>` to hold the button. It references external CSS and JavaScript files.
+
+**CSS**:
+
+- The `.shadcn-btn` class styles the button to resemble a ShadCN UI button, with rounded corners, padding, and a green background.
+- The hover, focus, and active states are handled with simple CSS transitions, providing a smooth effect on mouse interaction.
+- Disabled buttons have a distinct gray color and are non-interactive.
+
+**JavaScript**:
+
+- JavaScript dynamically creates a `<button>` element, assigns it the ShadCN button class, and appends it to the DOM.
+- An event listener is added to show an alert when the button is clicked.
+
+This code creates a button with a ShadCN UI-inspired style and functionality, all without relying on a JavaScript framework or library. You can further customize the styles and behaviors by adjusting the CSS and JavaScript as needed.
+
+<Codepen id='ExqGyXr' />
+
+## Part 2: Create a button component
+
+In this part, we'll build a professional-grade button component that mirrors ShadcnUI's functionality and aesthetics using only vanilla JavaScript.
+
+### Setting Up the HTML Structure
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head></head>
+  <body>
+    <div class="button-container">
+      <button class="button button-default">Default Button</button>
+      <button class="button button-primary">Primary Button</button>
+      <button class="button button-destructive">Destructive Button</button>
+      <button class="button button-ghost">Ghost Button</button>
+      <button class="button button-primary" disabled>Disabled Button</button>
+      <button class="button button-primary button-loading">Loading</button>
+    </div>
+  </body>
+</html>
+```
+
+### Styling with CSS
+
+Let's add our styles to create the visual foundation:
+
+```css
+.button-container {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  padding: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  user-select: none;
+}
+
+/* Button Variants */
+.button-default {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #e2e8f0;
+}
+
+.button-default:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.button-primary {
+  background-color: #18181b;
+  color: #ffffff;
+  border: 1px solid #18181b;
+}
+
+.button-primary:hover {
+  background-color: #27272a;
+}
+
+.button-destructive {
+  background-color: #ef4444;
+  color: #ffffff;
+  border: 1px solid #ef4444;
+}
+
+.button-destructive:hover {
+  background-color: #dc2626;
+}
+
+.button-ghost {
+  background-color: transparent;
+  border: none;
+  color: #000000;
+}
+
+.button-ghost:hover {
+  background-color: #f1f5f9;
+}
+```
+
+**Adding States and Animations**
+
+Now let's add styles for different states and the loading animation:
+
+```css
+/* Disabled state */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading state */
+.button-loading {
+  position: relative;
+  cursor: wait;
+}
+
+.button-loading::after {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  border-radius: 50%;
+  animation: button-spin 0.6s linear infinite;
+  margin-left: 0.5rem;
+}
+
+@keyframes button-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+```
+
+### JavaScript Implementation
+
+Let's create our button class to handle the functionality:
+
+```javascript
+class ShadcnButton {
+  constructor(element, options = {}) {
+    this.element = element;
+    this.options = {
+      variant: options.variant || 'default',
+      loading: options.loading || false,
+      disabled: options.disabled || false,
+      onClick: options.onClick || null,
+    };
+
+    this.init();
+  }
+
+  init() {
+    // Add base class
+    this.element.classList.add('button');
+
+    // Add variant class
+    this.element.classList.add(`button-${this.options.variant}`);
+
+    // Set loading state
+    if (this.options.loading) {
+      this.setLoading(true);
+    }
+
+    // Set disabled state
+    if (this.options.disabled) {
+      this.setDisabled(true);
+    }
+
+    // Add click handler
+    if (this.options.onClick) {
+      this.element.addEventListener('click', this.options.onClick);
+    }
+
+    // Add ripple effect
+    this.element.addEventListener('click', e => this.createRipple(e));
+  }
+
+  setLoading(loading) {
+    if (loading) {
+      this.element.classList.add('button-loading');
+      this.element.disabled = true;
+    } else {
+      this.element.classList.remove('button-loading');
+      this.element.disabled = this.options.disabled;
+    }
+  }
+
+  setDisabled(disabled) {
+    this.element.disabled = disabled;
+    this.options.disabled = disabled;
+  }
+}
+```
+
+**Adding the Ripple Effect**
+
+Let's implement the ripple animation:
+
+```javascript
+createRipple(event) {
+    const button = event.currentTarget;
+    const ripple = document.createElement('span');
+
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+
+    ripple.style.width = ripple.style.height = `${diameter}px`;
+    ripple.style.left = `${event.clientX - button.offsetLeft - radius}px`;
+    ripple.style.top = `${event.clientY - button.offsetTop - radius}px`;
+    ripple.style.position = 'absolute';
+    ripple.style.borderRadius = '50%';
+    ripple.style.transform = 'scale(0)';
+    ripple.style.animation = 'ripple 0.6s linear';
+    ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    `;
+
+    document.head.appendChild(style);
+    button.appendChild(ripple);
+
+    setTimeout(() => {
+        ripple.remove();
+        style.remove();
+    }, 600);
+}
+```
+
+**Initialization**
+
+Finally, let's initialize our buttons:
+
+```javascript
+// Initialize all buttons on the page
+document.querySelectorAll('.button').forEach(button => {
+  new ShadcnButton(button, {
+    variant: button.classList.contains('button-primary')
+      ? 'primary'
+      : button.classList.contains('button-destructive')
+        ? 'destructive'
+        : button.classList.contains('button-ghost')
+          ? 'ghost'
+          : 'default',
+    loading: button.classList.contains('button-loading'),
+    disabled: button.disabled,
+    onClick: e => {
+      console.log('Button clicked:', e.target.textContent);
+    },
+  });
+});
+```
+
+**Complete Solution**
+
+Check the full implementation in action:
+
+<Codepen id='wvVRWPd' />
+
+## Part 3: Building a Complete Component
+
+Let's start by setting up the structure of our application. We'll create three files: `index.html`, `style.css`, and `app.js`, and fill each with basic markup to get started.
+
+### HTML
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JS Component</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
+```
+
+### CSS
+
+```css
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+.container {
+  margin-top: 200px;
+}
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+}
+```
+
+Together, these styles create a clean and centered layout for the page content, with evenly spaced items within the wrapper.
+
+### JavaScript
+
+**Component Basics**
+
+```js
+class Component extends HTMLElement {
+  constructor() {
+    super();
+    this.init(); // Calls init() to initialize shadow DOM and state
+  }
+
+  // Initialize the shadow DOM and set up the state object
+  init() {
+    const shadow = this.attachShadow({ mode: 'open' });
+    this.state = {}; // Initializes an empty state object
+  }
+}
+```
+
+The `Component` class extends `HTMLElement` to create a foundation for our custom elements. It initializes an "open" shadow DOM, which encapsulates styles and structure, preventing them from affecting the main document.
+
+The [Element.attachShadow()](https://developer.mozilla.org/ru/docs/Web/API/Element/attachShadow) method in JavaScript is used to attach a shadow DOM to an element, which enables encapsulation of HTML, CSS, and JavaScript. This feature is key to building Web Components and helps avoid style and script conflicts between components.
+
+**Benefits of `attachShadow()`**
+
+- **Encapsulation**: Styles and structure inside the shadow DOM are isolated from the rest of the document, which prevents unintended style leaks.
+- **Reusability**: Components can be reused without worrying about conflicts with external styles or scripts.
+- **Clean Component Boundaries**: The method allows building components with their own isolated styles, markup, and behavior, making them self-contained and modular.
+
+In summary, `attachShadow()` is crucial for creating robust web components with encapsulation and style isolation, improving the maintainability and scalability of web applications.
+
+**Creating the Button Component**
+
+```js
+class Button extends Component {
+  constructor() {
+    super();
+    this._container = document.createElement('button');
+    this.data();
+    this._style();
+    this._html();
+  }
+}
+```
+
+This `Button` class extends the `Component` class, allowing it to reuse the shadow DOM initialization. The constructor:
+
+- Creates the button (`this._container`).
+- Initializes component data (`this.data()`).
+- Applies styles and structure (`this._style()` and `this._html()`).
+
+**Defining Button Styles**
+
+The `_style` method defines CSS for button variants, sizes, and styles, including color, padding, and animations.
+
+```js
+_style() {
+    // Create a <style> element to hold the CSS for the button
+    const buttonCss = document.createElement('style');
+    // Define button background colors, borders, and text colors based on the type
+    const variants = {
+        default: ['#4c97f8', '#5faefb', 'white'],
+        destructive: ['#d6d3d1', '#e7e5e4', 'black'],
+        outline: ['#737373', '#a3a3a3', 'black'],
+        secondary: ['#10b981', '#34d399', 'white'],
+        ghost: ['#f3f4f6', '#f9fafb', 'black'],
+    };
+    const roundeds = {
+        none: '0',
+        sm: '2px',
+        default: '4px',
+        md: '6px',
+        lg: '8px',
+        xl: '12px',
+        '2xl': '16px',
+        '3xl': '24px',
+        full: '9999px'
+    }
+    // Style button according to its variant, roundness, and size
+    buttonCss.textContent = `
+        .btn {
+            display: inline-block;
+            background: ${variants[this.state.variant][0]};
+            border: 2px solid transparent;
+            color: ${variants[this.state.variant][2]};
+            line-height: 1;
+            white-space: nowrap;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            border-radius: ${roundeds[this.state.rounded]};
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: ${variants[this.state.variant][1]};
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .btn-md {
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+        .btn-sm {
+            font-size: 12px;
+            padding: 9px 15px;
+        }
+        .btn-lg {
+            font-size: 16px;
+            padding: 12px 24px;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .btn-loading {
+            position: relative;
+            cursor: wait;
+        }
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 1rem;
+            height: 1rem;
+            right: 40%;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-right-color: currentColor;
+            border-radius: 50%;
+            animation: button-spin 0.6s linear infinite;
+        }
+
+        @keyframes button-spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    `;
+    this.shadowRoot.appendChild(buttonCss); // Append styles to shadow DOM
+}
+```
+
+The `buttonCss` variable holds styling rules for various button states:
+
+- **Variants**: Color schemes for different button types (`default`, `destructive`, `outline`).
+- **Rounded Corners**: Options for rounded button shapes (`none`, `sm`, `md`, `full`).
+- **Loading Spinner**: Displays a spinner when loading.
+
+**Defining HTML Structure**
+
+The `_html` method creates the button’s structure and applies classes based on attributes like size and variant.
+
+```js
+	// Create the button's HTML structure
+_html() {
+    this._container.classList.add('btn'); // Apply base button class
+
+    if (this.state.size && this.state.size !== 'default') {
+        this._container.classList.add(`btn-${this.state.size}`); // Add size class if applicable
+    }
+    this._container.innerHTML = `<span><slot></slot></span>`; // Add slot for content projection
+    this.shadowRoot.appendChild(this._container); // Append the button to shadow DOM
+}
+```
+
+The `<slot>` element allows custom content to be placed inside the `<shadcn-button>`, making it flexible and reusable.
+
+**Getting Attributes and Handling States**
+
+Several `getAttr` functions retrieve the button's `variant`, `size`, `rounded`, `disabled`, and `loading` states from its attributes.
+
+```js
+getAttrVariant() {
+    try {
+        const variants = ['default', 'destructive', 'outline', 'secondary', 'ghost'];
+        let variant = this.getAttribute('variant');
+        if (variant && variants.includes(variant)) {
+            this.state.variant = variant;
+        } else {
+            this.state.variant = 'default'; // Default type if invalid
+        }
+    } catch (e) {
+        this.state.variant = 'default'; // Default type if error
+    }
+}
+
+// Get 'round' attribute value and set it in state
+getAttrRounded() {
+    const rounded = this.getAttribute('rounded');
+    const roundeds = ['none', 'sm', 'default', 'md', 'lg', 'xl', '2xl', '3xl', 'full'];
+    try {
+        if (rounded && roundeds.includes(rounded)) {
+            this.state.rounded = rounded; // Set roundness based on attribute
+        } else {
+            this.state.rounded = 'none'; // Default to none
+        }
+    } catch (e) {
+        this.state.rounded = 'none'; // Default to none if error
+    }
+}
+
+// Get 'size' attribute value and set it in state
+getAttrSize() {
+    const size = this.getAttribute('size');
+    const sizes = ['md', 'sm', 'lg', 'default'];
+    try {
+        if (size && sizes.includes(size)) {
+            this.state.size = size; // Set size based on attribute
+        } else {
+            this.state.size = 'default'; // Default to 'default' size if invalid
+        }
+    } catch (e) {
+        this.state.size = 'default'; // Default size if error
+    }
+}
+getAttrDisabled() {
+    const disabled = this.getAttribute('disabled');
+    if (disabled !== null) {
+        if (disabled === 'true') {
+            this.setDisabled(true);
+        } else if (disabled === 'false') {
+            this.setDisabled(false);
+        }
+    }
+}
+getAttrLoading() {
+    const loading = this.getAttribute('loading');
+    if (loading === "true") {
+        this._container.classList.add('btn-loading');
+    } else if (loading === "false") {
+        this._container.classList.remove('btn-loading');
+    }
+}
+```
+
+These functions validate and set the state based on provided attributes. For instance, `getAttrDisabled` manages the `disabled` state by adding or removing the `disabled` attribute on the button element.
+
+To add a `setDisabled` method, we'll incorporate logic for handling the button's `disabled` state. This method will check if the button should be disabled and then update the component’s `state` and actual DOM attributes accordingly.
+
+Here’s how to add setDisabled and how it fits into our overall button component:
+
+**Adding `setDisabled` for Managing Button State**
+
+The `setDisabled` function allows dynamic updates to the button's disabled state. This function checks if the `disabled` parameter is `true` or `false` and then updates the button accordingly.
+
+To add a setDisabled method, we'll incorporate logic for handling the button's disabled state. This method will check if the button should be disabled and then update the component’s state and actual DOM attributes accordingly.
+
+Here’s how to add setDisabled and how it fits into our overall button component:
+
+```js
+setDisabled(disabled) {
+	this.state.disabled = disabled;
+	if (disabled) {
+		this._container.setAttribute('disabled', 'true'); // Adds 'disabled' attribute
+	} else {
+		this._container.removeAttribute('disabled'); // Removes 'disabled' attribute
+	}
+}
+```
+
+If you want to disable or enable `<shadcn-button>` dynamically in your app, you could call `setDisabled(true)` or `setDisabled(false)` in your JavaScript to control the button's availability based on user interaction, loading states, or other events.
+
+**Putting It All Together**
+
+Finally, `customElements.define` registers the `<shadcn-button>` component.
+
+```js
+customElements.define('shadcn-button', Button);
+```
+
+This allows us to use `<shadcn-button></shadcn-button>` anywhere in HTML with the functionality, styles, and customizations defined above. By extending `HTMLElement` and using shadow DOM, this approach keeps our component modular, customizable, and isolated from global styles.
+
+### Full JavaScript Code
+
+```js
+// The Component class creates a custom HTML element by extending HTMLElement
+class Component extends HTMLElement {
+  constructor() {
+    super();
+    this.init(); // Calls init() to initialize shadow DOM and state
+  }
+
+  // Initialize the shadow DOM and set up the state object
+  init() {
+    const shadow = this.attachShadow({
+      mode: 'open', // Creates an open shadow DOM
+    });
+    this.state = {}; // Initializes an empty state object
+  }
+}
+
+// <shadcn-button></shadcn-button> is the custom element
+class Button extends Component {
+  constructor() {
+    super(); // Inherits from Component
+    this._container = document.createElement('button'); // Creates the main button element
+    this.data(); // Initializes data for the button
+    this._style(); // Applies button styles
+    this._html(); // Creates the button's HTML structure
+  }
+
+  // Initialize data such as button type, round, and size
+  data() {
+    this.state = {
+      variant: 'default', // Sets default type for button
+      rounded: 'none', // Determines if button is rounded
+      size: 'default', // Default size of the button
+      disabled: false,
+      loading: false,
+    };
+    this.getAttrVariant(); // Get type from attributes
+    this.getAttrRounded(); // Get roundness from attributes
+    this.getAttrSize(); // Get size from attributes
+    this.getAttrDisabled();
+    this.getAttrLoading();
+  }
+
+  // Add styles to the shadow DOM
+  _style() {
+    // Create a <style> element to hold the CSS for the button
+    const buttonCss = document.createElement('style');
+    // Define button background colors, borders, and text colors based on the type
+    const variants = {
+      default: ['#4c97f8', '#5faefb', 'white'],
+      destructive: ['#d6d3d1', '#e7e5e4', 'black'],
+      outline: ['#737373', '#a3a3a3', 'black'],
+      secondary: ['#10b981', '#34d399', 'white'],
+      ghost: ['#f3f4f6', '#f9fafb', 'black'],
+    };
+    const roundeds = {
+      none: '0',
+      sm: '2px',
+      default: '4px',
+      md: '6px',
+      lg: '8px',
+      xl: '12px',
+      '2xl': '16px',
+      '3xl': '24px',
+      full: '9999px',
+    };
+    // Style button according to its variant, roundness, and size
+    buttonCss.textContent = `
+            .btn {
+                display: inline-block;
+                background: ${variants[this.state.variant][0]};
+                border: 2px solid transparent;
+                color: ${variants[this.state.variant][2]};
+                line-height: 1;
+                white-space: nowrap;
+                text-align: center;
+                box-sizing: border-box;
+                padding: 12px 24px;
+                font-size: 16px;
+                font-weight: 600;
+                text-align: center;
+                text-decoration: none;
+                border-radius: ${roundeds[this.state.rounded]};
+                cursor: pointer;
+                outline: none;
+                transition: all 0.3s ease;
+            }
+            .btn:hover {
+                background: ${variants[this.state.variant][1]};
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+            .btn-md {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+            .btn-sm {
+                font-size: 12px;
+                padding: 9px 15px;
+            }
+            .btn-lg {
+                font-size: 16px;
+                padding: 12px 24px;
+            }
+			.btn:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+            	pointer-events: none;
+			}
+			.btn-loading {
+				position: relative;
+				cursor: wait;
+			}
+			.btn-loading::after {
+				content: '';
+				position: absolute;
+				width: 1rem;
+				height: 1rem;
+				right: 40%;
+				border: 2px solid transparent;
+				border-top-color: currentColor;
+				border-right-color: currentColor;
+				border-radius: 50%;
+				animation: button-spin 0.6s linear infinite;
+			}
+
+			@keyframes button-spin {
+				from {
+					transform: rotate(0deg);
+				}
+				to {
+					transform: rotate(360deg);
+				}
+			}
+        `;
+    this.shadowRoot.appendChild(buttonCss); // Append styles to shadow DOM
+  }
+
+  // Create the button's HTML structure
+  _html() {
+    this._container.classList.add('btn'); // Apply base button class
+
+    if (this.state.size && this.state.size !== 'default') {
+      this._container.classList.add(`btn-${this.state.size}`); // Add size class if applicable
+    }
+    this._container.innerHTML = `<span><slot></slot></span>`; // Add slot for content projection
+    this.shadowRoot.appendChild(this._container); // Append the button to shadow DOM
+  }
+
+  // Get 'type' attribute value and set it in state
+  getAttrVariant() {
+    try {
+      const variants = [
+        'default',
+        'destructive',
+        'outline',
+        'secondary',
+        'ghost',
+      ];
+      let variant = this.getAttribute('variant');
+      if (variant && variants.includes(variant)) {
+        this.state.variant = variant;
+      } else {
+        this.state.variant = 'default'; // Default type if invalid
+      }
+    } catch (e) {
+      this.state.variant = 'default'; // Default type if error
+    }
+  }
+
+  // Get 'round' attribute value and set it in state
+  getAttrRounded() {
+    const rounded = this.getAttribute('rounded');
+    const roundeds = [
+      'none',
+      'sm',
+      'default',
+      'md',
+      'lg',
+      'xl',
+      '2xl',
+      '3xl',
+      'full',
+    ];
+    try {
+      if (rounded && roundeds.includes(rounded)) {
+        this.state.rounded = rounded; // Set roundness based on attribute
+      } else {
+        this.state.rounded = 'none'; // Default to none
+      }
+    } catch (e) {
+      this.state.rounded = 'none'; // Default to none if error
+    }
+  }
+
+  // Get 'size' attribute value and set it in state
+  getAttrSize() {
+    const size = this.getAttribute('size');
+    const sizes = ['md', 'sm', 'lg', 'default'];
+    try {
+      if (size && sizes.includes(size)) {
+        this.state.size = size; // Set size based on attribute
+      } else {
+        this.state.size = 'default'; // Default to 'default' size if invalid
+      }
+    } catch (e) {
+      this.state.size = 'default'; // Default size if error
+    }
+  }
+  getAttrDisabled() {
+    const disabled = this.getAttribute('disabled');
+    if (disabled !== null) {
+      if (disabled === 'true') {
+        this.setDisabled(true);
+      } else if (disabled === 'false') {
+        this.setDisabled(false);
+      }
+    }
+  }
+  getAttrLoading() {
+    const loading = this.getAttribute('loading');
+    if (loading === 'true') {
+      this._container.classList.add('btn-loading');
+    } else if (loading === 'false') {
+      this._container.classList.remove('btn-loading');
+    }
+  }
+  setDisabled(disabled) {
+    this.state.disabled = disabled;
+    if (disabled) {
+      this._container.setAttribute('disabled', disabled);
+    } else {
+      this._container.removeAttribute('disabled');
+    }
+  }
+}
+
+// Define the custom element '<Button>'
+customElements.define('shadcn-button', Button);
+```
+
+**Result**:
+
+<Codepen id='rNXowZo' />
+
+## Conclusion
+
+By using Web Components, this button component can be customized and reused across different applications. With options for `variant`, `size`, and `rounded` properties, this `<shadcn-button>` element provides a robust and flexible button for any UI, offering reusable, styled, and dynamic components without external libraries.

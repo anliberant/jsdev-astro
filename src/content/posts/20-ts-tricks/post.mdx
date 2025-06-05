@@ -1,0 +1,210 @@
+---
+title: '20 TypeScript Tips for Cleaner, More Efficient Code in 2024'
+slug: 20-ts-tricks
+heading: 20 Essential TypeScript Tips for 2024
+image: ./images/20-ts-tricks.png
+permalink: 20-ts-tricks
+date: 2024-11-04
+author: anton liberant
+category: typescript
+type: post
+tags: ['typescript-tips']
+desc: Discover 20 powerful TypeScript tricks to improve code quality using type assertions, utility types, generics, and advanced patterns.
+---
+
+TypeScript enhances JavaScript with type safety and powerful features, but many developers use only its basics. Here’s a guide to 20 advanced TypeScript tricks that can boost your productivity, code maintainability, and will help improve code efficiency and readability. Each trick is demonstrated with practical code examples.
+
+## 1. NonNullable: Excludes `null` and `undefined`.
+
+```ts
+type User = { name: string; age?: number | null };
+const userAge: NonNullable<User['age']> = 30; // No null or undefined
+```
+
+## 2. Partial: Makes all properties optional.
+
+```ts
+interface User {
+  name: string;
+  age: number;
+  email: string;
+}
+const updateUser = (user: Partial<User>) => ({
+  ...user,
+  updatedAt: new Date(),
+});
+updateUser({ name: 'John' });
+```
+
+## 3. Readonly: Enforces immutability.
+
+```ts
+const config: Readonly<{ apiUrl: string; retries: number }> = {
+  apiUrl: 'https://api.com',
+  retries: 5,
+};
+config.apiUrl = 'https://newapi.com'; // Error
+```
+
+## 4. Mapped Types: Transform existing types dynamically.
+
+```ts
+type Status = 'loading' | 'success' | 'error';
+type ApiResponse<T> = { [K in Status]: T };
+const response: ApiResponse<string> = {
+  loading: 'Loading...',
+  success: 'Done',
+  error: 'Error',
+};
+```
+
+## 5. Optional Tuple Elements: Use variadic tuple types.
+
+```ts
+type UserTuple = [string, number?, boolean?];
+const user1: UserTuple = ['Rob']; // Only name
+```
+
+## 6. Union Exhaustiveness: Ensure all cases are handled.
+
+```ts
+type Status = 'open' | 'closed' | 'pending';
+function handleStatus(status: Status) {
+  switch (status) {
+    case 'open':
+      return 'Opened';
+    case 'closed':
+      return 'Closed';
+    case 'pending':
+      return 'Pending';
+    default:
+      const exhaustiveCheck: never = status;
+      return exhaustiveCheck;
+  }
+}
+```
+
+## 7. Omit: Remove properties from a type.
+
+```ts
+interface Todo {
+  title: string;
+  description: string;
+  completed: boolean;
+}
+type TodoPreview = Omit<Todo, 'description'>;
+const todo: TodoPreview = { title: 'Learn TypeScript', completed: false };
+```
+
+## 8. Type Narrowing: Use in and instanceof to narrow types.
+
+```ts
+function processInput(input: string | number | { title: string }) {
+  if (typeof input === 'string') return input.toUpperCase();
+  if ('title' in input) return input.title.toUpperCase();
+}
+```
+
+## 9. Conditional Types: Apply conditional logic.
+
+```ts
+type IsString<T> = T extends string ? true : false;
+type CheckString = IsString<'Hello'>; // true
+```
+
+## 10. Literal Types with `as const`:
+
+```ts
+const COLORS = ['red', 'green', 'blue'] as const;
+type Color = (typeof COLORS)[number]; // 'red' | 'green' | 'blue'
+```
+
+## 11. Extract and Exclude: Filter union types.
+
+```ts
+type T = 'a' | 'b' | 'c';
+type OnlyAOrB = Extract<T, 'a' | 'b'>; // 'a' | 'b'
+```
+
+## 12. Custom Type Guards:
+
+```ts
+function isString(input: any): input is string {
+  return typeof input === 'string';
+}
+```
+
+## 13. Record: Dynamic object types.
+
+```ts
+type Role = 'admin' | 'user' | 'guest';
+const permissions: Record<Role, string[]> = {
+  admin: ['write'],
+  user: ['read'],
+  guest: ['view'],
+};
+```
+
+## 14. Index Signatures: Add dynamic properties.
+
+```ts
+class DynamicObject {
+  [key: string]: any;
+}
+const obj = new DynamicObject();
+obj.name = 'Rob';
+```
+
+## 15. Never Type: For exhaustive checks.
+
+```ts
+function assertNever(value: never): never {
+  throw new Error(`Unexpected: ${value}`);
+}
+```
+
+## 16. Optional Chaining:
+
+```ts
+const user = { profile: { name: 'John' } };
+const userName = user?.profile?.name; // 'John'
+```
+
+## 17. Null Coalescing (`??`):
+
+```ts
+const input: string | null = null;
+const defaultValue = input ?? 'Default'; // 'Default'
+```
+
+## 18. ReturnType: Infer function return types.
+
+```ts
+function getUser() {
+  return { name: 'John', age: 30 };
+}
+type UserReturn = ReturnType<typeof getUser>;
+```
+
+## 19. Generics: Flexible function types.
+
+```ts
+function identity<T>(value: T): T {
+  return value;
+}
+identity<string>('Hello'); // 'Hello'
+```
+
+## 20. Intersection Types: Combine multiple types.
+
+```ts
+type Admin = { privileges: string[] };
+type User = { name: string };
+type AdminUser = Admin & User;
+```
+
+## Summary
+
+Each of these tips highlights ways to write cleaner, more reliable TypeScript code. Using these tricks, you can leverage TypeScript’s full type system for safer and more maintainable development.
+
+Would you like me to explain any of these tricks in more detail? I can also provide additional examples or show how these patterns can be combined in real-world scenarios.

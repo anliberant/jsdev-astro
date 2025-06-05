@@ -1,0 +1,139 @@
+---
+title: 'How to Improve JavaScript Code Security: Best Practices and Tips'
+slug: js-code-security
+heading: Best Practices for Securing JavaScript Code
+icon: /icons/javascript.png
+image: ./images/js-code-security.png
+permalink: howto/js-code-security
+date: 2025-01-28
+author: anton liberant
+category: javascript
+type: howto
+tags: ['js-tips', 'code-security', 'XSS', 'CSRF']
+desc: Protect your JavaScript code from XSS and CSRF attacks with essential security tips, modern tools, and best practices for building secure web applications.
+---
+
+This guide aims to equip developers with effective strategies for safeguarding their JavaScript code against common vulnerabilities and cyberattacks. It provides actionable tips, recommended practices, and tools to enhance code security.
+
+![How to Improve JavaScript Code Security](./images/js-code-security.png)
+
+## Introduction
+
+JavaScript is the backbone of many web applications, powering both frontend and backend functionality. Its widespread adoption, however, makes it a frequent target for malicious attacks such as XSS (Cross-Site Scripting), CSRF (Cross-Site Request Forgery), and other threats.
+
+This article dives into essential techniques to improve JavaScript security and protect your applications from vulnerabilities. By following these best practices, you can enhance the security of your codebase and safeguard user data.
+
+## 1. Protecting Against XSS (Cross-Site Scripting)
+
+XSS attacks occur when attackers inject malicious JavaScript code into a webpage, which is then executed by unsuspecting users’ browsers. Such attacks can steal sensitive data, hijack user sessions, or even execute arbitrary commands.
+
+### How to Prevent XSS
+
+- **Escape User Input Properly**: Avoid directly injecting user data into HTML or JavaScript without escaping it. Use the following approach:
+
+  ```js
+  // Unsafe example
+  document.querySelector('#user-name').innerHTML = userInput;
+
+  // Safe example
+  document.querySelector('#user-name').textContent = userInput;
+  ```
+
+- **Implement a Content Security Policy (CSP)**: A CSP helps block unauthorized scripts from executing. You can include a CSP header in your server configuration:
+  ```http
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://trusted-cdn.com;
+  ```
+- **Sanitize User Input**: Use libraries like DOMPurify to clean user-provided HTML, ensuring no malicious scripts are embedded.
+
+  ```js
+  import DOMPurify from 'dompurify';
+
+  import DOMPurify from 'dompurify';
+
+  const sanitizedInput = DOMPurify.sanitize(userInput);
+  document.querySelector('#content').innerHTML = sanitizedInput;
+  ```
+
+## 2. Preventing CSRF (Cross-Site Request Forgery)
+
+CSRF attacks trick authenticated users into performing unintended actions, such as submitting malicious forms or executing unauthorized requests.
+
+### How to Prevent CSRF
+
+- **Use CSRF Tokens**: Add randomly generated tokens to forms and validate them on the server side.
+  ```html
+  <form method="POST" action="/update-profile">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <input type="text" name="name" />
+    <button type="submit">Update</button>
+  </form>
+  ```
+- **Validate Request Origins**: Check the `Referer` or `Origin` headers on incoming requests to ensure they originate from your site.
+  ```js
+  const isTrusted = req.headers.referer === 'https://example.com';
+  if (!isTrusted) {
+    res.status(403).send('Suspicious request detected!');
+  }
+  ```
+
+## 3. Securing Cookies with HttpOnly and Secure Flags
+
+Cookies are a common way to store session data, but if they are accessible through JavaScript, they may be vulnerable to theft in XSS attacks.
+
+### How to Secure Cookies
+
+- Use **HttpOnly** and **Secure** flags when setting cookies to prevent unauthorized
+  ```js
+  res.cookie('session_id', 'abc123', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Strict',
+  });
+  ``;
+  ```
+- **HttpOnly** ensures that cookies are only sent with HTTP requests and are inaccessible via JavaScript.
+- **Secure** ensures cookies are transmitted only over HTTPS.
+
+## 4. Encrypting and Protecting Data
+
+Encryption is critical to safeguarding sensitive data both during transmission and storage.
+
+### How to Improve Encryption
+
+- **Use HTTPS**: Ensure all data exchanges between the client and server occur over encrypted HTTPS connections.
+  <div className='code-cmd'>sudo certbot --nginx -d example.com</div>
+- **Hash Sensitive Data**: Use strong hashing algorithms like `bcrypt` to securely store passwords.
+  ```js
+  const bcrypt = require('bcrypt');
+  const passwordHash = await bcrypt.hash(userPassword, 10);
+  ```
+- **Adopt JWT for Authentication**: Use JSON Web Tokens to securely transmit user data between the client and server.
+  ```js
+  const jwt = require('jsonwebtoken');
+  const token = jwt.sign({ userId: 123 }, 'secretKey', { expiresIn: '1h' });
+  ```
+
+## 5. Regularly Update Dependencies
+
+Outdated or insecure third-party libraries often serve as an entry point for attacks.
+
+### How to Minimize Risks
+
+- **Audit Dependencies Regularly**: Use tools like **npm audit** or **Dependabot** to identify and resolve vulnerabilities in your project.
+  <div className='code-cmd'>npm audit fix</div>
+- **Limit Dependency Usage**: Avoid overloading your project with unnecessary dependencies, as each adds potential security risks.
+- **Verify Sources**: Only use libraries from trusted repositories such as npm or GitHub with an active community and security updates.
+
+## 6. Use Security Analysis Tools
+
+Specialized tools can automate vulnerability detection in your code and dependencies:
+
+- [Snyk](https://snyk.io) - Detects vulnerabilities in dependencies and provides fixes.
+- [ESLint Security Plugin](https://www.npmjs.com/package/eslint-plugin-security) - Flags insecure patterns in JavaScript code.
+- [OWASP ZAP](<https://en.wikipedia.org/wiki/ZAP_(software)>): A robust tool for security testing of web applications.
+
+## Conclusion
+
+Securing JavaScript code requires a multi-faceted approach, addressing vulnerabilities like XSS, CSRF, and insecure cookies while encrypting sensitive data and keeping dependencies up-to-date. Implementing these best practices significantly reduces the risk of attacks and helps ensure a secure development lifecycle.
+
+Prioritize security as an ongoing effort, regularly review your practices, and leverage security tools to maintain a strong defense against potential threats.

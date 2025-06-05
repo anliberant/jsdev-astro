@@ -1,0 +1,111 @@
+---
+title: How to Type Object Properties as Strings in TypeScript
+slug: open-closed-ts
+heading: Typing Object Properties as Strings in TypeScript
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/open-closed-ts
+date: 2024-12-23
+author: anton liberant
+category: typescript
+type: howto
+tags: ['object', 'ValidPath']
+desc: Learn to ensure type safety for object properties in TypeScript using the ValidPath utility type. Validate nested paths while excluding functions and arrays.
+---
+
+When working with functions or methods that accept an object and its property as a string, it can be challenging to maintain type safety as objects evolve. Here's how to create a utility type in TypeScript to ensure that property names are type-checked at compile time.
+
+## Problem
+
+Consider this function call:
+
+```ts
+updateDate(user, 'date');
+```
+
+If the property changes (`user.date → user.birthday`), the compiler won’t catch the mismatch, leading to potential bugs during runtime.
+
+## Solution
+
+We can use a custom utility type, `ValidPath`, to ensure type safety for object properties.
+
+### Step 1: Define the Type
+
+The `ValidPath` type recursively generates string representations of all object keys, including nested properties:
+
+```ts
+type PropertiesOnly<T> = Pick<
+  T,
+  {
+    [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K;
+  }[keyof T]
+>;
+
+type IsArray<T> = T extends (infer U)[] ? true : false;
+
+export type ValidPath<T, Prefix extends string = ''> = T extends object
+  ? {
+      [K in keyof PropertiesOnly<T> & (string | number)]: IsArray<
+        T[K]
+      > extends true
+        ? never
+        : `${K}` | `${K}.${ValidPath<T[K], `${Prefix}${K}.`>}`;
+    }[keyof PropertiesOnly<T> & string]
+  : never;
+```
+
+**Explanation**:
+
+- **Exclude Functions**: `PropertiesOnly` filters out methods from the object.
+- **Handle Arrays**: `IsArray` excludes arrays from the recursion to avoid complex union types.
+- **Recursive Type**: The `ValidPath` type generates all possible key paths in the object, including nested properties.
+
+### Step 2: Create a Utility Function
+
+The `validatePath` function ensures that only valid property paths are accepted.
+
+```ts
+export function validatePath<T>(path: ValidPath<T>): ValidPath<T> {
+  return path; // All checks occur during compilation
+}
+```
+
+## Example Usage
+
+Given this object:
+
+```ts
+const data = {
+  user: {
+    name: 'Alice',
+    details: { age: 30 },
+  },
+};
+```
+
+You can validate property paths like this:
+
+```ts
+validatePath<typeof data>('user.name'); // Valid
+validatePath<typeof data>('user.details.age'); // Valid
+validatePath<typeof data>('user.invalid'); // Error
+```
+
+### Additional Example
+
+For more advanced scenarios:
+
+```ts
+function floatHandler<T>(
+  value: string,
+  row: any,
+  property: ValidPath<T>,
+  propertyRaw: string
+) {
+  // Your code here
+}
+
+floatHandler<(typeof data)['user']>('42', data.user, 'details.age', 'age');
+```
+
+This approach ensures type safety and prevents runtime errors caused by invalid property names.

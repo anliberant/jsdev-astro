@@ -1,0 +1,60 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import ConverterHeader from '@/shared/ui/converters/converter-header.astro';
+import ConverterPanel from '@/shared/ui/converters/converter-panel.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+const breadcrumbItems = generateToolsBreadcrumbs('HTML to JSX Converter');
+
+const converterOptions = [
+  { id: 'prettifyOption', label: 'Prettify', checked: true },
+  { id: 'camelCaseOption', label: 'camelCase Props', checked: true },
+  { id: 'fragmentOption', label: 'Use Fragment', checked: false },
+];
+---
+
+<Breadcrumbs items={breadcrumbItems} class='mt-10' />
+
+<HeadingBlock
+  title='HTML to JSX Converter'
+  description='Easily convert HTML to JSX with this HTML to JSX converter'
+  class='mt-0'
+/>
+
+<ConverterHeader options={converterOptions} class='mt-10' />
+
+<div class='main-content'>
+  <ConverterPanel
+    type='input'
+    title='HTML Input'
+    icon='📝'
+    textareaId='htmlInput'
+    placeholder='Paste your HTML code here...'
+    showSampleButton={true}
+    showStats={true}
+  />
+
+  <ConverterPanel
+    type='output'
+    title='JSX Output'
+    icon='⚛️'
+    textareaId='jsxOutput'
+    placeholder='Converted JSX code will appear here...'
+    readonly={true}
+    showStats={true}
+  />
+</div>
+
+<script>
+  import { HtmlToJsxConverterController } from './lib/converter-controller';
+
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      new HtmlToJsxConverterController();
+      console.log('JSX converter initialized successfully');
+    } catch (error) {
+      console.error('Error initializing converter:', error);
+    }
+  });
+</script>

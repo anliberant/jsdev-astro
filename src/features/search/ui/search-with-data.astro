@@ -1,0 +1,31 @@
+---
+import { getAllSearchData } from '../model/search-data.js';
+import Search from './search.astro';
+
+export interface Props {
+  placeholder?: string;
+  className?: string;
+}
+
+const { placeholder = 'Search...', className } = Astro.props;
+
+const searchData = await getAllSearchData();
+---
+
+<Search
+  placeholder={placeholder}
+  className={className}
+/>
+
+<script define:vars={{ searchData }}>
+  window.searchData = searchData;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log(`🔍 Search initialized with ${searchData.length} items:`, {
+      posts: searchData.filter(item => item.category === 'posts').length,
+      howtos: searchData.filter(item => item.category === 'howtos').length,
+      snippets: searchData.filter(item => item.category === 'snippets').length,
+      fridays: searchData.filter(item => item.category === 'fridays').length,
+    });
+  });
+</script>

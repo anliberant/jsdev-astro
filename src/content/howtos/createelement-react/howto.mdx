@@ -1,0 +1,116 @@
+---
+title: How to Solve 'Cannot Read Property CreateElement of Undefined'
+slug: createelement-react
+heading: "Fix 'Cannot Read Property CreateElement of Undefined'"
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/createelement-react
+date: 2025-01-07
+author: anton liberant
+category: react
+type: howto
+tags: ['createElement']
+desc: Fix React’s "Cannot read property 'createElement' of undefined" error by verifying imports, resolving version conflicts, and updating project configurations.
+---
+
+The error `Cannot read property 'createElement' of undefined` in React typically occurs when React or ReactDOM is not imported or configured correctly in your project. Here are common causes and solutions:
+
+## 1. React and ReactDOM Are Not Properly Imported
+
+Ensure you have imported `React` and `ReactDOM` at the top of your file:
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+// For older versions
+```
+
+If you're using React 18 or later, you should use:
+
+```jsx
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+```
+
+## 2. Incorrect React or ReactDOM Installation
+
+Verify that both `react` and `react-dom` are installed in your project.
+
+Run the following commands:
+
+<div className='code-cmd'>npm install react react-dom</div>
+
+## 3. React Version Mismatch
+
+If you are using an older version of `react-dom` but the latest react, it can cause this error. Ensure the versions of `react` and `react-dom` match in your package.json:
+
+```json
+"dependencies": {
+  "react": "^18.0.0",
+  "react-dom": "^18.0.0"
+}
+```
+
+Update them if necessary:
+
+<div className='code-cmd'>npm install react@latest react-dom@latest</div>
+
+## 4. Incorrect Use of `React.createElement`
+
+If you're manually using `React.createElement`, ensure the syntax is correct:
+
+```jsx
+const element = React.createElement('div', null, 'Hello, World!');
+```
+
+## 5. File Import Issues
+
+Ensure your `React` and `ReactDOM` imports are correct. If you're importing from a CDN or a custom build, double-check the paths.
+
+**For CDN (HTML file):**
+
+```html
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+```
+
+## 6. Configuration Issues in Build Tools
+
+If you're using a bundler like Webpack or Vite:
+
+- Ensure your bundler is configured to resolve React properly.
+- Clear your build cache and rebuild the project.
+
+<div className='code-cmd'>npm run clean</div>
+<div className='code-cmd'>npm run build</div>
+
+## 7. Using the Correct Root Rendering Method
+
+For React 18 or later, use `createRoot` to render your application:
+
+```jsx
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
+```
+
+For React versions earlier than 18:
+
+```jsx
+ReactDOM.render(<App />, document.getElementById('root'));
+```
+
+## Debugging Tips
+
+- **Check the Console Logs**: Look for the exact line where the error occurs.
+- **Ensure Dependencies Are Correct:** Remove node_modules and reinstall packages
+  ```bash
+  rm -rf node_modules
+  npm install
+  ```
+- **Upgrade or Downgrade Versions**: Use compatible versions of React libraries.
+
+If you're still facing issues, share the relevant parts of your code, and I’ll help debug further!

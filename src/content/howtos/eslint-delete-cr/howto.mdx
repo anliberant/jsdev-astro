@@ -1,0 +1,99 @@
+---
+title: How to solve [eslint] Delete `CR` [prettier/prettier] error
+slug: eslint-delete-cr
+heading: ix [eslint] Delete CR [prettier/prettier] Error
+permalink: howto/eslint-delete-cr
+icon: /icons/prettier.png
+image: ./images/eslint-delete-cr.png
+date: 2023-10-16
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['eslint', 'prettier']
+desc: Fix the '[eslint] Delete CR [prettier/prettier]' error by resolving ESLint and Prettier line ending conflicts. Learn simple fixes to ensure consistent formatting.
+---
+
+## Solve [eslint] Delete 'cr' [prettier/prettier]
+
+The **[eslint] Delete CR** error typically occurs when there are carriage return (CR) characters at
+the end of lines in your code. It is often encountered when you're working in a cross-platform
+development environment, and line endings in your code files are not consistent. To resolve this
+error, you can follow these steps:
+
+### 1. Set Prettier Configuration:
+
+**Prettier:**
+
+```json
+// .prettierrc
+{
+  "endOfLine": "auto"
+}
+```
+
+**Eslint:**
+
+```json
+// .eslintrc.js
+module.exports = {
+  rules: {
+    'prettier/prettier': [
+      'error',
+      {
+        endOfLine: 'auto',
+      },
+    ],
+  },
+};
+```
+
+This configuration will make Prettier use the specified line ending format when formatting your
+code.
+
+### 2. Configure Your Editor to Use Consistent Line Endings:
+
+To prevent this error from occurring in the first place, configure your code editor or IDE to use
+consistent line endings. You typically have two options:
+
+1. **Unix Line Endings (LF)**: Common on Linux and macOS.
+2. **Windows Line Endings (CRLF)**: Common on Windows.
+
+Choose one format and configure your editor accordingly. In Visual Studio Code, for example, you can
+select the line ending type at the bottom right of the editor window.
+
+### 3. Convert Line Endings:
+
+If you are working on a codebase that has inconsistent line endings, you can use tools to
+automatically convert line endings to the preferred format.
+
+1. **dos2unix (Linux/macOS)**: You can use the `dos2unix` command to convert Windows line endings
+   to Unix line endings.
+
+<span className='code-cmd'>dos2unix file.js</span>
+
+2. **unix2dos (Linux/macOS)**: To convert Unix line endings to Windows line endings, you can use the `unix2dos` command.
+
+<span className='code-cmd'>unix2dos file.js</span>
+
+3. **Editor Extensions**: Some code editors, like Visual Studio Code, have extensions that can help
+   you convert line endings in your files. For example, the "End of Line" extension can be used for
+   this purpose.
+
+### 4. Editor and Version Control Configuration:
+
+Ensure that your code editor and version control system (e.g., Git) are configured to use the same
+line ending format for all files. This is important for maintaining consistency within your project.
+You can specify line endings in your `.gitattributes` file for Git, which helps enforce consistent
+line endings for all contributors.
+
+Example `.gitattributes`:
+
+Set all files to use LF (Unix) line endings
+
+<span className='code-cmd'>* text=auto eol=lf</span>
+
+By following these steps, you should be able to resolve the "[eslint] Delete CR [prettier/prettier]"
+error and ensure that your code maintains consistent line endings, making it more readable and
+easier to collaborate on in cross-platform development environments.
+
+![Error: Delete `CR` [prettier/prettier]](./images/eslint-delete-cr.png)

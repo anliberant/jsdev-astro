@@ -1,0 +1,87 @@
+---
+title: Extending the Properties of HTML elements in React and TypeScript
+slug: react-ts-props
+heading: 'React & TypeScript: Extending HTML Element Properties'
+image: ./images/react-ts-props.png
+permalink: react-ts-props
+date: 2023-11-29
+author: anton liberant
+category: react
+type: post
+tags: ['html-properties']
+desc: Extend HTML element properties in React with TypeScript to create reusable, type-safe components that enhance standard elements’ functionality and reliability.
+---
+
+When working with **React** and **TypeScript**, you might want to extend the properties of HTML
+elements to include additional attributes or custom properties. This can be achieved by defining a
+TypeScript interface that extends the base HTML element type.
+
+Here's an example demonstrating how to extend the properties of an Button element:
+
+```js
+type ButtonType = 'black' | 'white';
+
+interface ButtonProps
+  extends DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> {
+  children: ReactNode;
+  appearance: ButtonType;
+  disabled: boolean;
+}
+
+const Button = ({
+  children,
+  appearance,
+  disabled = false,
+  className,
+  ...props
+}: ButtonProps): JSX.Element => {
+  return (
+    <button
+      className={`group px-6 py-3 font-primary font-semibold text-base rounded-xl flex gap-2 max-w-fit
+      max-h-[52px] self-end disabled:bg-gray-50 ${
+        appearance === 'black' &&
+        'bg-gray-800 text-white hover:bg-gray-700 hover:text-gray-100 hover:gap-3'
+      } ${appearance === 'white' && 'bg-gray-200 text-gray-700 hover:bg-gray-100'} ${className}`}
+      disabled={disabled}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+export default Button;
+```
+
+In this example:
+
+ButtonProps is an interface that extends
+React.**DetailedHTMLProps\<ButtonHTMLAttributes\<HTMLButtonElement\>, HTMLButtonElement\>**. This
+means it includes all the standard HTML button element properties. The appearance, children, and
+disabled properties is added to ButtonProps, providing a way to extend the properties with custom
+attributes.
+
+The Button component is a functional component that takes ButtonProps as its prop types. Inside the
+component, the custom properties is destructured, and the rest of the input properties are spread
+onto the button element. This pattern allows you to extend the properties of HTML elements with
+custom attributes while leveraging TypeScript for type safety. You can apply a similar approach to
+other HTML elements by creating interfaces that extend their respective React types, such as
+React.**DetailedHTMLProps\<DivHTMLAttributes\<HTMLDivElement\>, HTMLDivElement\>,
+DetailedHTMLProps\<TextareaHTMLAttributes\<HTMLTextareaElement\>, HTMLTextareaElement\>**, etc.
+
+### Example usage of the Button component
+
+```js
+<Button
+  appearance='black'
+  className='w-full'
+  disabled={disabled}
+  onClick={(e: MouseEvent<HTMLButtonElement, MouseEvent>) => doSomething(e)}
+>
+  Do Something!
+</Button>
+```
+
+### Conclusion:
+
+By defining additional props and spreading them onto the underlying HTML elements, you can extend
+their behavior while leveraging TypeScript's type system for increased safety and productivity.

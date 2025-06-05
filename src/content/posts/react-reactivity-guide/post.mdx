@@ -1,0 +1,156 @@
+---
+title: 'Master Reactivity in React: Derivations, Effects, and State Synch'
+slug: react-reactivity-guide
+heading: 'The React Reactivity Model: Mastering Derivations, Effects and State Synchronization'
+image: ./images/react-reactivity-guide.png
+permalink: react-reactivity-guide
+date: 2025-04-17
+author: anton liberant
+category: react
+type: post
+tags: ['reactivity', 'state']
+desc: 'Master React’s reactivity concepts: state derivations, effects, and sync patterns. Avoid common pitfalls and build more predictable, maintainable React apps.'
+---
+
+In the world of React, reactivity often feels like a second-class citizen. We rely on `useEffect` for side effects, `useMemo` for optimization, and `useState` for everything else—but how do these pieces actually work together? What happens when state changes ripple through a component tree? And more importantly, how can we write reactive logic that's both correct and efficient?
+
+In this deep dive, we’ll explore the fundamentals of reactive systems—derivations, effects, and synchronization—through the lens of React. Inspired by concepts from frameworks like SolidJS and MobX, we’ll reframe these ideas using only idiomatic React, helping you understand why and when things re-render, and how to write better, cleaner state-driven components.
+
+## 🧠 Derivations vs Effects in React
+
+Let’s start with two key reactive patterns:
+
+### ✳️ Derivations with `useMemo`
+
+A derivation is a value calculated from other state. In React, you use `useMemo`:
+
+```jsx
+const [name, setName] = useState('John');
+const upperName = useMemo(() => name.toUpperCase(), [name]);
+```
+
+This is a pure transformation. It never triggers side effects or updates state—it just reacts to inputs.
+
+### 🔁 Synchronization with `useEffect`
+
+By contrast, this is synchronization logic:
+
+```jsx
+const [name, setName] = useState('John');
+const [upperName, setUpperName] = useState('');
+
+useEffect(() => {
+  setUpperName(name.toUpperCase());
+}, [name]);
+```
+
+This updates one state based on another, but it risks timing bugs and unnecessary renders. Derived values should ideally be expressed with `useMemo`.
+
+### ⚠️ Why Derivations Are Safer
+
+React’s `useEffect` runs after render, so updating state inside effects may cause double renders, stale values, or UI flickers.
+
+Using `useMemo` instead of setting derived state with `useEffect` avoids these issues and keeps logic pure and consistent.
+
+### 🕸️ Deriving from Multiple Values
+
+Let’s build a dependency graph in React. We’ll mimic this structure:
+
+```bash
+a ─▶ b ─┐
+│       │
+│       ▼
+└────▶ c ─▶ d ─▶ e
+        ▲
+        │
+       b
+```
+
+### 🔍 What We’ll Build
+
+- `a`: source state
+- `b`, `c`: derived from `a`
+- `d`: derived from `c`
+- `e`: derived from `b` and `d`
+
+All derivations are done with `useMemo`.
+
+## ✅ Full React Example (No Signals)
+
+```jsx
+import { useEffect, useMemo, useState } from 'react';
+
+export default function App() {
+  const [a, setA] = useState(1);
+
+  const b = useMemo(() => a + 1, [a]);
+  const c = useMemo(() => a + 1, [a]);
+  const d = useMemo(() => c + 1, [c]);
+  const e = useMemo(() => b + d, [b, d]);
+
+  useEffect(() => {
+    console.log('e =', e); // Only runs when b or d changes
+  }, [e]);
+
+  return (
+    <div className='text-gray-800 p-4 font-sans'>
+      <h1 className='mb-2 text-xl font-bold'>React Derivation Example</h1>
+      <div className='space-y-2'>
+        <div>a: {a}</div>
+        <div>b (a + 1): {b}</div>
+        <div>c (a + 1): {c}</div>
+        <div>d (c + 1): {d}</div>
+        <div>e (b + d): {e}</div>
+      </div>
+      <button
+        onClick={() => setA(prev => prev + 1)}
+        className='mt-4 rounded bg-blue-600 px-4 py-2 text-white'
+      >
+        Increment a
+      </button>
+    </div>
+  );
+}
+```
+
+### ✅ What This Code Demonstrates
+
+- `b`, `c`, `d`, `e` are all derived from `a` — purely with `useMemo`
+- No unnecessary `useEffect` logic for state syncing
+- React’s dependency tracking ensures correct evaluation order
+
+### 🔀 Pull-Based Reactivity in React
+
+React is **pull-based**. Components pull data when they render. This works well for derivations via `useMemo`, but React’s `useEffect` is asynchronous, which can be dangerous for direct state-to-state syncs.
+
+Instead of:
+
+```js
+useEffect(() => {
+  setX(transform(y));
+}, [y]);
+```
+
+Prefer:
+
+```js
+const x = useMemo(() => transform(y), [y]);
+```
+
+This avoids redundant updates and lets React optimize.
+
+## 💡 Summary
+
+- ✅ Prefer `useMemo` for derived values
+- ❌ Avoid `useEffect` to sync state unless necessary
+- ⚙️ React is pull-based, and benefits from pure derivation logic
+
+## Final Thoughts
+
+Reactivity isn't just about updating the UI—it’s about maintaining consistency, optimizing performance, and ensuring predictable behavior across your components. While React’s approach to reactivity differs from fine-grained systems like Solid or Svelte, understanding the underlying principles—derivations, synchronization, and the flow of updates—empowers you to make better architectural decisions.
+
+By modeling derived values properly, avoiding unnecessary effects, and respecting React’s render cycle, you can write code that’s not only cleaner but also more resilient. The more you understand how reactive data flows—from signals to state, from memoized values to effects—the more you'll be able to harness React’s power effectively.
+
+This was just the beginning. In the next part, we’ll dig into lazy vs eager computations, and how you can use techniques like memoization and selector composition to build even more optimized reactive trees in React.
+
+Stay tuned—and keep your components consistent.

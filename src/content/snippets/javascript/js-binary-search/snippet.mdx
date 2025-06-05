@@ -1,0 +1,62 @@
+---
+title: JavaScript Binary Search Implementation
+slug: js-binary-search
+heading: The Binary Search Algorithm
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/js-binary-search
+date: 2024-10-23
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['binary-search']
+desc: Learn how to implement binary search in JavaScript. This fast, efficient algorithm helps quickly find elements in sorted arrays with minimal comparisons.
+---
+
+Here's a concise explanation of binary search in JavaScript, along with an example implementation.
+
+## What is Binary Search?
+
+Binary search is an efficient algorithm for finding a target value within a sorted array. It works by repeatedly dividing the search interval in half. If the target value is less than the middle element, it searches the left half; if it's greater, it searches the right half. This process continues until the target value is found or the interval is empty.
+
+## Binary Search Algorithm Steps
+
+1. Initialize two pointers, `left` and `right`, to the start and end of the array.
+2. Calculate the `mid` index as the average of `left` and `right`.
+3. Compare the middle element with the target:
+   - If they are equal, return the mid index.
+   - If the target is less than the middle element, move the right pointer to mid - 1.
+   - If the target is greater, move the left pointer to mid + 1.
+4. Repeat steps 2-3 until the target is found or the pointers cross.
+
+```js
+function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (arr[mid] === target) {
+      return mid; // Target found
+    }
+    if (arr[mid] < target) {
+      left = mid + 1; // Search right half
+    } else {
+      right = mid - 1; // Search left half
+    }
+  }
+
+  return -1; // Target not found
+}
+
+// Example usage:
+const sortedArray = [1, 3, 5, 7, 9, 11, 13];
+const target = 7;
+const result = binarySearch(sortedArray, target);
+
+console.log(result); // Output: 3 (index of the target)
+```
+
+This implementation provides a time complexity of
+$𝑂(log 𝑛)$, making it much more efficient than a linear search for large datasets.

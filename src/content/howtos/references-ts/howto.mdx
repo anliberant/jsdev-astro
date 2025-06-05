@@ -1,0 +1,129 @@
+---
+title: 'How to Use References in TypeScript'
+slug: references-ts
+heading: Using References in TypeScript
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/references-ts
+date: 2025-01-07
+author: anton liberant
+category: typescript
+type: howto
+tags: ['references']
+desc: Learn how TypeScript References and --build improve project structure, boost build speed, and ensure modular code organization for frontend and backend projects.
+---
+
+## What Are References in TypeScript?
+
+Introduced in TypeScript 3.0, **References** allow developers to split large codebases into smaller, independent components. This modular approach improves build times, ensures clear separation of concerns, and simplifies project management. Paired with the `--build` flag, References enable incremental builds for enhanced performance.
+
+## Key Benefits of References
+
+### 1. Improved Build Efficiency:
+
+References work with `--build` to enable incremental builds, reducing unnecessary recompilation.
+
+### 2. Better Code Organization:
+
+Projects can be divided into logical components, making them easier to maintain and scale.
+
+### 3. Clear Dependency Management:
+
+References specify dependencies explicitly, ensuring components compile in the correct order.
+
+## How References Work
+
+References are defined in the root `tsconfig.json` file using the references field. For example:
+
+```json
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
+```
+
+- `tsconfig.app.json`: Configuration for frontend applications (e.g., Vue 3).
+- `tsconfig.node.json`: Configuration for backend or Node.js environments.
+
+Each referenced file merges its settings into the main configuration, ensuring a seamless build process.
+
+## Why Use Multiple Configuration Files?
+
+**Environment-Specific Settings:**
+
+- Frontend uses ESModules, while backend may rely on CommonJS.
+- Different tools (e.g., Vite vs. Node.js) require tailored configurations.
+
+**Improved Flexibility:**
+
+- Separate configurations for development and production environments enhance maintainability.
+
+## Example: Project with References
+
+**Project Structure**
+
+```bash
+/my-project
+  /module-a
+    tsconfig.json
+    index.ts
+  /module-b
+    tsconfig.json
+    index.ts
+  tsconfig.json
+```
+
+**Root `tsconfig.json`**
+
+```json
+{
+  "files": [],
+  "references": [{ "path": "./module-a" }, { "path": "./module-b" }]
+}
+```
+
+**Module-A Configuration**
+
+```json
+// module-a/tsconfig.json
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../dist/module-a",
+    "rootDir": "."
+  },
+  "include": ["index.ts"]
+}
+```
+
+**Module-B Configuration**
+
+```json
+// module-b/tsconfig.json
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../dist/module-b",
+    "rootDir": "."
+  },
+  "include": ["index.ts"],
+  "references": [{ "path": "../module-a" }]
+}
+```
+
+## Incremental Compilation with `--build`
+
+Run the following command for an optimized build process:
+
+<div className='code-cmd'>tsc --build</div>
+
+To check the build order and skipped files:
+
+<div className='code-cmd'>tsc -b --verbose</div>
+
+## Conclusion
+
+References and `--build` are essential tools for managing large TypeScript projects. By splitting codebases into smaller components, developers can improve build performance, ensure modularity, and maintain environment-specific configurations effortlessly.

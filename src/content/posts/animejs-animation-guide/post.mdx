@@ -1,0 +1,126 @@
+---
+title: 'Exploring Anime.js: A Powerful JavaScript Animation Library'
+slug: animejs-animation-guide
+heading: Mastering Web Animations with Anime.js
+permalink: animejs-animation-guide
+image: ./images/exploring-animejs.png
+date: 2025-03-17
+author: anton liberant
+category: javascript
+type: post
+tags: ['animejs']
+desc: Unlock stunning web animations with Anime.js—a lightweight JavaScript library for animating CSS, SVG, and DOM elements with ease. Includes tips and examples.
+---
+
+In modern web development, animations are essential for creating engaging and interactive user experiences. They help convey meaning, provide feedback, and improve aesthetics.
+
+Anime.js is a lightweight yet powerful JavaScript animation library designed to simplify animation creation. It offers an intuitive API, broad functionality, and excellent performance, making it an excellent choice for developers.
+
+## What is Anime.js?
+
+[Anime.js](https://animejs.com) is a flexible JavaScript library that enables smooth animations with minimal effort. It is widely used for animating CSS properties, SVG elements, DOM attributes, and JavaScript objects.
+
+### Key Features:
+
+- **Lightweight & Fast**: Minimal impact on performance, ensuring smooth animations.
+- **Rich API**: Supports CSS transformations, SVG animations, and JavaScript object manipulation.
+- **Broad Browser Compatibility**: Works in most modern browsers (Chrome, Firefox, Safari, Edge, etc.).
+- **Ease of Use**: Simple syntax makes it accessible to both beginners and experienced developers.
+
+### Resources:
+
+- **GitHub Repository**: [github.com/juliangarnier/anime](https://github.com/juliangarnier/anime)
+- **Official Website**: [animejs.com](https://animejs.com)
+
+## Basic Animations with Anime.js
+
+Let's begin with a simple example to demonstrate how Anime.js works.
+
+<Codepen id='KwKQgeQ' />
+
+**Explanation:**
+
+1. `targets: 'div'`
+   - Applies the animation to all `<div>` elements on the page.
+2. `translateX: [0, 250]`
+   - Moves the elements from `0px` to `250px` along the X-axis.
+3. `rotate: '1turn'`
+   - Rotates each `<div>` by one full turn (360 degrees).
+4. `scale: 1.5`
+   - Increases the size of the elements by **1.5 times**.
+5. `duration: 800`
+   - The animation lasts **800 milliseconds**.
+6. `loop: 3`
+   - The animation repeats **3 times** before stopping.
+7. `easing: 'easeInOutSine'`
+   - Smooth acceleration and deceleration for a natural motion effect.
+
+## Animating Multiple Properties
+
+<Codepen id='WbNMpBM' />
+
+**Explanation:**
+
+- Targets an element with the ID `#square`.
+- Scales it 2x.
+- Moves it 200px along the X-axis.
+- Uses `easeInOutSine` for smooth motion.
+
+## Staggered Animations
+
+Anime.js provides built-in support for staggered animations.
+
+<Codepen id='pvoaeZL' />
+
+**Explanation:**
+
+- Selects all elements with the `.item` class.
+- Moves each 100px along the X-axis.
+- Fades elements in by increasing opacity.
+- Uses `anime.stagger(100)` to delay each item by 100ms, creating a smooth sequential effect.
+
+## Advanced Animation Examples
+
+### SVG Path Animation
+
+Anime.js makes animating SVG paths easy and visually compelling.
+
+<Codepen id='QwWQGoR' />
+
+**Explanation:**
+
+- Selects the `<path>` element within an SVG.
+- Uses `strokeDashoffset` to create a drawing effect.
+- Animation lasts **3000 milliseconds**.
+- Uses `easeInOutQuad` for a natural transition.
+
+### Staggered Button Animation
+
+This example demonstrates a hover animation with staggered particle and ripple effects.
+
+<Codepen id='OPJQpBp' />
+
+### Battery Loading Animation
+
+<Codepen id='dPydWpp' />
+
+**Explanation:**
+
+- Creates a button with hover effects.
+- Particles and ripples appear around the button when hovered.
+- Uses `anime.stagger()` for smooth sequential effects.
+- The click effect scales the button slightly.
+
+## Conclusion
+
+Anime.js provides an elegant and efficient way to create animations in JavaScript. Whether you're a beginner or an experienced developer, its powerful API and broad compatibility make it an excellent choice for web animation projects.
+
+### Summary of Key Features:
+
+- Supports CSS animations, **SVG path transformations, DOM manipulations**, and **JavaScript object animations**.
+- Enables **staggered effects, 3D-like animations, gradient transformations**, and **text motion**.
+- Works across all modern browsers, ensuring broad accessibility.
+
+By exploring the full potential of Anime.js, developers can create engaging and interactive web experiences that captivate users.
+
+For more details, visit [animejs.com](https://animejs.com) or check out the [GitHub repository](https://github.com/juliangarnier/anime).

@@ -1,0 +1,68 @@
+---
+title: 'HowTo Generate a GUID/UUID in JavaScript: Best Methods & Examples'
+slug: generate-uuid-js
+heading: Best Ways to Create GUID/UUID in JavaScript
+icon: /icons/javascript.png
+image: ./images/generate-uuid-js.png
+permalink: howto/generate-uuid-js
+date: 2025-02-06
+author: anton liberant
+category: javascript
+type: howto
+tags: ['uuid', 'guid']
+desc: Generate GUID/UUID in JavaScript using crypto.randomUUID(), crypto.getRandomValues(), and Math.random(). Learn secure, efficient methods for browsers and Node.js.
+---
+
+A GUID (Globally Unique Identifier) or UUID (Universally Unique Identifier) is a 128-bit value used to uniquely identify objects. JavaScript provides multiple ways to generate UUIDs, with the recommended method being `crypto.randomUUID()`.
+
+![Generate a GUID/UUID in JavaScript](./images/generate-uuid-js.png)
+
+## 1. Using `crypto.randomUUID()` (Recommended)
+
+```js
+const uuid = crypto.randomUUID();
+console.log(uuid); // Output: c44ff497-9424-4355-96af-ba2690db5725
+```
+
+This built-in method generates a UUID v4, ensuring randomness and uniqueness. It is supported in modern browsers and Node.js (14.17+).
+
+## 2. Using `crypto.getRandomValues()` (Alternative Secure Method)
+
+If you need a secure UUID v4 generator without `crypto.randomUUID()`, use the following function:
+
+```js
+function generateUUIDv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r =
+      (crypto.getRandomValues(new Uint8Array(1))[0] & 15) >>
+      (c === 'x' ? 0 : 3);
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+console.log(generateUUIDv4()); // Output: "42254574-affd-47cc-9915-0ecae592351b"
+```
+
+This method uses `crypto.getRandomValues()` to ensure better randomness and security compared to Math.random().
+
+## 3. Using `Math.random()` (Fallback)
+
+If crypto APIs are unavailable, you can use `Math.random()` as a fallback:
+
+```js
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+console.log(generateUUID()); // Output: "def4ac61-c2a3-4426-af8e-580c7c862ff1"
+```
+
+This method is not cryptographically secure and should only be used when better alternatives are unavailable.
+
+## Conclusion
+
+Generating a UUID in JavaScript is straightforward with multiple options available. The recommended method is `crypto.randomUUID()` for modern browsers and Node.js. If not available, `crypto.getRandomValues()` offers a secure alternative. As a last resort, `Math.random()` can generate UUID-like values but lacks cryptographic security. Always choose the most secure method available for your use case.

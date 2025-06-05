@@ -1,0 +1,261 @@
+---
+title: 'Exploring Directories in Node.js: Retrieve All Files and Folders'
+slug: files-dirs-nodejs
+heading: Get All Files and Folders in Node.js Directories
+image: ./images/files-dirs-nodejs.png
+permalink: files-dirs-nodejs
+date: 2024-11-03
+author: anton liberant
+category: nodejs
+type: post
+tags: ['file', 'dir', 'fn']
+desc: Explore how to use Node.js built-in modules for file system operations. Learn to retrieve files and folders with practical examples and best practices.
+---
+
+In this tutorial, we’ll look at how to read all `.mdx` files in a directory structure like this:
+
+```bash
+content
+ └── posts
+     ├── post1/post.mdx
+     └── post2/post.mdx
+```
+
+Managing markdown files, especially in .mdx format, can be essential for content-driven applications. This guide shows how to retrieve and process .mdx files in a nested directory structure using Node.js, fs, and gray-matter.
+
+Check out [this collection of code snippets](https://jsdev.space/snippets/get-dirs-files/) for handling various folder and file operations efficiently.
+
+## 1. Retrieve Directories:
+
+```js
+function getDirectories(srcpath) {
+  return fs
+    .readdirSync(srcpath)
+    .map(file => path.join(srcpath, file))
+    .filter(path => fs.statSync(path).isDirectory());
+}
+```
+
+This function lists all directories within a specified path by filtering out non-directory items.
+
+## 2. Flattening Arrays:
+
+```js
+function flatten(lists) {
+  return lists.reduce((a, b) => a.concat(b), []);
+}
+```
+
+The `flatten` function merges nested arrays into a single-level array, simplifying handling directory structures.
+
+## 3. Recursive Directory Search:
+
+```js
+function getDirectoriesRecursive(dir) {
+  return [dir, ...flatten(getDirectories(dir).map(getDirectoriesRecursive))];
+}
+```
+
+Recursively collects all directories and subdirectories under a given path.
+
+## 4. Retrieving MDX Files:
+
+```js
+function getMDXFiles(dir) {
+  return fs.readdirSync(dir).filter(file => path.extname(file) === '.mdx');
+}
+```
+
+This function searches for `.mdx` files in a specified directory.
+
+## 5. Retrieve MDX Files from Multiple Folders:
+
+```js
+function getMDXFilesInFolders(pathArr) {
+  const files = [];
+  pathArr.forEach(pathSrc => {
+    const file = fs
+      .readdirSync(pathSrc)
+      .filter(file => path.extname(file) === '.mdx');
+    if (file.length > 0) {
+      file.forEach(f => {
+        files.push(path.join(pathSrc, f));
+      });
+    }
+  });
+  return files;
+}
+```
+
+This function accepts an array of folder paths and retrieves `.mdx` files from each.
+
+## 6. Reading MDX File Content and Metadata:
+
+```js
+function readMDXFile(filePath) {
+  const rawContent = fs.readFileSync(filePath, 'utf-8');
+  return matter(rawContent);
+}
+```
+
+Here, `gray-matter` is used to parse front matter (metadata) from MDX files.
+
+## 7. Compiling MDX Data:
+
+```js
+function getMDXData(dir) {
+  const dirs = getDirectoriesRecursive(dir);
+  const filesInDir = getMDXFilesInFolders(dirs);
+
+  return filesInDir.map(file => {
+    const { data: metadata, content } = readMDXFile(file);
+    const slug = path.basename(file, path.extname(file));
+
+    return { metadata, slug, content };
+  });
+}
+```
+
+## 8. Specific Data Retrieval for Blog
+
+```js
+export function getBlogPosts() {
+  return getMDXData(path.join(process.cwd(), 'content', 'blog'));
+}
+```
+
+These functions streamline the retrieval of data for specific types of content.
+
+## 9. Formatting Dates:
+
+```js
+export function formatDate(date, includeRelative = false) {
+  const targetDate = new Date(date.includes('T') ? date : `${date}T00:00:00`);
+  const fullDate = targetDate.toLocaleString('en-us', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  if (!includeRelative) return fullDate;
+
+  const currentDate = new Date();
+  const difference = currentDate - targetDate;
+
+  const formattedDate =
+    difference > 0
+      ? `${Math.floor(difference / (1000 * 60 * 60 * 24))} days ago`
+      : 'Today';
+  return `${fullDate} (${formattedDate})`;
+}
+```
+
+This function formats dates for blog posts, optionally including relative dates.
+
+## Full code
+
+```js
+import fs from "fs";
+import path from "path";
+import matter from "gray-matter";
+
+function flatten(lists) {
+  return lists.reduce((a, b) => a.concat(b), []);
+}
+
+function getDirectories(srcpath) {
+  return fs
+    .readdirSync(srcpath)
+    .map((file) => path.join(srcpath, file))
+    .filter((path) => fs.statSync(path).isDirectory());
+}
+
+function getDirectoriesRecursive(dir) {
+  return [dir, ...flatten(getDirectories(dir).map(getDirectoriesRecursive))];
+}
+
+// get all the mdx files from the dir
+function getMDXFiles(dir: string) {
+  return fs.readdirSync(dir).filter((file) => path.extname(file) === ".mdx");
+}
+function getMDXFilesInFolders(pathArr: string[]): string[] {
+  const files = [];
+  pathArr.forEach((pathSrc) => {
+    const file = fs
+      .readdirSync(pathSrc)
+      .filter((file) => path.extname(file) === ".mdx");
+    if (file.length > 0) {
+      file.forEach((f) => {
+        files.push(path.join(pathSrc, f));
+      });
+    }
+  });
+  return files;
+}
+// Read data from those files
+function readMDXFile(filePath: fs.PathOrFileDescriptor) {
+  const rawContent = fs.readFileSync(filePath, "utf-8");
+  return matter(rawContent);
+}
+// present the mdx data and metadata
+function getMDXData(dir: string) {
+  const dirs = getDirectoriesRecursive(dir);
+  const filesInDir = getMDXFilesInFolders(dirs);
+
+  return filesInDir.map((file) => {
+    const { data: metadata, content } = readMDXFile(file);
+    const slug = path.basename(file, path.extname(file));
+
+    return {
+      metadata,
+      slug,
+      content,
+    };
+  });
+}
+
+export function getBlogPosts() {
+  return getMDXData(path.join(process.cwd(), "content", "blog"));
+}
+
+export function formatDate(date: string, includeRelative = false) {
+  const currentDate = new Date();
+  if (!date.includes("T")) {
+    date = `${date}T00:00:00`;
+  }
+
+  const targetDate = new Date(date);
+
+  const yearsAgo = currentDate.getFullYear() - targetDate.getFullYear();
+  const monthsAgo = currentDate.getMonth() - targetDate.getMonth();
+  const daysAgo = currentDate.getDate() - targetDate.getDate();
+
+  let formattedDate = "";
+
+  if (yearsAgo > 0) {
+    formattedDate = `${yearsAgo}y ago`;
+  } else if (monthsAgo > 0) {
+    formattedDate = `${monthsAgo}mo ago`;
+  } else if (daysAgo > 0) {
+    formattedDate = `${daysAgo}d ago`;
+  } else {
+    formattedDate = "Today";
+  }
+
+  const fullDate = targetDate.toLocaleString("en-us", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  if (!includeRelative) {
+    return fullDate;
+  }
+
+  return `${fullDate} (${formattedDate})`;
+}
+```
+
+## Conclusion
+
+This setup allows you to organize and process `.mdx` files in various directories, ideal for a blog or CMS system. Using `fs` and `gray-matter`, you can dynamically read and parse metadata and content, building a powerful, file-driven content management layer in Node.js.

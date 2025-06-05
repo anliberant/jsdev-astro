@@ -1,0 +1,263 @@
+---
+title: The Best Way to Create Singleton Design Pattern in JavaScript
+slug: signleton-js
+heading: Creating the Singleton Design Pattern in JavaScript
+image: ./images/singleton-design-pattern.png
+permalink: signleton-js
+date: 2024-07-22
+author: anton liberant
+category: javascript
+type: post
+tags: ['singleton', 'design-pattern']
+desc: Learn best practices for implementing the Singleton Design Pattern in JavaScript and TypeScript. Follow step-by-step instructions for efficient, scalable code.
+---
+
+## What is The Singleton Design Pattern?
+
+**The Singleton Design Pattern** ensures that a class has only one instance and provides a global
+point of access to that instance. This pattern is useful when exactly one object is needed to
+coordinate actions across a system.
+
+**The Singleton Design Pattern** is used for several key reasons in software development. Here are
+some of the main advantages and use cases for employing this pattern:
+
+## Advantages of Singleton
+
+### 1. Controlled Access to Sole Instance
+
+    * **Ensures Single Instance**: Guarantees that a class has only one instance and provides a global point of access to it.
+
+    * **Consistency**: Helps maintain a single source of truth, preventing inconsistencies and conflicts that can arise from having multiple instances.
+
+### 2. Resource Management
+
+    * **Resource Intensive**: Ideal for managing resources such as database connections, file handles, or network connections, where multiple instances would be wasteful or problematic.
+
+    * **Improves Performance**: Reduces the overhead associated with creating and destroying instances frequently.
+
+Creating a Singleton pattern in JavaScript and TypeScript can be done in several ways. Here’s a
+detailed guide on how to implement a Singleton pattern effectively:
+
+### 3. Global State Management
+
+- **Centralized Configuration**: Useful for managing global states or configurations that need to be
+  consistent across the application. \* **State Sharing**: Facilitates sharing of data or state
+  across different parts of an application without the need to pass instances around.
+
+### 4. Simplifies Code Structure
+
+- **Encapsulation**: Encapsulates the instantiation logic within the class, making the codebase
+  easier to understand and maintain. \* **Avoids Global Variables**: Reduces the need for global
+  variables by providing a controlled access point.
+
+### 5. Thread Safety
+
+- **Concurrency Handling**: In multi-threaded environments, the Singleton pattern can be designed to
+  be thread-safe, ensuring that only one instance is created even when accessed concurrently.
+
+## Use Cases for Singleton Pattern:
+
+### **1. Logging Services:**
+
+- Ensure that there is a single logger instance that handles all log messages.
+
+### **2. Configuration Management:**
+
+- Manage application-wide configurations and settings from a single point.
+
+### **3. Database Connections:**
+
+- Maintain a single connection to a database, ensuring efficient resource usage.
+
+### **4. Cache Management:**
+
+- Implement a cache that is accessed globally and avoids the overhead of creating multiple cache
+  instances.
+
+### **5. Thread Pool Management**:
+
+- Manage a pool of threads or worker objects, ensuring that the pool is created only once.
+
+## JavaScript Singleton
+
+Using a ES6 classes:
+
+```js
+class Singleton {
+  constructor() {
+    if (!Singleton._instance) {
+      Singleton._instance = this;
+    }
+    return Singleton._instance;
+    this.data = 'Hello from Singleton';
+  }
+
+  getData() {
+    return this.data;
+  }
+}
+
+const instance1 = new Singleton();
+const instance2 = new Singleton();
+
+console.log(instance1 === instance2); // true
+```
+
+Using a **Closure**:
+
+```js
+const Singleton = (function () {
+  let _instance;
+
+  function createInstance() {
+    const object = new Object('Hello from Singleton');
+    return object;
+  }
+
+  return {
+    getInstance: function () {
+      if (!_instance) {
+        _instance = createInstance();
+      }
+      return _instance;
+    },
+  };
+})();
+
+const instance1 = Singleton.getInstance();
+const instance2 = Singleton.getInstance();
+
+console.log(instance1 === instance2); // true
+```
+
+## TypeScript Singleton
+
+Using a TypeScript Class with a Static Property:
+
+```ts
+class Singleton {
+  private static _instance: Singleton;
+
+  private constructor(args: string[]) {
+    // Private constructor to prevent instantiation
+  }
+
+  public someMethod(): string {
+    return 'I am the instance';
+  }
+
+  public static getInstance(args: string[]): Singleton {
+    if (this._instance) {
+      return this._instance;
+    }
+
+    this._instance = new Singleton(args);
+    return this._instance;
+  }
+}
+
+const instance1 = Singleton.getInstance();
+const instance2 = Singleton.getInstance();
+
+console.log(instance1 === instance2); // true
+```
+
+### Key Points:
+
+<div className="single-post__list">
+    * **Singleton Pattern** ensures that a class has only one instance and provides a global point of access to it.
+
+    * In TypeScript, you can use the **private constructor** and **static methods** to enforce the Singleton pattern.
+
+
+    * For JavaScript, closures and ES6 classes provide a straightforward way to implement this pattern.
+
+</div>
+
+## Singleton in older versions of JavaScript
+
+In older versions of JavaScript, you can create a singleton by using an Immediately Invoked Function Expression (IIFE). This pattern leverages closures to create a single instance of an object while keeping private variables and methods out of the global scope.
+
+Here’s how you can create a singleton in ES5-style JavaScript:
+
+```js
+var Singleton = (function () {
+  // Private variable to hold the instance
+  var instance;
+
+  // Private method and properties
+  function createInstance() {
+    var obj = new Object('I am the singleton instance!');
+    return obj;
+  }
+
+  // Public API for Singleton
+  return {
+    getInstance: function () {
+      if (!instance) {
+        instance = createInstance(); // Create the instance only once
+      }
+      return instance;
+    },
+  };
+})();
+
+// Usage:
+var singleton1 = Singleton.getInstance();
+var singleton2 = Singleton.getInstance();
+
+console.log(singleton1 === singleton2); // Output: true
+console.log(singleton1); // Output: I am the singleton instance!
+```
+
+### Explanation
+
+-**IIFE**: The `(function () { ... })()` syntax allows us to create an immediately invoked function that runs once and returns an object containing the `getInstance` method. This method provides controlled access to the singleton instance.
+
+- **Private `instance` Variable**: Since the `instance` variable is within the closure of the IIFE, it’s private and can only be accessed through `getInstance()`.
+- **Controlled Instance Creation**: `getInstance()` checks if `instance` is `undefined`. If it is, it calls `createInstance()` to create and assign the singleton instance; otherwise, it simply returns the existing instance.
+
+This approach ensures that only one instance of the singleton is created, and any subsequent calls will return the same instance.
+
+### Example Use Case: Database Connection Pool
+
+```ts
+class DatabaseConnection {
+  private static _instance: DatabaseConnection;
+
+  private constructor(args: string[]) {
+    // Initialize connection
+  }
+
+  public connect() {
+    // Connect to the database
+    console.log('Database connected');
+  }
+
+  public static getInstance(args: string[]): DatabaseConnection {
+    if (this._instance) {
+      return this._instance;
+    }
+
+    this._instance = new DatabaseConnection(args);
+    return this._instance;
+  }
+}
+
+// Usage
+const db1 = DatabaseConnection.getInstance();
+const db2 = DatabaseConnection.getInstance();
+
+db1.connect();
+console.log(db1 === db2); // true, same instance
+```
+
+## Considerations:
+
+    * **Overuse Risk:** Overusing Singleton can lead to tightly coupled code and make unit testing difficult.
+
+    * **Testing Challenges:** Singletons can be hard to test due to their global state and potential side effects.
+
+In summary, the **Singleton pattern** is powerful for managing global states and resources, ensuring
+consistency and efficient resource management across an application. However, it should be used
+judiciously to avoid issues related to maintainability and testability.

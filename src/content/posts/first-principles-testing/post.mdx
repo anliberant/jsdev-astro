@@ -1,0 +1,187 @@
+---
+title: 'F.I.R.S.T Principles: A Guide to Better Code Testing'
+slug: first-principles-testing
+heading: 'Master Code Testing Quality with F.I.R.S.T Methodology'
+image: ./images/first-principles-testing.png
+permalink: first-principles-testing
+date: 2025-02-24
+author: anton liberant
+category: nodejs
+type: post
+tags: ['testing', 'f.i.r.s.t.', 'unit-testing', 'code-quality']
+desc: Master the F.I.R.S.T principles to improve code testing. Learn strategies for fast, isolated, repeatable, self-validating, and timely test implementation.
+---
+
+Unit testing is a crucial aspect of modern software development, ensuring code reliability and maintainability. To maximize testing efficiency, developers should follow the **F.I.R.S.T** principles:
+
+- **Fast**
+- **Isolated**
+- **Repeatable**
+- **Self-Validating**
+- **Thorough/Timely**
+
+By adhering to these principles, teams can create robust test suites that enhance code quality while maintaining development speed. Let’s explore each principle with practical examples in React.
+
+## 1. Fast (F)
+
+Tests should execute quickly to allow frequent execution without slowing down development. Since large projects can have thousands of tests, reducing test execution time is vital.
+
+### ❌ Slow Test Example (Fetching Real API Data)
+
+```jsx
+it('retrieves and renders user details', async () => {
+  render(<UserCard userId='456' />);
+  await waitFor(() =>
+    expect(screen.getByText(/User Name/)).toBeInTheDocument()
+  );
+});
+```
+
+This test is slow because it depends on an actual API request.
+
+### ✅ Optimized Test (Using Mocks)
+
+```jsx
+jest.mock('services/userService');
+it('renders mocked user data correctly', () => {
+  userService.getUser.mockResolvedValue({ id: '456', name: 'Alice Doe' });
+  render(<UserCard userId='456' />);
+  expect(screen.getByText(/Alice Doe/)).toBeInTheDocument();
+});
+```
+
+By using mocks, we remove API dependencies, making the test much faster.
+
+## 2. Isolated (I)
+
+Each test should be independent, meaning the result of one test should not affect another.
+
+### ❌ Bad Example (Shared State Between Tests)
+
+```jsx
+const { result } = renderHook(() => useToggle());
+it('toggles state on action', () => {
+  act(() => {
+    result.current.toggle();
+  });
+  expect(result.current.state).toBe(true);
+});
+
+it('toggles state again', () => {
+  act(() => {
+    result.current.toggle();
+  });
+  expect(result.current.state).toBe(false); // Fails if the state persists
+});
+```
+
+These tests depend on shared state, making them unreliable.
+
+### ✅ Good Example (Isolated Tests)
+
+```jsx
+it('toggles state independently', () => {
+  const { result } = renderHook(() => useToggle());
+  act(() => {
+    result.current.toggle();
+  });
+  expect(result.current.state).toBe(true);
+});
+```
+
+Each test starts with a fresh instance of useToggle, ensuring isolation.
+
+## 3. Repeatable (R)
+
+Tests should produce consistent results regardless of external factors such as time, environment, or network conditions.
+
+### ❌ Bad Example (Time-Dependent Test)
+
+```jsx
+it('displays current date', () => {
+  render(<DateWidget />);
+  const today = new Date().toISOString().slice(0, 10);
+  expect(screen.getByText(today)).toBeInTheDocument();
+});
+```
+
+This test fails on different days due to changing system time.
+
+### ✅ Good Example (Fixed Time for Repeatability)
+
+```jsx
+it('displays a static date', () => {
+  jest.useFakeTimers().setSystemTime(new Date('2024-01-01'));
+  render(<DateWidget />);
+  expect(screen.getByText('2024-01-01')).toBeInTheDocument();
+});
+```
+
+By setting a fixed date, the test becomes repeatable.
+
+## 4. Self-Validating (S)
+
+A test should clearly indicate a pass or fail status without requiring manual interpretation.
+
+### ❌ Bad Example (Requires Manual Validation)
+
+```jsx
+it('checks component rendering', () => {
+  const component = render(<InfoBox />);
+  console.log(component); // Developer must check console output
+});
+```
+
+### ✅ Good Example (Automated Assertion)
+
+```jsx
+it('renders component with expected text', () => {
+  render(<InfoBox />);
+  expect(screen.getByText('Welcome!')).toBeInTheDocument();
+});
+```
+
+Now, the test result is clear and does not require human intervention.
+
+## 5. Thorough/Timely (T)
+
+Tests should cover all edge cases, not just the happy path. They should also be written in a timely manner—neither too early (before enough functionality is implemented) nor too late (after bugs have already crept in).
+
+### ❌ Bad Example (Limited Test Coverage)
+
+```jsx
+it('displays loading state', () => {
+  render(<DataFetcher />);
+  expect(screen.getByText('Loading...')).toBeInTheDocument();
+});
+```
+
+Only the loading state is tested, leaving success and failure cases uncovered.
+
+### ✅ Good Example (Comprehensive Testing)
+
+```jsx
+it('displays loading state', () => {
+  render(<DataFetcher />);
+  expect(screen.getByText('Loading...')).toBeInTheDocument();
+});
+
+it('renders fetched data after successful request', async () => {
+  const mockResponse = { content: 'Data retrieved' };
+  fetchData.mockResolvedValue(mockResponse);
+  render(<DataFetcher />);
+  expect(await screen.findByText('Data retrieved')).toBeInTheDocument();
+});
+
+it('shows error message when request fails', async () => {
+  fetchData.mockRejectedValue('Failed to load data');
+  render(<DataFetcher />);
+  expect(await screen.findByText('Failed to load data')).toBeInTheDocument();
+});
+```
+
+This approach ensures all critical scenarios are tested.
+
+## Conclusion
+
+Applying the **F.I.R.S.T** principles ensures that unit tests remain fast, isolated, repeatable, self-validating, and thorough. By structuring tests effectively, developers can maintain high code quality without slowing down development cycles. Following these guidelines in React, or any other framework, will help create reliable and maintainable test suites.

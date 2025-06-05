@@ -1,0 +1,184 @@
+---
+title: 'How to Configure Git Hooks with Husky for Pre-Commit Verification'
+slug: git-hooks-husky
+heading: 'Automate Code Quality: How to Set Up Git Hooks with Husky for Pre-Commit Verification'
+icon: /icons/git.png
+image: /icon.png
+permalink: howto/git-hooks-husky
+date: 2025-04-01
+author: anton liberant
+category: git
+type: howto
+tags: ['git-hooks', 'husky', 'pre-commit', 'verification']
+desc: Configure Git hooks with Husky to automate pre-commit checks. This 2025 guide covers installation, setup, and best practices to streamline your workflow.
+---
+
+In modern development workflows, maintaining code quality is paramount. Git hooks offer a powerful way to automate verification tasks before commits are finalized, ensuring your codebase remains clean and consistent. This guide will walk you through setting up Git hooks with Husky, a popular tool that makes hook management simple and effective.
+
+## What Are Git Hooks?
+
+Git hooks are scripts that Git executes before or after events such as commit, push, and receive. They allow you to automate tasks during your Git workflow, such as:
+
+- Running tests before committing
+- Linting code to ensure style consistency
+- Checking commit message format
+- Preventing commits to specific branches
+
+While Git hooks are powerful, they can be challenging to manage across a team. This is where Husky comes in.
+
+## Understanding Husky
+
+[Husky](https://typicode.github.io/husky/) is a powerful tool for setting up Git hooks that allow you to enforce code quality checks and automation before committing your changes. By integrating pre-commit hooks, you can run linting, testing, or other scripts to catch issues early. It allows you to:
+
+- Define hooks in your package.json or dedicated configuration files
+- Share hooks with your team through version control
+- Avoid the hassle of manually installing hooks in each clone of your repository
+
+## Installation and Setup
+
+Setting up Husky in your project involves just a few simple steps:
+
+### Step 1: Install Husky
+
+<div className='code-cmd'>npm install husky --save-dev</div>
+
+### Step 2: Enable Git Hooks
+
+For Husky v7 and above, you need to initialize Husky:
+
+<div className='code-cmd'>npx husky install</div>
+
+Add this command to your package.json so it runs automatically after install:
+
+```json
+{
+  "scripts": {
+    "prepare": "husky install"
+  }
+}
+```
+
+### Step 3: Create Your First Hook
+
+Create a pre-commit hook that runs your linting tools:
+
+<div className='code-cmd'>npx husky add .husky/pre-commit "npm run lint"</div>
+
+This creates a `.husky/pre-commit` file that will run your linting script before each commit.
+
+### Advanced Configuration
+
+Once you've set up the basics, you can enhance your workflow with more sophisticated configurations:
+
+### Combining Multiple Commands
+
+You can run multiple commands in a single hook:
+
+```bash
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+npm run lint
+npm run test
+```
+
+### Using lint-staged for Targeted Linting
+
+For larger projects, you might want to lint only the files that are being committed. The `lint-staged` package works perfectly with Husky for this purpose:
+
+<div className='code-cmd'>npm install lint-staged --save-dev</div>
+
+Create a `.lintstagedrc` file:
+
+```json
+{
+  "*.js": ["eslint --fix", "prettier --write"],
+  "*.{css,scss}": ["stylelint --fix", "prettier --write"],
+  "*.md": ["prettier --write"]
+}
+```
+
+Update your pre-commit hook:
+
+```bash
+npx husky add .husky/pre-commit "npx lint-staged"
+```
+
+### Enforcing Commit Message Conventions
+
+Create a commit-msg hook to enforce consistent commit messages:
+
+```bash
+npx husky add .husky/commit-msg "npx commitlint --edit $1"
+```
+
+Install commitlint packages:
+
+<div className='code-cmd'>
+  npm install @commitlint/cli @commitlint/config-conventional --save-dev
+</div>
+
+Create a `commitlint.config.js` file:
+
+```js
+module.exports = {
+  extends: ['@commitlint/config-conventional'],
+};
+```
+
+## Best Practices
+
+### 1. Keep Hooks Fast
+
+Slow hooks can frustrate developers. Optimize your hooks to run quickly, or consider moving time-consuming tasks to pre-push hooks instead of pre-commit.
+
+### 2. Make Hooks Skippable in Emergency
+
+Sometimes you need to bypass hooks in special circumstances. Allow this with the `--no-verify` flag, but use it sparingly:
+
+```bash
+git commit -m "Emergency fix" --no-verify
+```
+
+### 3. Document Your Hooks
+
+Make sure your team understands what hooks are in place and what they do. Add documentation to your project README.
+
+### 4. Test Hooks Before Sharing
+
+Verify that your hooks work as expected before pushing them to your shared repository.
+
+## Troubleshooting Common Issues
+
+### Hooks Not Running
+
+If your hooks aren't executing, check:
+
+- That Husky is properly installed and initialized
+- That the hook files have execute permissions
+- That the hooks are in the correct location (`.husky` directory)
+
+```bash
+chmod +x .husky/pre-commit
+```
+
+### Permission Denied Errors
+
+If you get permission errors, ensure the hook scripts have execute permissions:
+
+```bash
+chmod +x .husky/pre-commit
+chmod +x .husky/commit-msg
+```
+
+### Hooks Working Locally But Not in CI
+
+Make sure your CI environment is configured to run Husky hooks. Some CI platforms might skip the prepare script that initializes Husky.
+
+## Conclusion
+
+Git hooks with Husky provide a powerful way to automate quality checks in your development workflow. By implementing pre-commit verification, you can catch issues early, maintain code standards across your team, and save time on code reviews.
+
+By following this guide, you've learned how to set up Husky, configure various types of hooks, and implement best practices for your projects. As your workflow evolves, you can continue to refine your Git hooks to match your team's needs and standards.
+
+Start integrating these practices today, and watch your codebase quality improve with every commit!

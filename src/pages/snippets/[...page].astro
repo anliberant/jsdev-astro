@@ -1,0 +1,77 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+
+import { siteConfig } from '@/app/config/site';
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import Howtos from '@/entities/howto/howtos.astro';
+import { generateSnippetsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+import Pagination from '@/shared/ui/layout/pagination.astro';
+
+const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
+const sortedSnippets = allSnippets.sort((a, b) => {
+  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+});
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
+  return paginate(
+    allSnippets.sort((a, b) => {
+      return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+    }),
+    {
+      pageSize: siteConfig.postsPerPage,
+    }
+  );
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+
+const title =
+  page.currentPage === 1 ?
+    siteConfig.snippetsPageTitle
+  : siteConfig.snippetsPageTitle + ' ' + 'Page ' + page.currentPage;
+
+const breadcrumbItems = generateSnippetsBreadcrumbs(
+  page.currentPage > 1 ? page.currentPage : undefined
+);
+
+const numberOfPages = Math.ceil(sortedSnippets.length / siteConfig.postsPerPage);
+---
+
+<BaseLayout
+  title={title}
+  description={siteConfig.snippetsPageDescription}>
+  <main class='main'>
+    {
+      page.currentPage > 1 && (
+        <Breadcrumbs
+          items={breadcrumbItems}
+          class='mt-10'
+        />
+      )
+    }
+
+    {
+      page.currentPage === 1 ?
+        <HeadingBlock
+          title={siteConfig.snippetsHeadTitle}
+          headingTwo={siteConfig.snippetsHeadingTwo}
+          description={siteConfig.snippetsHeadDescription}
+        />
+      : <h1 class='page-heading'>JavaScript Snippets Page {page.currentPage}</h1>
+    }
+    <Howtos howtos={page.data} />
+    {
+      numberOfPages > 1 && (
+        <Pagination
+          currentPage={page.currentPage}
+          numPages={numberOfPages}
+          slug='snippets'
+        />
+      )
+    }
+  </main>
+</BaseLayout>

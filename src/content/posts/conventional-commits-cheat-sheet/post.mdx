@@ -1,0 +1,113 @@
+---
+title: Conventional Commits Cheat Sheet
+slug: conventional-commits-cheat-sheet
+heading: 'Conventional Commits: A Quick Cheat Sheet'
+image: ./images/conventional-commits-cheat-sheet.png
+permalink: conventional-commits-cheat-sheet
+date: 2024-12-20
+author: anton liberant
+category: git
+type: post
+tags: ['cheat-sheet', 'commits']
+desc: Use the Conventional Commits Cheat Sheet to write clear, consistent commit messages. Learn essential types, scopes, and best practices for cleaner version history.
+---
+
+This concise guide helps you quickly draft commit messages that follow the **Conventional Commits** standard. Use it as a practical tool to streamline your workflow.
+
+## Step 1: Choose a Commit Type
+
+Start your message with a type that reflects the nature of your change:
+
+- **feat**: Add a new feature.
+- **fix**: Fix a bug.
+- **docs**: Update documentation.
+- **style**: Code style changes (formatting, whitespace).
+- **refactor**: Code restructuring without changing functionality.
+- **perf**: Performance improvements.
+- **test**: Add or update tests.
+- **build**: Changes to build scripts or dependencies.
+- **ci**: Updates to CI/CD configurations.
+- **chore**: Other tasks (e.g., updating .gitignore).
+- **revert**: Revert a previous commit.
+
+**Example**:
+
+`fix(auth): fix token validation issue`
+
+## Step 2: Specify a Scope (Optional)
+
+Scopes clarify the affected area of the project. Examples:
+
+- **auth**: Authentication and authorization.
+- **ui**: User interface.
+- **api**: Backend or frontend APIs.
+- **core**: Core functionality.
+- **config**: Configuration files.
+- **deps**: Dependency updates.
+- **tests**: Testing.
+- **docs**: Documentation.
+- **db**: Database changes.
+
+**Example**:
+
+`docs(readme): add installation instructions`
+
+## Step 3: Write a Brief Description
+
+The description should be short and clear. Examples:
+
+- **UI**: `Fix button display on small screens`
+- **API**: `Add endpoint for file uploads`
+- **Core**: `Optimize cost calculation logic`
+- **Docs**: `Update project setup section`
+- **Tests**: `Add e2e tests for login feature`
+- **Deps**: `Upgrade dependencies to latest versions`
+- **Build**: `Configure build to support new plugins`
+
+**Example**:
+
+`feat(auth): add support for Google OAuth`
+
+## Step 4: Add Details (Optional)
+
+Provide additional context if needed:
+
+- What was changed?
+- Why was it changed?
+- Any additional information?
+
+**Example**:
+
+`fix(ui): fix button display issue`
+
+_Ensure proper button rendering on low-resolution screens._
+
+## Step 5: Indicate BREAKING CHANGES (If Applicable)
+
+For incompatible changes, specify a breaking change:
+
+**Example**:
+
+`feat(api): remove support for legacy data format`
+
+_BREAKING CHANGE: API no longer supports XML._
+
+## Ready-to-Use Examples
+
+- **New Feature**: `feat(auth): add Google authentication support`
+- **Bug Fix**: `fix(ui): fix button alignment issue`
+- **Docs Update**: `docs: update API documentation`
+- **Performance**: `perf(core): reduce application load time`
+- **Breaking Change**:
+
+  `feat(api): remove support for old endpoints`
+
+  _BREAKING CHANGE: deprecated endpoints removed._
+
+- **Revert**:
+
+  `revert: revert commit c12345`
+
+  _Reverts changes that broke login functionality._
+
+Use this cheat sheet to write clear and meaningful commit messages, ensuring a cleaner version history and better collaboration.

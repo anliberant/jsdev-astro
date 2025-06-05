@@ -1,0 +1,575 @@
+<div class='config-panel-content'>
+  <h3>Table Configuration</h3>
+
+  <div class='config-section'>
+    <h4>Dimensions</h4>
+
+    <div class='form-group'>
+      <label for='rows-input'>Rows:</label>
+      <div class='input-with-controls'>
+        <button
+          type='button'
+          class='control-btn'
+          data-action='decrease-rows'
+          >-</button
+        >
+        <input
+          type='number'
+          id='rows-input'
+          min='1'
+          max='20'
+          value='3'
+        />
+        <button
+          type='button'
+          class='control-btn'
+          data-action='increase-rows'
+          >+</button
+        >
+      </div>
+    </div>
+
+    <div class='form-group'>
+      <label for='cols-input'>Columns:</label>
+      <div class='input-with-controls'>
+        <button
+          type='button'
+          class='control-btn'
+          data-action='decrease-cols'
+          >-</button
+        >
+        <input
+          type='number'
+          id='cols-input'
+          min='1'
+          max='15'
+          value='3'
+        />
+        <button
+          type='button'
+          class='control-btn'
+          data-action='increase-cols'
+          >+</button
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Options -->
+  <div class='config-section'>
+    <h4>Table Options</h4>
+
+    <div class='form-group'>
+      <label class='checkbox-label'>
+        <input
+          type='checkbox'
+          id='has-header'
+          checked
+        />
+        <span class='checkmark'></span>
+        Include Header Row
+      </label>
+    </div>
+
+    <div class='form-group'>
+      <label class='checkbox-label'>
+        <input
+          type='checkbox'
+          id='bordered'
+          checked
+        />
+        <span class='checkmark'></span>
+        Bordered Table
+      </label>
+    </div>
+
+    <div class='form-group'>
+      <label class='checkbox-label'>
+        <input
+          type='checkbox'
+          id='striped'
+        />
+        <span class='checkmark'></span>
+        Striped Rows
+      </label>
+    </div>
+
+    <div class='form-group'>
+      <label class='checkbox-label'>
+        <input
+          type='checkbox'
+          id='responsive'
+          checked
+        />
+        <span class='checkmark'></span>
+        Responsive Design
+      </label>
+    </div>
+  </div>
+
+  <!-- Row/Column Actions -->
+  <div class='config-section'>
+    <h4>Quick Actions</h4>
+
+    <div class='action-buttons'>
+      <button
+        type='button'
+        class='action-btn'
+        id='add-row'>
+        <svg
+          width='16'
+          height='16'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          stroke-width='2'>
+          <line
+            x1='12'
+            y1='5'
+            x2='12'
+            y2='19'
+          ></line>
+          <line
+            x1='5'
+            y1='12'
+            x2='19'
+            y2='12'
+          ></line>
+        </svg>
+        Add Row
+      </button>
+
+      <button
+        type='button'
+        class='action-btn'
+        id='add-column'>
+        <svg
+          width='16'
+          height='16'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          stroke-width='2'>
+          <line
+            x1='12'
+            y1='5'
+            x2='12'
+            y2='19'
+          ></line>
+          <line
+            x1='5'
+            y1='12'
+            x2='19'
+            y2='12'
+          ></line>
+        </svg>
+        Add Column
+      </button>
+
+      <button
+        type='button'
+        class='action-btn danger'
+        id='clear-table'>
+        <svg
+          width='16'
+          height='16'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          stroke-width='2'>
+          <polyline points='3,6 5,6 21,6'></polyline>
+          <path
+            d='m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2'
+          ></path>
+        </svg>
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <!-- Presets -->
+  <div class='config-section'>
+    <h4>Presets</h4>
+
+    <div class='preset-buttons'>
+      <button
+        type='button'
+        class='preset-btn'
+        data-preset='basic'>
+        Basic Table (3×3)
+      </button>
+
+      <button
+        type='button'
+        class='preset-btn'
+        data-preset='pricing'>
+        Pricing Table (4×3)
+      </button>
+
+      <button
+        type='button'
+        class='preset-btn'
+        data-preset='comparison'>
+        Comparison Table (5×4)
+      </button>
+
+      <button
+        type='button'
+        class='preset-btn'
+        data-preset='schedule'>
+        Schedule Table (8×7)
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .config-panel-content h3 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .config-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .config-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .config-section h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+  }
+
+  .input-with-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .input-with-controls input {
+    flex: 1;
+    text-align: center;
+  }
+
+  .control-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    color: hsl(var(--foreground));
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .control-btn:hover {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+  }
+
+  input[type='number'] {
+    padding: 0.5rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-size: 0.875rem;
+  }
+
+  input[type='number']:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+  }
+
+  /* Custom Checkbox */
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+  }
+
+  .checkbox-label input[type='checkbox'] {
+    display: none;
+  }
+
+  .checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid hsl(var(--border));
+    border-radius: var(--radius);
+    margin-right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+    background: hsl(var(--background));
+  }
+
+  .checkmark:after {
+    content: '';
+    width: 6px;
+    height: 10px;
+    border: solid hsl(var(--primary-foreground));
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .checkbox-label input[type='checkbox']:checked + .checkmark {
+    background: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+  }
+
+  .checkbox-label input[type='checkbox']:checked + .checkmark:after {
+    opacity: 1;
+  }
+
+  .checkbox-label:hover .checkmark {
+    border-color: hsl(var(--primary));
+  }
+
+  /* Action Buttons */
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    color: hsl(var(--foreground));
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .action-btn:hover {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+  }
+
+  .action-btn.danger:hover {
+    background: hsl(var(--destructive));
+    color: hsl(var(--destructive-foreground));
+    border-color: hsl(var(--destructive));
+  }
+
+  /* Preset Buttons */
+  .preset-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .preset-btn {
+    padding: 0.75rem;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    color: hsl(var(--foreground));
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+
+  .preset-btn:hover {
+    background: hsl(var(--muted));
+    border-color: hsl(var(--primary));
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .input-with-controls {
+      flex-wrap: wrap;
+    }
+
+    .control-btn {
+      width: 28px;
+      height: 28px;
+    }
+  }
+</style>
+
+<script>
+  function getTableController() {
+    return window.tableController;
+  }
+
+  function updateConfig() {
+    const controller = getTableController();
+    if (!controller) return;
+
+    const config = {
+      rows: parseInt(document.getElementById('rows-input').value),
+      cols: parseInt(document.getElementById('cols-input').value),
+      hasHeader: document.getElementById('has-header').checked,
+      bordered: document.getElementById('bordered').checked,
+      striped: document.getElementById('striped').checked,
+      responsive: document.getElementById('responsive').checked,
+    };
+
+    controller.updateConfig(config);
+
+    const event = new CustomEvent('tableConfigChanged', { detail: config });
+    document.dispatchEvent(event);
+  }
+
+  document.querySelectorAll('.control-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      const input =
+        action.includes('rows') ?
+          document.getElementById('rows-input')
+        : document.getElementById('cols-input');
+
+      let value = parseInt(input.value);
+      const min = parseInt(input.min);
+      const max = parseInt(input.max);
+
+      if (action.includes('increase')) {
+        value = Math.min(value + 1, max);
+      } else if (action.includes('decrease')) {
+        value = Math.max(value - 1, min);
+      }
+
+      input.value = value;
+      updateConfig();
+    });
+  });
+
+  document.getElementById('rows-input').addEventListener('change', updateConfig);
+  document.getElementById('cols-input').addEventListener('change', updateConfig);
+  document.getElementById('has-header').addEventListener('change', updateConfig);
+  document.getElementById('bordered').addEventListener('change', updateConfig);
+  document.getElementById('striped').addEventListener('change', updateConfig);
+  document.getElementById('responsive').addEventListener('change', updateConfig);
+
+  document.getElementById('add-row').addEventListener('click', () => {
+    const controller = getTableController();
+    if (controller) {
+      controller.addRow();
+      document.getElementById('rows-input').value = controller.getConfig().rows;
+      updateConfig();
+    }
+  });
+
+  document.getElementById('add-column').addEventListener('click', () => {
+    const controller = getTableController();
+    if (controller) {
+      controller.addColumn();
+      document.getElementById('cols-input').value = controller.getConfig().cols;
+      updateConfig();
+    }
+  });
+
+  document.getElementById('clear-table').addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear all table data?')) {
+      const controller = getTableController();
+      if (controller) {
+        controller.reset();
+        updateConfig();
+      }
+    }
+  });
+
+  const presets = {
+    basic: { rows: 3, cols: 3, hasHeader: true, bordered: true, striped: false, responsive: true },
+    pricing: { rows: 4, cols: 3, hasHeader: true, bordered: true, striped: true, responsive: true },
+    comparison: {
+      rows: 5,
+      cols: 4,
+      hasHeader: true,
+      bordered: true,
+      striped: true,
+      responsive: true,
+    },
+    schedule: {
+      rows: 8,
+      cols: 7,
+      hasHeader: true,
+      bordered: true,
+      striped: true,
+      responsive: true,
+    },
+  };
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const presetName = btn.dataset.preset;
+      const preset = presets[presetName];
+
+      if (preset) {
+        document.getElementById('rows-input').value = preset.rows;
+        document.getElementById('cols-input').value = preset.cols;
+        document.getElementById('has-header').checked = preset.hasHeader;
+        document.getElementById('bordered').checked = preset.bordered;
+        document.getElementById('striped').checked = preset.striped;
+        document.getElementById('responsive').checked = preset.responsive;
+
+        const controller = getTableController();
+        if (controller) {
+          controller.updateConfig(preset);
+          updateConfig();
+        }
+      }
+    });
+  });
+
+  document.addEventListener('tableDataChanged', event => {
+    const { config } = event.detail;
+
+    document.getElementById('rows-input').value = config.rows;
+    document.getElementById('cols-input').value = config.cols;
+    document.getElementById('has-header').checked = config.hasHeader;
+    document.getElementById('bordered').checked = config.bordered;
+    document.getElementById('striped').checked = config.striped;
+    document.getElementById('responsive').checked = config.responsive;
+  });
+</script>

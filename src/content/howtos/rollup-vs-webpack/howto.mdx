@@ -1,0 +1,243 @@
+---
+title: How to Package Component Libraries with Rollup Instead of Webpack
+slug: rollup-vs-webpack
+heading: Package Component Libraries with Rollup, Not Webpack
+icon: /icons/nodejs.png
+image: ./images/rollup-vs-webpack.png
+permalink: howto/rollup-vs-webpack
+date: 2024-11-19
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['rollup', 'webpack']
+desc: Discover how to use Rollup for packaging component libraries, achieving cleaner, runtime-free bundles with support for ESM, CommonJS, and UMD formats.
+---
+
+When developing component libraries, choosing the right bundler is critical for delivering optimized and compatible packages. While Webpack is a versatile tool for web application bundling, Rollup is often preferred for packaging libraries due to its cleaner outputs, efficient tree-shaking, and robust plugin system. This article dives into the reasons why Rollup is a superior choice for component library packaging, along with practical examples comparing it to Webpack.
+
+## Why Rollup for Component Libraries?
+
+[Rollup](https://rollupjs.org/) is purpose-built for bundling JavaScript libraries. Unlike [Webpack](https://webpack.js.org/), which is designed for web applications and includes runtime management, Rollup focuses on generating minimal, dependency-free bundles. This makes it ideal for libraries that need to be lightweight and compatible with multiple environments.
+
+- **Clean Output**: Rollup avoids including runtime code, producing lean bundles.
+- **Multiple Module Format**s: Rollup natively supports ESM, CommonJS, and UMD, crucial for distributing libraries.
+- **Tree-Shaking**: Rollup’s default tree-shaking eliminates unused code, reducing bundle size.
+- **Extensibility**: The plugin system simplifies customization and modularity.
+- **Integration with Modern Tools**: Tools like Vite use Rollup for production builds.
+
+## Comparison: Rollup vs. Webpack
+
+![Rollup vs Webpack](./images/rollup-vs-webpack.png)
+
+### 1. Packaging Example
+
+To illustrate the differences, let’s package a simple project using both Rollup and Webpack.
+
+**Project Structure**
+
+We’ll use two basic modules:
+
+`src/index.js:`
+
+```js
+import { add } from './utils';
+
+import { add } from './utils';
+
+function main() {
+  console.log(add(1, 2));
+}
+
+export default main;
+```
+
+`src/utils.js`:
+
+```js
+function add(a, b) {
+  return a + b;
+}
+
+export { add };
+```
+
+### Using Rollup
+
+**1. Install Rollup**:
+
+<div className='code-cmd'>npm install --save-dev rollup</div>
+
+**2. Create Configuration**:
+
+`rollup.config.js:`
+
+```js
+/** @type {import('rollup').RollupOptions} */
+export default {
+  input: 'src/index.js',
+  output: [
+    { file: 'dist/esm.js', format: 'esm' },
+    { file: 'dist/cjs.js', format: 'cjs' },
+    { file: 'dist/umd.js', name: 'LibraryName', format: 'umd' },
+  ],
+};
+```
+
+**3. Build**:
+
+<div className='code-cmd'>npx rollup -c rollup.config.js</div>
+
+**Output**:
+
+- Clean bundles for ESM, CommonJS, and UMD, free of runtime code.
+
+### Using Webpack
+
+**1. Install Webpack**:
+
+<div className='code-cmd'>npm install --save-dev webpack webpack-cli</div>
+
+**2. Create Configuration**:
+
+`webpack.config.mjs`:
+
+```js
+import path from 'path';
+
+import path from 'path';
+
+/** @type {import('webpack').Configuration} */
+export default {
+  entry: './src/index.js',
+  mode: 'development',
+  devtool: false,
+  output: {
+    path: path.resolve(process.cwd(), 'dist'),
+    filename: 'bundle.js',
+    libraryTarget: 'commonjs2',
+  },
+};
+```
+
+**3. Build**:
+
+<div className='code-cmd'>npx webpack-cli -c webpack.config.mjs</div>
+
+**Output**:
+
+- The bundle includes over 100 lines of runtime code, even in simple scenarios.
+
+## CSS Handling: Rollup vs. Webpack
+
+Component libraries often require separate CSS files. Let’s see how both bundlers handle this.
+
+### Packaging CSS with Rollup
+
+**1. Install PostCSS Plugin**:
+
+<div className='code-cmd'>npm install --save-dev rollup-plugin-postcss</div>
+
+**2. Configure Rollup for CSS Extraction**:
+
+`rollup.config.js`:
+
+```js
+import postcss from 'rollup-plugin-postcss';
+
+import postcss from 'rollup-plugin-postcss';
+
+/** @type {import('rollup').RollupOptions} */
+export default {
+  input: 'src/index.js',
+  output: [
+    { file: 'dist/esm.js', format: 'esm' },
+    { file: 'dist/cjs.js', format: 'cjs' },
+    { file: 'dist/umd.js', name: 'LibraryName', format: 'umd' },
+  ],
+  plugins: [
+    postcss({
+      extract: 'styles.css', // Extracts CSS to a separate file
+    }),
+  ],
+};
+```
+
+**3. Build**:
+
+<div className='code-cmd'>npx rollup -c rollup.config.js</div>
+
+**Result**:
+
+- The CSS is extracted into `styles.css`, while the JS remains clean.
+
+### Packaging CSS with Webpack
+
+**1. Install CSS Loaders**:
+
+<div className='code-cmd'>
+  npm install --save-dev css-loader style-loader mini-css-extract-plugin
+</div>
+
+**2. Configure Webpack for CSS**:
+
+`webpack.config.mjs`:
+
+```js
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import path from 'path';
+
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import path from 'path';
+
+/** @type {import('webpack').Configuration} */
+export default {
+  entry: './src/index.js',
+  mode: 'development',
+  devtool: false,
+  output: {
+    path: path.resolve(process.cwd(), 'dist'),
+    filename: 'bundle.js',
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
+  plugins: [new MiniCssExtractPlugin({ filename: 'styles.css' })],
+};
+```
+
+**3. Build**:
+
+<div className='code-cmd'>npx webpack-cli -c webpack.config.mjs</div>
+
+**Result**:
+
+- CSS is extracted into `styles.css`, but the JS bundle still contains references to runtime helpers.
+
+## When to Use Rollup vs. Webpack
+
+### Use Rollup for:
+
+- Packaging libraries (e.g., JavaScript utilities, React/Vue component libraries).
+- Scenarios requiring clean, runtime-free bundles.
+- Projects targeting multiple module formats.
+
+### Use Webpack for:
+
+- Bundling web applications.
+- Handling complex assets like images, fonts, and dynamic imports.
+- Scenarios requiring advanced development server features.
+
+## Rollup in Modern Toolchains
+
+Tools like Vite and SvelteKit use Rollup under the hood for production builds. While Vite employs esbuild for development due to its speed, Rollup’s plugin system powers production packaging. This hybrid approach combines speed and flexibility.
+
+## Conclusion
+
+Rollup is a focused, efficient tool for library packaging, offering clean outputs and multiple format support. While Webpack dominates application bundling, Rollup excels in scenarios where simplicity, tree-shaking, and modularity are paramount. By understanding their strengths, developers can choose the right tool for their projects.
+
+Whether you're building a JavaScript library, a UI component library, or exploring tools like Vite, Rollup is an indispensable part of modern bundling workflows.

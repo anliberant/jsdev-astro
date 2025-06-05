@@ -1,0 +1,136 @@
+---
+title: How to Easily Upload Large Files in Parts with Multiple Params
+slug: upload-files-parts
+heading: Upload Large Files in Parts with Multiple Params
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/upload-files-parts
+date: 2024-11-01
+author: anton liberant
+category: javascript
+type: howto
+tags: ['uploading', 'files']
+desc: Learn to upload large files in parts using multiple parameters, improving efficiency and control over data transfers in this easy-to-follow guide.
+---
+
+Uploading large files efficiently is essential in web applications. This guide details an approach using JavaScript and a pre-upload hook to split large files into manageable chunks, send them one by one, and then merge them server-side. The method provides support for resumable uploads, progress tracking, and error handling.
+
+## Main Steps
+
+### Step 1: File Slicing
+
+First, slice the large file into smaller chunks using `Blob.prototype.slice`.
+
+```js
+createFileChunk = (dataSource, size = 5 * 1024 * 1024) => {
+  const fileChunkList = [];
+  let cur = 0,
+    index = 0;
+
+  while (cur < dataSource.size) {
+    const chunk = dataSource.slice(cur, cur + size);
+    fileChunkList.push({
+      hash: `${dataSource.name}_${index++}`,
+      file: chunk,
+    });
+    cur += size;
+  }
+  return fileChunkList;
+};
+```
+
+Each part has a unique identifier (a hash based on the file name and index) to ensure proper order during the merge process.
+
+### Step 2: Creating Fetch Requests for Each Chunk
+
+For each chunk, create a function that returns a `fetch()` request to upload it. This enables flexibility and asynchronous execution.
+
+```js
+createHttp = data => {
+  const { hash, file } = data;
+  const formData = new FormData();
+  formData.append('chunk', file);
+  formData.append('hash', hash);
+
+  return async () => {
+    try {
+      const response = await fetch(this.props.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          Authorization: this.props.token,
+        },
+      });
+      if (!response.ok)
+        throw new Error(`Upload failed: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Chunk upload failed', error);
+      throw error;
+    }
+  };
+};
+```
+
+This `createHttp` function wraps the chunk in `FormData`, sets up the request headers, and returns a function that will initiate the upload when called. This enables each chunk to be managed individually.
+
+### Step 3: Uploading Chunks with Progress Tracking
+
+Using `fetch()` requires handling progress separately, so we use a helper function with `ReadableStream` to track the upload’s progress:
+
+```js
+uploadWithProgress = async fileChunkList => {
+  for (let chunk of fileChunkList) {
+    await chunk()
+      .then(res => console.log('Chunk upload complete', res))
+      .catch(err => this.failedChunks.push(chunk));
+  }
+};
+```
+
+The `uploadWithProgress` function iterates over each chunk and uploads it sequentially. If a chunk fails, it’s stored in `this.failedChunks` for retrying later.
+
+### Step 4: Pausing and Resuming Uploads
+
+In `fetch()`, pausing uploads is achieved by stopping execution. Resume by retrying any remaining chunks.
+
+```js
+pauseUpload = () => {
+  this.isPaused = true;
+};
+
+resumeUpload = async () => {
+  this.isPaused = false;
+  await this.uploadWithProgress(this.failedChunks);
+};
+```
+
+Setting a flag (`this.isPaused`) allows us to control the upload flow. If paused, uploading stops until `resumeUpload` is called.
+
+### Step 5: Merging Chunks on the Server
+
+When all chunks are successfully uploaded, a merge request is sent to the server.
+
+```js
+mergeChunks = async () => {
+  try {
+    const response = await fetch(`${this.props.action}/merge`, {
+      method: 'POST',
+      headers: { Authorization: this.props.token },
+      body: JSON.stringify({ fileName: this.fileName }),
+    });
+    if (!response.ok) throw new Error('Merge request failed');
+    console.log('File merged successfully');
+  } catch (error) {
+    console.error('Error merging file', error);
+  }
+};
+```
+
+The server’s `/merge` endpoint will combine all uploaded chunks into a single file. The `mergeChunks` function sends the request and handles any errors.
+
+## Final Notes
+
+This method demonstrates a general approach to uploading a large file in chunks with JavaScript. The server needs to support chunk uploads and provide an endpoint for merging the parts. The hash used here combines the file name and index, while using a hashing algorithm like [spark-md5](https://en.wikipedia.org/wiki/MD5) on the file contents is ideal for consistency.
+
+This approach can easily extend to multi-file uploads, progress tracking for each file, and even for each chunk.

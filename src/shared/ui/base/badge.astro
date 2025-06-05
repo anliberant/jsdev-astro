@@ -1,0 +1,86 @@
+---
+import { cn } from '@/shared/utils';
+
+export interface Props {
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  class?: string;
+  [key: string]: string | number;
+}
+
+const { variant = 'default', class: className = '', ...props } = Astro.props;
+
+function getBadgeClasses(variant: string, className: string): string {
+  const baseClasses = 'badge-base';
+  const variantClass = `badge-${variant}`;
+
+  return cn(baseClasses, variantClass, className);
+}
+
+const badgeClasses = getBadgeClasses(variant, className);
+---
+
+<div
+  class={badgeClasses}
+  {...props}>
+  <slot />
+</div>
+
+<style>
+  .badge-base {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid;
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: colors 0.2s;
+    width: fit-content;
+  }
+
+  .badge-base:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .badge-default {
+    border-color: transparent;
+    background-color: var(--oposite-color);
+    color: var(--gradient-via);
+  }
+
+  .badge-default:hover {
+    background-color: #a5c9ca;
+  }
+
+  .badge-secondary {
+    border-color: transparent;
+    background-color: var(--secondary, #f1f5f9);
+    color: var(--secondary-foreground, #0f172a);
+  }
+
+  .badge-secondary:hover {
+    background-color: var(--secondary-hover, rgba(241, 245, 249, 0.8));
+  }
+
+  .badge-destructive {
+    border-color: transparent;
+    background-color: var(--destructive, #dc2626);
+    color: var(--destructive-foreground, #ffffff);
+  }
+
+  .badge-destructive:hover {
+    background-color: var(--destructive-hover, rgba(220, 38, 38, 0.8));
+  }
+
+  .badge-outline {
+    border-color: var(--border, #e2e8f0);
+    background-color: transparent;
+    color: var(--foreground, #0f172a);
+  }
+
+  .badge-outline:hover {
+    background-color: var(--accent, #f1f5f9);
+    color: var(--accent-foreground, #0f172a);
+  }
+</style>

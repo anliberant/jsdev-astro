@@ -1,0 +1,18 @@
+---
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import CategoriesList from '@/entities/categories/categories-list.astro';
+---
+
+<BaseLayout>
+  <header class='heading-header'>
+    <h1 class='heading-title'>
+      Explore our awesome
+      <span class='heading-highlight'>JavaScript Categories</span>
+    </h1>
+    <p class='heading-description'>
+      Browse articles by topic. Each category represents a specific technology, concept, or
+      framework featured in our tutorials and guides.
+    </p>
+  </header>
+  <CategoriesList />
+</BaseLayout>

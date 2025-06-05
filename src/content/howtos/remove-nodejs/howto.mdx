@@ -1,0 +1,145 @@
+---
+title: How to Completely Remove Node.js from Your Computer
+slug: remove-nodejs
+heading: How to Uninstall Node.js from Your System
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/remove-nodejs
+date: 2025-02-03
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['']
+desc: Master Node.js uninstallation on Windows, Mac, and Linux with this step-by-step guide to fully remove Node.js and avoid future configuration issues.
+---
+
+To completely remove Node.js from your computer, follow the steps based on your operating system:
+
+## Windows 🖥️
+
+### 1. Uninstall Node.js via Control Panel
+
+1. Press `Win + R`, type `appwiz.cpl`, and hit Enter.
+2. Locate Node.js in the list.
+3. Right-click it and select Uninstall.
+4. Follow the uninstallation wizard.
+
+### 2. Delete Remaining Files & Folders
+
+- Open File Explorer and delete:
+  ```makefile
+  C:\Program Files\nodejs
+  C:\Users\<YourUsername>\AppData\Roaming\npm
+  C:\Users\<YourUsername>\AppData\Roaming\npm-cache
+  C:\Users\<YourUsername>\.npmrc (if exists)
+  ```
+
+### 3. Remove Node.js from Environment Variables
+
+1. Press `Win + R`, type `sysdm.cpl`, and press Enter.
+2. Go to Advanced → Click Environment Variables.
+3. Find Path under System variables, and remove entries for Node.js.
+4. Click `OK`.
+
+### 4. Verify Removal
+
+Open **Command Prompt** (`Win + R` → type `cmd` → Enter) and run:
+
+```sh
+node -v
+npm -v
+```
+
+If Node.js is removed, you’ll see a **"command not found"** error.
+
+## MacOS 🍏
+
+### 1. Uninstall via Homebrew (If Installed with Brew)
+
+If you installed Node.js using Homebrew, run:
+
+```sh
+brew uninstall node
+```
+
+### 2. Manually Delete Files
+
+Remove all Node.js-related files:
+
+```sh
+sudo rm -rf /usr/local/lib/node_modules
+sudo rm -rf /usr/local/include/node
+sudo rm -rf /usr/local/bin/node
+sudo rm -rf ~/.npm ~/.nvm ~/.node
+```
+
+### 3. Check and Remove Environment Variables
+
+Open **Terminal** and edit your shell configuration file:
+
+```sh
+nano ~/.bashrc  # For Bash users
+nano ~/.zshrc   # For Zsh users (default in macOS)
+```
+
+Remove any lines related to `node` or `npm`. Save and exit.
+
+### 4. Verify Removal
+
+Check if Node.js is gone:
+
+```sh
+node -v
+npm -v
+```
+
+If it’s removed, the commands will return **"command not found"**.
+
+## Linux (Ubuntu/Debian-based) 🐧
+
+### 1. Remove Node.js via Package Manager
+
+If installed via **apt**, run:
+
+```sh
+sudo apt-get remove --purge nodejs
+sudo apt-get autoremove
+```
+
+For **nvm (Node Version Manager)** users, uninstall with:
+
+```sh
+nvm deactivate
+nvm uninstall node
+```
+
+### 2. Delete Node.js Files
+
+```sh
+sudo rm -rf /usr/local/lib/node_modules
+sudo rm -rf /usr/local/include/node
+sudo rm -rf /usr/local/bin/node
+sudo rm -rf ~/.npm ~/.nvm ~/.node
+```
+
+### 3. Remove Node.js from Environment Variables
+
+Edit your shell configuration file:
+
+```sh
+nano ~/.bashrc  # For Bash users
+nano ~/.zshrc   # For Zsh users
+```
+
+Remove any Node.js-related paths and restart your terminal.
+
+### 4. Verify Removal
+
+```sh
+node -v
+npm -v
+```
+
+If Node.js is fully removed, the commands will return **"command not found"**.
+
+Node.js is now completely removed from your computer! 🎉

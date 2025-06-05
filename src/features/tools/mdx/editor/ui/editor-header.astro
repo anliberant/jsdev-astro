@@ -1,0 +1,210 @@
+---
+import Button from '@/shared/ui/base/button.astro';
+---
+
+<div class='editor-header'>
+  <div class='header-left'>
+    <span class='emoji'>📝</span>
+    <h1 class='header-title'>MDX Editor</h1>
+    <input
+      type='text'
+      class='file-input'
+      id='fileName'
+      value='document.md'
+      placeholder='File name'
+    />
+  </div>
+
+  <div class='header-right'>
+    <div class='tab-group'>
+      <button
+        class='tab-button'
+        id='editTab'
+        data-tab='edit'
+        type='button'>
+        Editor
+      </button>
+      <button
+        class='tab-button active'
+        id='splitTab'
+        data-tab='split'
+        type='button'>
+        Split
+      </button>
+      <button
+        class='tab-button'
+        id='previewTab'
+        data-tab='preview'
+        type='button'>
+        Preview
+      </button>
+      <button
+        class='tab-button'
+        id='htmlTab'
+        data-tab='html'
+        type='button'>
+        HTML
+      </button>
+    </div>
+
+    <div class='file-ops'>
+      <label class='import-button'>
+        <input
+          type='file'
+          class='file-input-hidden'
+          id='fileImport'
+          accept='.md,.mdx,.txt'
+        />
+        Import
+      </label>
+
+      <Button
+        variant='default'
+        size='sm'
+        id='exportBtn'
+        >Export</Button
+      >
+    </div>
+  </div>
+</div>
+
+<style>
+  .editor-header {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .emoji {
+    font-size: 1.5rem;
+  }
+
+  .header-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .file-input {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    outline: none;
+    min-width: 200px;
+  }
+
+  .file-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .tab-group {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+  }
+
+  .tab-button {
+    padding: 0.5rem 0.75rem;
+    border: none;
+    background: transparent;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #64748b;
+  }
+
+  .tab-button.active {
+    background: white;
+    color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .tab-button:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.7);
+    color: #1e293b;
+  }
+
+  .file-ops {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .import-button {
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f1f5f9;
+    color: #1e293b;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .import-button:hover {
+    background: #e2e8f0;
+  }
+
+  .file-input-hidden {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .editor-header {
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+    }
+
+    .header-left {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .file-input {
+      min-width: auto;
+      flex: 1;
+      max-width: 200px;
+    }
+
+    .header-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .tab-group {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .tab-button {
+      flex: 1;
+      text-align: center;
+    }
+  }
+</style>

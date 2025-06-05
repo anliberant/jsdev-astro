@@ -1,0 +1,58 @@
+---
+title: How to Fix "__dirname is Not Defined" in NodeJs
+slug: dirname-not-defined
+heading: "Resolve '__dirname is Not Defined' Error in Node.js"
+icon: /icons/javascript.png
+image: ./images/dirname-not-defined.png
+permalink: howto/dirname-not-defined
+date: 2024-10-20
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['__dirname', 'path']
+desc: Learn how to fix the common __dirname is not defined error in Node.js. Get simple solutions, best practices, and tips to quickly resolve this issue in your projects.
+---
+
+![__dirname is Not Defined](./images/dirname-not-defined.png)
+
+If you’re encountering the error **dirname is not defined in your Node.js project, it’s likely because you are using ES modules ("type": "module" in your package.json) instead of CommonJS modules. In ES modules, **dirname is not available by default. Here are some methods to fix it:
+
+## 1. Manually Define \_\_dirname
+
+You can recreate the `__dirname` functionality using `import.meta.url`. Here’s how:
+
+```js
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// Create __filename and __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+console.log(__dirname); // Now __dirname works
+```
+
+This will give you the same behavior as `__dirname` and `__filename` in CommonJS.
+
+## 2. Use CommonJS (Remove `"type": "module"`)
+
+If you don’t need ES modules, you can remove `"type": "module"` from your `package.json` file. This way, Node.js will use CommonJS, where `__dirname` is natively supported.
+
+## 3. Use a bundler (like Webpack or Rollup)
+
+If you are working on a project that gets bundled for the browser (where `__dirname` doesn’t exist), you can configure a bundler like Webpack to polyfill it:
+
+- In Webpack, add this to your config:
+
+```js
+node: {
+  __dirname: false,
+}
+```
+
+This allows you to avoid the error in your browser-based projects.
+
+By applying one of these methods, you can resolve the `__dirname` issue and ensure that your project runs smoothly.

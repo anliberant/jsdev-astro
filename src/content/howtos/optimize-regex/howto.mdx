@@ -1,0 +1,114 @@
+---
+title: How to Optimize Regex for Better Algorithm and Efficiency
+slug: optimize-regex
+heading: Optimizing Regex for Better Performance
+icon: /icons/javascript.png
+image: ./images/optimize-regex.png
+permalink: howto/optimize-regex
+date: 2025-01-03
+author: anton liberant
+category: javascript
+type: howto
+tags: ['regex', 'algorithms']
+desc: Learn how to optimize regex for better performance and efficiency. Improve matching accuracy, reduce resource use, and handle large text data with proven techniques.
+---
+
+Regular expressions (regex) are powerful tools for text matching, but they can cause performance issues if not optimized. This guide covers techniques to enhance regex efficiency and reduce resource usage.
+
+![How to Optimize Regex for Better Algorithm and Efficiency](./images/optimize-regex.png)
+
+## 1. Use Anchors
+
+Anchors (`^` for start, `$` for end) limit matching scope, reducing unnecessary attempts.
+
+**Example**: To check if a string is numeric, use `^\d+$`
+
+**Before Optimization:**
+
+```js
+const text = 'abc123def456';
+const regex = /\d+/; // No anchor
+console.time('No Anchor Match');
+console.log(text.match(regex)); // [ '123' ]
+console.timeEnd('No Anchor Match');
+```
+
+**After Optimization:**
+
+```js
+const regex = /^\d+$/; // With anchors
+console.time('Anchor Match');
+console.log(text.match(regex)); // null
+console.timeEnd('Anchor Match');
+```
+
+## 2. Use Lookaheads Judiciously
+
+Positive `((?=...))` and negative `((?!...))` lookaheads enable conditional matching without consuming characters. Overuse may degrade performance.
+
+**Before Optimization:**
+
+```js
+const text = '123 word';
+const regex = /\d+\s\w+/; // Matches digits and word
+console.time('No Lookahead');
+console.log(text.match(regex)); // [ '123 word' ]
+console.timeEnd('No Lookahead');
+```
+
+**After Optimization:**
+
+```js
+const regex = /\d+(?=\s\w+)/; // Matches digits followed by word
+console.time('Lookahead');
+console.log(text.match(regex)); // [ '123' ]
+console.timeEnd('Lookahead');
+```
+
+## 3. Compile Regular Expressions
+
+For repeated use, compile regex to avoid re-parsing. In JavaScript, use new RegExp.
+
+**Before Optimization:**
+
+```js
+const regex = /abc\d+def/;
+console.time('Uncompiled Match');
+for (let i = 0; i < 1000; i++) regex.test('abc123def');
+console.timeEnd('Uncompiled Match');
+```
+
+**After Optimization:**
+
+```js
+const regex = new RegExp('abc\\d+def'); // Compiled regex
+console.time('Compiled Match');
+for (let i = 0; i < 1000; i++) regex.test('abc123def');
+console.timeEnd('Compiled Match');
+```
+
+## 4. Use Non-Capturing Groups
+
+Replace capturing groups `((...))` with non-capturing ones `((?:...))` to save resources.
+
+**Before Optimization:**
+
+```js
+const regex = /(abc|def)/; // Capturing group
+console.time('Capturing Group Match');
+console.log('abc or def'.match(regex)); // ['abc', 'abc']
+console.timeEnd('Capturing Group Match');
+```
+
+**After Optimization:**
+
+```js
+const regex = /(?:abc|def)/; // Non-capturing group
+console.time('Non-Capturing Group Match');
+console.log('abc or def'.match(regex)); // ['abc']
+console.timeEnd('Non-Capturing Group Match');
+```
+
+## Summary
+
+Optimizing regex improves accuracy and performance, especially when processing large datasets. By implementing these techniques, you can create faster, more efficient regex tailored to specific needs.

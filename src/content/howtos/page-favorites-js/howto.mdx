@@ -1,0 +1,87 @@
+---
+title: How to Add a Web Page to Favorites Using JavaScript
+slug: page-favorites-js
+heading: How to Bookmark a Web Page Using JavaScript
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/page-favorites-js
+date: 2024-10-27
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn to add webpages to favorites with JavaScript. Discover browser methods, manual prompts, draggable bookmarks, and PWA features for all browsers.
+---
+
+Adding a webpage to a browser's favorites directly through JavaScript isn't widely supported due to security and privacy restrictions. However, you can use some alternative methods to guide users on how to add a page to their favorites manually.
+
+## Method 1: Using `window.external.AddFavorite` (Internet Explorer Only)
+
+For Internet Explorer, you can use the `window.external.AddFavorite()` method. Here’s how it works:
+
+```js
+function addToFavorites(url, title) {
+  if (window.sidebar) {
+    // Firefox
+    window.sidebar.addPanel(title, url, '');
+  } else if (window.external && 'AddFavorite' in window.external) {
+    // IE
+    window.external.AddFavorite(url, title);
+  } else {
+    // Other browsers
+    alert('Press Ctrl+D to add this page to your favorites.');
+  }
+}
+
+// Usage
+addToFavorites('https://example.com', 'Example Page');
+```
+
+## Method 2: Prompt Users to Add to Favorites Manually
+
+Since most modern browsers don’t allow direct bookmarking, you can display a message prompting users to add the page to favorites manually:
+
+```js
+function showAddToFavoritesPrompt() {
+  alert('Press Ctrl+D to add this page to your favorites.');
+}
+
+// Usage
+showAddToFavoritesPrompt();
+```
+
+## Method 3: Use a Bookmark Link
+
+Create a draggable link that users can add to their bookmarks bar by dragging and dropping:
+
+```html
+<a href="https://example.com" title="Example Page" draggable="true"
+  >Add this page to your favorites</a
+>
+```
+
+## Method 4: Use Progressive Web App (PWA) Features
+
+Although there is no direct API to add favorites, you can enhance the experience by creating a PWA. The Web App Manifest allows users to save your site to their device's home screen.
+
+```json
+{
+  "name": "Example App",
+  "short_name": "Example",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff",
+  "theme_color": "#000",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+## Summary
+
+JavaScript cannot directly add a webpage to favorites in most modern browsers, but these workarounds—manual prompts, draggable links, and PWA features—can help guide users to save your page to favorites, improving the user experience.

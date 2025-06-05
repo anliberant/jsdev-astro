@@ -1,0 +1,408 @@
+---
+title: 'Hide Data in PNG Files Using JavaScript: A Step-by-Step Guide'
+slug: data-png-steganography-js
+heading: 'Steganography: Hide Data in PNG Files Using JavaScript'
+image: ./images/data-png-steganography-js.png
+permalink: data-png-steganography-js
+date: 2025-01-02
+author: anton liberant
+category: javascript
+type: post
+tags: ['png', 'steganography', 'encryption']
+desc: Learn how to hide data securely in PNG files with JavaScript. Explore steganography methods to encode and decode info inside image pixels efficiently.
+---
+
+Hiding data inside images is an ingenious method of steganography, leveraging the PNG format's structure to store information inconspicuously. This article will explain how to embed and retrieve data within PNG files using the Least Significant Bit (LSB) technique, alongside practical JavaScript code examples.
+
+## Understanding PNG and LSB Technique
+
+- **PNG Structure**: A PNG image stores information about each pixel. Every pixel contains three color channels (R, G, B) and an alpha channel for transparency.
+- **LSB (Least Significant Bit)**: The LSB of each channel can be altered to store additional data without noticeable changes in the image’s appearance.
+
+## Concept in Practice
+
+- **Data Storage**: Convert the data into binary form and replace the LSBs of the pixel channels with the data bits.
+- **Capacity**: Each pixel can hold 3 bits of data. A 1000x1000 image can store approximately 1 MB of data.
+
+## Code Implementation
+
+**Encoding Data into PNG**
+
+```js
+import fs from 'fs';
+import { PNG } from 'pngjs';
+
+import fs from 'fs';
+import { PNG } from 'pngjs';
+
+function writeData(imageData, binaryData) {
+  for (let i = 0, dataBitIndex = 0; i < imageData.length; i += 4) {
+    for (let j = 0; j < 3; j++, dataBitIndex++) {
+      if (dataBitIndex >= binaryData.length * 8) return imageData;
+      let bit =
+        (binaryData[Math.floor(dataBitIndex / 8)] >> (7 - (dataBitIndex % 8))) &
+        1;
+      imageData[i + j] = (imageData[i + j] & 0xfe) | bit;
+    }
+  }
+  return imageData;
+}
+
+async function encode(inputPath, outputPath, message) {
+  const binaryMessage = Buffer.from(message, 'utf-8');
+  return new Promise(resolve => {
+    fs.createReadStream(inputPath)
+      .pipe(new PNG())
+      .on('parsed', function () {
+        let lengthBuffer = Buffer.alloc(4);
+        lengthBuffer.writeUInt32BE(binaryMessage.length, 0);
+
+        let totalData = Buffer.concat([lengthBuffer, binaryMessage]);
+        writeData(this.data, totalData);
+
+        const output = fs.createWriteStream(outputPath);
+        output.on('finish', resolve);
+        this.pack().pipe(output);
+      });
+  });
+}
+```
+
+**Decoding Data from PNG**
+
+```js
+function readData(imageData) {
+  let bytes = [];
+  let currentByte = 0;
+  let dataBitIndex = 0;
+
+  for (let i = 0; i < imageData.length; i += 4) {
+    for (let j = 0; j < 3; j++) {
+      let bit = imageData[i + j] & 1;
+      currentByte = (currentByte << 1) | bit;
+      dataBitIndex++;
+      if (dataBitIndex % 8 === 0) {
+        bytes.push(currentByte);
+        currentByte = 0;
+      }
+    }
+  }
+  return Buffer.from(bytes);
+}
+
+async function decode(inputPath) {
+  return new Promise(resolve => {
+    fs.createReadStream(inputPath)
+      .pipe(new PNG())
+      .on('parsed', function () {
+        const binaryData = readData(this.data);
+        const messageLength = binaryData.readUInt32BE(0);
+        const message = binaryData
+          .slice(4, 4 + messageLength)
+          .toString('utf-8');
+        resolve(message);
+      });
+  });
+}
+```
+
+## PNG Steganography Class in TypeScript
+
+```ts
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import * as process from 'node:process';
+import { gunzipSync, gzipSync } from 'zlib';
+import { PNG } from 'pngjs';
+
+export default class Steganography {
+  public png: PNG;
+
+  public constructor(png: PNG) {
+    if (png.data.length < 4) {
+      throw new Error('Cannot use this PNG file.');
+    }
+
+    this.png = png;
+  }
+
+  protected computeHash(data: Buffer): Buffer {
+    return crypto.createHash('sha256').update(data).digest();
+  }
+
+  protected generateAESKey(key: string): Buffer {
+    return crypto.createHash('sha256').update(key).digest();
+  }
+
+  protected extractHiddenData(pixels: Buffer): Buffer {
+    let bytes: number[] = [];
+    let bitIndex = 0;
+    let currentByte = 0;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      for (let j = 0; j < 3; j++) {
+        let bit = pixels[i + j] & 1;
+        currentByte = (currentByte << 1) | bit;
+        bitIndex++;
+
+        if (bitIndex % 8 === 0) {
+          bytes.push(currentByte);
+          currentByte = 0;
+        }
+      }
+    }
+
+    return Buffer.from(bytes);
+  }
+
+  protected embedData(pixels: Buffer, data: Buffer): Buffer {
+    let outputBuffer = Buffer.from(pixels);
+    let bitIndex = 0;
+
+    for (let i = 0; i < outputBuffer.length; i += 4) {
+      for (let j = 0; j < 3; j++) {
+        let bit =
+          bitIndex < data.length * 8
+            ? (data[Math.floor(bitIndex / 8)] >> (7 - (bitIndex % 8))) & 1
+            : crypto.randomInt(2);
+
+        outputBuffer[i + j] = (outputBuffer[i + j] & 0xfe) | bit;
+        bitIndex++;
+      }
+    }
+
+    return outputBuffer;
+  }
+
+  protected createClone(buffer: Buffer | null = null): Steganography {
+    let newImage = new PNG({
+      width: this.png.width,
+      height: this.png.height,
+    });
+    if (!buffer) {
+      buffer = this.png.data;
+    }
+    buffer.copy(newImage.data);
+
+    return new Steganography(newImage);
+  }
+
+  protected getMaximumCapacity(): number {
+    return (Math.floor(this.png.data.length / 4) * 3) / 8;
+  }
+
+  public static async loadPNG(path: string): Promise<Steganography> {
+    return new Promise(resolve => {
+      fs.createReadStream(path)
+        .pipe(new PNG())
+        .on('parsed', function () {
+          resolve(new Steganography(this));
+        });
+    });
+  }
+
+  public getAvailableSpace(): number {
+    return this.getMaximumCapacity() - 4 - 32;
+  }
+
+  public decodeImage(binary: boolean = false): string | Buffer {
+    if (this.png.data.length < 96 * 4) {
+      throw new Error('Cannot decode this container.');
+    }
+    let metadata = this.extractHiddenData(this.png.data.slice(0, 96 * 4));
+    let length = metadata.readUInt32BE();
+    let hash = metadata.slice(4, 36);
+    let data = this.extractHiddenData(this.png.data).slice(36, 36 + length);
+    if (!this.computeHash(data).equals(hash)) {
+      throw new Error('Cannot decode this container.');
+    }
+    let decompressedData = gunzipSync(data);
+
+    return binary
+      ? decompressedData
+      : new TextDecoder().decode(decompressedData);
+  }
+
+  public encodeImage(data: string | Buffer): Steganography {
+    let binaryData =
+      typeof data === 'string' ? Buffer.from(data, 'utf-8') : Buffer.from(data);
+    let compressedData = gzipSync(binaryData);
+    let length = Buffer.alloc(4);
+    length.writeUInt32BE(compressedData.length, 0);
+    let hash = this.computeHash(compressedData);
+    let serializedData = Buffer.concat([length, hash, compressedData]);
+    if (serializedData.length > this.getMaximumCapacity()) {
+      throw new Error('Message is too large to encode.');
+    }
+
+    return this.createClone(this.embedData(this.png.data, serializedData));
+  }
+
+  public async saveImage(path: string): Promise<void> {
+    let stream = fs.createWriteStream(path);
+    this.png.pack().pipe(stream);
+
+    return new Promise(resolve => {
+      stream.on('finish', resolve);
+    });
+  }
+
+  public encodeWithEncryption(
+    key: string,
+    data: string | Buffer
+  ): Steganography {
+    let aesKey = this.generateAESKey(key);
+    let binaryData =
+      typeof data === 'string' ? Buffer.from(data, 'utf-8') : Buffer.from(data);
+    let iv = crypto.randomBytes(16);
+    let cipher = crypto.createCipheriv('aes-256-cbc', aesKey, iv);
+    let encryptedData = Buffer.concat([
+      cipher.update(binaryData),
+      cipher.final(),
+    ]);
+    let finalData = Buffer.concat([iv, encryptedData]);
+
+    return this.encodeImage(finalData);
+  }
+
+  public decodeWithEncryption(
+    key: string,
+    binary: boolean = false
+  ): string | Buffer {
+    let aesKey = this.generateAESKey(key);
+    let encodedData = <Buffer>this.decodeImage(true);
+    let iv = encodedData.slice(0, 16);
+    let encryptedData = encodedData.slice(16);
+    let decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, iv);
+    let decryptedData = Buffer.concat([
+      decipher.update(encryptedData),
+      decipher.final(),
+    ]);
+
+    return binary ? decryptedData : new TextDecoder().decode(decryptedData);
+  }
+
+  public encodeFile(path: string): Steganography {
+    let dataBuffer = fs.readFileSync(path);
+    return this.encodeImage(dataBuffer);
+  }
+
+  public decodeFile(path: string): void {
+    let decodedData = this.decodeImage(true);
+    fs.writeFileSync(path, decodedData);
+  }
+
+  public encodeFileWithEncryption(key: string, path: string): Steganography {
+    let dataBuffer = fs.readFileSync(path);
+    return this.encodeWithEncryption(key, dataBuffer);
+  }
+
+  public decodeFileWithEncryption(key: string, path: string): void {
+    let decodedData = this.decodeWithEncryption(key, true);
+    fs.writeFileSync(path, decodedData);
+  }
+}
+```
+
+The Stenography class allows hiding, extracting, and optionally encrypting data in PNG files by modifying their pixel data.
+
+### Core Methods
+
+**Data Manipulation**
+
+`hashData(binaryData: Buffer): Buffer`
+
+- Creates a SHA-256 hash of the provided binary data.
+- Ensures data integrity during decoding.
+
+`deriveAESKey(key: string): Buffer`
+
+- Derives a secure AES key using SHA-256 hashing of a given key string.
+
+`mask(pixels: Buffer, data: Buffer): Buffer`
+
+- Encodes data into the least significant bits (LSB) of the image's pixel data.
+- Ensures encoded data remains visually indistinguishable in the image.
+
+`unmask(pixels: Buffer): Buffer`
+
+- Extracts hidden data from the LSBs of the image's pixel data.
+
+### Image Handling
+
+`clone(buffer: Buffer | null = null): Stenography`
+
+- Creates a copy of the current PNG object, optionally using a provided buffer.
+
+`getAvailableEncodeBytes(): number`
+
+- Calculates the maximum data size (in bytes) that can be encoded in the image.
+
+`saveToFile(path: string): Promise<void>`
+
+- Saves the modified PNG object to a file.
+
+`openPNG(path: string): Promise<Stenography>`
+
+- Static method to load and parse a PNG file, returning a Stenography instance.
+
+### Data Encoding and Decoding
+
+`encode(data: string | Buffer): Stenography`
+
+- Compresses, hashes, and embeds the provided data into the PNG image.
+- Throws an error if the data exceeds the available space.
+
+`decode(binary: boolean = false): string | Buffer`
+
+- Extracts and decompresses data from the image.
+- Validates the integrity of the data using its hash.
+
+`encodeWithKey(key: string, data: string | Buffer): Stenography`
+
+- Encrypts the data with AES-256 before encoding it in the image.
+
+`decodeWithKey(key: string, binary: boolean = false): string | Buffer`
+
+- Decrypts AES-encrypted data after extracting it from the image.
+
+### File Operations
+
+`encodeFile(fromDataPath: string): Stenography`
+
+- Reads a file, encodes its contents into the PNG image.
+
+`decodeFile(toDataPath: string): void`
+
+- Extracts and saves hidden file data from the image.
+
+`encodeFileWithKey(key: string, fromDataPath: string): Stenography`
+
+- Encrypts and embeds a file’s contents into the PNG image.
+
+`decodeFileWithKey(key: string, toDataPath: string): void`
+
+- Extracts and decrypts a file’s data from the image.
+
+### Key Concepts
+
+1. **Steganography**: Hides data within the LSBs of pixel channels (RGB). Human eyes cannot detect such minor changes.
+2. **Data Compression**: Uses gzipSync to minimize the size of data before encoding.
+3. **Encryption**: Supports AES-256 encryption for secure data storage.
+4. **Error Handling**: Includes various validations to ensure data integrity and compatibility.
+
+## Advanced Ideas and Enhancements
+
+- **Encryption**: Enhance security by encrypting the data before embedding it.
+- **Non-Sequential Pixel Selection**: Use algorithms like elliptic curves to determine pixel positions for data storage, adding obfuscation.
+- **Noise Addition**: Introduce subtle noise to obscure data concealment.
+
+## Practical Uses
+
+- Storing sensitive files within an image.
+- Hiding secure messages with AES encryption.
+- Embedding metadata for forensic purposes.
+
+## Conclusion
+
+With minimal visual impact, you can hide significant amounts of data in PNG files using the LSB method. By applying encryption, noise, and advanced pixel selection strategies, the data can remain undetectable even under scrutiny.

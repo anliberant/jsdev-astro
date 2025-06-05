@@ -1,0 +1,132 @@
+---
+title: "How to solve: 'FATAL ERROR: JavaScript heap out of memory'"
+slug: js-heap-memory
+heading: "Solving 'JavaScript Heap Out of Memory' Error"
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/js-heap-memory
+date: 2025-01-19
+author: anton liberant
+category: javascript
+type: howto
+tags: ['']
+desc: Resolve the JavaScript heap out of memory error with effective solutions. Learn how to increase Node.js memory limits, optimize code, and prevent crashes.
+---
+
+The error **"FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory"** occurs when a Node.js process exceeds the default memory limit. This typically happens in memory-intensive tasks such as building large projects, handling extensive datasets, or running processes requiring significant resources.
+
+## Solution Options:
+
+### 1. Increase the Memory Limit
+
+By default, Node.js has a memory limit of approximately 1.5GB for 64-bit systems. You can increase this limit using the `--max-old-space-size` flag. For example, to allocate 4GB of memory:
+
+```bash
+node --max-old-space-size=4096 your_script.js
+```
+
+For Windows:
+
+<div className='code-cmd'>Set NODE_OPTIONS="--max-old-space-size=8192"</div>
+
+For npm scripts, modify the command like this:
+
+```bash
+node --max-old-space-size=4096 ./node_modules/.bin/your-command
+```
+
+If you're running a specific build tool like Webpack, try:
+
+```bash
+node --max-old-space-size=4096 node_modules/.bin/webpack
+```
+
+The `--max-old-space-size` flag in Node.js can be set to control the maximum heap memory size. Here's how to use it:
+
+```bash
+# Common values (in megabytes)
+export NODE_OPTIONS="--max-old-space-size=2048"  # 2 GB
+export NODE_OPTIONS="--max-old-space-size=4096"  # 4 GB
+export NODE_OPTIONS="--max-old-space-size=8192"  # 8 GB
+export NODE_OPTIONS="--max-old-space-size=16384" # 16 GB
+
+# You can use any value in megabytes, not just powers of 2:
+export NODE_OPTIONS="--max-old-space-size=3000"  # 3 GB
+export NODE_OPTIONS="--max-old-space-size=5500"  # 5.5 GB
+
+# Check current heap size limit (in MB):
+node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))'
+```
+
+The value represents megabytes of memory. While powers of 2 (2048, 4096, etc.) are common, you can set any value up to your available system memory.
+
+### 2. Update Dependencies
+
+Old or inefficient libraries can cause memory issues. Update your project dependencies to their latest versions by running:
+
+```bash
+npm outdated
+npm update
+```
+
+### 3. Optimize the Code
+
+- **Lazy Loading**: Import only what you need at runtime.
+- **Garbage Collection**: Use smaller data structures or clear unused references.
+- **Streams**: If you're processing large files, use Node.js streams to avoid loading everything into memory.
+
+### 4. Split Workloads
+
+Break your tasks into smaller chunks or batches to reduce memory usage. For example:
+
+- Process large files line-by-line.
+- Use worker threads to parallelize resource-intensive tasks.
+
+### 5. Use Monitoring Tools
+
+Analyze the memory usage of your application:
+
+- `process.memoryUsage()`: Add this to your code to log memory stats:
+  ```bash
+  console.log(process.memoryUsage());
+  ```
+- ools like clinic.js, Heapdump, or Chrome DevTools can help pinpoint memory leaks.
+
+### 6. Clear Node Cache
+
+If you’re building or running tasks repeatedly, clear the npm cache to free memory:
+
+```bash
+npm cache clean --force
+```
+
+### 7. Upgrade Node.js
+
+Newer Node.js versions have better memory management. Upgrade to the latest stable version:
+
+```bash
+nvm install stable
+nvm use stable
+```
+
+### 8. Use Swap Memory (Temporary)
+
+If increasing memory limits doesn’t help and you’re on a server or limited device:
+
+- Add swap memory to your system as a fallback for RAM exhaustion. This is a temporary solution and not recommended for production environments.
+
+## Example: Increasing Memory for npm Run Build
+
+If you're encountering this issue during a build process (e.g., `npm run build`), prepend the memory allocation flag:
+
+```bash
+node --max-old-space-size=4096 ./node_modules/.bin/react-scripts build
+```
+
+Or modify the `scripts` section of `package.json`:
+
+```json
+"scripts": {
+  "build": "node --max-old-space-size=4096 react-scripts build"
+}
+```

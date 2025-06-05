@@ -1,0 +1,154 @@
+.converter-header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.converter-panel {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.converter-panel.input {
+  border-right: 1px solid #e2e8f0;
+}
+
+.pane-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pane-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.textarea {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  padding: 1rem;
+  border: none;
+  outline: none;
+  resize: none;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background: white;
+  overflow: auto;
+}
+
+.textarea:focus {
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.textarea.output {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.textarea.readonly {
+  cursor: default;
+}
+
+.message {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  border-radius: var(--radius);
+  margin: 1rem 1.5rem;
+}
+
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.success-message {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.stats {
+  padding: 0.5rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+}
+
+.options-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.checkbox-group input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #3b82f6;
+}
+
+.checkbox-group label {
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.main-content {
+  display: flex;
+  height: calc(100vh - 140px);
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .converter-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .options-group {
+    flex-wrap: wrap;
+  }
+
+  .main-content {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .converter-panel {
+    width: 100%;
+    height: 50vh;
+  }
+
+  .converter-panel.input {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}

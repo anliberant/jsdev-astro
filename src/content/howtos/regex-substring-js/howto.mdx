@@ -1,0 +1,132 @@
+---
+title: 'How to Use RegEx for Conditional Substring Search in JavaScript'
+slug: regex-substring-js
+heading: RegEx Conditional Substring Search in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/regex-substring-js
+date: 2025-01-20
+author: anton liberant
+category: javascript
+type: howto
+tags: ['RegEx']
+desc: Master RegEx in JavaScript to perform conditional substring searches. Learn with practical examples and tips to extract and manipulate specific patterns efficiently.
+---
+
+JavaScript’s RegEx engine offers robust tools for conditional substring searches. While not as feature-rich as some other engines, it is still capable of solving complex tasks with clever pattern construction. This guide covers examples of extracting substrings under specific conditions using JavaScript.
+
+## Key Concepts for JavaScript RegEx
+
+### 1. Condition-Based Search
+
+Extract substrings (e.g., words or numbers) from lines starting with a specific condition, such as the letter `a`.
+
+**Example strings:**
+
+```text
+a apple = fruit + snack
+a 42 = number + meaning
+pear & apple = fruit + snack
+```
+
+**JavaScript RegEx Solution:**
+
+```js
+const regex = /(?<=^a\s).*?\b\w+\b/g;
+
+const text = `
+a apple = fruit + snack
+a 42 = number + meaning
+pear & apple = fruit + snack
+`;
+
+const matches = text.match(regex);
+console.log(matches); // Output: ['apple', '42']
+```
+
+**Pattern Breakdown:**
+
+- **`(?<=^a\s)`** – Positive lookbehind for lines starting with `a` followed by a space.
+- **`.*?\b\w+\b`** – Non-greedy search to capture each word or digit after the condition.
+
+### 2. Searching Within Delimiters
+
+Extract words or numbers enclosed in quotes (`"` or `'`) only for lines starting with b.
+
+**Example strings:**
+
+```text
+b"banana & orange" = fruit + snack
+b"100 = score" + grade
+```
+
+**JavaScript RegEx Solution:**
+
+```js
+const regex = /(?<=^b["'])(.*?)(?=["'])/g;
+
+const text = `
+b"banana & orange" = fruit + snack
+b"100 = score" + grade
+`;
+
+const matches = text.match(regex).flatMap(match => match.match(/\b\w+\b/g));
+console.log(matches); // Output: ['banana', 'orange', '100', 'score']
+```
+
+**Pattern Breakdown:**
+
+- **`(?<=^b["'])`** – Positive lookbehind for lines starting with `b` followed by a quote (`"` or `'`).
+- **`(.*?)`** – Non-greedy match for everything inside the quotes.
+- **`match(/\b\w+\b/g)`** – Extract words or digits from the captured substring.
+
+### 3. Excluding Nested Patterns
+
+Extract content within backticks (`) while skipping nested braces (`{}`).
+
+**Example string:**
+
+```text
+`{data} processed with {excluded} items and 25 results`
+```
+
+**JavaScript RegEx Solution:**
+
+```js
+const regex = /(?<=`)(?:(?!{.*?})[^`])+?(?=`)/g;
+
+const text = '`{data} processed with {excluded} items and 25 results`';
+
+const matches = text.match(regex).flatMap(match => match.match(/\b\w+\b/g));
+console.log(matches); // Output: ['processed', 'with', 'items', '25', 'results']
+```
+
+**Pattern Breakdown:**
+
+- **`(?<=\)`** – Positive lookbehind for the backtick character.
+- **`(?:(?!{.*?})[^])+?`** – Negative lookahead to exclude braces (`{}`) and stop at the next backtick.
+- **`match(/\b\w+\b/g)`** – Extract words or digits from the filtered content.
+
+### Limitations and Optimizations
+
+**1. Limited Lookbehind Support:**
+
+For environments without lookbehind, you can rework the pattern by capturing the leading condition explicitly:
+
+```js
+const regex = /^a["'](.*?)(?=["'])/g;
+```
+
+**2. Prevent Backtracking:**
+
+Optimize patterns with non-capturing groups to reduce performance overhead caused by excessive backtracking.
+
+**3. Hybrid Logic:**
+
+Combine RegEx with JavaScript functions for complex scenarios where native features like `\K` are unavailable.
+
+## Conclusion
+
+JavaScript RegEx allows for precise substring searches when combined with creative pattern design. From handling delimiters to ignoring nested structures, these examples demonstrate how to solve practical problems efficiently.
+
+Experiment with these patterns in your codebase, and share your insights!

@@ -1,0 +1,51 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+import OptionsPanel from './ui/options-panel.astro';
+import OutputPanel from './ui/output-panel.astro';
+
+const { title, description } = Astro.props;
+
+const breadcrumbItems = generateToolsBreadcrumbs('HTML Boilerplate Generator');
+---
+
+<div class='boilerplate-generator'>
+  <Breadcrumbs items={breadcrumbItems} class='mt-10' />
+  <HeadingBlock title={title} description={description} class='mt-0' />
+
+  <div class='generator-content'>
+    <OptionsPanel />
+    <OutputPanel />
+  </div>
+</div>
+
+<style>
+  .generator-content {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    min-height: 600px;
+    margin-top: 2.5rem;
+  }
+
+  @media (max-width: 1024px) {
+    .generator-content {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .generator-content {
+      margin-top: 2rem;
+    }
+  }
+</style>
+
+<script>
+  import { BoilerplateGeneratorController } from './lib/generator-controller';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    new BoilerplateGeneratorController();
+  });
+</script>

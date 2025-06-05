@@ -1,0 +1,250 @@
+---
+title: 'Error Handling in Bash: 5 Essential Methods with Examples'
+slug: error-handling-bash
+heading: 5 Essential Error Handling Methods in Bash
+image: ./images/error-handling-bash.png
+permalink: error-handling-bash
+date: 2024-11-06
+author: anton liberant
+category: bash
+type: post
+tags: ['error-handling']
+desc: Learn effective Bash error handling with exit status, set -e, traps, logging, and custom functions to make your scripts more reliable and robust.
+---
+
+While Bash doesn't have built-in try-catch blocks like Python or JavaScript, it offers several powerful mechanisms for error handling. This guide demonstrates how to implement try-catch-like error handling in Bash scripts. Here are five essential methods for error handling in Bash:
+
+## 1. Exit Status Check
+
+Verify command success using the exit code. Zero means success, while any non-zero value indicates failure.
+
+```bash
+mkdir /root/test_dir
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to create directory."
+  exit 1
+fi
+```
+
+Use conditional statements to check for specific error conditions.
+
+```bash
+if ! command -v docker &> /dev/null; then
+    echo "Error: Docker is not installed"
+    exit 1
+fi
+
+# Check if file exists
+if [ ! -f "config.txt" ]; then
+    echo "Error: config.txt not found"
+    exit 1
+fi
+```
+
+## 2. Exit on Error (set -e)
+
+The `set -e` command causes your script to exit immediately if a command returns a non-zero status.
+
+```bash
+set -e
+mkdir /root/test_dir
+echo "Directory created successfully."
+```
+
+### Best Practices:
+
+- Place `set -e` at the beginning of your script
+- Use `|| true` for commands that are allowed to fail
+- Consider combining with `set -o pipefail`
+
+## 3. Custom Error Handling with trap
+
+The trap command allows you to catch signals and execute code when they occur.
+
+```bash
+trap 'echo "An error occurred. Exiting..."; exit 1;' ERR
+mkdir /root/test_di
+```
+
+Captures errors (using `ERR`) to trigger custom actions on failure.
+
+```bash
+# Define cleanup function
+cleanup() {
+    echo "Cleaning up temporary files..."
+    rm -f /tmp/tempfile
+    exit 1
+}
+
+# Set trap for script termination
+trap cleanup EXIT ERR SIGINT SIGTERM
+
+# Your script continues here
+```
+
+### Common Signals to Handle:
+
+- **EXIT**: Script exit (normal or abnormal)
+- **ERR**: Any command returning non-zero
+- **SIGINT**: Interrupt signal (Ctrl+C)
+- **SIGTERM**: Termination signal
+
+## 4. Error Functions
+
+Create reusable error handling functions for consistent error reporting.
+
+```bash
+error_exit() {
+    echo "Error: $1" >&2
+    exit "${2:-1}"
+}
+
+warn() {
+    echo "Warning: $1" >&2
+}
+
+# Usage
+[ -f "required_file.txt" ] || error_exit "Required file not found"
+```
+
+### Redirecting Errors to Log Files
+
+Send error messages to a log for easier debugging.
+
+```bash
+exec 2>error_log.txt
+mkdir /root/test_dir
+```
+
+### Define functions that provide line-specific error messages
+
+```bash
+handle_error() {
+  echo "Error on line $1"
+  exit 1
+}
+trap 'handle_error $LINENO' ERR
+mkdir /root/test_dir
+```
+
+## 5. Verbose Mode and Debugging
+
+Implement verbose mode for better error diagnosis.
+
+```bash
+# Enable debug mode with -v flag
+if [[ "$1" == "-v" ]]; then
+    set -x  # Print each command
+    VERBOSE=true
+    shift
+fi
+
+debug() {
+    if [ "$VERBOSE" = true ]; then
+        echo "DEBUG: $1" >&2
+    fi
+}
+
+# Usage
+debug "Checking system requirements..."
+```
+
+### Best Practices for Error Handling
+
+**1. Always Check Return Values**
+
+```bash
+if ! make_backup; then
+    error_exit "Backup failed"
+fi
+```
+
+**2. Provide Meaningful Error Messages**
+
+- Include specific details about what went wrong
+- Mention which operation failed
+- Include relevant file names or parameters
+
+**3. Clean Up on Exit**
+
+- Remove temporary files
+- Reset system states
+- Close network connections
+
+**4. Log Errors Appropriately**
+
+```bash
+log_error() {
+    local msg="$1"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "$timestamp ERROR: $msg" >> "/var/log/myscript.log"
+}
+```
+
+**5. Handle Different Error Types**
+
+- Distinguish between fatal and non-fatal errors
+- Implement different recovery strategies based on error type
+- Consider retry mechanisms for transient failures
+
+### Example: Complete Error Handling Implementation
+
+```bash
+#!/bin/bash
+
+# Error handling setup
+set -e
+set -o pipefail
+
+# Global variables
+VERBOSE=false
+LOG_FILE="/var/log/myscript.log"
+
+# Error handling functions
+error_exit() {
+    log_error "$1"
+    exit "${2:-1}"
+}
+
+log_error() {
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "$timestamp ERROR: $1" >> "$LOG_FILE"
+    echo "ERROR: $1" >&2
+}
+
+debug() {
+    if [ "$VERBOSE" = true ]; then
+        echo "DEBUG: $1" >&2
+    fi
+}
+
+cleanup() {
+    debug "Performing cleanup..."
+    # Add cleanup tasks here
+}
+
+# Set trap
+trap cleanup EXIT ERR SIGINT SIGTERM
+
+# Main script logic with error handling
+main() {
+    debug "Starting script execution"
+
+    # Check prerequisites
+    if ! command -v required_command &> /dev/null; then
+        error_exit "Required command not found" 2
+    fi
+
+    # Process with error handling
+    if ! process_data; then
+        error_exit "Data processing failed" 3
+    fi
+
+    debug "Script completed successfully"
+}
+
+# Run main function
+main "$@"
+```
+
+This guide covers the essential methods for handling errors in Bash scripts. By implementing these practices, you can create more reliable and maintainable scripts that gracefully handle error conditions and provide clear feedback when things go wrong.

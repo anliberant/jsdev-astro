@@ -1,0 +1,50 @@
+---
+title: Handle Outside Clicks in React with TypeScript
+slug: outside-click-react
+heading: Detect a Click Outside of a React Component
+icon: /icons/react.png
+image: /icon.png
+permalink: snippets/outside-click-react
+date: 2024-08-29
+author: anton liberant
+category: react
+type: snippets
+tags: ['react-hooks']
+desc: Learn how to detect clicks outside a React component. This guide helps you handle dropdowns, modals, and tooltips effectively with practical, easy-to-follow steps.
+---
+
+Detecting a click outside of a React component is a common requirement, especially when dealing with
+dropdowns, modals, or tooltips that should close when a user clicks outside of them.
+
+## useOutsideClick hook
+
+```ts
+import { RefObject, useEffect, useRef } from 'react';
+
+const events = [`mousedown`, `touchstart`, `mouseup`, `touchend`];
+
+type useClickOutsideProps = {
+  ref: RefObject<HTMLElement | undefined>;
+  callback: () => void;
+};
+
+export const useOutsideClick = ({ ref, callback }: useOutsideClickProps) => {
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        callback();
+      }
+    };
+
+    for (const event of events) {
+      document.addEventListener(event, handleClickOutside);
+    }
+
+    return () => {
+      for (const event of events) {
+        document.removeEventListener(event, handleClickOutside);
+      }
+    };
+  }, [callback]);
+};
+```

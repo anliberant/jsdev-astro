@@ -1,0 +1,598 @@
+---
+title: Create a Custom Multi-Select Dropdown with Vanilla JavaScript
+slug: multi-select-dropdown
+heading: Build a Custom Multi-Select Dropdown
+image: ./images/multi-select-dropdown.png
+permalink: multi-select-dropdown
+date: 2025-01-24
+author: anton liberant
+category: javascript
+type: post
+tags: ['dropdown', 'multi-select']
+desc: Learn how to create a custom multi-select dropdown using vanilla JavaScript. Enhance your UI with dynamic selections, styled options, and persistent data storage.
+---
+
+Creating a custom multi-select dropdown enhances user experience and allows more flexibility than native `<select>` elements. Here's how you can build one from scratch with JavaScript, CSS, and HTML:
+
+## Step 1: Analyze Requirements
+
+- Allow users to select multiple options from a dropdown.
+- Display selected options in an input field.
+- Persist selections across page refreshes using localStorage.
+
+## Step 2: HTML Structure
+
+Define the basic structure for the dropdown:
+
+```html
+<div id="multiSelect" class="multi-select-dropdown"></div>
+```
+
+## Step 3: CSS Styling
+
+Style the dropdown for a clean, modern UI:
+
+```css
+.multi-select-dropdown {
+  position: relative;
+  width: 300px;
+}
+.dropdown-header {
+  border: 1px solid #ccc;
+  padding: 10px;
+  cursor: pointer;
+  background: white;
+}
+.dropdown-list {
+  display: none;
+  position: absolute;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-top: none;
+  background: white;
+}
+.dropdown-list.show {
+  display: block;
+}
+.dropdown-item {
+  padding: 8px;
+  cursor: pointer;
+}
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+.dropdown-item.selected {
+  background-color: #e0e0e0;
+}
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+.tag {
+  background-color: #f0f0f0;
+  padding: 2px 5px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+}
+.tag-remove {
+  margin-left: 5px;
+  cursor: pointer;
+}
+```
+
+## Step 4: JavaScript Logic
+
+Implement the dynamic functionality:
+
+```js
+class MultiSelect {
+  constructor(container, options) {
+    this.container = container;
+    this.options = options;
+    this.selectedValues = [];
+    this.render();
+    this.setupEventListeners();
+  }
+
+  render() {
+    // Create dropdown header
+    const header = document.createElement('div');
+    header.classList.add('dropdown-header');
+    header.textContent = 'Select options';
+
+    // Create selected tags container
+    const selectedTags = document.createElement('div');
+    selectedTags.classList.add('selected-tags');
+
+    // Create dropdown list
+    const list = document.createElement('div');
+    list.classList.add('dropdown-list');
+
+    this.options.forEach(option => {
+      const item = document.createElement('div');
+      item.classList.add('dropdown-item');
+      item.textContent = option.label;
+      item.dataset.value = option.value;
+      list.appendChild(item);
+    });
+
+    this.container.appendChild(selectedTags);
+    this.container.appendChild(header);
+    this.container.appendChild(list);
+  }
+
+  setupEventListeners() {
+    const header = this.container.querySelector('.dropdown-header');
+    const list = this.container.querySelector('.dropdown-list');
+    const selectedTags = this.container.querySelector('.selected-tags');
+
+    // Toggle dropdown
+    header.addEventListener('click', () => {
+      list.classList.toggle('show');
+    });
+
+    // Select/deselect items
+    list.addEventListener('click', e => {
+      if (e.target.classList.contains('dropdown-item')) {
+        const value = e.target.dataset.value;
+        const label = e.target.textContent;
+
+        if (this.selectedValues.some(item => item.value === value)) {
+          // Deselect
+          this.selectedValues = this.selectedValues.filter(
+            item => item.value !== value
+          );
+          e.target.classList.remove('selected');
+        } else {
+          // Select
+          this.selectedValues.push({ value, label });
+          e.target.classList.add('selected');
+        }
+
+        this.updateSelectedTags();
+      }
+    });
+
+    // Remove tag
+    selectedTags.addEventListener('click', e => {
+      if (e.target.classList.contains('tag-remove')) {
+        const valueToRemove = e.target.closest('.tag').dataset.value;
+        this.selectedValues = this.selectedValues.filter(
+          item => item.value !== valueToRemove
+        );
+        this.updateSelectedTags();
+        this.updateListSelection();
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', e => {
+      if (!this.container.contains(e.target)) {
+        list.classList.remove('show');
+      }
+    });
+  }
+
+  updateSelectedTags() {
+    const selectedTags = this.container.querySelector('.selected-tags');
+    const header = this.container.querySelector('.dropdown-header');
+
+    // Clear existing tags
+    selectedTags.innerHTML = '';
+
+    // Create new tags
+    this.selectedValues.forEach(item => {
+      const tag = document.createElement('div');
+      tag.classList.add('tag');
+      tag.dataset.value = item.value;
+      tag.innerHTML = `
+              ${item.label}
+              <span class="tag-remove">×</span>
+          `;
+      selectedTags.appendChild(tag);
+    });
+
+    // Update header text
+    header.textContent = this.selectedValues.length
+      ? `${this.selectedValues.length} selected`
+      : 'Select options';
+  }
+
+  updateListSelection() {
+    const list = this.container.querySelector('.dropdown-list');
+    list.querySelectorAll('.dropdown-item').forEach(item => {
+      const value = item.dataset.value;
+      if (this.selectedValues.some(selected => selected.value === value)) {
+        item.classList.add('selected');
+      } else {
+        item.classList.remove('selected');
+      }
+    });
+  }
+
+  // Optional method to get selected values
+  getSelectedValues() {
+    return this.selectedValues.map(item => item.value);
+  }
+}
+
+// Example usage
+const options = [
+  { value: '1', label: 'JavaScript' },
+  { value: '2', label: 'TypeScript' },
+  { value: '3', label: 'React' },
+  { value: '4', label: 'Angular' },
+  { value: '5', label: 'Svelve' },
+  { value: '6', label: 'Vue' },
+];
+
+const multiSelect = new MultiSelect(
+  document.getElementById('multiSelect'),
+  options
+);
+```
+
+This code defines a class named `MultiSelect` that creates and manages a custom multi-select dropdown using vanilla JavaScript. It allows users to select multiple options from a dropdown and displays their selections with tags. Here's a breakdown of the key functionality:
+
+### Class Constructor
+
+```js
+constructor(container, options) {
+  this.container = container;
+  this.options = options;
+  this.selectedValues = [];
+  this.render();
+  this.setupEventListeners();
+}
+```
+
+- `container`: A DOM element where the dropdown will be rendered.
+- `options`: An array of objects, each representing a dropdown option (value and label).
+- `selectedValues`: Tracks the currently selected items.
+
+**Calls:**
+
+- `render()`: Renders the dropdown structure.
+- `setupEventListeners()`: Adds interactivity to the dropdown.
+
+### `render` Method
+
+This method creates the visual structure of the dropdown:
+
+- **Header**: Displays the dropdown title or number of selected items.
+- **Selected Tags Container**: Displays tags for selected items.
+- **Dropdown List**: Lists all the available options dynamically from the `options` array.
+
+Each option is rendered as a `div` with a `data-value` attribute containing the option's unique value.
+
+### `setupEventListeners` Method
+
+Adds event listeners to enable dropdown functionality:
+
+**1. Toggle Dropdown:**
+
+```js
+header.addEventListener('click', () => {
+  list.classList.toggle('show');
+});
+```
+
+Clicking the header toggles the visibility of the dropdown list.
+
+**2. Select/Deselect Items:**
+
+```js
+list.addEventListener("click", (e) => {
+  if (e.target.classList.contains("dropdown-item")) {
+    ...
+  }
+});
+```
+
+Clicking an option:
+
+- Adds or removes it from `selectedValues`.
+- Toggles the `selected` class on the item.
+- Updates the tags using `updateSelectedTags()`.
+
+**3. Remove Tags:**
+
+```js
+selectedTags.addEventListener("click", (e) => {
+  if (e.target.classList.contains("tag-remove")) {
+    ...
+  }
+});
+```
+
+Clicking the remove icon (`×`) on a tag:
+
+- Removes the corresponding option from `selectedValues`.
+- Updates the tags and list selection.
+
+**4. Close Dropdown on Outside Click:**
+
+```js
+document.addEventListener('click', e => {
+  if (!this.container.contains(e.target)) {
+    list.classList.remove('show');
+  }
+});
+```
+
+### `updateSelectedTags` Method
+
+Updates the selected tags displayed below the dropdown header:
+
+- Clears existing tags.
+- Adds a new tag for each selected item with a remove button.
+- Updates the header text to reflect the number of selected items or reset to "Select options."
+
+### updateListSelection Method
+
+Synchronizes the dropdown list items with the current selections:
+
+- Adds the `selected` class to items in `selectedValues`.
+- Removes it from unselected items.
+
+### Optional `getSelectedValues` Method
+
+Returns an array of the value properties of the currently selected options.
+
+### Example Usage
+
+```js
+const options = [
+  { value: '1', label: 'JavaScript' },
+  { value: '2', label: 'TypeScript' },
+  { value: '3', label: 'React' },
+  { value: '4', label: 'Angular' },
+  { value: '5', label: 'Svelte' },
+  { value: '6', label: 'Vue' },
+];
+
+const multiSelect = new MultiSelect(
+  document.getElementById('multiSelect'),
+  options
+);
+```
+
+- options: An array of programming languages/frameworks.
+- The dropdown is initialized on the container with the ID multiSelect.
+
+### Summary of Features
+
+- Allows multiple selections with tags to display selected options.
+- Dynamic rendering of dropdown options.
+- Toggleable dropdown list.
+- Click-to-select and deselect functionality for items.
+- Option to remove tags via a close (×) button.
+- Syncs UI with current selections.
+
+This is a clean, reusable component that enhances usability by providing a multi-select dropdown built with pure JavaScript.
+
+## Full code
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Custom Multi-Select Dropdown</title>
+    <style>
+      .multi-select-dropdown {
+        position: relative;
+        width: 300px;
+        margin: 10rem auto;
+      }
+      .dropdown-header {
+        border: 1px solid #ccc;
+        padding: 10px;
+        cursor: pointer;
+        background: white;
+      }
+      .dropdown-list {
+        display: none;
+        position: absolute;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        border-top: none;
+        background: white;
+      }
+      .dropdown-list.show {
+        display: block;
+      }
+      .dropdown-item {
+        padding: 8px;
+        cursor: pointer;
+      }
+      .dropdown-item:hover {
+        background-color: #f0f0f0;
+      }
+      .dropdown-item.selected {
+        background-color: #e0e0e0;
+      }
+      .selected-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 5px;
+      }
+      .tag {
+        background-color: #f0f0f0;
+        padding: 2px 5px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+      }
+      .tag-remove {
+        margin-left: 5px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="multiSelect" class="multi-select-dropdown"></div>
+    <script>
+      class MultiSelect {
+        constructor(container, options) {
+          this.container = container;
+          this.options = options;
+          this.selectedValues = [];
+          this.render();
+          this.setupEventListeners();
+        }
+
+        render() {
+          // Create dropdown header
+          const header = document.createElement('div');
+          header.classList.add('dropdown-header');
+          header.textContent = 'Select options';
+
+          // Create selected tags container
+          const selectedTags = document.createElement('div');
+          selectedTags.classList.add('selected-tags');
+
+          // Create dropdown list
+          const list = document.createElement('div');
+          list.classList.add('dropdown-list');
+
+          this.options.forEach(option => {
+            const item = document.createElement('div');
+            item.classList.add('dropdown-item');
+            item.textContent = option.label;
+            item.dataset.value = option.value;
+            list.appendChild(item);
+          });
+
+          this.container.appendChild(selectedTags);
+          this.container.appendChild(header);
+          this.container.appendChild(list);
+        }
+
+        setupEventListeners() {
+          const header = this.container.querySelector('.dropdown-header');
+          const list = this.container.querySelector('.dropdown-list');
+          const selectedTags = this.container.querySelector('.selected-tags');
+
+          // Toggle dropdown
+          header.addEventListener('click', () => {
+            list.classList.toggle('show');
+          });
+
+          // Select/deselect items
+          list.addEventListener('click', e => {
+            if (e.target.classList.contains('dropdown-item')) {
+              const value = e.target.dataset.value;
+              const label = e.target.textContent;
+
+              if (this.selectedValues.some(item => item.value === value)) {
+                // Deselect
+                this.selectedValues = this.selectedValues.filter(
+                  item => item.value !== value
+                );
+                e.target.classList.remove('selected');
+              } else {
+                // Select
+                this.selectedValues.push({ value, label });
+                e.target.classList.add('selected');
+              }
+
+              this.updateSelectedTags();
+            }
+          });
+
+          // Remove tag
+          selectedTags.addEventListener('click', e => {
+            if (e.target.classList.contains('tag-remove')) {
+              const valueToRemove = e.target.closest('.tag').dataset.value;
+              this.selectedValues = this.selectedValues.filter(
+                item => item.value !== valueToRemove
+              );
+              this.updateSelectedTags();
+              this.updateListSelection();
+            }
+          });
+
+          // Close dropdown when clicking outside
+          document.addEventListener('click', e => {
+            if (!this.container.contains(e.target)) {
+              list.classList.remove('show');
+            }
+          });
+        }
+
+        updateSelectedTags() {
+          const selectedTags = this.container.querySelector('.selected-tags');
+          const header = this.container.querySelector('.dropdown-header');
+
+          // Clear existing tags
+          selectedTags.innerHTML = '';
+
+          // Create new tags
+          this.selectedValues.forEach(item => {
+            const tag = document.createElement('div');
+            tag.classList.add('tag');
+            tag.dataset.value = item.value;
+            tag.innerHTML = `
+                    ${item.label}
+                    <span class="tag-remove">×</span>
+                `;
+            selectedTags.appendChild(tag);
+          });
+
+          // Update header text
+          header.textContent = this.selectedValues.length
+            ? `${this.selectedValues.length} selected`
+            : 'Select options';
+        }
+
+        updateListSelection() {
+          const list = this.container.querySelector('.dropdown-list');
+          list.querySelectorAll('.dropdown-item').forEach(item => {
+            const value = item.dataset.value;
+            if (
+              this.selectedValues.some(selected => selected.value === value)
+            ) {
+              item.classList.add('selected');
+            } else {
+              item.classList.remove('selected');
+            }
+          });
+        }
+
+        // Optional method to get selected values
+        getSelectedValues() {
+          return this.selectedValues.map(item => item.value);
+        }
+      }
+
+      // Example usage
+      const options = [
+        { value: '1', label: 'JavaScript' },
+        { value: '2', label: 'TypeScript' },
+        { value: '3', label: 'React' },
+        { value: '4', label: 'Angular' },
+        { value: '5', label: 'Svelve' },
+        { value: '6', label: 'Vue' },
+      ];
+
+      const multiSelect = new MultiSelect(
+        document.getElementById('multiSelect'),
+        options
+      );
+    </script>
+  </body>
+</html>
+```
+
+## Conclusion
+
+Creating a custom multi-select dropdown with vanilla JavaScript provides a powerful and flexible solution for enhancing user interfaces without relying on external libraries. By dynamically rendering elements, managing user interactions, and updating the UI in real time, this approach ensures a seamless and interactive experience. It also gives you full control over customization and functionality, making it adaptable to various use cases. Whether you're building a simple form or a complex application, mastering this technique is a valuable skill that showcases the versatility of JavaScript.

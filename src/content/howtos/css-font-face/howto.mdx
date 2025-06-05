@@ -1,0 +1,105 @@
+---
+title: 'How to Use CSS @font-face: A Complete Guide to Custom Web Fonts'
+slug: css-font-face
+heading: Mastering CSS @font-face for Custom Web Fonts
+permalink: howto/css-font-face
+icon: /icons/css.png
+image: /icon.png
+date: 2025-02-09
+author: anton liberant
+category: css
+type: howto
+tags: ['@font-face']
+desc: Learn to implement custom web fonts with CSS @font-face. Discover font formats, optimize loading, and ensure cross-browser support with practical tips and examples.
+---
+
+The `@font-face` rule in CSS allows you to use custom fonts on a webpage, ensuring consistent typography across different devices and browsers. This guide covers how to implement, optimize, and best use `@font-face` for web typography.
+
+## 1. Defining a Custom Font with `@font-face`
+
+To load a custom font, define it in your CSS:
+
+```css
+@font-face {
+  font-family: 'CustomFont';
+  src:
+    url('fonts/custom-font.woff2') format('woff2'),
+    url('fonts/custom-font.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+```
+
+- `font-family`: Name assigned to the font.
+- `src`: Specifies font file paths and formats.
+- `font-weight` & `font-style`: Define variations (optional).
+
+## 2. Applying the Font
+
+Once defined, use it in your styles:
+
+```css
+body {
+  font-family: 'CustomFont', sans-serif;
+}
+```
+
+## 3. Best Practices for @font-face
+
+**a) Use Multiple Font Formats for Compatibility**
+
+Older browsers may not support modern formats. Provide fallbacks:
+
+```css
+@font-face {
+  font-family: 'CustomFont';
+  src:
+    url('fonts/custom-font.woff2') format('woff2'),
+    url('fonts/custom-font.woff') format('woff'),
+    url('fonts/custom-font.ttf') format('truetype');
+}
+```
+
+**b) Load Fonts Efficiently**
+
+- Prefer **WOFF2** format for modern browsers (better compression).
+- Use `font-display: swap` to prevent rendering delays:
+  ```css
+  @font-face {
+    font-family: 'CustomFont';
+    src: url('fonts/custom-font.woff2') format('woff2');
+    font-display: swap;
+  }
+  ```
+- **Host Locally**: Self-hosting fonts is faster than external CDNs.
+
+## 4. Using Variable Fonts
+
+Variable fonts allow flexibility in weight and style within a single file:
+
+```css
+@font-face {
+  font-family: 'CustomFont';
+  src: url('fonts/custom-font.woff2') format('woff2');
+  font-weight: 100 900;
+}
+```
+
+This allows dynamic font-weight control:
+
+```css
+h1 {
+  font-family: 'CustomFont', sans-serif;
+  font-weight: 700;
+}
+```
+
+## 5. Accessibility & Performance Considerations
+
+- **Limit the Number of Custom Fonts**: Too many fonts can slow page load times.
+- **Use System Fonts as a Fallback**: Provide alternatives in `font-family`.
+- **Optimize Font Loading**: Use preload techniques and avoid blocking resources.
+
+## Conclusion
+
+Using `@font-face`, you can create a unique and consistent web typography experience. By optimizing performance, ensuring compatibility, and following best practices, you can enhance readability and design without compromising speed.

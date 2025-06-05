@@ -1,0 +1,57 @@
+---
+import { Moon, Sun } from '@lucide/astro';
+
+const isDark = `(window.matchMedia("(prefers-color-scheme: dark)").matches || localStorage.getItem("theme") === "dark")`;
+---
+
+<span class='theme-switcher' id='theme-toggle'>
+  <Moon class='moon' stroke-width={1} size={20} />
+  <Sun class='sun' stroke-width={1} size={20} />
+</span>
+
+<style>
+  .theme-switcher {
+    cursor: pointer;
+  }
+  .icon {
+    display: none;
+  }
+
+  :global(.dark) .sun {
+    display: block;
+  }
+
+  .moon {
+    display: block;
+  }
+  .sun {
+    display: none;
+    fill: white;
+    stroke: white;
+  }
+  :global(.dark) .moon {
+    display: none;
+  }
+
+  :global(.dark) {
+    color-scheme: dark;
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById('theme-toggle');
+  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+  const current = localStorage.getItem('theme') || systemTheme;
+
+  document.documentElement.classList.add(current);
+
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    const nextTheme = isDark ? 'light' : 'dark';
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+  });
+</script>

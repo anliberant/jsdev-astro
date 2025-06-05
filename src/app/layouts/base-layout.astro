@@ -1,0 +1,220 @@
+---
+import { siteConfig } from '@/app/config/site';
+import Footer from '@/widgets/footer/footer.astro';
+import Header from '@/widgets/header/header.astro';
+
+import '@/shared/styles/global.css';
+
+import ScrollToTop from '@/shared/ui/layout/scroll-to-top.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: string;
+}
+
+const {
+  title,
+  description = siteConfig.description,
+  image = siteConfig.image,
+  type = 'website',
+} = Astro.props;
+
+const fullTitle = title || siteConfig.title;
+const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/${image}`;
+---
+
+<!doctype html>
+<html
+  lang='en'
+  data-theme='light'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta
+      name='description'
+      content={description}
+    />
+    <meta
+      name='viewport'
+      content='width=device-width, initial-scale=1.0'
+    />
+    <link
+      rel='icon'
+      type='image/png'
+      href='/icon.png'
+    />
+    <meta
+      name='generator'
+      content={Astro.generator}
+    />
+    <title>{fullTitle}</title>
+
+    <!-- Fonts -->
+    <link
+      rel='preconnect'
+      href='https://fonts.googleapis.com'
+    />
+    <link
+      rel='preconnect'
+      href='https://fonts.gstatic.com'
+      crossorigin
+    />
+    <link
+      href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
+      rel='stylesheet'
+    />
+    <link
+      rel='alternate'
+      type='application/rss+xml'
+      title={siteConfig.title}
+      href={new URL('rss.xml', Astro.site)}
+    />
+    <!-- SEO Meta Tags -->
+    <meta
+      property='og:title'
+      content={fullTitle}
+    />
+    <meta
+      property='og:description'
+      content={description}
+    />
+    <meta
+      property='og:image'
+      content={fullImageUrl}
+    />
+    <meta
+      property='og:url'
+      content={Astro.url}
+    />
+    <meta
+      property='og:type'
+      content={type}
+    />
+    <meta
+      property='og:site_name'
+      content={siteConfig.shortTitle}
+    />
+
+    <!-- Twitter Card -->
+    <meta
+      name='twitter:card'
+      content='summary_large_image'
+    />
+    <meta
+      name='twitter:title'
+      content={fullTitle}
+    />
+    <meta
+      name='twitter:description'
+      content={description}
+    />
+    <meta
+      name='twitter:image'
+      content={fullImageUrl}
+    />
+    {
+      siteConfig.twitterUsername && (
+        <meta
+          name='twitter:site'
+          content={siteConfig.twitterUsername}
+        />
+      )
+    }
+
+    <!-- Canonical URL (default, can be overridden) -->
+    <link
+      rel='canonical'
+      href={Astro.url}
+    />
+    <link
+      rel='sitemap'
+      href='/sitemap-index.xml'
+    />
+
+    <!-- Additional head content slot -->
+    <slot name='head' />
+  </head>
+  <body>
+    <div class='container'>
+      <Header />
+      <slot />
+      <Footer />
+      <ScrollToTop />
+    </div>
+
+    <script>
+      // Scroll to top functionality
+      class ScrollToTop {
+        private button: HTMLButtonElement;
+        private showButton = false;
+
+        constructor() {
+          this.createButton();
+          this.init();
+        }
+
+        private createButton() {
+          this.button = document.createElement('button');
+          this.button.innerHTML = '↑';
+          this.button.className = 'scroll-to-top';
+          this.button.setAttribute('aria-label', 'Scroll to top');
+          this.button.style.display = 'none';
+          document.body.appendChild(this.button);
+        }
+
+        private init() {
+          this.button.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+
+          window.addEventListener('scroll', () => this.handleScroll());
+        }
+
+        private handleScroll() {
+          const shouldShow = window.pageYOffset > 1200;
+          if (shouldShow !== this.showButton) {
+            this.showButton = shouldShow;
+            this.button.style.display = shouldShow ? 'block' : 'none';
+          }
+        }
+      }
+
+      new ScrollToTop();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .scroll-to-top {
+    position: fixed;
+    bottom: var(--space-xl);
+    right: var(--space-xl);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .scroll-to-top:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    .scroll-to-top {
+      bottom: var(--space-md);
+      right: var(--space-md);
+      width: 2.5rem;
+      height: 2.5rem;
+      font-size: 1rem;
+    }
+  }
+</style>

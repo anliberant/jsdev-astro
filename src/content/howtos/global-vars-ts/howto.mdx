@@ -1,0 +1,101 @@
+---
+title: 'How to Declare and Use Global Variables in TypeScript'
+slug: global-vars-ts
+heading: Declaring and Using Global Variables in TypeScript
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/global-vars-ts
+date: 2025-01-07
+author: anton liberant
+category: typescript
+type: howto
+tags: ['global-vars']
+desc: Learn to declare and use global variables in TypeScript with best practices. Ensure type safety, avoid naming conflicts, and keep your code clean and maintainable.
+---
+
+TypeScript provides a structured way to declare and use global variables while ensuring type safety. Global variables can be accessed across your application, but managing them properly is essential to avoid conflicts and maintain code clarity.
+
+## Steps to Declare Global Variables in TypeScript
+
+### 1. Create a Global Declaration File
+
+TypeScript uses declaration files (`.d.ts`) to define global variables. Create a file, typically named `globals.d.ts`, in your project directory.
+
+<div className='code-cmd'>touch globals.d.ts</div>
+
+### 2. Define the Global Variable
+
+Inside the `globals.d.ts` file, use the `declare` keyword to define your global variable. You can specify its type for type checking.
+
+```ts
+declare const API_URL: string;
+```
+
+This tells TypeScript that a global variable `API_URL` exists and is of type `string`.
+
+### 3. Set the Global Variable
+
+Set the global variable in your JavaScript or TypeScript runtime. For example, in a `script` tag in an HTML file or at the entry point of your application:
+
+**Example in HTML:**
+
+```html
+<script>
+  window.API_URL = 'https://api.example.com';
+</script>
+```
+
+**Example in TypeScript:**
+
+```ts
+(globalThis as any).API_URL = 'https://api.example.com';
+```
+
+### 4. Access the Global Variable
+
+You can now access the global variable anywhere in your TypeScript code without re-declaring it.
+
+```ts
+console.log(`API Endpoint: ${API_URL}`);
+```
+
+### 5. Optional: Extend Existing Global Interfaces
+
+To ensure better integration with existing global objects like `window`, you can extend their interfaces.
+
+```ts
+// globals.d.ts
+interface Window {
+  API_URL: string;
+}
+```
+
+Set the variable in the browser's `window` object:
+
+```ts
+window.API_URL = 'https://api.example.com';
+```
+
+Access it:
+
+```ts
+console.log(window.API_URL);
+```
+
+## Tips for Managing Global Variables
+
+- **Avoid Overusing Globals**: Use them sparingly to reduce potential conflicts.
+- **Namespace Grouping**: Group related variables under a namespace to avoid clutter.
+  ```ts
+  declare namespace MyApp {
+    const CONFIG: {
+      API_URL: string;
+      VERSION: string;
+    };
+  }
+  ```
+- **Use Environment Variables**: Tools like `dotenv` allow you to manage configurations without hardcoding global variables.
+
+## Conclusion
+
+Global variables in TypeScript are easy to declare and use when structured correctly. By using declaration files, extending global interfaces, and adhering to best practices, you can ensure your application remains maintainable and type-safe.

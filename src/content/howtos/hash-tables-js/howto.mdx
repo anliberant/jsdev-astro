@@ -1,0 +1,211 @@
+---
+title: How to Use Hash Tables for Fast Data Lookup in JavaScript
+slug: hash-tables-js
+heading: Using Hash Tables for Fast Data Lookup in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/hash-tables-js
+date: 2024-11-11
+author: anton liberant
+category: javascript
+type: howto
+tags: ['hash-tables']
+desc: Learn how to use hash tables in JavaScript for fast data lookup. Explore custom implementations, collision handling, and built-in Map/Object usage for efficiency.
+---
+
+Hash tables (also known as hash maps or dictionaries) are essential for fast data lookup in JavaScript. They provide a way to store and retrieve data quickly using key-value pairs. This article will guide you through what hash tables are, how they work, and how to implement them in JavaScript for efficient data handling.
+
+## What is a Hash Table?
+
+A hash table is a data structure that maps keys to values using a hashing function. This function takes an input (the key) and transforms it into a unique index or hash code, which points to where the value is stored in the table. By converting keys into specific memory locations, hash tables allow for near-instantaneous retrieval of data, especially when the hash function is well-optimized.
+
+**Benefits of Hash Tables**:
+
+1. **Fast Lookups**: With constant time complexity (O(1)), hash tables allow fast access to data.
+2. **Efficient Memory Use**: Only the values that are stored need memory.
+3. **Data Organization**: Hash tables are ideal for scenarios where you need fast access to data by unique keys, such as in caching and indexing.
+
+## Implementing a Hash Table in JavaScript
+
+JavaScript doesn’t have a built-in hash table structure, but it has `Map` and `Object`, which function similarly to hash tables. Here’s how you can create a basic hash table structure.
+
+### Step 1: Set Up the Hash Table Class
+
+```js
+class HashTable {
+  constructor(size = 50) {
+    this.table = new Array(size);
+  }
+
+  // Simple hash function
+  _hash(key) {
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+      hash += key.charCodeAt(i);
+    }
+    return hash % this.table.length;
+  }
+}
+```
+
+The constructor initializes the hash table with a fixed size. The `_hash` function converts a key to a number, using each character’s ASCII value, and then takes the modulus with the array length to limit the hash to the table's bounds.
+
+### Step 2: Insert Data
+
+Adding data involves creating a key-value pair and storing it at the hashed index.
+
+```js
+add(key, value) {
+  const index = this._hash(key);
+  if (!this.table[index]) {
+    this.table[index] = [];
+  }
+  this.table[index].push([key, value]);
+}
+```
+
+If there’s no array at the index, one is created. This allows for handling collisions through chaining—storing multiple key-value pairs at the same index.
+
+### Step 3: Retrieve Data
+
+To retrieve data, use the same hash function on the key, locate the index, and search the array at that index.
+
+```js
+get(key) {
+  const index = this._hash(key);
+  const bucket = this.table[index];
+  if (bucket) {
+    for (let [k, v] of bucket) {
+      if (k === key) return v;
+    }
+  }
+  return undefined;
+}
+```
+
+This method checks each key-value pair in the bucket at the hashed index, returning the value if it matches the key.
+
+### Step 4: Remove Data
+
+Removing data requires locating the hashed index and filtering out the matching key.
+
+```js
+remove(key) {
+  const index = this._hash(key);
+  const bucket = this.table[index];
+  if (bucket) {
+    this.table[index] = bucket.filter(([k, v]) => k !== key);
+    return true;
+  }
+  return false;
+}
+```
+
+## Handling Collisions
+
+When two keys hash to the same index, a **collision** occurs. Our code above handles collisions using separate chaining by storing an array at each index. Other collision handling techniques include open addressing and linear probing.
+
+### Using Built-In JavaScript Options
+
+In addition to custom implementations, JavaScript provides:
+
+- **Map**: Allows any type of key and preserves the order of entries.
+- **Object**: Functions as a simple hash table but is limited to string keys.
+
+```js
+const map = new Map();
+map.set('name', 'John Doe');
+console.log(map.get('name')); // Output: John Doe
+```
+
+### Use Cases for Hash Tables in JavaScript
+
+- **Database Caching**: Use hash tables to store frequently accessed data.
+- **Counting Occurrences**: Quickly count occurrences of elements in an array.
+- **Unique Identifiers**: Store data with unique keys for fast retrieval.
+
+## Hash table implementation in JavaScript
+
+```js
+// HashTable class with methods for adding, retrieving, and deleting key-value pairs
+class HashTable {
+  constructor(size) {
+    this.size = size; // Size of the hash table
+    this.table = new Array(size); // Initializes an array as storage
+  }
+
+  // Hash function to calculate index for a given key
+  _hash(key) {
+    const hashValue = 0;
+    for (let i = 0; i < key.length; i++) {
+      hashValue = (hashValue + key.charCodeAt(i)) % this.size;
+    }
+    return hashValue;
+  }
+
+  // Method to insert a key-value pair into the hash table
+  set(key, value) {
+    const index = this._hash(key);
+    if (!this.table[index]) {
+      this.table[index] = []; // If no array at this index, initialize it
+    }
+
+    // Check for existing key to update its value
+    for (let i = 0; i < this.table[index].length; i++) {
+      if (this.table[index][i][0] === key) {
+        this.table[index][i][1] = value;
+        return;
+      }
+    }
+
+    // If no existing key found, add a new key-value pair
+    this.table[index].push([key, value]);
+  }
+
+  // Method to retrieve the value for a given key
+  get(key) {
+    const index = this._hash(key);
+    if (!this.table[index]) return undefined; // Return undefined if bucket is empty
+
+    // Search for the key-value pair in the bucket
+    for (let i = 0; i < this.table[index].length; i++) {
+      if (this.table[index][i][0] === key) {
+        return this.table[index][i][1];
+      }
+    }
+    return undefined; // Return undefined if key not found
+  }
+
+  // Method to delete a key-value pair by key
+  delete(key) {
+    let index = this._hash(key);
+    if (!this.table[index]) return false; // Return false if bucket is empty
+
+    // Search for the key in the bucket and remove it if found
+    for (let i = 0; i < this.table[index].length; i++) {
+      if (this.table[index][i][0] === key) {
+        this.table[index].splice(i, 1); // Remove element from array
+        return true;
+      }
+    }
+    return false; // Return false if key not found
+  }
+}
+
+// Example usage of the HashTable
+let hashTable = new HashTable(10);
+hashTable.set('name', 'Rob');
+hashTable.set('age', 42);
+hashTable.set('city', 'New York');
+
+console.log(hashTable.hash('name')); // Output: hash index for 'name'
+console.log(hashTable.get('name')); // Output: "Rob"
+console.log(hashTable.get('age')); // Output: 42
+console.log(hashTable.get('city')); // Output: "New York"
+```
+
+This code defines a `HashTable` class with methods for creating a hash table of a specified size, hashing keys, and adding, retrieving, or deleting key-value pairs.
+
+## Conclusion
+
+Hash tables offer powerful data management capabilities and are crucial for JavaScript developers needing fast, constant-time lookups. Whether using `Map`, `Object`, or a custom implementation, mastering hash tables will enhance your JavaScript skills and enable you to write efficient code for data-intensive applications.

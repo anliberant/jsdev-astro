@@ -1,0 +1,195 @@
+---
+title: Encapsulating a Comprehensive WebSocket Client in JavaScript
+slug: comprehensive-websocket-client
+heading: WebSocket Client JavaScript Implementation
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/comprehensive-websocket-client
+date: 2025-01-28
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['WebSocket']
+desc: Build a robust JavaScript WebSocket client with auto-reconnect, heartbeat checks, and message queuing. Ensure stable real-time connections in your app.
+---
+
+Below is an improved and concise implementation of a WebSocketClient class. It handles connection management, reconnection logic, heartbeat mechanisms, and message queuing, making it robust for real-world applications.
+
+## WebSocket Client Class Implementation
+
+```js
+class WebSocketClient {
+  constructor(url, options = {}) {
+    this.url = url;
+    this.ws = null;
+    this.options = {
+      reconnectInterval: options.reconnectInterval || 5000,
+      maxReconnectInterval: options.maxReconnectInterval || 60000,
+      heartbeatInterval: options.heartbeatInterval || 30000,
+      heartbeatTimeout: options.heartbeatTimeout || 10000,
+      maxReconnectAttempts: options.maxReconnectAttempts || 5,
+      maxHeartbeatTimeouts: options.maxHeartbeatTimeouts || 3,
+      ...options,
+    };
+    this.reconnectAttempts = 0;
+    this.heartbeatTimeouts = 0;
+    this.messageQueue = [];
+    this.heartbeatTimer = null;
+    this.reconnectTimer = null;
+    this.isReconnecting = false;
+
+    this.connect();
+  }
+
+  connect() {
+    this.ws = new WebSocket(this.url);
+
+    this.ws.onopen = () => {
+      console.log('WebSocket connected');
+      this.isReconnecting = false;
+      this.reconnectAttempts = 0;
+      this.heartbeatTimeouts = 0;
+      this.startHeartbeat();
+      this.flushMessageQueue();
+      this.options.onOpen?.();
+    };
+
+    this.ws.onmessage = event => {
+      if (event.data === JSON.stringify({ type: 'heartbeat' })) {
+        this.resetHeartbeatTimeout();
+      }
+      this.options.onMessage?.(event);
+    };
+
+    this.ws.onclose = event => {
+      console.log(`WebSocket closed: ${event.code} ${event.reason}`);
+      this.stopHeartbeat();
+      this.options.onClose?.(event);
+
+      if (!this.isReconnecting && event.code !== 1000) {
+        this.reconnect();
+      }
+    };
+
+    this.ws.onerror = error => {
+      console.error('WebSocket error:', error);
+      this.options.onError?.(error);
+    };
+  }
+
+  startHeartbeat() {
+    this.heartbeatTimer = setInterval(() => {
+      if (this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ type: 'heartbeat' }));
+        this.setHeartbeatTimeout();
+      }
+    }, this.options.heartbeatInterval);
+  }
+
+  stopHeartbeat() {
+    clearInterval(this.heartbeatTimer);
+    clearTimeout(this.heartbeatTimeoutId);
+  }
+
+  setHeartbeatTimeout() {
+    clearTimeout(this.heartbeatTimeoutId);
+    this.heartbeatTimeoutId = setTimeout(() => {
+      console.warn('Heartbeat timeout');
+      this.heartbeatTimeouts++;
+      if (this.heartbeatTimeouts >= this.options.maxHeartbeatTimeouts) {
+        this.ws.close();
+      }
+    }, this.options.heartbeatTimeout);
+  }
+
+  resetHeartbeatTimeout() {
+    this.heartbeatTimeouts = 0;
+    this.setHeartbeatTimeout();
+  }
+
+  reconnect() {
+    this.isReconnecting = true;
+    if (this.reconnectAttempts < this.options.maxReconnectAttempts) {
+      const interval = Math.min(
+        this.options.reconnectInterval * Math.pow(2, this.reconnectAttempts),
+        this.options.maxReconnectInterval
+      );
+      this.reconnectTimer = setTimeout(() => {
+        console.log(`Reconnecting... Attempt ${this.reconnectAttempts + 1}`);
+        this.reconnectAttempts++;
+        this.connect();
+      }, interval);
+    } else {
+      console.error('Max reconnect attempts reached');
+    }
+  }
+
+  send(data) {
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(data));
+    } else {
+      this.messageQueue.push(data);
+    }
+  }
+
+  flushMessageQueue() {
+    while (this.messageQueue.length > 0) {
+      this.send(this.messageQueue.shift());
+    }
+  }
+
+  close() {
+    this.ws.close(1000, 'Closed by client');
+    this.stopHeartbeat();
+    clearTimeout(this.reconnectTimer);
+  }
+}
+```
+
+### Key Features
+
+**1. Connection Management:**
+
+- Handles onopen, onclose, and onerror events gracefully.
+- Reconnects automatically using exponential backoff.
+
+**2. Heartbeat Mechanism:**
+
+- Sends periodic heartbeat messages to keep the connection alive.
+- Detects and handles heartbeat timeouts.
+
+**3. Reconnection Logic:**
+
+- Reconnects when the connection drops unexpectedly, with configurable limits.
+- Stops reconnection attempts after reaching a maximum number of attempts.
+
+**4. Message Queue:**
+
+- Caches messages if the connection is closed and sends them once reconnected.
+
+**5. Customizable:**
+
+- Options like onOpen, onMessage, and onError allow for flexible callbacks.
+
+### Usage Example
+
+```js
+const wsClient = new WebSocketClient('ws://example.com/socket', {
+  reconnectInterval: 3000,
+  maxReconnectAttempts: 3,
+  onOpen: () => console.log('Connection established'),
+  onMessage: event => console.log('Received:', event.data),
+  onClose: event => console.log(`Disconnected: ${event.code}`),
+  onError: error => console.error('Error:', error),
+});
+
+// Send a message
+wsClient.send({ type: 'message', content: 'Hello, Server!' });
+
+// Close the connection manually
+// wsClient.close();
+```
+
+## Summary
+
+This `WebSocketClient` class provides a robust solution for handling WebSocket connections, ensuring stability through reconnection, heartbeat, and message queuing. It is well-suited for real-time applications requiring persistent communication.

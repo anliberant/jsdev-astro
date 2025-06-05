@@ -1,0 +1,168 @@
+---
+title: 5 Proven Ways to Speed Up Prettier Format-On-Save in VS Code
+slug: speedup-prettier
+heading: Improve Prettier Format-On-Save Speed in VS Code
+image: ./images/speedup-prettier.png
+permalink: speedup-prettier
+date: 2024-11-05
+author: anton liberant
+category: javascript
+type: post
+tags: ['prettier']
+desc: Optimize Prettier’s format-on-save in VS Code with five proven tips. Improve configuration, manage resources, and reduce delays for a smoother coding flow.
+---
+
+Are you frustrated with slow Prettier formatting when saving files? Many developers face this issue, especially in larger projects. Here's how to significantly improve Prettier's performance without compromising code quality.
+
+## 1. Enable Format on Save Only for Specific Languages
+
+Instead of formatting every file type, limit Prettier to languages you actually need:
+
+```json
+{
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // Disable for other file types
+  "[json]": {
+    "editor.formatOnSave": false
+  }
+}
+```
+
+## 2. Use `.prettierignore` Effectively
+
+Create a `.prettierignore` file in your project root to skip unnecessary files:
+
+```
+# Dependencies
+node_modules
+**/node_modules
+package-lock.json
+
+# Build outputs
+dist
+build
+coverage
+.next
+
+# Large generated files
+*.min.js
+*.bundle.js
+
+# Other files you rarely edit
+*.svg
+*.png
+```
+
+## 3. Configure Prettier for Performance
+
+Add these settings to your `.prettierrc`:
+
+```json
+{
+  "printWidth": 100,
+  "useTabs": false,
+  "tabWidth": 2,
+  "requirePragma": true,
+  "insertPragma": true
+}
+```
+
+The `requirePragma` option is particularly important - it tells Prettier to only format files that have a special comment at the top:
+
+```js
+/** @format */
+```
+
+## 4. Use Editor Config for Better Performance
+
+Create an `.editorconfig` file to handle basic formatting, reducing Prettier's workload:
+
+```ini
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+```
+
+## 5. Optimize VS Code Settings
+
+Update your VS Code settings to improve formatting performance:
+
+```json
+{
+  "editor.formatOnSaveTimeout": 5000,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
+  "files.autoSave": "onFocusChange"
+}
+```
+
+### Additional Performance Tips
+
+1. **Use Latest Versions**: Keep Prettier and the VS Code extension updated for latest performance improvements.
+2. **Consider Using prettier-eslint**: If you're using ESLint, integrate it with Prettier to avoid double processing:
+   <div className='code-cmd'>npm install --save-dev prettier-eslint</div>
+3. **Format Selected Files Only**: Instead of formatting the entire project, use VS Code's file explorer to selectively format files or directories.
+4. **Use Git Pre-commit Hooks**: Move formatting to pre-commit hooks using husky and pretty-quick:
+   <div className='code-cmd'>npm install --save-dev husky pretty-quick</div>
+   Add to your package.json:
+
+```json
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  }
+}
+```
+
+**5. Remove the `Auto Import` plugin** and similar extensions to streamline your development environment.
+
+These plugins can sometimes introduce unnecessary complexity or slow down your workflow. By uninstalling them, you can enhance the performance of your IDE and improve your coding experience.
+
+### Common Issues and Solutions
+
+**1. Slow on Large Files:**
+
+- Split large files into smaller modules
+- Increase `formatOnSaveTimeout` in VS Code settings
+
+**2. Conflicts with ESLint:**
+
+- Use `eslint-config-prettier` to disable conflicting rules
+- Configure ESLint to run after Prettier
+
+**3. High CPU Usage:**
+
+- Limit the number of file watchers
+- Use `requirePragma` option
+
+## Using VS Code's Extension Bisect to Identify Plugin Conflicts with Prettier
+
+VS Code’s [Extension Bisect](https://code.visualstudio.com/blogs/2021/02/16/extension-bisect) feature is designed to pinpoint extensions causing problems by automatically disabling and enabling them until it finds the conflicting extension. Here’s a quick guide on using it:
+
+1. **Activate Extension Bisect**: Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux) and type “Start Extension Bisect.” VS Code will begin disabling half of your extensions.
+2. **Reproduce the Issue**: Test Prettier’s format-on-save functionality. If the problem persists, Extension Bisect will continue testing the remaining extensions until it identifies the culprit.
+3. **Identify and Resolve**: Once the conflicting extension is found, VS Code will inform you. You can choose to uninstall or disable the problematic plugin.
+
+This method simplifies troubleshooting by automating the process of identifying which extension conflicts with Prettier, helping you restore smooth operation without manually testing each one.
+
+## Conclusion
+
+By implementing these optimizations, you can significantly reduce Prettier's formatting time. Start with the most impactful changes like proper .prettierignore configuration and language-specific formatting, then fine-tune with additional optimizations as needed.
+
+Remember, the goal is to find the right balance between code formatting and development speed. Not every file needs to be formatted on every save, and not every project requires the same level of formatting rigor.

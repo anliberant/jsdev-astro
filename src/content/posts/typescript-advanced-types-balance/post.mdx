@@ -1,0 +1,130 @@
+---
+title: 'Mastering TypeScript: How Complex Should Your Types Be?'
+slug: typescript-advanced-types-balance
+heading: 'Finding Balance in Advanced TypeScript Typing'
+image: ./images/typescript-advanced-types-balance.png
+permalink: typescript-advanced-types-balance
+date: 2025-06-04
+author: anton liberant
+category: typescript
+type: post
+tags: ['typescript-types']
+desc: Explore how far you should go with advanced TypeScript typing. Learn when complexity adds value and when it just adds confusion. Examples included.
+---
+
+TypeScript is often defined as “JavaScript with type syntax.” But in practice, it’s much more than that. You could describe it as a dual-layer language: one layer for runtime behavior (JavaScript), and another — incredibly powerful — layer for type-level computation.
+
+In fact, TypeScript’s type system is Turing-complete. That means — in theory — it can perform any computation given the right input and enough time. But what does that mean in practice? Should we write complex type-level programs just because we can?
+
+This article is for developers already using TypeScript who want to go beyond the basics. We won’t cover basic syntax or `tsconfig`. Instead, we'll explore type-level design strategies that help you:
+
+- Use types as a design tool — not just for catching errors;
+- Balance strictness and flexibility in your codebase;
+- Leverage advanced techniques like branded types and state machines.
+
+Let’s start with what makes the type system so powerful — and where its limits lie.
+
+## TypeScript’s Type System Is Turing-Complete — So What?
+
+This fact is often cited in blog posts and conference talks, usually followed by some esoteric type-level computation. For example, here’s a project that checks JavaScript code correctness… using only TypeScript types:
+
+```ts 
+// Error: ["7: Argument of type 'string' is not assignable to parameter of type 'number'."]
+type Errors = TypeCheck<`
+function square(n: number) {
+  return n * n;
+}
+square("2");
+`>;
+```
+
+Projects like HypeScript go even further, building SQL engines and Lisp interpreters in the type system itself.
+
+But while these are impressive demonstrations of what’s possible, they rarely solve real problems. This genre of type manipulation is often called “type gymnastics.”
+
+Should you learn this stuff? It depends. Type gymnastics is a good way to stretch your understanding of the system — but it can also be a trap. Knowing when not to use it is just as important.
+
+## Real-World Example: Zustand’s Type Logic
+
+Let’s look at an example of advanced, real-world typing from Zustand (a popular React state library):
+
+```ts 
+type Cast<T, U> = T extends U ? T : U;
+
+type Write<T, U> = Omit<T, keyof U> & U;
+
+type TakeTwo<T> =
+  T extends { length: 0 } ? [undefined, undefined] :
+  T extends { length: 1 } ? [...a0: Cast<T, unknown[]>, a1: undefined] :
+  T extends { length: 0 | 1 } ? [...a0: Cast<T, unknown[]>, a1: undefined] :
+  T extends { length: 2 } ? T :
+  T extends { length: 1 | 2 } ? T :
+  T extends { length: 0 | 1 | 2 } ? T :
+  T extends [infer A0, infer A1, ...unknown[]] ? [A0, A1] :
+  T extends [infer A0, (infer A1)?, ...unknown[]] ? [A0, A1?] :
+  T extends [(infer A0)?, (infer A1)?, ...unknown[]] ? [A0?, A1?] :
+  never;
+```
+
+This type transforms a tuple into exactly two elements, handling edge cases for 0, 1, or more inputs. It’s a balance of complexity and utility — readable enough to maintain, powerful enough to enforce strong constraints.
+
+## Branded Types: Safety Without Runtime Cost
+
+Branded types let you distinguish between structurally identical values. For example:
+
+```ts 
+type UserID = string & { __brand: 'UserID' };
+
+function createUser(id: UserID) {
+  // ...
+}
+
+const id = 'abc123' as UserID;
+createUser(id); // ✅ OK
+createUser('abc123'); // ❌ Error
+```
+
+This prevents passing arbitrary strings as user IDs without any runtime checks.
+
+## Advanced Pattern: Finite State Machines in Types
+
+You can use types to describe allowable transitions in a finite state machine.
+
+```ts 
+type State = 'idle' | 'loading' | 'success' | 'error';
+
+type Transition<S extends State> =
+  S extends 'idle' ? 'loading' :
+  S extends 'loading' ? 'success' | 'error' :
+  never;
+
+type Next<S extends State> = {
+  [K in Transition<S>]: () => void;
+};
+```
+
+This restricts transitions based on the current state — at the type level.
+
+## When Type Complexity Hurts More Than Helps
+
+Advanced types are great — until they’re not. Here are signs your type system is too complex:
+
+- **Your team avoids updating types.**
+- **Intellisense becomes slow or breaks entirely.**
+- **You need multiple pages of docs to explain one interface.**
+- **You debug your types more than your runtime logic.**
+
+In those cases, consider whether runtime validation (like with [Zod](https://zod.dev/)) might be a better choice.
+
+## Practical Guidelines
+
+- 💡 Use simple types by default. Add complexity only when it pays off.
+- 🧪 Test types like you test code. You can use `@ts-expect-error` and `dtslint`.
+- 🧰 Prefer utility types over DIY solutions. TypeScript ships with many (`Partial`, `Record`, `Pick`, etc.).
+- 🏷️ Use branded types when primitive types aren't distinct enough.
+- 🔀 Don’t be afraid to mix runtime validation (e.g., Zod, io-ts) with static typing.
+
+## Conclusion
+TypeScript is more than just annotations — it's a full-fledged design language. But like any tool, it should serve the problem, not become the problem. Use the Turing-complete powers of the type system wisely, and you’ll write safer, cleaner, and more expressive code.
+
+Type gymnastics might impress your peers, but thoughtful, balanced type design will make you a better engineer.

@@ -1,0 +1,102 @@
+---
+title: How to Setup a Local PostgreSQL Using Docker Compose
+slug: postgresql-docker-compose
+heading: Setting Up Local PostgreSQL with Docker Compose
+icon: /icons/docker.png
+image: ./images/postgresql-docker-compose.png
+permalink: howto/postgresql-docker-compose
+date: 2024-10-28
+author: anton liberant
+category: docker
+type: howto
+tags: ['postgresql', 'docker-compose']
+desc: Learn to set up local PostgreSQL database with Docker Compose. Follow step-by-step instructions for easy database management, connection, and persistence options.
+---
+
+![Local PostgreSQL Using Docker Compose](./images/postgresql-docker-compose.png)
+
+Running a PostgreSQL database locally with Docker Compose is an efficient way to manage databases without manual installation. Here’s a step-by-step guide to set it up.
+
+## Prerequisites
+
+- Docker and Docker Compose installed on your machine.
+
+## Step 1: Create a Project Directory
+
+Create a new directory for your project to keep all files organized:
+
+<div className='code-cmd'>mkdir postgres-docker</div>
+
+then
+
+<div className='code-cmd'>cd postgres-docker</div>
+
+## Step 2: Create a docker-compose.yml File
+
+Inside your project directory, create a file named `docker-compose.yml` and add the following configuration:
+
+```yaml
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: local-postgres
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: postgres_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Optional: initialize with SQL script
+
+volumes:
+  postgres_data:
+```
+
+**Environment Variables**:
+
+- `POSTGRES_USER`: Set the username for the PostgreSQL instance.
+- `POSTGRES_PASSWORD`: Set the password for the PostgreSQL instance.
+- `POSTGRES_DB`: Set the default database to be created.
+
+- **Ports**: The 5432:5432 mapping lets you access the database locally on port 5432.
+
+**Volumes:**
+
+- **postgres_data**: Persist PostgreSQL data even after stopping the container.
+- **init.sql**: Optional SQL script that runs automatically when the container starts (you can customize this file for initial configurations).
+
+## Step 3: Start the PostgreSQL Service
+
+Run the following command to start the PostgreSQL container with Docker Compose:
+
+<div className='code-cmd'>docker-compose up -d</div>
+
+This command pulls the PostgreSQL image, creates the container, and starts it in detached mode (`-d`).
+
+## Step 4: Connect to PostgreSQL
+
+Once the container is running, connect to PostgreSQL from your local machine using a tool like `psql` or a database GUI like DBeaver or pgAdmin.
+
+**Using `psql` Command**:
+
+<div className='code-cmd'>
+  psql -h localhost -p 5432 -U postgres_user -d postgres_db
+</div>
+
+Replace `postgres_user` and `postgres_db` with the values from your `docker-compose.yml` file.
+
+## Step 5: Stop and Remove the Container (Optional)
+
+To stop and remove the container, use:
+
+<div className='code-cmd'>docker-compose down</div>
+
+This command will stop the PostgreSQL container and remove it but keep the volume data intact for reuse.
+
+## Summary
+
+Setting up PostgreSQL with Docker Compose allows you to manage your database locally with ease. By following these steps, you’ll have a fully functional PostgreSQL instance running on your machine without the need for manual installation.

@@ -1,0 +1,119 @@
+---
+title: How to create a Scroll to Top Button in ReactJS
+slug: react-scroll-to-top
+heading: Creating a Scroll to Top Button in ReactJS
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/react-scroll-to-top
+date: 2024-09-11
+author: anton liberant
+category: react
+type: howto
+tags: []
+desc: Create a smooth Scroll to Top button in ReactJS with this step-by-step guide. Boost your site’s UX using easy code examples and best practices.
+---
+
+Creating a "Scroll to Top" button in a ReactJS application involves a few steps. You'll need to
+create a button component, handle the scroll event to show or hide the button, and then implement
+the functionality to scroll back to the top of the page when the button is clicked. Here’s a simple
+guide to achieving this:
+
+## 1. Create a ref
+
+In your **layout.(tsx | jsx)** create a reference in a top of the DOM structure.
+
+```js
+const topRef = React.useRef < HTMLDivElement > null;
+```
+
+Connect it to the top element
+
+```js
+<div className='container' ref={topRef}>
+  ...Rest of the content
+</div>
+```
+
+## 3. Create a handleScrollToTop function
+
+```js
+const handleScrollToTop = () => {
+  window?.scrollTo({
+    top: topRef.current?.offsetTop,
+    behavior: 'smooth',
+  });
+};
+```
+
+## 4. Create a React state
+
+```js
+const [showButton, setShowButton] = React.useState(false);
+
+React.useEffect(() => {
+  const handleScrollButtonVisibility = () => {
+    window?.pageYOffset > 1200 ? setShowButton(true) : setShowButton(false);
+  };
+  window?.addEventListener('scroll', handleScrollButtonVisibility);
+
+  return () => {
+    window?.removeEventListener('scroll', handleScrollButtonVisibility);
+  };
+}, []);
+```
+
+## 5. Create the Button Component
+
+```js
+// ScrollToTopButton.tsx
+import React from 'react';
+
+import { Button } from '@/components/ui/button';
+
+const ScrollToTopButton = ({ onClick }: { onClick: () => void }) => {
+  return (
+    <Button
+      className='fixed bottom-5 right-7 z-50 cursor-pointer rounded'
+      variant='secondary'
+      onClick={handleScrollToTop}
+    >
+      <svg
+        width='18px'
+        height='18px'
+        viewBox='-0.5 0 25 25'
+        fill='none'
+        xmlns='http://www.w3.org/2000/svg'
+      >
+        <path
+          d='M8 13.8599L10.87 10.8C11.0125 10.6416 11.1868 10.5149 11.3815 10.4282C11.5761 10.3415 11.7869 10.2966 12 10.2966C12.2131 10.2966 12.4239 10.3415 12.6185 10.4282C12.8132 10.5149 12.9875 10.6416 13.13 10.8L16 13.8599'
+          stroke='#000000'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+        />
+        <path
+          d='M3 7.41992L3 17.4199C3 19.6291 4.79086 21.4199 7 21.4199H17C19.2091 21.4199 21 19.6291 21 17.4199V7.41992C21 5.21078 19.2091 3.41992 17 3.41992H7C4.79086 3.41992 3 5.21078 3 7.41992Z'
+          stroke='#000000'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+        />
+      </svg>
+    </Button>
+  );
+};
+
+export default ScrollToTopButton;
+```
+
+## 6. Integrate the Button in Your App
+
+```js
+{
+  showButton && <ScrollToTopButton onClick={handleScrollToTop} />;
+}
+```
+
+This approach ensures the button appears when the user scrolls down and smoothly scrolls the page
+back to the top when clicked. Feel free to customize the button and its behavior to fit the design
+and functionality of your application!

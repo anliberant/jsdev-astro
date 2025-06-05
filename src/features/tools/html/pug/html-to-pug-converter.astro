@@ -1,0 +1,55 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import ConverterHeader from '@/shared/ui/converters/converter-header.astro';
+import ConverterPanel from '@/shared/ui/converters/converter-panel.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+const breadcrumbItems = generateToolsBreadcrumbs('HTML to Pug Converter');
+
+const converterOptions = [
+  { id: 'prettifyOption', label: 'Prettify', checked: true },
+  { id: 'combineTextOption', label: 'Combine Text', checked: false },
+  { id: 'preserveCommentsOption', label: 'Preserve Comments', checked: false },
+];
+---
+
+<Breadcrumbs items={breadcrumbItems} class='mt-10' />
+
+<HeadingBlock
+  title='HTML to Pug Converter'
+  description='Convert HTML markup to clean Pug template syntax quickly and easily'
+  class='mt-0'
+/>
+
+<ConverterHeader options={converterOptions} class='mt-10' />
+
+<div class='main-content'>
+  <ConverterPanel
+    type='input'
+    title='HTML Input'
+    icon='📝'
+    textareaId='htmlInput'
+    placeholder='Paste your HTML code here...'
+    showSampleButton={true}
+    showStats={true}
+  />
+
+  <ConverterPanel
+    type='output'
+    title='Pug Output'
+    icon='🎯'
+    textareaId='pugOutput'
+    placeholder='Converted Pug code will appear here...'
+    readonly={true}
+    showStats={true}
+  />
+</div>
+
+<script>
+  import { HtmlToPugConverterController } from './lib/converter-controller';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    new HtmlToPugConverterController();
+  });
+</script>

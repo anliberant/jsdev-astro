@@ -1,0 +1,171 @@
+---
+title: Implementing Dark Mode in NextJS14 with Tailwind CSS
+slug: dark-mode-react
+heading: 'Tailwind CSS Dark Mode Integration in Next.js 14'
+image: ./images/dark-mode-next.png
+permalink: dark-mode-react
+date: 2024-05-15
+author: anton liberant
+category: nextjs
+type: post
+tags: ['use-theme', 'dark-mode', 'tailwindcss']
+desc:
+  To set up dark mode with Node.js 14 and Tailwind CSS, you'll follow a similar approach as before,
+  but with some adjustments for server-side rendering in Node.js.
+---
+
+Implementing **Dark Mode** with **Tailwind CSS** and **Next.js** is straightforward. You can utilize
+Tailwind CSS's built-in dark mode feature along with Next.js's dynamic routing to achieve this.
+Here's how you can do it:
+
+### 1. Create a Next.js Project:
+
+If you haven't already, create a new Next.js project using the following command:
+
+<span className='code-cmd'>npx create-next-app my-next-app</span>
+
+### 2. Install Tailwind CSS:
+
+Navigate to your project directory and install Tailwind CSS along with **autoprefixer** and
+**postcss**:
+
+<span className='code-cmd'>npm install tailwindcss postcss autoprefixer</span>
+
+### 3. Create Tailwind Configuration:
+
+Generate a default Tailwind configuration file:
+
+<span className='code-cmd'>npx tailwindcss init -p</span>
+
+### 4. Enable Dark Mode in Tailwind Configuration:
+
+In your **tailwind.config.js**, set the darkMode property to **'class'**:
+
+```js
+// tailwind.config.js
+module.exports = {
+  darkMode: 'class',
+  // other configurations...
+};
+```
+
+### 5. Create CSS File:
+
+Create a CSS file where you'll import Tailwind CSS and define additional styles, including those for
+dark mode:
+
+```css
+/* app/globals.css */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Define dark mode styles */
+@media (prefers-color-scheme: dark) {
+  .dark {
+    @apply dark;
+  }
+}
+```
+
+### 6. Import CSS in layout
+
+```js
+import './globals.css';
+import './globals.css';
+```
+
+### 7. Install next-themes:
+
+<span className='code-cmd'>npm install next-themes</span>
+
+### 8. Create a theme-provider:
+
+Create a theme-provider.tsx components inside the components or app folder:
+
+```js
+'use client';
+
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import { type ThemeProviderProps } from 'next-themes/dist/types';
+import { useEffect, useState } from 'react';
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <>{children}</>;
+  }
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+}
+```
+
+### 9. Create a theme-switcher component:
+
+```js
+'use client';
+
+import { useTheme } from 'next-themes';
+
+import { useTheme } from 'next-themes';
+
+const ThemeSwitcher = () => {
+  const { theme, setTheme } = useTheme();
+  return (
+    <button
+      type='button'
+      className='hs-dark-mode-active:hidden hs-dark-mode text-gray-600 hover:text-gray-500 group mr-[1em] flex items-center font-medium dark:text-white dark:hover:text-neutral-500'
+      data-hs-theme-click-value='dark'
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+    >
+      {theme === 'light' ? (
+        <svg
+          className='size-5 flex-shrink-0'
+          xmlns='http://www.w3.org/2000/svg'
+          width='24'
+          height='24'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+        >
+          <path d='M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z'></path>
+        </svg>
+      ) : (
+        <svg
+          className='size-5 flex-shrink-0'
+          xmlns='http://www.w3.org/2000/svg'
+          width='24'
+          height='24'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          strokeWidth='2'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+        >
+          <circle cx='12' cy='12' r='4'></circle>
+          <path d='M12 2v2'></path>
+          <path d='M12 20v2'></path>
+          <path d='m4.93 4.93 1.41 1.41'></path>
+          <path d='m17.66 17.66 1.41 1.41'></path>
+          <path d='M2 12h2'></path>
+          <path d='M20 12h2'></path>
+          <path d='m6.34 17.66-1.41 1.41'></path>
+          <path d='m19.07 4.93-1.41 1.41'></path>
+        </svg>
+      )}
+    </button>
+  );
+};
+export default ThemeSwitcher;
+```
+
+This setup will enable dark mode in your Next.js project using Tailwind CSS. You can customize the
+dark mode styles further based on your requirements

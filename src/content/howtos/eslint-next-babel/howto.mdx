@@ -1,0 +1,69 @@
+---
+title: "How to solve eslint Parsing error Cannot find module 'next/babel'"
+slug: eslint-next-babel
+heading: "Fix ESLint Parsing Error: Cannot Find 'next/babel'"
+icon: /icons/babel.png
+image: ./images/eslint-next-babel.png
+permalink: howto/eslint-next-babel
+date: 2023-11-02
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['eslint', 'babel']
+desc: Resolve the '[eslint] Parsing error - Cannot find module "next/babel"' issue in Next.js. Follow step-by-step solutions to fix ESLint and Babel config errors.
+---
+
+## Solve [eslint] Parsing error: Cannot find module 'next/babel'
+
+The "[eslint] Parsing error: Cannot find module 'next/babel'" error often occurs when ESLint
+encounters an issue with the Babel configuration in a Next.js project. To resolve this error, you
+can follow these steps:
+
+### 1. Configure .eslintrc.js:
+
+In your **ESLint** configuration file (usually **.eslintrc.js**), you should extend the appropriate
+ESLint configuration for **NextJs**. You can do this by extending the next ESLint config in your
+ESLint configuration file:
+
+```json
+{
+  "extends": ["next/babel", "next/core-web-vitals"]
+}
+```
+
+### 2. Check Babel Configuration:
+
+Ensure that your Babel configuration is set up correctly. **NextJs** typically includes **Babel**
+configuration out of the box, but if you have a custom **.babelrc** or **babel.config.js**, make
+sure it's configured properly.
+
+### 3. Clear ESLint Cache:
+
+Sometimes, ESLint can have a cache that causes issues. You can try clearing the ESLint cache by
+running the following command:
+
+<span className='code-cmd'>npx eslint --clear</span>
+
+### 4. Update ESLint and Related Plugins:
+
+<span className='code-cmd'>
+  npm update eslint eslint-plugin-react eslint-plugin-react-hooks
+</span>
+
+### 5. Verify Your File Extensions:
+
+Ensure that your ESLint is correctly configured to lint the files with the appropriate extensions,
+such as **.js**, **.jsx**, or _.ts_, \*.tsx, depending on your project.
+
+After following these steps, the "[eslint] Parsing error: Cannot find module 'next/babel'" error
+should be resolved. If you still encounter issues, double-check your project's file structure and
+configurations, and make sure you're using compatible versions of **NextJs**, **ESLint**, and
+**Babel**.
+
+<div className='single-post__img-wrapper'>
+  ![Parsing error: Cannot find module
+  'next/babel'](./images/eslint-next-babel.png)
+  <span className='single-post__img-alt'>
+    Parsing error: Cannot find module 'next/babel'
+  </span>
+</div>

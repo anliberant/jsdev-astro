@@ -1,0 +1,202 @@
+---
+title: How to Create Custom Elements in HTML5
+slug: custom-html-tag
+heading: Mastering Custom Elements in HTML5
+permalink: howto/custom-html-tag
+icon: /icons/html.png
+image: /icon.png
+date: 2024-09-19
+author: anton liberant
+category: html
+type: howto
+tags: ['html5', 'frontend']
+desc: Learn to create custom HTML elements with the Web Components API. Define, register, and use reusable elements with encapsulated styles for modular web development.
+---
+
+[Custom Elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
+is a feature of the Web Components API in HTML5, allowing developers to create reusable and
+encapsulated HTML tags with custom behavior. It enables you to extend the functionality of standard
+HTML elements or create entirely new ones.
+
+## Step-by-Step Guide to Creating Custom Elements
+
+Creating custom elements in HTML5 allows you to define your own HTML tags with specific behavior and
+appearance. This is part of the Web Components standard, and it provides powerful ways to build
+modular, reusable components for web applications.
+
+### 1. Define the Custom Element Class
+
+To create a custom element, you need to define a class that extends the **HTMLElement** class. This
+class will encapsulate the behavior and structure of your custom element.
+
+**Example:**
+
+```js
+class MyCustomElement extends HTMLElement {
+  constructor() {
+    super(); // Always call super() first in the constructor
+    this.attachShadow({ mode: 'open' }); // Attach shadow DOM
+    this.shadowRoot.innerHTML = `
+      <style>
+        p { color: blue; }
+      </style>
+      <p>Hello, I am a custom element!</p>
+    `;
+  }
+}
+```
+
+### 2. Register the Custom Element
+
+Next, use the **customElements.define()** method to register the new custom element with the
+browser. This allows you to use it in your HTML code.
+
+```js
+customElements.define('my-custom-element', MyCustomElement);
+```
+
+In this case, **'my-custom-element'** is the tag name you’ll use in your HTML.
+
+### 3. Use the Custom Element in HTML
+
+Once the element is registered, you can use it like any other HTML tag in your document.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Custom Elements Demo</title>
+  </head>
+  <body>
+    <my-custom-element></my-custom-element>
+
+    <script src="custom-element.js"></script>
+    <!-- Link to your script file -->
+  </body>
+</html>
+```
+
+This will render a blue paragraph with the text: "Hello, I am a custom element!"
+
+**Working with Shadow DOM**
+
+To encapsulate styles and prevent them from affecting the rest of the page, custom elements can use
+the **Shadow DOM**. This creates an isolated part of the DOM where you can define your element's
+structure and styles.
+
+```js
+this.attachShadow({ mode: 'open' });
+```
+
+When the shadow DOM is attached to the element, all styles and scripts within that shadow DOM remain
+isolated from the rest of the page.
+
+**Example of a Custom Element with Shadow DOM**
+
+```js
+class FancyBox extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `
+      <style>
+        div {
+          padding: 20px;
+          border: 2px solid green;
+          background-color: lightyellow;
+        }
+      </style>
+      <div>
+        <p>This is a fancy box!</p>
+      </div>
+    `;
+  }
+}
+
+customElements.define('fancy-box', FancyBox);
+```
+
+In this example:
+
+- The FancyBox element is created.
+- It contains a div with some custom styles that are encapsulated within the shadow DOM, so they
+  don’t interfere with the page’s global styles.
+
+To use this custom element, you would write:
+
+```html
+<fancy-box></fancy-box>
+```
+
+**Handling Attributes**
+
+Custom elements can respond to attributes just like standard HTML elements. To do this, you can
+override the **attributeChangedCallback()** method to detect changes to specific attributes.
+
+Example:
+
+```js
+class AlertBox extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `<div><p>Default alert message</p></div>`;
+  }
+
+  static get observedAttributes() {
+    return ['message']; // List of attributes to observe
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'message') {
+      this.shadowRoot.querySelector('p').textContent = newValue;
+    }
+  }
+}
+
+customElements.define('alert-box', AlertBox);
+```
+
+Now, if you use the custom element with a message attribute:
+
+```html
+<alert-box message="This is a custom alert!"></alert-box>
+```
+
+The text inside the element will update based on the attribute’s value.
+
+**Customized Built-In Elements**
+
+In addition to creating autonomous custom elements, you can extend existing HTML elements. These are
+called **Customized Built-In Elements**.
+
+Example:
+
+```js
+class HighlightedButton extends HTMLButtonElement {
+  constructor() {
+    super();
+    this.style.backgroundColor = 'yellow';
+    this.style.fontWeight = 'bold';
+  }
+}
+
+customElements.define('highlighted-button', HighlightedButton, {
+  extends: 'button',
+});
+```
+
+To use this customized button, write:
+
+```html
+<button is="highlighted-button">Click Me!</button>
+```
+
+## Conclusion
+
+Creating custom elements in HTML5 allows you to build reusable components with encapsulated behavior
+and styles. By leveraging the power of the Web Components API, you can extend HTML and make your web
+applications more modular and maintainable. Whether you need a simple custom tag or a more complex
+element with shadow DOM, custom elements offer a flexible solution.

@@ -1,0 +1,287 @@
+---
+title: Crafting Effective Related Posts for Your Gatsby Blog
+slug: related-posts-gatsby
+heading: Building Related Posts for Your Gatsby Site
+image: ./images/related-posts-gatsby.png
+permalink: related-posts-gatsby
+date: 2024-10-17
+author: anton liberant
+category: gatsby
+type: post
+tags: ['related-posts', 'graphql', 'seo']
+desc: Learn to create effective related posts for your Gatsby blog using tips and best practices. Boost user engagement, SEO, and page views with dynamic relevant content.
+---
+
+We’ll be using Gatsby, TailwindCSS, and Shadcn UI for this tutorial. If you’re unsure how to set up a project with these tools, please check out our previous posts in the Gatsby category. In this guide, we won't be building a blog from scratch or filling it with random content. Instead, we’ll assume you already have a blog with existing content organized by categories, and you're looking to display related posts.
+
+Related posts are an excellent way to increase reader engagement on your blog. They help keep visitors on your site longer by offering them content that aligns with their interests. This article will guide you through creating effective related posts for your Gatsby blog, covering best practices, tips, and examples to enhance user experience.
+
+Let’s start by creating the Related Posts component.
+
+## Why Related Posts Matter
+
+Related posts enhance user experience by offering readers additional content they are likely to find valuable. Some key benefits include:
+
+- **Increased engagement**: Related posts encourage readers to explore more of your content, reducing bounce rates.
+- **Improved SEO**: By linking relevant articles together, you create a network of internal links, which can help with SEO.
+- **Higher page views**: Visitors are more likely to stay on your site if you guide them toward content that aligns with their interests.
+- **Better user experience**: Offering more relevant articles improves navigation and keeps users engaged with high-quality content.
+
+Now, let’s explore how you can create effective related posts in your Gatsby blog.
+
+## Related Posts Component
+
+The design of your related posts section should be clean and visually appealing. It should fit seamlessly within your post layout but still stand out to draw attention. Consider using images, headlines, and brief descriptions.
+
+### 1. Create a related-posts folder inside a components dir\*\*.
+
+<div className='code-cmd'>mkdir related-posts</div>
+
+### 2. Create a related-card.types.tsx file:
+
+```tsx
+// related-card.types.tsx
+
+export type RelatedPost = {
+  frontmatter: {
+    desc: string;
+    permalink: string;
+    title: string;
+  };
+  id: string;
+};
+```
+
+### 3. Create a related-card.tsx components:
+
+We’ll use the [card](https://ui.shadcn.com/docs/components/card) component from Shadcn. First, instantiate the component:
+
+<div className='code-cmd'>npx shadcn@latest add card</div>
+
+```tsx
+// related-card.tsx
+import React from 'react';
+
+import { Card, CardContent, CardTitle } from '../../ui/card';
+import { RelatedPost } from './related-card.types';
+import { Link } from 'gatsby';
+
+import { Card, CardContent, CardTitle } from '../../ui/card';
+import { RelatedPost } from './related-card.types';
+import { Link } from 'gatsby';
+
+type RelatedCardPostProps = {
+  post: RelatedPost;
+};
+
+const RelatedCard = ({ post }: RelatedCardPostProps) => {
+  return (
+    <Card className='max-h-fit max-w-[45%] justify-start p-3 hover:shadow-black dark:hover:shadow-white md:flex md:items-center'>
+      <CardContent className='p-0'>
+        <Link to={`/${post.frontmatter.permalink}`}>
+          <CardTitle className='mt-1 inline-block text-lg font-medium'>
+            {post.frontmatter.title}
+          </CardTitle>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+};
+export default RelatedCard;
+```
+
+Now let’s bring it all together into a wrapper, which we’ll call **related-posts.tsx**
+
+```tsx
+import React from 'react';
+
+import RelatedCard from './cards/related-card';
+import { RelatedPost } from './cards/related-card.types';
+
+import RelatedCard from './cards/related-card';
+import { RelatedPost } from './cards/related-card.types';
+
+type RelatedPostsProps = {
+  posts: RelatedPost[];
+};
+
+const RelatedPosts = ({ posts }: RelatedPostsProps) => {
+  return (
+    <div className='my-4'>
+      <h3 className='my-4 text-xl'>Related Posts:</h3>
+      <section className='flex flex-wrap justify-between gap-5'>
+        {posts.map((post, idx) => {
+          return <RelatedCard post={post} key={post.id} />;
+        })}
+      </section>
+    </div>
+  );
+};
+export default RelatedPosts;
+```
+
+## Fetch the data with GraphQL Query
+
+We’ve created the Related Posts component, and now we need to integrate it and pass the posts into it. We'll fetch the data using **GraphQL** in any parent component or template. For this example, we’ll use a post template.
+
+```js
+export const query = graphql`
+  query GetSinglePost($slug: String, $category: String) {
+    mdx(frontmatter: { slug: { eq: $slug } }) {
+      excerpt
+      frontmatter {
+        category
+        date(formatString: "YYYY-MM-DDTHH:mm:ss.sssZ")
+        slug
+        title
+        desc
+        tags
+        image {
+          childImageSharp {
+            gatsbyImageData(
+              layout: CONSTRAINED
+              formats: WEBP
+              webpOptions: { quality: 50 }
+              width: 800
+            )
+          }
+        }
+      }
+      fields {
+        timeToRead {
+          minutes
+        }
+      }
+      tableOfContents
+    }
+    relatedPosts: allMdx(
+      filter: {
+        frontmatter: {
+          type: { eq: "post" }
+          category: { eq: $category }
+          slug: { ne: $slug }
+        }
+      }
+      limit: 4
+      sort: { frontmatter: { date: DESC } }
+    ) {
+      nodes {
+        id
+        frontmatter {
+          title
+          permalink
+          desc
+        }
+      }
+    }
+  }
+`;
+```
+
+This GraphQL query is fetching data for a single blog post and its related posts in a Gatsby project.
+Here's a breakdown of what each part of the code does:
+
+- **graphql**: A template literal for writing GraphQL queries in Gatsby.
+- **GetSinglePost**: The name of the query. It accepts two variables: `$slug` (a unique identifier for the post) and `$category` (the category the post belongs to).
+
+**Fetching the Main Post (mdx)**:
+
+```js
+mdx(frontmatter: { slug: { eq: $slug } }) {
+```
+
+- This part retrieves a single post where the `slug` (a unique identifier for the post) matches the value of `$slug`.
+
+Inside this block, it fetches several fields from the post:
+
+- **excerpt**: A short summary or snippet of the post.
+- **frontmatter**: Contains metadata about the post, such as:
+- **category**: The category of the post.
+- **date**: The publication date, formatted as YYYY-MM-DDTHH:mm:ss.sssZ.
+- **slug**: The unique slug of the post.
+- **title**: The title of the post.
+- **desc**: A description of the post.
+- **image**: Fetches the post’s image, including image optimization options like:
+- **gatsbyImageData**: Generates optimized images using the gatsby-plugin-image API.
+- **fields**: Includes the calculated timeToRead, specifically fetching the reading time in minutes.
+- **tableOfContents**: Retrieves the post’s table of contents if it exists.
+
+**Fetching Related Posts:**
+
+```js
+relatedPosts: allMdx(
+   filter: {
+     frontmatter: { type: { eq: "post" }, category: { eq: $category }, slug: { ne: $slug } }
+   }
+   limit: 4
+   sort: { frontmatter: { date: DESC } }
+ ) {
+```
+
+- **relatedPosts**: This alias fetches related posts based on their category and excludes the current post `(slug: { ne: $slug })`.
+  It filters posts by:
+- **type**: "post": Ensures only posts (not pages or other content types) are returned.
+- **category**: `{ eq: $category }`: Filters posts by the same category as the current post.
+- **slug**: `{ ne: $slug }`: Excludes the current post from the results.
+- The query limits the related posts to a maximum of 4 (limit: 4).
+- The results are sorted by the date field in descending order (date: DESC), showing the most recent posts first.
+
+**Purpose**:
+
+The query is designed to fetch detailed information about a specific blog post and a list of related posts based on the same category. This is often used to display related posts at the end of a blog article to enhance user engagement.
+
+## Alternative Method: Filter the data with Javascript
+
+The fastest way to fetch related posts in terms of performance is by using a **GraphQL** query. But what if we need more refined sorting for our posts? That’s where native JavaScript comes in handy.
+
+### What have we done so far?
+
+We’ve been pulling the latest posts from a category using **GraphQL**. While this method is quick, it's not ideal for **SEO** because all posts end up linking to the same 4 recent posts. Worse, these links change with every deployment, which isn’t great for search rankings.
+
+To improve this, we’ll sort our posts by date and only show the previous posts within the same category. The downside of this approach is that the first post won’t have any related posts, and the second post will only have one. However, this method provides static links that won’t change every time new content is added, which is much better for **SEO**.
+
+```tsx
+const PostTemplate: React.FC<PageProps<Queries.GetSinglePostQuery>> = ({
+  data: {
+    mdx: {
+      frontmatter: { title, category, image, date, tags },
+      fields: {
+        timeToRead: { minutes },
+      },
+      tableOfContents,
+    },
+    relatedPosts,
+  },
+  children,
+}) => {
+  // Fetching all posts with a hook
+  const { posts } = useAllPosts();
+
+  // Filtering all posts by category
+  const filteredPostsByCategory = posts.filter(
+    post => post.frontmatter.category === category
+  );
+  // Filtering all posts by date
+  let filteredRelatedPosts = filteredPostsByCategory.filter(
+    post => Date.parse(post.frontmatter.date) < Date.parse(date)
+  );
+  if (filteredRelatedPosts.length > 4) {
+    filteredRelatedPosts = filteredRelatedPosts.slice(0, 4);
+  }
+
+  return (
+    <Layout>
+      // Component code
+      <RelatedPosts posts={filteredRelatedPosts} />
+    </Layout>
+  );
+};
+```
+
+The goal of the component is to display the main post's content and show related posts based on the same category, while ensuring the related posts are older (published earlier) than the current post. By limiting the number of related posts to a maximum of 4, the component ensures a clean and consistent UI.
+
+This approach avoids the issue of displaying the most recent posts repeatedly, providing static, date-based related content instead.
+
+## Final Thoughts
+
+Creating effective related posts in your Gatsby blog can significantly improve user engagement, SEO, and page views. By carefully choosing relevant content, limiting the number of posts, and presenting them in an appealing way, you can help readers discover more of your valuable content. The power of Gatsby’s GraphQL and React components gives you all the tools you need to create dynamic, user-friendly related post sections tailored to your audience’s needs.

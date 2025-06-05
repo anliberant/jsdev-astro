@@ -1,0 +1,266 @@
+---
+title: Mastering Advanced TypeScript Concepts for Robust Applications
+slug: mastering-adv-ts
+heading: Advanced TypeScript Concepts for Strong Applications
+permalink: mastering-adv-ts
+image: ./images/mastering-adv-ts.png
+date: 2024-11-25
+author: anton liberant
+category: typescript
+type: post
+tags: ['generics']
+desc: Learn advanced TypeScript features like generics, utility types, mapped types, and more to create dynamic, scalable, and type-safe applications.
+---
+
+TypeScript, a powerful superset of JavaScript, has revolutionized the way developers build scalable, maintainable applications. While basic typing ensures safer code, advanced TypeScript features such as generics, utility types, mapped types, and constraints take productivity and type safety to the next level. This article delves into these advanced concepts to help you master TypeScript for robust application development.
+
+## 1. Constraint Using Specific Types
+
+If you use an array (`Type[]`) as a generic type, it inherently guarantees properties like `length` because all arrays in JavaScript have this property.
+
+**Example:**
+
+```ts
+function getArrayLength<T>(arr: T[]): number {
+  return arr.length; // Safe to access `length`
+}
+
+const numbers = [1, 2, 3];
+console.log(getArrayLength(numbers)); // Output: 3
+
+const strings = ['a', 'b', 'c'];
+console.log(getArrayLength(strings)); // Output: 3
+```
+
+Here, the constraint `T[]` ensures that the input is an array, which always has a `length` property.
+
+## 2. Constraint Using Interfaces with extends
+
+When working with types that may or may not have certain properties, you can use an interface to enforce constraints. For example, if you need to ensure that a type has a `length` property, you can define an interface and constrain the generic type with `extends`.
+
+**Example:**
+
+```ts
+interface HasLength {
+  length: number;
+}
+
+function logWithLength<T extends HasLength>(value: T): void {
+  console.log(`Length: ${value.length}`);
+}
+
+logWithLength('Hello, TypeScript!'); // Works, because strings have `length`
+// Output: Length: 17
+
+logWithLength([1, 2, 3, 4]); // Works, because arrays have `length`
+// Output: Length: 4
+
+logWithLength({ length: 5, name: 'Example' }); // Works, because the object has `length`
+// Output: Length: 5
+
+// logWithLength(42); // Error: number does not have `length`
+```
+
+1. **Specific Types (1)**: Constrains the type to an array, guaranteeing array-specific properties like length.
+2. **Interfaces with `extends`**: Adds custom constraints for any type, ensuring it includes the required properties or structure.
+
+This flexibility allows you to handle a wide range of scenarios while keeping your TypeScript code robust and type-safe.
+
+## 3. Advanced Utility Types
+
+TypeScript provides built-in utility types to simplify type manipulations.
+
+- **Partial**: Makes all properties optional.
+
+```ts
+interface Props {
+  id: string;
+  name: string;
+}
+type PartialProps = Partial<Props>;
+```
+
+- **Readonly**: Makes all properties read-only.
+
+```ts
+type ReadonlyProps = Readonly<Props>;
+```
+
+- **Pick**: Extracts specific properties from a type.
+
+```ts
+type PickedProps = Pick<Props, 'id'>;
+```
+
+- **Record**: Defines a type with specific keys and their associated values.
+
+```ts
+type RecordExample = Record<'a' | 'b', number>;
+```
+
+## 4. Mapping Types for Efficiency
+
+Mapped types dynamically transform existing types, reducing redundancy.
+
+**Example:**
+
+```ts
+type Keys = 'x' | 'y' | 'z';
+type Coordinates = { [K in Keys]: number };
+```
+
+This creates an object type with keys `x`, `y`, and `z` and their values as numbers.
+
+## 5. Index Signatures for Dynamic Structures
+
+When objects have dynamic keys, use index signatures.
+
+```ts
+interface DynamicObject {
+  [key: string]: string;
+}
+let obj: DynamicObject = {
+  name: 'Alice',
+  age: '25',
+};
+```
+
+## 6. Custom Utility Type Implementations
+
+Understanding the internals of utility types strengthens your grasp on TypeScript.
+
+**Readonly Implementation:**
+
+```ts
+type MyReadonly<T> = {
+  readonly [P in keyof T]: T[P];
+};
+```
+
+**Partial Implementation:**
+
+```ts
+type MyPartial<T> = {
+  [P in keyof T]?: T[P];
+};
+```
+
+**Pick Implementation:**
+
+```ts
+type MyPick<T, K extends keyof T> = {
+  [P in K]: T[P];
+};
+```
+
+## 7. Index Query Types for Property Access
+
+Query property types dynamically using `keyof` and index queries.
+
+```ts
+type Props = { a: number; b: string; c: boolean };
+type TypeA = Props['a']; // number
+```
+
+## 8. Function Compatibility in TypeScript
+
+Function compatibility refers to the ability of one function type to be assigned to another. This is influenced by the number of parameters, parameter types, and return value types. Let’s break this down:
+
+### 1. Number of Parameters
+
+In TypeScript, a function with fewer parameters can be assigned to a function with more parameters. This is because the additional parameters in the receiving function are simply ignored.
+
+**Example:**
+
+```ts
+type F1 = (a: number) => void;
+type F2 = (a: number, b: number) => void;
+
+let f1: F1;
+let f2: F2 = f1; // Compatible: f1 has fewer parameters than f2
+```
+
+Here, `f1` can be assigned to `f2` because `f2` expects more parameters, but `f1` doesn’t use them.
+
+**Real-World Example with forEach:**
+
+The `forEach` method of an array takes a callback function as its argument. The callback has the following signature:
+
+```ts
+(value: string, index: number, array: string[]) => void;
+```
+
+However, TypeScript allows you to omit unused parameters in the callback, promoting function compatibility.
+
+```ts
+const arr = ['a', 'b', 'c'];
+
+// Omitting all parameters
+arr.forEach(() => {
+  console.log('No parameters used');
+});
+
+// Using one parameter
+arr.forEach(item => {
+  console.log(item);
+});
+
+// Using all parameters
+arr.forEach((item, index, array) => {
+  console.log(`Item: ${item}, Index: ${index}, Array: ${array}`);
+});
+```
+
+TypeScript automatically infers the types of `item`, `index`, and `array` based on the context. This makes it easy to use only the parameters you need.
+
+### 2. Parameter Types
+
+The types of parameters in a function must be compatible. TypeScript uses structural typing, meaning the parameter types are compared by their shape rather than their name.
+
+**Example:**
+
+```ts
+type F3 = (x: { name: string }) => void;
+type F4 = (y: { name: string; age: number }) => void;
+
+let f3: F3;
+let f4: F4 = f3; // Compatible: f3 can be assigned to f4
+
+// Error: f4 cannot be assigned to f3
+// let f3: F3 = f4;
+```
+
+Here, `f3` can be assigned to `f4` because `f3` expects a subset of `f4`’s parameter type.
+
+### 3. Return Value Types
+
+The return value type of a function must also be compatible. A function with a more general (wider) return type can be assigned to a function with a more specific (narrower) return type.
+
+**Example:**
+
+```ts
+type F5 = () => string;
+type F6 = () => string | number;
+
+let f5: F5;
+let f6: F6 = f5; // Compatible: f5 has a narrower return type
+```
+
+However, the reverse is not true. Assigning a function with a wider return type to one with a narrower type will result in an error:
+
+```ts
+// Error: f6 cannot be assigned to f5
+// let f5: F5 = f6;
+```
+
+**Key Points on Function Compatibility**
+
+1. **Fewer parameters → More parameters**: A function with fewer parameters is compatible with one expecting more parameters.
+2. **Subset parameter types**: A function expecting a subset of properties in its parameters is compatible with one expecting a superset.
+3. **Narrower return type → Wider return type**: A function with a narrower return type is compatible with one expecting a wider return type.
+
+By understanding these rules, you can take full advantage of TypeScript's type inference and structural typing, making your code both robust and flexible.
+
+## Conclusion
+
+By mastering these advanced TypeScript concepts, you unlock the full potential of this versatile language. From defining reusable generic functions to leveraging utility types, you can create highly scalable, maintainable, and robust applications. Whether you’re working on enterprise-level systems or small projects, TypeScript's advanced features provide the tools needed for excellence in modern development.

@@ -1,0 +1,50 @@
+---
+title: Convert EPSG-4326 to EPSG-3857 in JavaScript
+slug: epsg4326-epsg3857
+heading: Convert coordinates from EPSG-4326 to EPSG-3857
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/epsg4326-epsg3857
+date: 2024-10-11
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['EPSG-4326', 'EPSG-3857', 'coordinates']
+desc: Learn how to convert EPSG:4326 to EPSG:3857 in JavaScript using a simple formula. Perfect for maps and geospatial data visualization in web applications.
+---
+
+To convert coordinates from EPSG:4326 (WGS84 - latitude/longitude) to EPSG:3857 (Web Mercator projection) in JavaScript, you can use the following formula. This converts latitude and longitude into X and Y coordinates suitable for map display (such as Google Maps or OpenStreetMap).
+
+## Formula for Conversion:
+
+```js
+function convertCoordinates(lon, lat) {
+  const RADIUS = 6378137; // Earth radius in meters
+
+  // Convert longitude to X coordinate (meters)
+  const x = lon * (Math.PI / 180) * RADIUS;
+
+  // Convert latitude to Y coordinate (meters), with Mercator projection
+  const y =
+    Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 180 / 2)) * RADIUS;
+
+  return { x, y };
+}
+
+// Example usage:
+const lon = -74.006; // Longitude (EPSG:4326)
+const lat = 40.7128; // Latitude (EPSG:4326)
+
+const result = convert4326To3857(lon, lat);
+console.log(result); // { x: -8238310.235647004, y: 4970071.579142427 }
+```
+
+## Explanation:
+
+- `RADIUS` is the Earth's radius in meters for the Web Mercator projection.
+
+- Longitude is converted to the X coordinate by multiplying the longitude (in degrees) by the radius and converting it to radians.
+
+- Latitude is converted to the Y coordinate using the Mercator projection formula, which involves logarithms and trigonometric functions.
+
+This conversion is necessary for displaying geographic coordinates on web-based mapping systems that use the EPSG:3857 projection.
