@@ -35,9 +35,7 @@ const featuredPosts = page.data.slice(0, 3);
 const recentPosts = page.data.slice(3, page.data.length);
 
 const title =
-  page.currentPage === 1 ?
-    siteConfig.howtosPageTitle
-  : siteConfig.howtosPageTitle + ' ' + 'Page ' + page.currentPage;
+  page.currentPage === 1 ? siteConfig.title : siteConfig.title + ' ' + 'Page ' + page.currentPage;
 ---
 
 <BaseLayout title={title}>
