@@ -64,9 +64,9 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
           title={siteConfig.howtoHeadTitle}
           headingTwo={siteConfig.howtoHeadingTwo}
           description={siteConfig.howtoHeadingDescription}
-          class='mt-0'
+          class='mt-10'
         />
-      : <h1 class='page-heading'>Howto Tutorials Page {page.currentPage}</h1>
+      : <h1 class='mt-10'>Howto Tutorials Page {page.currentPage}</h1>
     }
     <HowtoCategoriesList />
     <Howtos howtos={page.data} />

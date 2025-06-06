@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 
 import Card from '@/shared/ui/base/card.astro';
@@ -9,13 +10,14 @@ export interface Props {
 
 const { howto } = Astro.props;
 const image = howto.data.icon || howto.data.image;
+const icon = howto.data.icon;
 ---
 
 <div class='howto-card'>
   <div class='howto-card-wrapper'>
     <div class='howto-card-image'>
       {
-        image && (
+        icon ?
           <img
             src={image.src || image}
             alt={howto.data.category}
@@ -24,7 +26,16 @@ const image = howto.data.icon || howto.data.image;
             height='28'
             class='image'
           />
-        )
+        : image && (
+            <Image
+              src={image}
+              alt={howto.data.title}
+              title={howto.data.title}
+              width='28'
+              height='28'
+              class='image'
+            />
+          )
       }
     </div>
     <div class='howto-card-content'>
