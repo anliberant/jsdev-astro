@@ -52,15 +52,14 @@ import ThemeSwitcher from './theme-switcher.astro';
     font-size: 1.125rem;
     line-height: 1.75rem;
     font-weight: 600;
-    margin-right: 1.5rem;
   }
   .header-panel {
     display: flex;
     width: 100%;
     align-items: center;
     justify-content: flex-end;
-    gap: 1.5rem;
-    min-width: 280px;
+    gap: 0.25rem;
+    min-width: 80px;
     min-height: 64px;
   }
   @media (min-width: 768px) {
@@ -72,10 +71,17 @@ import ThemeSwitcher from './theme-switcher.astro';
     .header-panel {
       gap: 1rem;
     }
+    .logo {
+      margin-right: 1rem;
+    }
   }
   @media (min-width: 1280px) {
     .header-panel {
+      min-width: 280px;
       gap: 2.5rem;
+    }
+    .logo {
+      margin-right: 1.5rem;
     }
   }
   .header-icons {
