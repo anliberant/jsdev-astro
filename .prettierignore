@@ -1,4 +1,3 @@
-# .prettierignore - поместить в корень проекта
 dist/
 .astro/
 node_modules/

@@ -13,8 +13,11 @@ const { tags } = Astro.props;
     tags.length > 0 &&
       tags.map(tag => {
         return (
-          <a rel='nofollow' href={`/tag/${tag.trim().toLowerCase()}/`}>
-            <Badge variant='outline' title={tag} class='tag-badge'>
+          <a href={`/tag/${tag.trim().toLowerCase()}/`}>
+            <Badge
+              variant='outline'
+              title={tag}
+              class='tag-badge'>
               {tag}
             </Badge>
           </a>
