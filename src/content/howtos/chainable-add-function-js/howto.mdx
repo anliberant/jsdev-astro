@@ -1,0 +1,195 @@
+---
+title: How to Build a Chainable add() Function in JavaScript
+slug: chainable-add-function-js
+heading: "Mastering Chainable Functions in JavaScript: The Ultimate Guide"
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/chainable-add-function-js
+date: 2025-06-08
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn how to implement a chainable JavaScript add() function using closures and currying. Supports multi-argument calls and auto-return with valueOf.
+---
+
+JavaScript allows some clever tricks with functions—and one of the most impressive is building a function like `add(1)(2)(3)()` that returns the sum of all inputs. This is more than just currying—this is functional wizardry.
+
+In this guide, you'll learn to build a flexible, chainable `add()` function that supports:
+
+- Single or multiple arguments
+- Infinite chained calls
+- Optional empty-call to return the result
+- Auto-conversion to primitive values (`+`, `console.log`, etc.)
+
+## 🧪 Expected Behavior
+
+Before we dive in, here's what we want:
+
+```js 
+add(1)(2)(3)();           // 6
+add(1, 2, 3)(4)();        // 10
+add(1)(2, 3)(4, 5)();     // 15
+add(1)(2)(3) + 4;         // 10
+console.log(add(5)(10));  // 15
+```
+
+## 🛠 Step 1: Basic Single-Arg Chain
+
+We start with a version that only supports one number per call and requires `()` to get the result:
+
+```js 
+function add(num) {
+  let sum = num;
+
+  function inner(next) {
+    if (next === undefined) return sum;
+    sum += next;
+    return inner;
+  }
+
+  return inner;
+}
+
+console.log(add(1)(2)(3)()); // 6
+```
+
+### 🔍 How it works:
+
+- `add()` creates a local `sum`
+- `inner()` accumulates values or returns the final result if called with no argument
+- Closure preserves the `sum` across chained calls
+
+## ⚡ Step 2: Multi-Argument Support
+
+Let’s upgrade it to allow `add(1, 2, 3)(4)()`:
+
+```js 
+function add(...args) {
+  let sum = args.reduce((a, b) => a + b, 0);
+
+  function inner(...nextArgs) {
+    if (nextArgs.length === 0) return sum;
+    sum += nextArgs.reduce((a, b) => a + b, 0);
+    return inner;
+  }
+
+  return inner;
+}
+
+console.log(add(1, 2)(3, 4)()); // 10
+```
+
+## 🚀 Step 3: Implicit Return with valueOf & toString
+
+We now add implicit conversion so `add(1)(2) + 3` just works:
+
+```js 
+function add(...args) {
+  let sum = args.reduce((a, b) => a + b, 0);
+
+  function inner(...nextArgs) {
+    sum += nextArgs.reduce((a, b) => a + b, 0);
+    return inner;
+  }
+
+  inner.valueOf = () => sum;
+  inner.toString = () => sum.toString();
+
+  return inner;
+}
+
+// All supported:
+console.log(add(1)(2)(3)());     // 6
+console.log(add(1)(2)(3) + 4);   // 10
+console.log(`${add(10)(5)}`);    // "15"
+```
+
+> 💡 `valueOf()` and `toString()` let JS convert the object to a number or string automatically—useful for logs and arithmetic.
+
+## 🔬 Deep Dive: What Makes This Work?
+
+This approach combines four advanced JavaScript concepts:
+
+1. Closures: Keep sum persistent across function calls.
+2. Higher-order functions: `add()` returns another function.
+3. Rest parameters: `(...args)` lets us accept any number of values.
+4. Object-to-primitive conversion: JS automatically calls `valueOf()` or `toString()` when needed.
+
+## 🧩 Advanced Use Case: Chainable Calculator
+
+Let’s go further—what if you wanted a mini arithmetic library?
+
+```js
+function calc(initial = 0) {
+  let result = initial;
+
+  const methods = {
+    add(...args) {
+      result += args.reduce((a, b) => a + b, 0);
+      return methods;
+    },
+    subtract(...args) {
+      result -= args.reduce((a, b) => a + b, 0);
+      return methods;
+    },
+    multiply(...args) {
+      result *= args.reduce((a, b) => a * b, 1);
+      return methods;
+    },
+    divide(...args) {
+      result /= args.reduce((a, b) => a * b, 1);
+      return methods;
+    },
+    valueOf: () => result
+  };
+
+  return methods;
+}
+
+// Usage
+const result = calc(10)
+  .add(5)
+  .subtract(3)
+  .multiply(2)
+  .divide(2) + 1;
+
+console.log(result); // 13
+```
+
+## 📚 Best Practices & Warnings
+
+- ✅ Use for utility libraries or FP-based interfaces
+- ⚠️ Avoid overusing this in production code—it may confuse team members unfamiliar with JS quirks
+- 🔒 Wrap your function with types in TypeScript for better DX
+
+## 🧠 Bonus: TypeScript Version
+
+Here’s a typed version for safer usage:
+
+```ts 
+function add(...args: number[]) {
+  let sum = args.reduce((a, b) => a + b, 0);
+
+  function inner(...nextArgs: number[]): any {
+    sum += nextArgs.reduce((a, b) => a + b, 0);
+    return inner;
+  }
+
+  inner.valueOf = () => sum;
+  inner.toString = () => sum.toString();
+
+  return inner;
+}
+```
+
+## ✅ Summary
+
+To implement a chainable `add()` in JavaScript:
+
+- Use closures to store accumulated results
+- Return functions to allow chaining
+- Use `valueOf`/`toString` for auto-evaluation
+- Optionally extend to full arithmetic support
+
+This technique is great for learning advanced JavaScript patterns and impressing interviewers—but always favor clarity in production.
