@@ -107,6 +107,49 @@ export const SAMPLE_HTML = {
   </div>
 </body>
 </html>`,
+
+  markdown: `<div class="container">
+  <header class="header">
+    <h1>Welcome to Our Website</h1>
+    <nav>
+      <ul class="nav-list">
+        <li><a href="#home" class="nav-link">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="main-content">
+    <section class="hero">
+      <h2>Hero Section</h2>
+      <p>This is a <strong>sample</strong> paragraph with <em>emphasis</em>.</p>
+      <blockquote>
+        <p>This is an important quote that provides valuable information.</p>
+      </blockquote>
+      <pre><code>function example() {
+  return "Hello World";
+}</code></pre>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Conversion</td>
+            <td>✅ Working</td>
+          </tr>
+          <tr>
+            <td>Tables</td>
+            <td>✅ Supported</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>`,
 };
 
 export class ErrorHandler {

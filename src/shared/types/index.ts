@@ -194,3 +194,13 @@ export interface FridayData {
   permalink: string;
   type: 'friday';
 }
+
+export interface HtmlMarkdownElements extends BaseConverterElements {
+  htmlInput: HTMLTextAreaElement;
+  markdownOutput: HTMLTextAreaElement;
+  inputStats: HTMLElement;
+  outputStats: HTMLElement;
+  modeToggle: HTMLButtonElement;
+  inputLabel: HTMLElement;
+  outputLabel: HTMLElement;
+}

@@ -1,34 +1,40 @@
-import { Atom, FileCode, Layout, Rocket, Table, FileText } from '@lucide/astro';
+import { FileText, Code, Table, Wrench, Hash, PenTool, FileCode, Archive } from '@lucide/astro';
 
-export const toolsHtml = [
+export const toolsHtml: ToolInfo[] = [
   {
-    title: 'HTML to Pug',
-    description: 'Convert HTML markup to clean Pug template syntax quickly and easily',
-    href: '/tools/html-to-pug/',
+    title: 'HTML to JSX Converter',
+    description: 'Convert HTML to JSX with camelCase props, fragments, and formatting options.',
+    href: '/tools/html-to-jsx',
+    icon: Code,
+  },
+  {
+    title: 'HTML to Pug Converter', 
+    description: 'Transform HTML markup into clean, indented Pug template syntax.',
+    href: '/tools/html-to-pug',
     icon: FileCode,
   },
   {
-    title: 'HTML to Astro',
-    description: 'Convert static HTML markup to Astro component syntax with proper frontmatter and component structure',
-    href: '/tools/html-to-astro/',
-    icon: Rocket,
+    title: 'HTML to Astro Converter',
+    description: 'Convert HTML to Astro component format with frontmatter support.',
+    href: '/tools/html-to-astro', 
+    icon: Archive,
   },
   {
-    title: 'HTML to JSX',
-    description: 'Transform HTML elements to JSX syntax for React components with automatic attribute conversion',
-    href: '/tools/html-to-jsx/',
-    icon: Atom,
+    title: 'HTML ⇄ Markdown Converter',
+    description: 'Bidirectional converter between HTML and Markdown with table support and formatting options.',
+    href: '/tools/html-markdown',
+    icon: FileText,
   },
   {
     title: 'HTML Boilerplate Generator',
-    description: 'Generate complete HTML5 boilerplate with meta tags, CSS links, and JavaScript includes',
-    href: '/tools/html-boilerplate/',
-    icon: Layout,
+    description: 'Generate customized HTML5 boilerplates with meta tags and structure.',
+    href: '/tools/html-boilerplate',
+    icon: PenTool,
   },
   {
     title: 'HTML Table Generator',
-    description: 'Create customizable HTML tables with headers, styling options, and responsive design',
-    href: '/tools/html-table-generator/',
+    description: 'Create responsive HTML tables with headers, styling, and export options.',
+    href: '/tools/html-table-generator',
     icon: Table,
   },
 ];

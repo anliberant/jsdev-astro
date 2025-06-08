@@ -1,0 +1,321 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import Button from '@/shared/ui/base/button.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+const breadcrumbItems = generateToolsBreadcrumbs('HTML ⇄ Markdown Converter');
+---
+
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
+
+<HeadingBlock
+  title='HTML ⇄ Markdown Converter'
+  description='Convert between HTML and Markdown formats easily with this bidirectional converter'
+  class='mt-0'
+/>
+
+<div class='converter-container'>
+  <div class='converter-header'>
+    <div class='header-left'>
+      <Button
+        variant='convert'
+        id='modeToggle'
+        type='button'>
+        🔄 Switch to Markdown → HTML
+      </Button>
+    </div>
+
+    <div class='header-center'>
+      <label class='import-button'>
+        <input
+          type='file'
+          class='file-input-hidden'
+          id='fileImport'
+          accept='.html,.md,.txt'
+        />
+        📁 Import File
+      </label>
+    </div>
+
+    <div class='header-right'>
+      <Button
+        variant='convert'
+        id='convertBtn'
+        type='button'>
+        🔄 Convert
+      </Button>
+      <Button
+        variant='clear'
+        id='clearBtn'
+        type='button'>
+        🗑 Clear
+      </Button>
+      <Button
+        variant='copy'
+        id='copyBtn'
+        type='button'>
+        📋 Copy
+      </Button>
+      <Button
+        variant='sample'
+        id='sampleBtn'
+        type='button'>
+        📄 Sample
+      </Button>
+      <Button
+        variant='secondary'
+        id='downloadBtn'
+        type='button'>
+        💾 Download
+      </Button>
+    </div>
+  </div>
+
+  <div class='main-content'>
+    <div class='converter-panel input'>
+      <div class='pane-header'>
+        <div class='pane-title'>
+          <span id='inputLabel'>📝 HTML Input</span>
+        </div>
+      </div>
+
+      <div
+        id='errorMessage'
+        class='error-message hidden'
+      ></div>
+      <div
+        id='successMessage'
+        class='success-message hidden'
+      ></div>
+
+      <textarea
+        class='textarea'
+        id='htmlInput'
+        placeholder='Paste your HTML code here...'
+        spellcheck='false'
+      ></textarea>
+
+      <div class='stats'>
+        <span id='inputStats'>Lines: 0, Characters: 0</span>
+      </div>
+    </div>
+
+    <div class='converter-panel output'>
+      <div class='pane-header'>
+        <div class='pane-title'>
+          <span id='outputLabel'>📝 Markdown Output</span>
+        </div>
+      </div>
+
+      <textarea
+        class='textarea output readonly'
+        id='markdownOutput'
+        placeholder='Converted content will appear here...'
+        readonly
+        spellcheck='false'
+      ></textarea>
+
+      <div class='stats'>
+        <span id='outputStats'>Lines: 0, Characters: 0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { HtmlMarkdownConverterController } from './lib/converter-controller';
+
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM loaded, initializing HTML ⇄ Markdown converter...');
+
+    try {
+      const controller = new HtmlMarkdownConverterController();
+      console.log('Converter initialized successfully');
+    } catch (error) {
+      console.error('Error initializing converter:', error);
+    }
+  });
+</script>
+
+<style>
+  .converter-container {
+    margin-top: 2.5rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--background));
+    overflow: hidden;
+  }
+
+  .converter-header {
+    background: hsl(var(--muted));
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .header-left,
+  .header-center,
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .import-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .import-button:hover {
+    background: hsl(var(--secondary) / 0.8);
+  }
+
+  .file-input-hidden {
+    display: none;
+  }
+
+  .main-content {
+    display: flex;
+    height: calc(100vh - 200px);
+    max-height: 600px;
+    min-height: 400px;
+  }
+
+  .converter-panel {
+    background: hsl(var(--background));
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .converter-panel.input {
+    border-right: 1px solid hsl(var(--border));
+  }
+
+  .pane-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.5);
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pane-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .textarea {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    color: hsl(var(--foreground));
+    padding: 1rem;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    background: hsl(var(--background));
+    overflow: auto;
+  }
+
+  .textarea:focus {
+    box-shadow: inset 0 0 0 2px hsl(var(--primary) / 0.2);
+  }
+
+  .textarea.output {
+    background: hsl(var(--muted) / 0.3);
+  }
+
+  .textarea.readonly {
+    cursor: default;
+  }
+
+  .stats {
+    padding: 0.5rem 1.5rem;
+    background: hsl(var(--muted) / 0.5);
+    border-top: 1px solid hsl(var(--border));
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .message {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    border-radius: var(--radius);
+    margin: 0 1.5rem;
+  }
+
+  .error-message {
+    background: hsl(var(--destructive) / 0.1);
+    border: 1px solid hsl(var(--destructive) / 0.3);
+    color: hsl(var(--destructive));
+  }
+
+  .success-message {
+    background: hsl(142 76% 36% / 0.1);
+    border: 1px solid hsl(142 76% 36% / 0.3);
+    color: hsl(142 76% 36%);
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  @media (max-width: 768px) {
+    .converter-header {
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+    }
+
+    .header-left,
+    .header-center,
+    .header-right {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .main-content {
+      flex-direction: column;
+      height: auto;
+      min-height: 600px;
+    }
+
+    .converter-panel {
+      width: 100%;
+      height: 300px;
+    }
+
+    .converter-panel.input {
+      border-right: none;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+  }
+</style>
