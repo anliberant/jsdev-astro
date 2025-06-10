@@ -6,25 +6,8 @@ export function transformCollectionToSearchable(
   category: 'posts' | 'howtos' | 'snippets' | 'fridays'
 ): SearchableContent[] {
   return collection.map((item, index) => {
-    let href = '';
+    let href = `/${item.data?.permalink || item.slug}/`;
     
-    switch (category) {
-      case 'posts':
-        href = `/${item.data?.permalink || item.slug}/`;
-        break;
-      case 'howtos':
-        href = `/howto/${item.data?.permalink || item.slug}/`;
-        break;
-      case 'snippets':
-        href = `/snippets/${item.data?.permalink || item.slug}/`;
-        break;
-      case 'fridays':
-        href = `/friday/${item.data?.permalink || item.slug}/`;
-        break;
-      default:
-        href = `/${item.data?.permalink || item.slug}/`;
-    }
-
     return {
       id: item.id || `${category}-${index}`,
       title: item.data?.title || 'Untitled',
