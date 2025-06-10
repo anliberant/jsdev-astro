@@ -1,4 +1,3 @@
-// src/features/tools/css/neobrutalism/lib/generator-controller.ts
 import type { ButtonConfig, ButtonPreset, GeneratorElements, TabElements } from '../types/button';
 
 export class NeobrutalistmButtonController {
@@ -38,52 +37,61 @@ export class NeobrutalistmButtonController {
     };
   }
 
+  private safeGetElement<T extends HTMLElement>(id: string): T | null {
+    try {
+      return document.getElementById(id) as T | null;
+    } catch (error) {
+      console.warn(`Element with id "${id}" not found:`, error);
+      return null;
+    }
+  }
+
   private initializeElements(): void {
     this.elements = {
-      preview: document.getElementById('button-preview') as HTMLElement,
-      cssOutput: document.getElementById('css-output') as HTMLTextAreaElement,
-      htmlOutput: document.getElementById('html-output') as HTMLTextAreaElement,
+      preview: this.safeGetElement('button-preview') || document.createElement('div'),
+      cssOutput: this.safeGetElement('css-output') || document.createElement('textarea'),
+      htmlOutput: this.safeGetElement('html-output') || document.createElement('textarea'),
       // Text inputs
-      textInput: document.getElementById('button-text') as HTMLInputElement,
-      fontSizeInput: document.getElementById('font-size') as HTMLInputElement,
-      fontWeightSelect: document.getElementById('font-weight') as HTMLSelectElement,
-      fontFamilyInput: document.getElementById('font-family') as HTMLInputElement,
-      textTransformSelect: document.getElementById('text-transform') as HTMLSelectElement,
-      letterSpacingInput: document.getElementById('letter-spacing') as HTMLInputElement,
+      textInput: this.safeGetElement('button-text') || document.createElement('input'),
+      fontSizeInput: this.safeGetElement('font-size') || document.createElement('input'),
+      fontWeightSelect: this.safeGetElement('font-weight') || document.createElement('select'),
+      fontFamilyInput: this.safeGetElement('font-family') || document.createElement('input'),
+      textTransformSelect: this.safeGetElement('text-transform') || document.createElement('select'),
+      letterSpacingInput: this.safeGetElement('letter-spacing') || document.createElement('input'),
       // Color inputs
-      backgroundColorInput: document.getElementById('background-color') as HTMLInputElement,
-      textColorInput: document.getElementById('text-color') as HTMLInputElement,
-      borderColorInput: document.getElementById('border-color') as HTMLInputElement,
-      shadowColorInput: document.getElementById('shadow-color') as HTMLInputElement,
+      backgroundColorInput: this.safeGetElement('background-color') || document.createElement('input'),
+      textColorInput: this.safeGetElement('text-color') || document.createElement('input'),
+      borderColorInput: this.safeGetElement('border-color') || document.createElement('input'),
+      shadowColorInput: this.safeGetElement('shadow-color') || document.createElement('input'),
       // Size inputs
-      borderWidthInput: document.getElementById('border-width') as HTMLInputElement,
-      shadowOffsetXInput: document.getElementById('shadow-offset-x') as HTMLInputElement,
-      shadowOffsetYInput: document.getElementById('shadow-offset-y') as HTMLInputElement,
-      borderRadiusInput: document.getElementById('border-radius') as HTMLInputElement,
-      paddingXInput: document.getElementById('padding-x') as HTMLInputElement,
-      paddingYInput: document.getElementById('padding-y') as HTMLInputElement,
+      borderWidthInput: this.safeGetElement('border-width') || document.createElement('input'),
+      shadowOffsetXInput: this.safeGetElement('shadow-offset-x') || document.createElement('input'),
+      shadowOffsetYInput: this.safeGetElement('shadow-offset-y') || document.createElement('input'),
+      borderRadiusInput: this.safeGetElement('border-radius') || document.createElement('input'),
+      paddingXInput: this.safeGetElement('padding-x') || document.createElement('input'),
+      paddingYInput: this.safeGetElement('padding-y') || document.createElement('input'),
       // Animation inputs
-      hoverEffectSelect: document.getElementById('hover-effect') as HTMLSelectElement,
-      animationDurationInput: document.getElementById('animation-duration') as HTMLInputElement,
+      hoverEffectSelect: this.safeGetElement('hover-effect') || document.createElement('select'),
+      animationDurationInput: this.safeGetElement('animation-duration') || document.createElement('input'),
       // Range displays
-      fontSizeValue: document.getElementById('font-size-value') as HTMLElement,
-      borderWidthValue: document.getElementById('border-width-value') as HTMLElement,
-      shadowOffsetXValue: document.getElementById('shadow-offset-x-value') as HTMLElement,
-      shadowOffsetYValue: document.getElementById('shadow-offset-y-value') as HTMLElement,
-      borderRadiusValue: document.getElementById('border-radius-value') as HTMLElement,
-      paddingXValue: document.getElementById('padding-x-value') as HTMLElement,
-      paddingYValue: document.getElementById('padding-y-value') as HTMLElement,
-      letterSpacingValue: document.getElementById('letter-spacing-value') as HTMLElement,
-      animationDurationValue: document.getElementById('animation-duration-value') as HTMLElement
+      fontSizeValue: this.safeGetElement('font-size-value') || document.createElement('span'),
+      borderWidthValue: this.safeGetElement('border-width-value') || document.createElement('span'),
+      shadowOffsetXValue: this.safeGetElement('shadow-offset-x-value') || document.createElement('span'),
+      shadowOffsetYValue: this.safeGetElement('shadow-offset-y-value') || document.createElement('span'),
+      borderRadiusValue: this.safeGetElement('border-radius-value') || document.createElement('span'),
+      paddingXValue: this.safeGetElement('padding-x-value') || document.createElement('span'),
+      paddingYValue: this.safeGetElement('padding-y-value') || document.createElement('span'),
+      letterSpacingValue: this.safeGetElement('letter-spacing-value') || document.createElement('span'),
+      animationDurationValue: this.safeGetElement('animation-duration-value') || document.createElement('span')
     };
 
     this.tabElements = {
-      previewTab: document.getElementById('preview-tab') as HTMLButtonElement,
-      cssTab: document.getElementById('css-tab') as HTMLButtonElement,
-      htmlTab: document.getElementById('html-tab') as HTMLButtonElement,
-      previewPanel: document.getElementById('preview-panel') as HTMLElement,
-      cssPanel: document.getElementById('css-panel') as HTMLElement,
-      htmlPanel: document.getElementById('html-panel') as HTMLElement
+      previewTab: this.safeGetElement('preview-tab') || document.createElement('button'),
+      cssTab: this.safeGetElement('css-tab') || document.createElement('button'),
+      htmlTab: this.safeGetElement('html-tab') || document.createElement('button'),
+      previewPanel: this.safeGetElement('preview-panel') || document.createElement('div'),
+      cssPanel: this.safeGetElement('css-panel') || document.createElement('div'),
+      htmlPanel: this.safeGetElement('html-panel') || document.createElement('div')
     };
 
     this.initializeInputValues();
@@ -112,75 +120,91 @@ export class NeobrutalistmButtonController {
     this.updateRangeDisplays();
   }
 
+  private safeAddEventListener(
+    element: HTMLElement | null,
+    event: string,
+    handler: EventListener
+  ): void {
+    if (element && typeof element.addEventListener === 'function') {
+      element.addEventListener(event, handler);
+    }
+  }
+
   private bindEvents(): void {
     // Text inputs
-    this.elements.textInput.addEventListener('input', () => this.updateConfig());
-    this.elements.fontFamilyInput.addEventListener('input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.textInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.fontFamilyInput, 'input', () => this.updateConfig());
     
     // Color inputs
-    this.elements.backgroundColorInput.addEventListener('input', () => this.updateConfig());
-    this.elements.textColorInput.addEventListener('input', () => this.updateConfig());
-    this.elements.borderColorInput.addEventListener('input', () => this.updateConfig());
-    this.elements.shadowColorInput.addEventListener('input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.backgroundColorInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.textColorInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.borderColorInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.shadowColorInput, 'input', () => this.updateConfig());
     
     // Range inputs
-    this.elements.fontSizeInput.addEventListener('input', () => this.updateConfig());
-    this.elements.borderWidthInput.addEventListener('input', () => this.updateConfig());
-    this.elements.shadowOffsetXInput.addEventListener('input', () => this.updateConfig());
-    this.elements.shadowOffsetYInput.addEventListener('input', () => this.updateConfig());
-    this.elements.borderRadiusInput.addEventListener('input', () => this.updateConfig());
-    this.elements.paddingXInput.addEventListener('input', () => this.updateConfig());
-    this.elements.paddingYInput.addEventListener('input', () => this.updateConfig());
-    this.elements.letterSpacingInput.addEventListener('input', () => this.updateConfig());
-    this.elements.animationDurationInput.addEventListener('input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.fontSizeInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.borderWidthInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.shadowOffsetXInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.shadowOffsetYInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.borderRadiusInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.paddingXInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.paddingYInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.letterSpacingInput, 'input', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.animationDurationInput, 'input', () => this.updateConfig());
     
     // Select inputs
-    this.elements.fontWeightSelect.addEventListener('change', () => this.updateConfig());
-    this.elements.textTransformSelect.addEventListener('change', () => this.updateConfig());
-    this.elements.hoverEffectSelect.addEventListener('change', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.fontWeightSelect, 'change', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.textTransformSelect, 'change', () => this.updateConfig());
+    this.safeAddEventListener(this.elements.hoverEffectSelect, 'change', () => this.updateConfig());
 
     // Tab events
-    this.tabElements.previewTab.addEventListener('click', () => this.switchTab('preview'));
-    this.tabElements.cssTab.addEventListener('click', () => this.switchTab('css'));
-    this.tabElements.htmlTab.addEventListener('click', () => this.switchTab('html'));
+    this.safeAddEventListener(this.tabElements.previewTab, 'click', () => this.switchTab('preview'));
+    this.safeAddEventListener(this.tabElements.cssTab, 'click', () => this.switchTab('css'));
+    this.safeAddEventListener(this.tabElements.htmlTab, 'click', () => this.switchTab('html'));
 
     // Copy buttons
-    document.getElementById('copy-css')?.addEventListener('click', () => this.copyCSS());
-    document.getElementById('copy-html')?.addEventListener('click', () => this.copyHTML());
-    document.getElementById('copy-both')?.addEventListener('click', () => this.copyBoth());
+    const copyCSS = this.safeGetElement('copy-css');
+    this.safeAddEventListener(copyCSS, 'click', () => this.copyCSS());
+
+    const copyHTML = this.safeGetElement('copy-html');
+    this.safeAddEventListener(copyHTML, 'click', () => this.copyHTML());
+
+    const copyBoth = this.safeGetElement('copy-both');
+    this.safeAddEventListener(copyBoth, 'click', () => this.copyBoth());
 
     // Preset buttons
-    document.getElementById('preset-primary')?.addEventListener('click', () => this.loadPreset('primary'));
-    document.getElementById('preset-secondary')?.addEventListener('click', () => this.loadPreset('secondary'));
-    document.getElementById('preset-danger')?.addEventListener('click', () => this.loadPreset('danger'));
-    document.getElementById('preset-success')?.addEventListener('click', () => this.loadPreset('success'));
-    document.getElementById('preset-warning')?.addEventListener('click', () => this.loadPreset('warning'));
-    document.getElementById('preset-retro')?.addEventListener('click', () => this.loadPreset('retro'));
+    this.safeAddEventListener(this.safeGetElement('preset-primary'), 'click', () => this.loadPreset('primary'));
+    this.safeAddEventListener(this.safeGetElement('preset-secondary'), 'click', () => this.loadPreset('secondary'));
+    this.safeAddEventListener(this.safeGetElement('preset-danger'), 'click', () => this.loadPreset('danger'));
+    this.safeAddEventListener(this.safeGetElement('preset-success'), 'click', () => this.loadPreset('success'));
+    this.safeAddEventListener(this.safeGetElement('preset-warning'), 'click', () => this.loadPreset('warning'));
+    this.safeAddEventListener(this.safeGetElement('preset-retro'), 'click', () => this.loadPreset('retro'));
 
     // Reset button
-    document.getElementById('reset-button')?.addEventListener('click', () => this.resetToDefault());
+    const resetButton = this.safeGetElement('reset-button');
+    this.safeAddEventListener(resetButton, 'click', () => this.resetToDefault());
   }
 
   private updateConfig(): void {
     this.currentConfig = {
-      text: this.elements.textInput.value,
-      backgroundColor: this.elements.backgroundColorInput.value,
-      textColor: this.elements.textColorInput.value,
-      borderColor: this.elements.borderColorInput.value,
-      shadowColor: this.elements.shadowColorInput.value,
-      borderWidth: parseInt(this.elements.borderWidthInput.value),
-      shadowOffsetX: parseInt(this.elements.shadowOffsetXInput.value),
-      shadowOffsetY: parseInt(this.elements.shadowOffsetYInput.value),
-      borderRadius: parseInt(this.elements.borderRadiusInput.value),
-      fontSize: parseInt(this.elements.fontSizeInput.value),
-      paddingX: parseInt(this.elements.paddingXInput.value),
-      paddingY: parseInt(this.elements.paddingYInput.value),
-      fontWeight: this.elements.fontWeightSelect.value as ButtonConfig['fontWeight'],
-      fontFamily: this.elements.fontFamilyInput.value,
-      textTransform: this.elements.textTransformSelect.value as ButtonConfig['textTransform'],
-      letterSpacing: parseFloat(this.elements.letterSpacingInput.value),
-      hoverEffect: this.elements.hoverEffectSelect.value as ButtonConfig['hoverEffect'],
-      animationDuration: parseInt(this.elements.animationDurationInput.value)
+      text: this.elements.textInput.value || 'Click Me',
+      backgroundColor: this.elements.backgroundColorInput.value || '#FFEB3B',
+      textColor: this.elements.textColorInput.value || '#000000',
+      borderColor: this.elements.borderColorInput.value || '#000000',
+      shadowColor: this.elements.shadowColorInput.value || '#000000',
+      borderWidth: parseInt(this.elements.borderWidthInput.value) || 3,
+      shadowOffsetX: parseInt(this.elements.shadowOffsetXInput.value) || 4,
+      shadowOffsetY: parseInt(this.elements.shadowOffsetYInput.value) || 4,
+      borderRadius: parseInt(this.elements.borderRadiusInput.value) || 8,
+      fontSize: parseInt(this.elements.fontSizeInput.value) || 16,
+      paddingX: parseInt(this.elements.paddingXInput.value) || 24,
+      paddingY: parseInt(this.elements.paddingYInput.value) || 12,
+      fontWeight: this.elements.fontWeightSelect.value as ButtonConfig['fontWeight'] || '700',
+      fontFamily: this.elements.fontFamilyInput.value || 'Arial, sans-serif',
+      textTransform: this.elements.textTransformSelect.value as ButtonConfig['textTransform'] || 'uppercase',
+      letterSpacing: parseFloat(this.elements.letterSpacingInput.value) || 1,
+      hoverEffect: this.elements.hoverEffectSelect.value as ButtonConfig['hoverEffect'] || 'lift',
+      animationDuration: parseInt(this.elements.animationDurationInput.value) || 200
     };
 
     this.updateRangeDisplays();
@@ -219,13 +243,27 @@ export class NeobrutalistmButtonController {
         button.style.animation = `neobrutalism-shake ${config.animationDuration}ms ease-in-out`;
         break;
       default:
-        // No hover effect
         break;
     }
   }
 
+  private removeHoverEffect(button: HTMLElement): void {
+    const config = this.currentConfig;
+    
+    button.style.transform = '';
+    button.style.boxShadow = `${config.shadowOffsetX}px ${config.shadowOffsetY}px 0 ${config.shadowColor}`;
+    button.style.animation = '';
+  }
+
+  private applyActiveEffect(button: HTMLElement): void {
+    const config = this.currentConfig;
+    
+    button.style.transform = `translate(${Math.floor(config.shadowOffsetX / 2)}px, ${Math.floor(config.shadowOffsetY / 2)}px)`;
+    button.style.boxShadow = `${Math.floor(config.shadowOffsetX / 2)}px ${Math.floor(config.shadowOffsetY / 2)}px 0 ${config.shadowColor}`;
+  }
+
   private removeActiveEffect(button: HTMLElement): void {
-    // Return to hover state if still hovering
+    // Return to hover state if still hovering, otherwise return to normal
     if (button.matches(':hover')) {
       this.applyHoverEffect(button);
     } else {
@@ -246,7 +284,7 @@ export class NeobrutalistmButtonController {
     const styles = this.generateButtonStyles();
     button.style.cssText = styles.inline;
     
-    // Add hover and active event listeners for dynamic effects
+    // Add event listeners for dynamic effects with proper binding
     button.addEventListener('mouseenter', () => {
       this.applyHoverEffect(button);
     });
@@ -261,6 +299,11 @@ export class NeobrutalistmButtonController {
     
     button.addEventListener('mouseup', () => {
       this.removeActiveEffect(button);
+    });
+
+    // Prevent context menu to avoid stuck states
+    button.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
     });
     
     // Add to preview
@@ -405,7 +448,7 @@ export class NeobrutalistmButtonController {
   }
 
   private showCopySuccess(buttonId: string): void {
-    const button = document.getElementById(buttonId);
+    const button = this.safeGetElement(buttonId);
     if (button) {
       const originalText = button.textContent;
       button.textContent = 'Copied!';

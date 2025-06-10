@@ -16,42 +16,41 @@ export class HtmlEncoderDecoderController extends BaseConverterController<HtmlEn
 
   protected initializeElements(): HtmlEncoderElements {
     return {
-      htmlInput: document.getElementById('htmlInput') as HTMLTextAreaElement,
-      htmlOutput: document.getElementById('htmlOutput') as HTMLTextAreaElement,
-      errorMessage: document.getElementById('errorMessage') as HTMLElement,
-      successMessage: document.getElementById('successMessage') as HTMLElement,
-      inputStats: document.getElementById('inputStats') as HTMLElement,
-      outputStats: document.getElementById('outputStats') as HTMLElement,
+      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || document.createElement('textarea'),
+      htmlOutput: this.safeGetElement<HTMLTextAreaElement>('htmlOutput') || document.createElement('textarea'),
+      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || document.createElement('div'),
+      successMessage: this.safeGetElement<HTMLElement>('successMessage') || document.createElement('div'),
+      inputStats: this.safeGetElement<HTMLElement>('inputStats') || document.createElement('div'),
+      outputStats: this.safeGetElement<HTMLElement>('outputStats') || document.createElement('div'),
       options: {
-        prettyFormat: document.getElementById('prettyFormatOption') as HTMLInputElement,
-        specialChars: document.getElementById('specialCharsOption') as HTMLInputElement,
-        numericEntities: document.getElementById('numericEntitiesOption') as HTMLInputElement,
+        prettyFormat: this.safeGetElement<HTMLInputElement>('prettyFormatOption') || document.createElement('input'),
+        specialChars: this.safeGetElement<HTMLInputElement>('specialCharsOption') || document.createElement('input'),
+        numericEntities: this.safeGetElement<HTMLInputElement>('numericEntitiesOption') || document.createElement('input'),
       },
     };
   }
 
   protected bindEvents(): void {
-    this.elements.htmlInput.addEventListener('input', () => {
+    this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
       this.detectMode();
       this.convert();
       this.updateStats();
     });
 
-    document
-      .getElementById('convertBtn')
-      ?.addEventListener('click', () => this.convert());
-    document
-      .getElementById('clearBtn')
-      ?.addEventListener('click', () => this.clear());
-    document
-      .getElementById('copyBtn')
-      ?.addEventListener('click', () => this.copy());
-    document
-      .getElementById('sampleBtn')
-      ?.addEventListener('click', () => this.loadSample());
+    const convertBtn = this.safeGetElement('convertBtn');
+    this.safeAddEventListener(convertBtn, 'click', () => this.convert());
+
+    const clearBtn = this.safeGetElement('clearBtn');
+    this.safeAddEventListener(clearBtn, 'click', () => this.clear());
+
+    const copyBtn = this.safeGetElement('copyBtn');
+    this.safeAddEventListener(copyBtn, 'click', () => this.copy());
+
+    const sampleBtn = this.safeGetElement('sampleBtn');
+    this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
 
     Object.values(this.elements.options).forEach(option => {
-      option.addEventListener('change', () => {
+      this.safeAddEventListener(option, 'change', () => {
         this.encoder = new HtmlEncoderDecoder(this.getOptions());
         this.convert();
       });
@@ -60,14 +59,14 @@ export class HtmlEncoderDecoderController extends BaseConverterController<HtmlEn
 
   private getOptions(): EncoderOptions {
     return {
-      prettyFormat: this.elements.options.prettyFormat.checked,
-      specialChars: this.elements.options.specialChars.checked,
-      numericEntities: this.elements.options.numericEntities.checked,
+      prettyFormat: this.elements.options.prettyFormat?.checked || false,
+      specialChars: this.elements.options.specialChars?.checked || false,
+      numericEntities: this.elements.options.numericEntities?.checked || false,
     };
   }
 
   private detectMode(): void {
-    const input = this.elements.htmlInput.value.trim();
+    const input = this.elements.htmlInput.value?.trim() || '';
     
     // Check if input contains HTML entities
     const hasEntities = /&[a-zA-Z][a-zA-Z0-9]*;|&#[0-9]+;|&#x[0-9a-fA-F]+;/.test(input);
@@ -87,10 +86,12 @@ export class HtmlEncoderDecoderController extends BaseConverterController<HtmlEn
   }
 
   protected convert(): void {
-    const input = this.elements.htmlInput.value.trim();
+    const input = this.elements.htmlInput.value?.trim() || '';
 
     if (!input) {
-      this.elements.htmlOutput.value = '';
+      if (this.elements.htmlOutput) {
+        this.elements.htmlOutput.value = '';
+      }
       this.hideMessages();
       this.updateStats();
       return;
@@ -107,21 +108,27 @@ export class HtmlEncoderDecoderController extends BaseConverterController<HtmlEn
         this.showSuccess('HTML successfully encoded!');
       }
 
-      this.elements.htmlOutput.value = result;
+      if (this.elements.htmlOutput) {
+        this.elements.htmlOutput.value = result;
+      }
       this.updateStats();
     } catch (error) {
       console.error('Conversion error:', error);
       this.showError(`Conversion error: ${(error as Error).message}`);
-      this.elements.htmlOutput.value = '';
+      if (this.elements.htmlOutput) {
+        this.elements.htmlOutput.value = '';
+      }
       this.updateStats();
     }
   }
 
   private loadSample(): void {
-    this.elements.htmlInput.value = SAMPLE_HTML.encoder;
-    this.detectMode();
-    this.convert();
-    this.updateStats();
+    if (this.elements.htmlInput) {
+      this.elements.htmlInput.value = SAMPLE_HTML.encoder;
+      this.detectMode();
+      this.convert();
+      this.updateStats();
+    }
   }
 
   private clear(): void {
@@ -135,8 +142,8 @@ export class HtmlEncoderDecoderController extends BaseConverterController<HtmlEn
 
   private updateStats(): void {
     if (this.elements.inputStats && this.elements.outputStats) {
-      const inputStats = this.calculateStats(this.elements.htmlInput.value);
-      const outputStats = this.calculateStats(this.elements.htmlOutput.value);
+      const inputStats = this.calculateStats(this.elements.htmlInput.value || '');
+      const outputStats = this.calculateStats(this.elements.htmlOutput.value || '');
 
       this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
       this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
@@ -144,9 +151,13 @@ export class HtmlEncoderDecoderController extends BaseConverterController<HtmlEn
   }
 
   protected showSuccess(message: string): void {
-    this.elements.successMessage.textContent = message;
-    this.elements.successMessage.classList.remove('hidden');
-    this.elements.errorMessage.classList.add('hidden');
+    if (this.elements.successMessage) {
+      this.elements.successMessage.textContent = message;
+      this.elements.successMessage.classList.remove('hidden');
+    }
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.classList.add('hidden');
+    }
     
     setTimeout(() => {
       this.hideMessages();
@@ -154,9 +165,13 @@ export class HtmlEncoderDecoderController extends BaseConverterController<HtmlEn
   }
 
   protected showError(message: string): void {
-    this.elements.errorMessage.textContent = message;
-    this.elements.errorMessage.classList.remove('hidden');
-    this.elements.successMessage.classList.add('hidden');
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.textContent = message;
+      this.elements.errorMessage.classList.remove('hidden');
+    }
+    if (this.elements.successMessage) {
+      this.elements.successMessage.classList.add('hidden');
+    }
     
     setTimeout(() => {
       this.hideMessages();

@@ -1,3 +1,4 @@
+// src/shared/types/index.ts - Add ConversionMode type
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
 
 export interface BaseComponentProps {
@@ -195,6 +196,9 @@ export interface FridayData {
   type: 'friday';
 }
 
+// Add ConversionMode type
+export type ConversionMode = 'html-to-markdown' | 'markdown-to-html';
+
 export interface HtmlMarkdownElements extends BaseConverterElements {
   htmlInput: HTMLTextAreaElement;
   markdownOutput: HTMLTextAreaElement;
@@ -235,6 +239,14 @@ export interface TagRemoverElements extends BaseConverterElements {
     convertEntities: HTMLInputElement;
   };
   tagListInput?: HTMLInputElement;
+}
+
+export interface TagRemoverOptions {
+  preserveText: boolean;
+  preserveWhitespace: boolean;
+  removeSpecificTags: boolean;
+  tagList?: string[];
+  convertEntities: boolean;
 }
 
 export interface NeobrutalismButtonConfig {

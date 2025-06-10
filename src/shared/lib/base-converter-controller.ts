@@ -13,20 +13,32 @@ export abstract class BaseConverterController<T extends BaseConverterElements> {
   protected abstract convert(): void;
 
   protected showError(message: string): void {
-    this.elements.errorMessage.textContent = message;
-    this.elements.errorMessage.classList.remove('hidden');
-    this.elements.successMessage.classList.add('hidden');
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.textContent = message;
+      this.elements.errorMessage.classList.remove('hidden');
+    }
+    if (this.elements.successMessage) {
+      this.elements.successMessage.classList.add('hidden');
+    }
   }
 
   protected showSuccess(message: string): void {
-    this.elements.successMessage.textContent = message;
-    this.elements.successMessage.classList.remove('hidden');
-    this.elements.errorMessage.classList.add('hidden');
+    if (this.elements.successMessage) {
+      this.elements.successMessage.textContent = message;
+      this.elements.successMessage.classList.remove('hidden');
+    }
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.classList.add('hidden');
+    }
   }
 
   protected hideMessages(): void {
-    this.elements.errorMessage.classList.add('hidden');
-    this.elements.successMessage.classList.add('hidden');
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.classList.add('hidden');
+    }
+    if (this.elements.successMessage) {
+      this.elements.successMessage.classList.add('hidden');
+    }
   }
 
   protected async copyToClipboard(text: string): Promise<boolean> {
@@ -94,6 +106,29 @@ export abstract class BaseConverterController<T extends BaseConverterElements> {
       this.temporaryButtonText(buttonId, '✅ Copied!', originalText);
     } else {
       this.showError('Failed to copy to clipboard');
+    }
+  }
+
+  // Helper method to safely get element
+  protected safeGetElement<E extends HTMLElement>(id: string): E | null {
+    try {
+      return document.getElementById(id) as E | null;
+    } catch (error) {
+      console.warn(`Element with id "${id}" not found:`, error);
+      return null;
+    }
+  }
+
+  // Helper method to safely add event listener
+  protected safeAddEventListener(
+    element: HTMLElement | null,
+    event: string,
+    handler: EventListener
+  ): void {
+    if (element && typeof element.addEventListener === 'function') {
+      element.addEventListener(event, handler);
+    } else {
+      console.warn(`Cannot add event listener to element:`, element);
     }
   }
 }

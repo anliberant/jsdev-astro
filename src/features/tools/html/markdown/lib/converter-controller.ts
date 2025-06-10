@@ -1,3 +1,4 @@
+// src/features/tools/html/markdown/lib/converter-controller.ts
 import { HtmlToMarkdownConverter } from './html-to-markdown-converter';
 import { BaseConverterController } from '@/shared/lib/base-converter-controller';
 import type { HtmlMarkdownElements, ConversionMode } from '@/shared/types';
@@ -16,32 +17,43 @@ export class HtmlMarkdownConverterController extends BaseConverterController<Htm
 
   protected initializeElements(): HtmlMarkdownElements {
     return {
-      htmlInput: document.getElementById('htmlInput') as HTMLTextAreaElement,
-      markdownOutput: document.getElementById('markdownOutput') as HTMLTextAreaElement,
-      errorMessage: document.getElementById('errorMessage') as HTMLElement,
-      successMessage: document.getElementById('successMessage') as HTMLElement,
-      inputStats: document.getElementById('inputStats') as HTMLElement,
-      outputStats: document.getElementById('outputStats') as HTMLElement,
-      modeToggle: document.getElementById('modeToggle') as HTMLButtonElement,
-      inputLabel: document.getElementById('inputLabel') as HTMLElement,
-      outputLabel: document.getElementById('outputLabel') as HTMLElement,
+      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || document.createElement('textarea'),
+      markdownOutput: this.safeGetElement<HTMLTextAreaElement>('markdownOutput') || document.createElement('textarea'),
+      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || document.createElement('div'),
+      successMessage: this.safeGetElement<HTMLElement>('successMessage') || document.createElement('div'),
+      inputStats: this.safeGetElement<HTMLElement>('inputStats') || document.createElement('div'),
+      outputStats: this.safeGetElement<HTMLElement>('outputStats') || document.createElement('div'),
+      modeToggle: this.safeGetElement<HTMLInputElement>('modeToggle') || document.createElement('button'),
+      inputLabel: this.safeGetElement<HTMLElement>('inputLabel') || document.createElement('span'),
+      outputLabel: this.safeGetElement<HTMLElement>('outputLabel') || document.createElement('span'),
     };
   }
 
   protected bindEvents(): void {
-    this.elements.htmlInput.addEventListener('input', () => {
+    this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
       this.convert();
       this.updateStats();
     });
 
-    this.elements.modeToggle?.addEventListener('click', () => this.toggleMode());
+    this.safeAddEventListener(this.elements.modeToggle, 'click', () => this.toggleMode());
 
-    document.getElementById('convertBtn')?.addEventListener('click', () => this.convert());
-    document.getElementById('clearBtn')?.addEventListener('click', () => this.clear());
-    document.getElementById('copyBtn')?.addEventListener('click', () => this.copy());
-    document.getElementById('sampleBtn')?.addEventListener('click', () => this.loadSample());
-    document.getElementById('downloadBtn')?.addEventListener('click', () => this.downloadFile());
-    document.getElementById('fileImport')?.addEventListener('change', (e) => this.importFile(e as Event));
+    const convertBtn = this.safeGetElement('convertBtn');
+    this.safeAddEventListener(convertBtn, 'click', () => this.convert());
+
+    const clearBtn = this.safeGetElement('clearBtn');
+    this.safeAddEventListener(clearBtn, 'click', () => this.clear());
+
+    const copyBtn = this.safeGetElement('copyBtn');
+    this.safeAddEventListener(copyBtn, 'click', () => this.copy());
+
+    const sampleBtn = this.safeGetElement('sampleBtn');
+    this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
+
+    const downloadBtn = this.safeGetElement('downloadBtn');
+    this.safeAddEventListener(downloadBtn, 'click', () => this.downloadFile());
+
+    const fileImport = this.safeGetElement('fileImport');
+    this.safeAddEventListener(fileImport, 'change', (e) => this.importFile(e as Event));
   }
 
   private toggleMode(): void {
@@ -52,23 +64,41 @@ export class HtmlMarkdownConverterController extends BaseConverterController<Htm
 
   private updateUI(): void {
     if (this.currentMode === 'html-to-markdown') {
-      this.elements.inputLabel.textContent = '📝 HTML Input';
-      this.elements.outputLabel.textContent = '📝 Markdown Output';
-      this.elements.htmlInput.placeholder = 'Paste your HTML code here...';
-      this.elements.modeToggle.textContent = '🔄 Switch to Markdown → HTML';
+      if (this.elements.inputLabel) {
+        this.elements.inputLabel.textContent = '📝 HTML Input';
+      }
+      if (this.elements.outputLabel) {
+        this.elements.outputLabel.textContent = '📝 Markdown Output';
+      }
+      if (this.elements.htmlInput) {
+        this.elements.htmlInput.placeholder = 'Paste your HTML code here...';
+      }
+      if (this.elements.modeToggle) {
+        this.elements.modeToggle.textContent = '🔄 Switch to Markdown → HTML';
+      }
     } else {
-      this.elements.inputLabel.textContent = '📝 Markdown Input';
-      this.elements.outputLabel.textContent = '📝 HTML Output';
-      this.elements.htmlInput.placeholder = 'Paste your Markdown content here...';
-      this.elements.modeToggle.textContent = '🔄 Switch to HTML → Markdown';
+      if (this.elements.inputLabel) {
+        this.elements.inputLabel.textContent = '📝 Markdown Input';
+      }
+      if (this.elements.outputLabel) {
+        this.elements.outputLabel.textContent = '📝 HTML Output';
+      }
+      if (this.elements.htmlInput) {
+        this.elements.htmlInput.placeholder = 'Paste your Markdown content here...';
+      }
+      if (this.elements.modeToggle) {
+        this.elements.modeToggle.textContent = '🔄 Switch to HTML → Markdown';
+      }
     }
   }
 
   protected convert(): void {
-    const input = this.elements.htmlInput.value.trim();
+    const input = this.elements.htmlInput.value?.trim() || '';
 
     if (!input) {
-      this.elements.markdownOutput.value = '';
+      if (this.elements.markdownOutput) {
+        this.elements.markdownOutput.value = '';
+      }
       this.hideMessages();
       this.updateStats();
       return;
@@ -85,17 +115,23 @@ export class HtmlMarkdownConverterController extends BaseConverterController<Htm
         this.showSuccess('Markdown successfully converted to HTML!');
       }
 
-      this.elements.markdownOutput.value = result;
+      if (this.elements.markdownOutput) {
+        this.elements.markdownOutput.value = result;
+      }
       this.updateStats();
     } catch (error) {
       console.error('Conversion error:', error);
       this.showError(`Conversion error: ${(error as Error).message}`);
-      this.elements.markdownOutput.value = '';
+      if (this.elements.markdownOutput) {
+        this.elements.markdownOutput.value = '';
+      }
       this.updateStats();
     }
   }
 
   private loadSample(): void {
+    if (!this.elements.htmlInput) return;
+
     if (this.currentMode === 'html-to-markdown') {
       this.elements.htmlInput.value = SAMPLE_HTML.markdown;
     } else {
@@ -146,7 +182,7 @@ function hello() {
   }
 
   private downloadFile(): void {
-    const content = this.elements.markdownOutput.value;
+    const content = this.elements.markdownOutput.value || '';
     if (!content) {
       this.showError('No content to download');
       return;
@@ -168,29 +204,37 @@ function hello() {
   private importFile(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
-    if (file) {
+    if (file && this.elements.htmlInput) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        this.elements.htmlInput.value = e.target?.result as string;
-        this.convert();
-        this.updateStats();
+        if (this.elements.htmlInput) {
+          this.elements.htmlInput.value = e.target?.result as string || '';
+          this.convert();
+          this.updateStats();
+        }
       };
       reader.readAsText(file);
     }
   }
 
   private updateStats(): void {
-    const inputStats = this.calculateStats(this.elements.htmlInput.value);
-    const outputStats = this.calculateStats(this.elements.markdownOutput.value);
+    if (this.elements.inputStats && this.elements.outputStats) {
+      const inputStats = this.calculateStats(this.elements.htmlInput.value || '');
+      const outputStats = this.calculateStats(this.elements.markdownOutput.value || '');
 
-    this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
-    this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
+      this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
+      this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
+    }
   }
 
   protected showSuccess(message: string): void {
-    this.elements.successMessage.textContent = message;
-    this.elements.successMessage.classList.remove('hidden');
-    this.elements.errorMessage.classList.add('hidden');
+    if (this.elements.successMessage) {
+      this.elements.successMessage.textContent = message;
+      this.elements.successMessage.classList.remove('hidden');
+    }
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.classList.add('hidden');
+    }
     
     setTimeout(() => {
       this.hideMessages();
@@ -198,9 +242,13 @@ function hello() {
   }
 
   protected showError(message: string): void {
-    this.elements.errorMessage.textContent = message;
-    this.elements.errorMessage.classList.remove('hidden');
-    this.elements.successMessage.classList.add('hidden');
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.textContent = message;
+      this.elements.errorMessage.classList.remove('hidden');
+    }
+    if (this.elements.successMessage) {
+      this.elements.successMessage.classList.add('hidden');
+    }
     
     setTimeout(() => {
       this.hideMessages();
