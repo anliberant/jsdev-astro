@@ -121,6 +121,7 @@ code,
 pre {
   font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
   font-display: swap;
+  background-color: var(--code-hover);
 }
 
 p code {
@@ -136,7 +137,7 @@ table {
   border-collapse: collapse;
   margin-top: 1.5rem;
   overflow: hidden;
-  border-radius: 1rem;
+  border-radius: var(--radius);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   font-size: 0.9rem;
   display: block;
@@ -152,7 +153,6 @@ thead {
 
 thead th {
   padding: 0.75rem 1rem;
-  font-weight: 600;
   font-size: 0.85rem;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -163,6 +163,11 @@ tbody td {
   border-bottom: 1px solid #e5e7eb;
 }
 
+th {
+  text-align: start;
+  padding: 0 1rem;
+}
+
 tbody tr:hover {
   background-color: #f3f4f6;
   transition: background-color 0.2s ease-in-out;
@@ -171,7 +176,6 @@ tbody tr:hover {
 tbody tr:last-child td {
   border-bottom: none;
 }
-
 :global(.dark) thead {
   background-color: #1f2937;
   color: #d1d5db;
@@ -360,4 +364,15 @@ tbody tr:last-child td {
   line-height: 28px;
   letter-spacing: 0.025em;
   border-radius: 2px;
+}
+blockquote {
+  margin: 1.5em 0;
+  padding: 1em 1.5em;
+  border-left: 4px solid var(--oposite-color);
+  background-color: hsl(var(--card));
+  color: var(--oposite-color);
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  border-radius: 0.5em;
 }

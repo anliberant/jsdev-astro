@@ -1,0 +1,604 @@
+---
+title: SOLID Design Principles Every JavaScript Deveveloper Should Know
+slug: solid-design-principles
+heading: Understanding SOLID Principles for Cleaner JavaScript Code
+image: ./images/solid-design-principles.png
+permalink: solid-design-principles
+date: 2025-06-10
+author: anton liberant
+category: javascript
+type: post
+tags: ['solid']
+desc: Master the SOLID design principles in JavaScript to write cleaner, maintainable, and scalable code. Learn with examples and improve your architecture today.
+---
+
+Writing clean, maintainable code is key to building scalable applications. The **SOLID** principles, introduced by [Robert C. Martin](http://www.cleancoder.com/) (Uncle Bob), are five essential design rules that help developers organize their code better, reduce bugs, and ease future modifications.
+
+In this article, we’ll break down each principle, show simple examples in JavaScript, and explain why it matters.
+
+## 🧱 What Does SOLID Stand For?
+
+- **S** — Single Responsibility Principle (SRP)
+- **O** — Open/Closed Principle (OCP)
+- **L** — Liskov Substitution Principle (LSP)
+- **I** — Interface Segregation Principle (ISP)
+- **D** — Dependency Inversion Principle (DIP)
+
+Let’s explore each one.
+
+## ✅ 1. Single Responsibility Principle (SRP)
+
+> **A module, class, or function should have only one reason to change.**
+
+In simpler terms: **each function or class should only do one thing**. This makes your code easier to test, reuse, and maintain.
+
+Let’s look at a bad example that violates SRP, and then a refactored version that respects it.
+
+### 🚫 Bad Example: Violates SRP
+
+```js
+function processUserRegistration(userData) {
+  // 1. Validate input
+  if (!userData.email.includes('@')) {
+    throw new Error('Invalid email');
+  }
+
+  // 2. Save user to DB (simulated)
+  const userId = Math.floor(Math.random() * 1000);
+
+  // 3. Send welcome email (simulated)
+  console.log(`Sending welcome email to ${userData.email}`);
+
+  return userId;
+}
+```
+
+❌ **Why this is bad:**
+
+- It validates input
+- It saves data
+- It sends an email
+
+Each of these steps could change for different reasons: business rules, DB logic, or email service changes. This breaks SRP.
+
+### ✅ Good Example: Follows SRP
+
+```js 
+function validateUser(userData) {
+  if (!userData.email.includes('@')) {
+    throw new Error('Invalid email');
+  }
+}
+
+function saveUserToDatabase(userData) {
+  const userId = Math.floor(Math.random() * 1000);
+  // Simulated DB call
+  console.log(`User saved with ID ${userId}`);
+  return userId;
+}
+
+function sendWelcomeEmail(email) {
+  console.log(`Sending welcome email to ${email}`);
+}
+
+function registerUser(userData) {
+  validateUser(userData);
+  const userId = saveUserToDatabase(userData);
+  sendWelcomeEmail(userData.email);
+  return userId;
+}
+```
+
+✅ **Benefits:**
+
+- Each function has one clear purpose.
+- Easier to test independently.
+- If email logic changes, we only update sendWelcomeEmail.
+
+### 🧪 Example Usage
+
+```js 
+const user = { email: 'alice@example.com' };
+const userId = registerUser(user);
+console.log(`New user ID: ${userId}`);
+```
+
+Following SRP makes your code:
+
+- Easier to read and refactor
+- More modular and reusable
+- Less prone to bugs when requirements change
+
+Even in small JavaScript projects, SRP leads to better code discipline and long-term maintainability. Always ask: *"Does this function do more than one thing?"* If yes — split it.
+
+## ✅ 2. Open/Closed Principle (OCP)
+
+The Open/Closed Principle (OCP) is the second letter in the SOLID acronym—a collection of principles. Formulated by [Bertrand Meyer](https://bertrandmeyer.com/), the principle states:
+
+> **Software entities should be open for extension but closed for modification.**
+
+In simpler terms, you should be able to add new functionality without changing existing code. This approach reduces the risk of introducing bugs and promotes code reuse and flexibility.
+
+Let’s explore what this principle looks like in JavaScript, with both a bad example (violating the principle) and a good example (adhering to it).
+
+### ❌ Bad Example (Violates OCP)
+
+```js 
+function getDiscountedPrice(customerType, price) {
+  if (customerType === 'regular') {
+    return price * 0.9;
+  } else if (customerType === 'vip') {
+    return price * 0.8;
+  } else if (customerType === 'platinum') {
+    return price * 0.7;
+  } else {
+    return price;
+  }
+}
+```
+
+**What’s Wrong?**
+
+- Every time a new customer type is introduced (e.g., "gold"), you have to modify the existing function.
+- This breaks the Open/Closed Principle, because changes to the function risk breaking existing functionality.
+- Logic is tightly coupled and not extensible.
+
+### ✅ A Good Example (Follows OCP)
+
+```js 
+class DiscountStrategy {
+  getDiscount(price) {
+    return price;
+  }
+}
+
+class RegularCustomerDiscount extends DiscountStrategy {
+  getDiscount(price) {
+    return price * 0.9;
+  }
+}
+
+class VIPCustomerDiscount extends DiscountStrategy {
+  getDiscount(price) {
+    return price * 0.8;
+  }
+}
+
+class PlatinumCustomerDiscount extends DiscountStrategy {
+  getDiscount(price) {
+    return price * 0.7;
+  }
+}
+
+// Use case
+function getDiscountedPrice(discountStrategy, price) {
+  return discountStrategy.getDiscount(price);
+}
+
+const customer = new VIPCustomerDiscount();
+console.log(getDiscountedPrice(customer, 100)); // 80
+```
+
+**Why It’s Better:**
+
+- You can add new discount strategies by creating a new class that extends `DiscountStrategy`, without modifying any existing code.
+- This adheres to OCP: the `getDiscountedPrice` function is closed for modification, yet open for extension through polymorphism.
+- Logic is cleanly separated and easier to test or extend.
+
+### 🚀 Real-World Applications of OCP in JavaScript
+
+- **Middleware systems** (e.g., Express.js): You can extend functionality by adding middleware without modifying the core logic.
+- **Plugin architectures**: Systems like Webpack and ESLint are extensible without changing their internals.
+- **Form validation libraries**: Easily support new rules by registering them, not rewriting the validator.
+
+## ✅ 3. Liskov Substitution Principle (LSP)
+
+The **Liskov Substitution Principle** (LSP), introduced by Barbara Liskov, is the “L” in SOLID. It states:
+
+> Objects of a superclass should be replaceable with objects of a subclass without affecting the correctness of the program.
+
+In simpler terms: subclasses should behave like their parent classes. If you need to check the type of an object or override methods in a way that breaks expected behavior, you're likely violating LSP.
+
+Let’s explore this with JavaScript examples.
+
+### ❌ Bad Example (Violates LSP)
+
+```js 
+class Bird {
+  fly() {
+    console.log('Flying');
+  }
+}
+
+class Penguin extends Bird {
+  fly() {
+    throw new Error("Penguins can't fly!");
+  }
+}
+
+function makeBirdFly(bird) {
+  bird.fly();
+}
+
+const genericBird = new Bird();
+const penguin = new Penguin();
+
+makeBirdFly(genericBird); // ✅ Flying
+makeBirdFly(penguin);     // ❌ Throws Error
+```
+
+**What’s Wrong?**
+
+- `Penguin` inherits from `Bird`, but it overrides `fly()` in a way that breaks expectations.
+
+The `makeBirdFly` function assumes any `Bird` can fly—but that’s not true for all subclasses.
+
+This violates LSP: you can’t safely substitute a `Penguin` where a `Bird` is expected.
+
+### ✅ Good Example (Follows LSP)
+
+We fix this by designing the inheritance structure around behavior:
+
+```js 
+class Bird {
+  layEgg() {
+    console.log('Laying an egg');
+  }
+}
+
+class FlyingBird extends Bird {
+  fly() {
+    console.log('Flying');
+  }
+}
+
+class Penguin extends Bird {
+  swim() {
+    console.log('Swimming');
+  }
+}
+
+class Sparrow extends FlyingBird {}
+
+function letBirdFly(bird) {
+  bird.fly();
+}
+
+const sparrow = new Sparrow();
+letBirdFly(sparrow); // ✅ Flying
+
+const penguin = new Penguin();
+// letBirdFly(penguin); ❌ TypeError if called — but it’s not allowed by design
+```
+
+**Why It’s Better:**
+
+- Separate classes for `FlyingBird` and `Bird` ensure that only flying birds are passed to `letBirdFly`.
+- `Penguin` is still a `Bird`, but it’s not expected to fly.
+- Subclasses don’t break the expectations set by their parent classes.
+
+### 🚀 Real-World Applications of LSP in JavaScript
+
+- **React components**: Components should extend from base components or hooks in a way that doesn’t break expectations when reused or composed.
+- **Promise chains**: Returning values that match the expected return type (e.g., not mixing sync/async patterns unexpectedly).
+- **Event handlers or middleware**: A middleware or event listener should always conform to the contract (e.g., calling `next()` or returning the expected value).
+
+### ✅ Key Takeaway
+
+When following LSP in JavaScript:
+
+- Don’t override methods in subclasses just to throw errors or change behavior drastically.
+- Use interfaces (even informally, via duck typing) to enforce consistent behavior.
+- Design around capabilities, not types—just like we separated `FlyingBird` and `Bird`.
+
+Even without static typing, JavaScript developers benefit from LSP by thinking carefully about class hierarchy, behavioral contracts, and substitutability.
+
+## ✅ 4. Interface Segregation Principle (ISP)
+
+The Interface Segregation Principle (ISP) is the fourth principle in the SOLID acronym. It states:
+
+> Clients should not be forced to depend on interfaces they do not use.
+
+In JavaScript terms, this means: don’t make functions, classes, or objects implement things they don’t need. Instead, break large, general-purpose interfaces into smaller, role-specific ones.
+
+This improves maintainability, avoids bloated code, and makes it easier to extend or test individual behaviors.
+
+### ❌ Bad Example (Violates ISP)
+
+```js 
+class Machine {
+  print() {
+    throw new Error('Not implemented');
+  }
+
+  scan() {
+    throw new Error('Not implemented');
+  }
+
+  fax() {
+    throw new Error('Not implemented');
+  }
+}
+
+class OldPrinter extends Machine {
+  print() {
+    console.log('Printing...');
+  }
+
+  // scan() and fax() not supported
+}
+```
+
+**What’s Wrong?**
+
+- `OldPrinter` must implement `Machine`, but only supports printing.
+- It’s forced to inherit methods (`scan`, `fax`) it doesn’t use.
+- This can lead to confusing errors, unnecessary stubs, or runtime failures.
+
+This violates ISP—classes should not be forced to implement methods they don’t need.
+
+### ✅ Good Example (Follows ISP)
+
+Split the large interface into smaller ones based on responsibilities:
+
+```js 
+class Printer {
+  print() {
+    console.log('Printing...');
+  }
+}
+
+class Scanner {
+  scan() {
+    console.log('Scanning...');
+  }
+}
+
+class FaxMachine {
+  fax() {
+    console.log('Faxing...');
+  }
+}
+
+class ModernPrinter {
+  constructor() {
+    this.printer = new Printer();
+    this.scanner = new Scanner();
+    this.faxMachine = new FaxMachine();
+  }
+
+  print() {
+    this.printer.print();
+  }
+
+  scan() {
+    this.scanner.scan();
+  }
+
+  fax() {
+    this.faxMachine.fax();
+  }
+}
+
+class BasicPrinter {
+  constructor() {
+    this.printer = new Printer();
+  }
+
+  print() {
+    this.printer.print();
+  }
+}
+```
+
+**Why It’s Better:**
+
+- Functionality is modular—each interface is small and focused.
+- `BasicPrinter` only depends on the features it supports.
+- `ModernPrinter` composes capabilities without being forced to inherit unrelated methods.
+- This adheres to ISP: no class is forced to implement more than it needs.
+
+### 🚀 Real-World Applications of ISP in JavaScript
+
+- **React components**: Avoid passing giant props objects—pass only what each component needs.
+- **Modular services**: Use small, composable services (e.g., a `StorageService` shouldn’t have unrelated methods like `sendEmail()`).
+- **Node.js modules**: Split utilities by `purpose—mathUtils.js` shouldn’t include unrelated helpers like `parseQueryString`.
+
+### ✂️ Keep Interfaces Lean and Purposeful
+
+To follow ISP in JavaScript:
+
+- Split large interfaces (or objects) into smaller, purpose-driven ones.
+- Don’t force components, functions, or classes to implement more than they need.
+- Favor composition over inheritance when possible.
+
+By applying ISP, your code becomes cleaner, more focused, and easier to maintain—especially as your project grows.
+
+## ✅ 5. Dependency Inversion Principle (DIP)
+
+The Dependency Inversion Principle is the final piece of the SOLID puzzle. It states:
+
+> High-level modules should not depend on low-level modules.
+Both should depend on abstractions.
+> Abstractions should not depend on details.
+Details should depend on abstractions.
+
+### 🧠 In Plain English
+
+Your core business logic (high-level code) shouldn’t be tightly coupled to implementation details (low-level code like APIs, databases, etc). Instead, both should rely on interfaces or abstractions.
+
+This promotes flexibility, testability, and separation of concerns.
+
+### ❌ Bad Example (Violates DIP)
+
+```js
+class MySQLDatabase {
+  save(data) {
+    console.log('Saving data to MySQL:', data);
+  }
+}
+
+class UserService {
+  constructor() {
+    this.db = new MySQLDatabase();
+  }
+
+  registerUser(user) {
+    this.db.save(user);
+  }
+}
+```
+
+**What’s wrong here?**
+
+- `UserService` is tightly coupled to MySQLDatabase.
+- You can’t swap out the database (e.g., switch to MongoDB or an API) without modifying `UserService`.
+- Harder to test — mocking `MySQLDatabase` would require editing core logic.
+
+### ✅ Good Example (Follows DIP)
+
+```js 
+// Abstraction
+class Database {
+  save(data) {
+    throw new Error('Not implemented');
+  }
+}
+
+// Low-level implementation
+class MySQLDatabase extends Database {
+  save(data) {
+    console.log('Saving data to MySQL:', data);
+  }
+}
+
+// Another implementation
+class InMemoryDatabase extends Database {
+  constructor() {
+    super();
+    this.data = [];
+  }
+
+  save(data) {
+    this.data.push(data);
+    console.log('Saved in memory:', data);
+  }
+}
+
+// High-level module depends on abstraction
+class UserService {
+  constructor(database) {
+    this.db = database;
+  }
+
+  registerUser(user) {
+    this.db.save(user);
+  }
+}
+```
+
+**Usage:**
+
+```js 
+const db = new MySQLDatabase(); // or new InMemoryDatabase()
+const userService = new UserService(db);
+userService.registerUser({ name: 'Eve' });
+```
+
+### 🎯 Why This is Better
+
+- `UserService` can work with any database implementation that respects the `Database` abstraction.
+- You can swap implementations (MySQL, PostgreSQL, in-memory, mocked) without changing core logic.
+- Easier to test and scale.
+
+### 🧭 Wrapping Up Dependency Inversion
+
+The Dependency Inversion Principle helps you write flexible and maintainable code by encouraging:
+
+- Abstractions over concrete classes
+- Loose coupling between layers
+- Easy mocking for unit tests
+- Swappable dependencies for real-world flexibility
+
+By designing around abstractions, you build a system where components are interchangeable and code becomes easier to evolve over time.
+
+## 📦 Final Thoughts on the SOLID Principles
+
+The SOLID principles aren’t just academic theory—they are proven, practical rules for writing better object-oriented code. By following them, you’ll gain:
+
+- Cleaner, more modular code
+- Easier testing and debugging
+- Reduced risk of introducing bugs
+- Better scalability and flexibility
+
+Here’s a quick recap:
+
+<table>
+  <thead>
+    <tr>
+      <th>**Principle**</th>
+      <th>**Core Idea**</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>**SRP**</th>
+      <th>One function/class = one responsibility</th>
+    </tr>
+    <tr>
+      <th>**OCP**</th>
+      <th>Extend behavior without modifying existing code</th>
+    </tr>
+    <tr>
+      <th>**OCP**</th>
+      <th>Extend behavior without modifying existing code</th>
+    </tr>
+    <tr>
+      <th>**LSP**</th>
+      <th>Subclasses must be replaceable without altering correctness</th>
+    </tr>
+    <tr>
+      <th>**ISP**</th>
+      <th>Don’t force clients to implement unused interfaces</th>
+    </tr>
+    <tr>
+      <th>**DIP**</th>
+      <th>Depend on abstractions, not concrete implementations</th>
+    </tr>
+  </tbody>
+</table>
+
+Together, these principles create a foundation for maintainable, adaptable, and scalable JavaScript applications—even in small projects.
+
+## 💼 Most Common Interview Questions About SOLID
+
+If you're preparing for an interview or just want to deepen your understanding, here are some popular SOLID-related questions you might encounter:
+
+1. **What are the SOLID principles?**\
+    SOLID is an acronym for five key object-oriented design principles:
+    - S: Single Responsibility Principle (SRP)
+    - O: Open/Closed Principle (OCP)
+    - L: Liskov Substitution Principle (LSP)
+    - I: Interface Segregation Principle (ISP)
+    - D: Dependency Inversion Principle (DIP)
+
+    They help developers write scalable, maintainable, and loosely coupled code.
+2. **Why is the Single Responsibility Principle important?**\
+    SRP ensures that a module/class/function has one reason to change. This reduces coupling and increases maintainability. In JavaScript, separating validation, persistence, and communication logic is a common SRP use case.
+3. **How can you implement Open/Closed Principle in JavaScript?**\
+    By using polymorphism or higher-order functions. For example, strategy patterns allow you to add new behavior without altering existing logic, keeping modules closed for modification but open for extension.
+4. **What does the Liskov Substitution Principle mean in practice?**\
+    Subtypes must be usable in place of their parent types without breaking behavior. In JS, when extending a class, ensure overridden methods respect the base class's contract (e.g., return types, expected behavior).
+5. **How does Interface Segregation apply in JavaScript without interfaces?**\
+    Even though JavaScript lacks formal interfaces, we follow ISP by designing small, focused abstractions. Avoid creating objects with large, catch-all APIs—prefer composition and separation of concerns.
+6. **What is Dependency Inversion Principle and how do you use it in JavaScript?**\
+    DIP means high-level modules should not depend on low-level modules; both should depend on abstractions. In JS, this can be achieved through dependency injection—passing services (e.g., `db`, `mailer`) as arguments instead of hardcoding them.
+7. **Can you give a real-world example of applying SOLID in JavaScript?**\
+    In an Express.js app:
+    - SRP: Separate route handling, validation, and business logic into different functions/modules.
+    - OCP: Add new middleware without modifying core logic.
+    - LSP: Use subclasses for different strategies like auth providers.
+    - ISP: Keep service interfaces focused (e.g., EmailSender vs NotificationService).
+    - DIP: Inject database or logging services into controllers instead of directly importing them.
+
+✅ **Pro tip**: Understanding SOLID principles deeply means you can explain, identify violations, and apply refactoring techniques. Most interviewers are looking for these three things.

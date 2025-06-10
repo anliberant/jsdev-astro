@@ -28,7 +28,10 @@ h4 {
   font-weight: inherit;
 }
 
-ol,
+ol {
+  margin: 0;
+  padding-left: 1rem;
+}
 ul,
 menu {
   list-style: none;

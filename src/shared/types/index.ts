@@ -200,7 +200,7 @@ export interface HtmlMarkdownElements extends BaseConverterElements {
   markdownOutput: HTMLTextAreaElement;
   inputStats: HTMLElement;
   outputStats: HTMLElement;
-  modeToggle: HTMLButtonElement;
+  modeToggle: HTMLInputElement;
   inputLabel: HTMLElement;
   outputLabel: HTMLElement;
 }

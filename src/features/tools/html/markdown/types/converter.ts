@@ -1,10 +1,4 @@
-export interface HtmlMarkdownConversionOptions {
-  preserveHtml: boolean;
-  preserveWhitespace: boolean;
-  convertTables: boolean;
-  sanitize?: boolean;
-  allowHtml?: boolean;
-}
+export type ConversionMode = 'html-to-markdown' | 'markdown-to-html';
 
 export interface ConversionResult {
   success: boolean;

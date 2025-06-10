@@ -11,6 +11,7 @@ export async function GET(context) {
 	const sortedPosts = allPosts.sort((a, b) => {
 		return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
 	});
+	site: 'https://jsdev.space',
 	return rss({
 		stylesheet: '/rss/styles.xsl',
 		title: siteConfig.title,
