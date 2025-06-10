@@ -586,34 +586,52 @@ import Button from '@/shared/ui/base/button.astro';
     align-items: center;
     gap: 0.75rem;
   }
-
   .range-group input[type='range'] {
     flex: 1;
     height: 6px;
-    background: hsl(var(--muted));
+    background: hsl(var(--border));
     border-radius: 3px;
     outline: none;
     -webkit-appearance: none;
+    border: 1px solid hsl(var(--border));
+    position: relative;
+  }
+
+  .range-group input[type='range']::-webkit-slider-track {
+    height: 6px;
+    background: hsl(var(--muted));
+    border-radius: 3px;
+    border: 1px solid hsl(var(--border));
   }
 
   .range-group input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     background: hsl(var(--primary));
     border-radius: 50%;
     cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    margin-top: -7px;
+  }
+
+  .range-group input[type='range']::-moz-range-track {
+    height: 6px;
+    background: hsl(var(--muted));
+    border-radius: 3px;
+    border: 1px solid hsl(var(--border));
   }
 
   .range-group input[type='range']::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     background: hsl(var(--primary));
     border-radius: 50%;
     cursor: pointer;
-    border: none;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
-
   .range-value {
     font-size: 0.75rem;
     font-weight: 500;

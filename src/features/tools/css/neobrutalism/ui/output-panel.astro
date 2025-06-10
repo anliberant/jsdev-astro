@@ -249,7 +249,6 @@ import Button from '@/shared/ui/base/button.astro';
     min-height: 100px;
   }
 
-  /* Default button styles that will be overridden by JavaScript */
   .neobrutalism-preview-button {
     background-color: #ffeb3b;
     color: #000000;
@@ -267,6 +266,7 @@ import Button from '@/shared/ui/base/button.astro';
     text-decoration: none;
     display: inline-block;
     user-select: none;
+    position: relative;
   }
 
   .neobrutalism-preview-button:hover {
@@ -277,6 +277,29 @@ import Button from '@/shared/ui/base/button.astro';
   .neobrutalism-preview-button:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 #000000;
+  }
+
+  /* Ensure hover effects work even when styles are overridden */
+  .button-preview .neobrutalism-preview-button:hover {
+    transform: translate(-2px, -2px) !important;
+  }
+
+  .button-preview .neobrutalism-preview-button:active {
+    transform: translate(2px, 2px) !important;
+  }
+
+  /* Shake animation for preview */
+  @keyframes neobrutalism-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-2px);
+    }
+    75% {
+      transform: translateX(2px);
+    }
   }
 
   .preview-info {

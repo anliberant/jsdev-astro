@@ -200,6 +200,39 @@ export class NeobrutalistmButtonController {
     this.elements.animationDurationValue.textContent = `${this.currentConfig.animationDuration}ms`;
   }
 
+  private applyHoverEffect(button: HTMLElement): void {
+    const config = this.currentConfig;
+    
+    switch (config.hoverEffect) {
+      case 'lift':
+        button.style.transform = 'translate(-2px, -2px)';
+        button.style.boxShadow = `${config.shadowOffsetX + 2}px ${config.shadowOffsetY + 2}px 0 ${config.shadowColor}`;
+        break;
+      case 'push':
+        button.style.transform = 'translate(2px, 2px)';
+        button.style.boxShadow = `${config.shadowOffsetX - 2}px ${config.shadowOffsetY - 2}px 0 ${config.shadowColor}`;
+        break;
+      case 'glow':
+        button.style.boxShadow = `${config.shadowOffsetX}px ${config.shadowOffsetY}px 0 ${config.shadowColor}, 0 0 20px ${config.backgroundColor}80`;
+        break;
+      case 'shake':
+        button.style.animation = `neobrutalism-shake ${config.animationDuration}ms ease-in-out`;
+        break;
+      default:
+        // No hover effect
+        break;
+    }
+  }
+
+  private removeActiveEffect(button: HTMLElement): void {
+    // Return to hover state if still hovering
+    if (button.matches(':hover')) {
+      this.applyHoverEffect(button);
+    } else {
+      this.removeHoverEffect(button);
+    }
+  }
+  
   private updatePreview(): void {
     // Clear existing content
     this.elements.preview.innerHTML = '';
@@ -212,6 +245,23 @@ export class NeobrutalistmButtonController {
     // Apply styles
     const styles = this.generateButtonStyles();
     button.style.cssText = styles.inline;
+    
+    // Add hover and active event listeners for dynamic effects
+    button.addEventListener('mouseenter', () => {
+      this.applyHoverEffect(button);
+    });
+    
+    button.addEventListener('mouseleave', () => {
+      this.removeHoverEffect(button);
+    });
+    
+    button.addEventListener('mousedown', () => {
+      this.applyActiveEffect(button);
+    });
+    
+    button.addEventListener('mouseup', () => {
+      this.removeActiveEffect(button);
+    });
     
     // Add to preview
     this.elements.preview.appendChild(button);
