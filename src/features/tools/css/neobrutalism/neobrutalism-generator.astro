@@ -1,0 +1,61 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+import ControlsPanel from './ui/controls-panel.astro';
+import OutputPanel from './ui/output-panel.astro';
+
+const { title, description } = Astro.props;
+
+const breadcrumbItems = generateToolsBreadcrumbs('Neobrutalism CSS Button Generator');
+---
+
+<div class='neobrutalism-generator'>
+  <Breadcrumbs
+    items={breadcrumbItems}
+    class='mt-10'
+  />
+  <HeadingBlock
+    title={title}
+    description={description}
+    class='mt-0'
+  />
+
+  <div class='generator-content'>
+    <ControlsPanel />
+    <OutputPanel />
+  </div>
+</div>
+
+<style>
+  .generator-content {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    min-height: 600px;
+  }
+
+  @media (max-width: 1024px) {
+    .generator-content {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .generator-content {
+      margin-top: 2rem;
+      gap: 1rem;
+    }
+  }
+</style>
+
+<script>
+  import { NeobrutalistmButtonController } from './lib/generator-controller';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    new NeobrutalistmButtonController();
+  });
+</script>

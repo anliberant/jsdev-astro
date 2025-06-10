@@ -204,3 +204,100 @@ export interface HtmlMarkdownElements extends BaseConverterElements {
   inputLabel: HTMLElement;
   outputLabel: HTMLElement;
 }
+
+export interface HtmlEncoderElements extends BaseConverterElements {
+  htmlInput: HTMLTextAreaElement;
+  htmlOutput: HTMLTextAreaElement;
+  inputStats: HTMLElement;
+  outputStats: HTMLElement;
+  options: {
+    prettyFormat: HTMLInputElement;
+    specialChars: HTMLInputElement;
+    numericEntities: HTMLInputElement;
+  };
+}
+
+export interface EncoderOptions {
+  prettyFormat: boolean;
+  specialChars: boolean;
+  numericEntities: boolean;
+}
+
+export interface TagRemoverElements extends BaseConverterElements {
+  htmlInput: HTMLTextAreaElement;
+  textOutput: HTMLTextAreaElement;
+  inputStats: HTMLElement;
+  outputStats: HTMLElement;
+  options: {
+    preserveText: HTMLInputElement;
+    preserveWhitespace: HTMLInputElement;
+    removeSpecificTags: HTMLInputElement;
+    convertEntities: HTMLInputElement;
+  };
+  tagListInput?: HTMLInputElement;
+}
+
+export interface NeobrutalismButtonConfig {
+  text: string;
+  backgroundColor: string;
+  textColor: string;
+  borderColor: string;
+  shadowColor: string;
+  borderWidth: number;
+  shadowOffsetX: number;
+  shadowOffsetY: number;
+  borderRadius: number;
+  fontSize: number;
+  paddingX: number;
+  paddingY: number;
+  fontWeight: 'normal' | 'bold' | '400' | '500' | '600' | '700' | '800' | '900';
+  fontFamily: string;
+  textTransform: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  letterSpacing: number;
+  hoverEffect: 'none' | 'lift' | 'push' | 'glow' | 'shake';
+  animationDuration: number;
+}
+
+export interface NeobrutalismButtonPreset {
+  name: string;
+  description: string;
+  config: NeobrutalismButtonConfig;
+}
+
+export interface NeobrutalismGeneratorElements {
+  preview: HTMLElement;
+  cssOutput: HTMLTextAreaElement;
+  htmlOutput: HTMLTextAreaElement;
+  // Text inputs
+  textInput: HTMLInputElement;
+  fontSizeInput: HTMLInputElement;
+  fontWeightSelect: HTMLSelectElement;
+  fontFamilyInput: HTMLInputElement;
+  textTransformSelect: HTMLSelectElement;
+  letterSpacingInput: HTMLInputElement;
+  // Color inputs
+  backgroundColorInput: HTMLInputElement;
+  textColorInput: HTMLInputElement;
+  borderColorInput: HTMLInputElement;
+  shadowColorInput: HTMLInputElement;
+  // Size inputs
+  borderWidthInput: HTMLInputElement;
+  shadowOffsetXInput: HTMLInputElement;
+  shadowOffsetYInput: HTMLInputElement;
+  borderRadiusInput: HTMLInputElement;
+  paddingXInput: HTMLInputElement;
+  paddingYInput: HTMLInputElement;
+  // Animation inputs
+  hoverEffectSelect: HTMLSelectElement;
+  animationDurationInput: HTMLInputElement;
+  // Range displays
+  fontSizeValue: HTMLElement;
+  borderWidthValue: HTMLElement;
+  shadowOffsetXValue: HTMLElement;
+  shadowOffsetYValue: HTMLElement;
+  borderRadiusValue: HTMLElement;
+  paddingXValue: HTMLElement;
+  paddingYValue: HTMLElement;
+  letterSpacingValue: HTMLElement;
+  animationDurationValue: HTMLElement;
+}

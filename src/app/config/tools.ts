@@ -1,4 +1,4 @@
-import { FileText, Code, Table, Wrench, Hash, PenTool, FileCode, Archive } from '@lucide/astro';
+import { FileText, Code, Table, Wrench, Hash, PenTool, FileCode, Archive, Scissors, PaintbrushIcon } from '@lucide/astro';
 
 export const toolsHtml: ToolInfo[] = [
   {
@@ -37,9 +37,21 @@ export const toolsHtml: ToolInfo[] = [
     href: '/tools/html-table-generator/',
     icon: Table,
   },
+  {
+    title: 'HTML Encoder & Decoder',
+    description: 'Encode and decode HTML entities, special characters, and symbols bidirectionally.',
+    href: '/tools/html-encoder-decoder/',
+    icon: Code,
+  },
+  {
+    title: 'HTML Tag Remover',
+    description: 'Remove HTML tags from content while preserving text. Configure removal options and convert entities.',
+    href: '/tools/html-tag-remover/',
+    icon: Scissors,
+  },
 ];
 
-export const toolsText = [
+export const toolsText: ToolInfo[] = [
   {
     title: 'MDX Editor',
     description: 'Edit and preview Markdown content with live HTML output and syntax highlighting',
@@ -48,7 +60,17 @@ export const toolsText = [
   },
 ];
 
+export const toolsCss: ToolInfo[] = [
+  {
+    title: 'Neobrutalism CSS Button Generator',
+    description: 'Create bold, eye-catching buttons with thick borders, vibrant colors, and dramatic shadows in the neobrutalism design style.',
+    href: '/tools/neobrutalism-button',
+    icon: PaintbrushIcon,
+  },
+];
+
 export const allTools = [
   ...toolsHtml,
   ...toolsText,
+  ...toolsCss,
 ];

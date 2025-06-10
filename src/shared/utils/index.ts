@@ -150,6 +150,18 @@ export const SAMPLE_HTML = {
     </section>
   </main>
 </div>`,
+encoder: `<div class="example">
+<h2>Special Characters & Symbols</h2>
+<p>Copyright © 2024 - All rights reserved!</p>
+<p>Price: $29.99 (was $39.99)</p>
+<p>Math: 2 + 2 = 4, 5 > 3, 10 ≥ 5</p>
+<p>Quotes: "Hello World" & 'Single quotes'</p>
+<p>Symbols: ★ ♥ ♦ ♣ ♠ → ← ↑ ↓</p>
+<p>Accents: café, naïve, résumé</p>
+<script>
+  console.log("This <script> tag will be encoded!");
+</script>
+</div>`,
 };
 
 export class ErrorHandler {

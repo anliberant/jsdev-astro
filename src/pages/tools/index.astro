@@ -1,5 +1,5 @@
 ---
-import { toolsHtml, toolsText } from '@/app/config/tools';
+import { toolsCss, toolsHtml, toolsText } from '@/app/config/tools';
 import BaseLayout from '@/app/layouts/base-layout.astro';
 import ToolCard from '@/entities/tools/ui/tool-card.astro';
 import Separator from '@/shared/ui/base/separator.astro';
@@ -21,6 +21,20 @@ import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
       <div class='tools-grid'>
         {
           toolsText.map(tool => (
+            <ToolCard
+              title={tool.title}
+              description={tool.description}
+              href={tool.href}
+              icon={tool.icon}
+            />
+          ))
+        }
+      </div>
+      <h2 class='tools-heading'>CSS Tools</h2>
+      <Separator />
+      <div class='tools-grid'>
+        {
+          toolsCss.map(tool => (
             <ToolCard
               title={tool.title}
               description={tool.description}
