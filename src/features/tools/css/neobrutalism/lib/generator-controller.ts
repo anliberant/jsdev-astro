@@ -1,3 +1,4 @@
+// src/features/tools/css/neobrutalism/lib/generator-controller.ts
 import type { ButtonConfig, ButtonPreset, GeneratorElements, TabElements } from '../types/button';
 
 export class NeobrutalistmButtonController {
@@ -200,47 +201,20 @@ export class NeobrutalistmButtonController {
   }
 
   private updatePreview(): void {
-    const buttons = this.elements.preview.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    // Clear existing content
+    this.elements.preview.innerHTML = '';
     
-    buttons.forEach((button, index) => {
-      // Main button gets the full text, others get abbreviated text
-      if (index === 0) {
-        button.textContent = this.currentConfig.text;
-      } else {
-        const texts = ['Normal', 'Hover', 'Active', 'Large'];
-        if (texts[index - 1]) {
-          button.textContent = texts[index - 1];
-        }
-      }
-    });
+    // Create single button
+    const button = document.createElement('button');
+    button.textContent = this.currentConfig.text;
+    button.className = 'neobrutalism-preview-button';
     
+    // Apply styles
     const styles = this.generateButtonStyles();
+    button.style.cssText = styles.inline;
     
-    buttons.forEach((button, index) => {
-      let buttonStyles = styles.inline;
-      
-      // Apply size variations
-      if (index === 1 || index === 2 || index === 3) { // Small buttons
-        buttonStyles += `; font-size: 12px; padding: 8px 16px; box-shadow: 2px 2px 0 ${this.currentConfig.shadowColor}`;
-      } else if (index === 4) { // Large button
-        buttonStyles += `; font-size: 18px; padding: 16px 32px; box-shadow: 6px 6px 0 ${this.currentConfig.shadowColor}`;
-      }
-      
-      // Active state for button 3
-      if (index === 3) {
-        const offsetX = Math.floor(this.currentConfig.shadowOffsetX / 2);
-        const offsetY = Math.floor(this.currentConfig.shadowOffsetY / 2);
-        buttonStyles += `; transform: translate(${offsetX}px, ${offsetY}px); box-shadow: ${offsetX}px ${offsetY}px 0 ${this.currentConfig.shadowColor}`;
-      }
-      
-      button.style.cssText = buttonStyles;
-      
-      // Update hover effect classes
-      button.className = `neobrutalism-button hover-${index === 2 ? 'none' : this.currentConfig.hoverEffect}`;
-      if (index === 3) button.classList.add('active-state');
-      if (index === 1 || index === 2 || index === 3) button.classList.add('btn-small');
-      if (index === 4) button.classList.add('btn-large');
-    });
+    // Add to preview
+    this.elements.preview.appendChild(button);
   }
 
   private generateButtonStyles(): { css: string; inline: string } {

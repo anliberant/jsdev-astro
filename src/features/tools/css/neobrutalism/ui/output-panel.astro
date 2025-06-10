@@ -37,31 +37,7 @@ import Button from '@/shared/ui/base/button.astro';
         <div
           id='button-preview'
           class='button-preview'>
-          <!-- Main Button -->
-          <div class='showcase-item'>
-            <span class='showcase-label'>Main Button</span>
-            <button class='neobrutalism-button hover-lift'>Click Me</button>
-          </div>
-
-          <!-- Button Variations -->
-          <div class='button-showcase'>
-            <div class='showcase-item'>
-              <span class='showcase-label'>Normal</span>
-              <button class='neobrutalism-button hover-none btn-small'>Normal</button>
-            </div>
-            <div class='showcase-item'>
-              <span class='showcase-label'>Hover Effect</span>
-              <button class='neobrutalism-button hover-lift btn-small'>Hover Me</button>
-            </div>
-            <div class='showcase-item'>
-              <span class='showcase-label'>Active</span>
-              <button class='neobrutalism-button hover-none btn-small active-state'>Active</button>
-            </div>
-            <div class='showcase-item'>
-              <span class='showcase-label'>Large</span>
-              <button class='neobrutalism-button hover-lift btn-large'>Large</button>
-            </div>
-          </div>
+          <!-- Single Button Preview -->
         </div>
       </div>
 
@@ -69,11 +45,11 @@ import Button from '@/shared/ui/base/button.astro';
         <div class='info-grid'>
           <div class='info-item'>
             <span class='info-icon'>🎨</span>
-            <span class='info-text'>Hover over buttons to see animations</span>
+            <span class='info-text'>Live preview updates as you customize</span>
           </div>
           <div class='info-item'>
             <span class='info-icon'>⚡</span>
-            <span class='info-text'>Click to see active states</span>
+            <span class='info-text'>Real-time CSS and HTML generation</span>
           </div>
           <div class='info-item'>
             <span class='info-icon'>📱</span>
@@ -268,35 +244,13 @@ import Button from '@/shared/ui/base/button.astro';
     position: relative;
     z-index: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2rem;
+    justify-content: center;
+    min-height: 100px;
   }
 
-  .button-showcase {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1.5rem;
-    width: 100%;
-    max-width: 600px;
-  }
-
-  .showcase-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .showcase-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: hsl(var(--muted-foreground));
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .neobrutalism-button {
+  /* Default button styles that will be overridden by JavaScript */
+  .neobrutalism-preview-button {
     background-color: #ffeb3b;
     color: #000000;
     border: 3px solid #000000;
@@ -315,65 +269,14 @@ import Button from '@/shared/ui/base/button.astro';
     user-select: none;
   }
 
-  .neobrutalism-button.hover-lift:hover {
+  .neobrutalism-preview-button:hover {
     transform: translate(-2px, -2px);
     box-shadow: 6px 6px 0 #000000;
   }
 
-  .neobrutalism-button.hover-push:hover {
+  .neobrutalism-preview-button:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 #000000;
-  }
-
-  .neobrutalism-button.hover-glow:hover {
-    box-shadow:
-      4px 4px 0 #000000,
-      0 0 20px rgba(255, 235, 59, 0.5);
-  }
-
-  .neobrutalism-button.hover-shake:hover {
-    animation: neobrutalism-shake 200ms ease-in-out;
-  }
-
-  .neobrutalism-button:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 #000000;
-  }
-
-  @keyframes neobrutalism-shake {
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-    25% {
-      transform: translateX(-2px);
-    }
-    75% {
-      transform: translateX(2px);
-    }
-  }
-
-  /* Button Variations */
-  .btn-small {
-    font-size: 12px !important;
-    padding: 8px 16px !important;
-    box-shadow: 2px 2px 0 #000000 !important;
-  }
-
-  .btn-large {
-    font-size: 18px !important;
-    padding: 16px 32px !important;
-    box-shadow: 6px 6px 0 #000000 !important;
-  }
-
-  .active-state {
-    transform: translate(2px, 2px) !important;
-    box-shadow: 1px 1px 0 #000000 !important;
-  }
-
-  .neobrutalism-button.hover-none:hover {
-    transform: none !important;
-    box-shadow: 4px 4px 0 #000000 !important;
   }
 
   .preview-info {
@@ -551,18 +454,9 @@ import Button from '@/shared/ui/base/button.astro';
       padding: 1rem;
     }
 
-    .button-showcase {
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
     .info-grid {
       grid-template-columns: 1fr;
       gap: 0.75rem;
-    }
-
-    .showcase-label {
-      font-size: 0.6875rem;
     }
   }
 </style>
