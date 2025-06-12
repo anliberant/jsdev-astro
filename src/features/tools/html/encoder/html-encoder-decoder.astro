@@ -55,14 +55,78 @@ const converterOptions = [
 <script>
   import { HtmlEncoderDecoderController } from './lib/encoder-controller';
 
-  document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM loaded, initializing HTML Encoder & Decoder...');
+  let initAttempts = 0;
+  const maxAttempts = 50;
+  const retryDelay = 100;
+
+  function checkRequiredElements(): boolean {
+    const required = ['htmlInput', 'htmlOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
+    return required.every(id => {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.warn(`Element ${id} not found`);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  function initializeEncoder(): void {
+    initAttempts++;
+
+    console.log(`Attempt ${initAttempts}: Initializing HTML Encoder & Decoder...`);
+
+    if (!checkRequiredElements()) {
+      if (initAttempts < maxAttempts) {
+        console.log(`Missing elements, retrying in ${retryDelay}ms...`);
+        setTimeout(initializeEncoder, retryDelay);
+        return;
+      } else {
+        console.error('Failed to find all required elements after maximum attempts');
+        return;
+      }
+    }
 
     try {
+      console.log('All required elements found, creating controller...');
       const controller = new HtmlEncoderDecoderController();
       console.log('Encoder/Decoder initialized successfully');
+
+      if (typeof window !== 'undefined') {
+        (window as any).encoderController = controller;
+      }
     } catch (error) {
       console.error('Error initializing encoder/decoder:', error);
+
+      if (initAttempts < maxAttempts) {
+        console.log('Retrying initialization...');
+        setTimeout(initializeEncoder, retryDelay * 2);
+      }
     }
-  });
+  }
+
+  function startInitialization(): void {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeEncoder);
+    } else if (document.readyState === 'interactive') {
+      setTimeout(initializeEncoder, 50);
+    } else {
+      requestAnimationFrame(() => {
+        setTimeout(initializeEncoder, 0);
+      });
+    }
+  }
+
+  startInitialization();
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (initAttempts === 0 || !checkRequiredElements()) {
+          console.log('Performing final initialization attempt...');
+          initializeEncoder();
+        }
+      }, 500);
+    });
+  }
 </script>
