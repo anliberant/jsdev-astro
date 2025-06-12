@@ -48,7 +48,7 @@ function parseHighlightRanges(raw) {
 }
 
 let finalCode = '';
-let language = propLanguage || dataLanguage || 'javascript';
+let language = propLanguage || dataLanguage || 'js' || 'javascript';
 
 if (propCode) {
   finalCode = simpleDecodeHtml(propCode);
@@ -145,7 +145,14 @@ const codeLines = finalCode.split('\n');
 
       result = result.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-      if (lang === 'javascript' || lang === 'typescript' || lang === 'jsx' || lang === 'tsx') {
+      if (
+        lang === 'javascript' ||
+        lang === 'js' ||
+        lang === 'ts' ||
+        lang === 'typescript' ||
+        lang === 'jsx' ||
+        lang === 'tsx'
+      ) {
         const tokens = [];
 
         let match;

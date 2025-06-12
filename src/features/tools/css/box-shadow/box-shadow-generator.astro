@@ -1,0 +1,61 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+import ControlsPanel from './ui/controls-panel.astro';
+import OutputPanel from './ui/output-panel.astro';
+
+const { title, description } = Astro.props;
+
+const breadcrumbItems = generateToolsBreadcrumbs('Box Shadow CSS Generator');
+---
+
+<div class='box-shadow-generator'>
+  <Breadcrumbs
+    items={breadcrumbItems}
+    class='mt-10'
+  />
+  <HeadingBlock
+    title={title}
+    description={description}
+    class='mt-0'
+  />
+
+  <div class='generator-content'>
+    <ControlsPanel />
+    <OutputPanel />
+  </div>
+</div>
+
+<style>
+  .generator-content {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    min-height: 600px;
+  }
+
+  @media (max-width: 1024px) {
+    .generator-content {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .generator-content {
+      margin-top: 2rem;
+      gap: 1rem;
+    }
+  }
+</style>
+
+<script>
+  import { BoxShadowGeneratorController } from './lib/generator-controller';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    new BoxShadowGeneratorController();
+  });
+</script>

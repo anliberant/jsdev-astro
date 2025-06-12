@@ -1,4 +1,5 @@
-import { FileText, Code, Table, Wrench, Hash, PenTool, FileCode, Archive, Scissors, PaintbrushIcon } from '@lucide/astro';
+import BoxShadowIcon from '@/shared/ui/icons/box-shadow-icon.astro';
+import { FileText, Code, Table, Wrench, Hash, PenTool, FileCode, Archive, Scissors, PaintbrushIcon, FrameIcon } from '@lucide/astro';
 
 export const toolsHtml: ToolInfo[] = [
   {
@@ -49,6 +50,12 @@ export const toolsHtml: ToolInfo[] = [
     href: '/tools/html-tag-remover/',
     icon: Scissors,
   },
+  {
+    title: 'HTML Iframe Generator',
+    description: 'Generate secure iframe embed codes with live preview, security controls, and responsive design options.',
+    href: '/tools/html-iframe-generator',
+    icon: FrameIcon,
+  }
 ];
 
 export const toolsText: ToolInfo[] = [
@@ -66,6 +73,12 @@ export const toolsCss: ToolInfo[] = [
     description: 'Create bold, eye-catching buttons with thick borders, vibrant colors, and dramatic shadows in the neobrutalism design style.',
     href: '/tools/neobrutalism-button',
     icon: PaintbrushIcon,
+  },
+  {
+    title: 'Box Shadow Generator',
+    description: 'Create stunning CSS box shadows with multiple layers, custom colors, and real-time preview',
+    href: '/tools/box-shadow-generator',
+    icon: BoxShadowIcon,
   },
 ];
 

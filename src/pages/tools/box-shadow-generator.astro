@@ -1,0 +1,17 @@
+---
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import BoxShadowGenerator from '@/features/tools/css/box-shadow/box-shadow-generator.astro';
+
+const pageTitle = 'Box Shadow CSS Generator | JSdev Tools';
+const pageDescription =
+  'Create stunning CSS box shadows with multiple layers, custom colors, and real-time preview. Generate box-shadow code for your web projects instantly.';
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}>
+  <BoxShadowGenerator
+    title='Box Shadow CSS Generator'
+    description='Create beautiful and professional box shadows with real-time preview, multiple shadow layers, and customizable effects for modern web designs'
+  />
+</BaseLayout>
