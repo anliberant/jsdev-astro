@@ -53,9 +53,66 @@ const converterOptions = [
 </div>
 
 <script>
-  import { HtmlToPugConverterController } from './lib/converter-controller';
+  // Only run this script on the Pug converter page
+  const isPugConverterPage = () => {
+    return (
+      window.location.pathname.includes('pug') || document.getElementById('htmlInput') !== null
+    );
+  };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    new HtmlToPugConverterController();
-  });
+  if (isPugConverterPage()) {
+    import('./lib/converter-controller')
+      .then(({ HtmlToPugConverterController }) => {
+        // Wait for DOM to be fully ready
+        const initializeWhenReady = () => {
+          // Double-check that we have the required elements
+          const htmlInput = document.getElementById('htmlInput');
+          const pugOutput = document.getElementById('pugOutput');
+
+          if (htmlInput && pugOutput) {
+            try {
+              const controller = new HtmlToPugConverterController();
+              console.log('Pug converter initialized successfully');
+
+              // Store reference for debugging
+              if (typeof window !== 'undefined') {
+                (window as any).pugController = controller;
+              }
+            } catch (error) {
+              console.error('Error initializing Pug converter:', error);
+            }
+          } else {
+            console.log('Pug converter elements not found, skipping initialization');
+          }
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initializeWhenReady);
+        } else {
+          // DOM is already ready
+          initializeWhenReady();
+        }
+      })
+      .catch(error => {
+        console.error('Failed to load Pug converter:', error);
+      });
+  } else {
+    console.log('Not on Pug converter page, skipping initialization');
+  }
 </script>
+
+<style>
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+</style>

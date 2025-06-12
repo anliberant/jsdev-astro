@@ -3,45 +3,14 @@ import type { HtmlToPugElements, PugConversionOptions } from '@/shared/types';
 import { SAMPLE_HTML } from '@/shared/utils';
 
 export class HtmlToPugConverterController extends BaseConverterController<HtmlToPugElements> {
-  private initAttempts: number = 0;
-  private maxAttempts: number = 50;
 
   constructor() {
     super();
-    this.delayedInit();
   }
 
-  private delayedInit(): void {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.attemptInit());
-    } else {
-      setTimeout(() => this.attemptInit(), 100);
-    }
-  }
-
-  private attemptInit(): void {
-    this.initAttempts++;
-    console.log(`Pug Converter Attempt ${this.initAttempts}: Initializing...`);
-
-    try {
-      this.elements = this.initializeElements();
-      
-      if (this.validateElements()) {
-        this.bindEvents();
-        this.updateStats();
-        console.log('Pug Converter initialized successfully');
-      } else {
-        throw new Error('Required elements not found');
-      }
-    } catch (error) {
-      console.warn(`Pug Converter initialization attempt ${this.initAttempts} failed:`, error);
-      
-      if (this.initAttempts < this.maxAttempts) {
-        setTimeout(() => this.attemptInit(), 100);
-      } else {
-        console.error('Failed to initialize Pug converter after maximum attempts');
-      }
-    }
+  // Define which elements this converter needs
+  protected getRequiredElementIds(): string[] {
+    return ['htmlInput', 'pugOutput'];
   }
 
   protected initializeElements(): HtmlToPugElements {
@@ -64,7 +33,7 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
   }
 
   protected validateElements(): boolean {
-    return !!(this.elements.htmlInput && this.elements.pugOutput);
+    return !!(this.elements?.htmlInput && this.elements?.pugOutput);
   }
 
   protected bindEvents(): void {
@@ -74,7 +43,7 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
     }
 
     // Main input event
-    this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
+    this.safeAddEventListener(this.elements!.htmlInput, 'input', () => {
       this.convert();
       this.updateStats();
     });
@@ -93,8 +62,8 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
     this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
 
     // Option change handlers
-    if (this.elements.options) {
-      Object.values(this.elements.options).forEach(option => {
+    if (this.elements!.options) {
+      Object.values(this.elements!.options).forEach(option => {
         if (option && option.addEventListener) {
           this.safeAddEventListener(option, 'change', () => {
             this.convert();
@@ -106,8 +75,13 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
     console.log('Pug Converter events bound successfully');
   }
 
+  protected onInitialized(): void {
+    // Update stats after initialization
+    this.updateStats();
+  }
+
   private getOptions(): PugConversionOptions {
-    if (!this.elements.options) {
+    if (!this.elements?.options) {
       return {
         prettify: true,
         combineText: false,
@@ -128,10 +102,10 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
       return;
     }
 
-    const html = this.elements.htmlInput.value?.trim() || '';
+    const html = this.elements!.htmlInput.value?.trim() || '';
 
     if (!html) {
-      this.elements.pugOutput.value = '';
+      this.elements!.pugOutput.value = '';
       this.hideMessages();
       this.updateStats();
       return;
@@ -139,13 +113,13 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
 
     try {
       const pug = this.convertHtmlToPug(html);
-      this.elements.pugOutput.value = pug;
+      this.elements!.pugOutput.value = pug;
       this.showSuccess('HTML successfully converted to Pug!');
       this.updateStats();
     } catch (error) {
       console.error('Conversion error:', error);
       this.showError(`Conversion error: ${(error as Error).message}`);
-      this.elements.pugOutput.value = '';
+      this.elements!.pugOutput.value = '';
       this.updateStats();
     }
   }
@@ -313,7 +287,7 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
   }
 
   private loadSample(): void {
-    if (this.elements.htmlInput) {
+    if (this.elements?.htmlInput) {
       this.elements.htmlInput.value = SAMPLE_HTML.pug;
       this.convert();
       this.updateStats();
@@ -330,9 +304,9 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
   }
 
   private updateStats(): void {
-    if (this.elements.inputStats && this.elements.outputStats) {
-      const inputStats = this.calculateStats(this.elements.htmlInput.value || '');
-      const outputStats = this.calculateStats(this.elements.pugOutput.value || '');
+    if (this.elements?.inputStats && this.elements?.outputStats) {
+      const inputStats = this.calculateStats(this.elements.htmlInput?.value || '');
+      const outputStats = this.calculateStats(this.elements.pugOutput?.value || '');
 
       this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
       this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
@@ -340,11 +314,11 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
   }
 
   protected showSuccess(message: string): void {
-    if (this.elements.successMessage) {
+    if (this.elements?.successMessage) {
       this.elements.successMessage.textContent = message;
       this.elements.successMessage.classList.remove('hidden');
     }
-    if (this.elements.errorMessage) {
+    if (this.elements?.errorMessage) {
       this.elements.errorMessage.classList.add('hidden');
     }
     
@@ -354,11 +328,11 @@ export class HtmlToPugConverterController extends BaseConverterController<HtmlTo
   }
 
   protected showError(message: string): void {
-    if (this.elements.errorMessage) {
+    if (this.elements?.errorMessage) {
       this.elements.errorMessage.textContent = message;
       this.elements.errorMessage.classList.remove('hidden');
     }
-    if (this.elements.successMessage) {
+    if (this.elements?.successMessage) {
       this.elements.successMessage.classList.add('hidden');
     }
     

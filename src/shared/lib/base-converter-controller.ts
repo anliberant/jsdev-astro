@@ -1,18 +1,40 @@
+// src/shared/lib/base-converter-controller.ts
 export abstract class BaseConverterController<T> {
   protected elements: T | null = null;
   private isInitialized: boolean = false;
   private initAttempts: number = 0;
-  private maxAttempts: number = 50;
+  private maxAttempts: number = 10; // Reduced from 50
+  private requiredElementIds: string[] = [];
 
-  constructor() {
-    // Don't call delayedInit here, let subclasses handle it
+  constructor(requiredElementIds: string[] = []) {
+    this.requiredElementIds = requiredElementIds;
+    if (this.shouldInitialize()) {
+      this.delayedInit();
+    }
+  }
+
+  protected abstract getRequiredElementIds(): string[];
+
+  private shouldInitialize(): boolean {
+    const requiredIds = this.getRequiredElementIds();
+    
+    const hasAnyElement = requiredIds.some(id => document.getElementById(id) !== null);
+    
+    if (!hasAnyElement) {
+      console.log(`Skipping initialization - required elements not found for ${this.constructor.name}`);
+      return false;
+    }
+    
+    return true;
   }
 
   protected delayedInit(): void {
+    // Use a more robust initialization approach
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.attemptInit());
     } else {
-      requestAnimationFrame(() => this.attemptInit());
+      // Document is already ready, but wait a bit for dynamic content
+      setTimeout(() => this.attemptInit(), 50);
     }
   }
 
@@ -20,26 +42,57 @@ export abstract class BaseConverterController<T> {
     this.initAttempts++;
     
     try {
-      console.log(`Base Controller Attempt ${this.initAttempts}: Initializing converter...`);
+      console.log(`${this.constructor.name} Attempt ${this.initAttempts}: Initializing...`);
+      
+      // Check if all required elements are present
+      if (!this.checkRequiredElements()) {
+        throw new Error('Required elements not found');
+      }
       
       this.elements = this.initializeElements();
       
       if (this.validateElements()) {
         this.bindEvents();
         this.isInitialized = true;
-        console.log('Base Controller initialized successfully');
+        console.log(`${this.constructor.name} initialized successfully`);
+        
+        // Call post-initialization hook
+        this.onInitialized();
       } else {
-        throw new Error('Required elements not found');
+        throw new Error('Element validation failed');
       }
     } catch (error) {
-      console.warn(`Base Controller initialization attempt ${this.initAttempts} failed:`, error);
+      console.warn(`${this.constructor.name} initialization attempt ${this.initAttempts} failed:`, error);
       
       if (this.initAttempts < this.maxAttempts) {
-        setTimeout(() => this.attemptInit(), 100);
+        setTimeout(() => this.attemptInit(), 200 * this.initAttempts); // Exponential backoff
       } else {
-        console.error('Failed to initialize base controller after maximum attempts');
+        console.error(`Failed to initialize ${this.constructor.name} after maximum attempts`);
+        this.onInitializationFailed();
       }
     }
+  }
+
+  private checkRequiredElements(): boolean {
+    const requiredIds = this.getRequiredElementIds();
+    const missingElements = requiredIds.filter(id => !document.getElementById(id));
+    
+    if (missingElements.length > 0) {
+      console.warn(`${this.constructor.name}: Missing elements: ${missingElements.join(', ')}`);
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Hook for subclasses to override
+  protected onInitialized(): void {
+    // Default implementation - can be overridden
+  }
+
+  // Hook for when initialization fails
+  protected onInitializationFailed(): void {
+    console.error(`${this.constructor.name} failed to initialize. Page may be missing required elements.`);
   }
 
   protected abstract initializeElements(): T;
@@ -199,5 +252,11 @@ export abstract class BaseConverterController<T> {
       console.warn(`Error accessing path ${path.join('.')}:`, error);
       return null;
     }
+  }
+
+  // Cleanup method
+  public destroy(): void {
+    this.isInitialized = false;
+    this.elements = null;
   }
 }
