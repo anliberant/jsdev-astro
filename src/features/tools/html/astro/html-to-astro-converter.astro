@@ -44,80 +44,302 @@ const breadcrumbItems = generateToolsBreadcrumbs('HTML to Astro Converter');
 </div>
 
 <script>
-  import { HtmlToAstroController } from './lib/converter-controller';
+  console.log('HTML to Astro Converter Script started');
 
-  let initAttempts = 0;
-  const maxAttempts = 50;
-  const retryDelay = 100;
+  // Simple converter function
+  function convertHtmlToAstro(html) {
+    if (!html.trim()) return '';
 
-  function checkRequiredElements(): boolean {
-    const required = ['htmlInput', 'astroOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
-    return required.every(id => {
-      const element = document.getElementById(id);
-      if (!element) {
-        console.warn(`Element ${id} not found`);
-        return false;
-      }
-      return true;
-    });
-  }
+    const isFullDocument =
+      html.includes('<!DOCTYPE') || (html.includes('<html') && html.includes('<head'));
 
-  function initializeConverter(): void {
-    initAttempts++;
+    if (isFullDocument) {
+      // Extract head content
+      const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+      const headContent = headMatch ? headMatch[1].trim() : '';
 
-    console.log(`Attempt ${initAttempts}: Initializing HTML to Astro converter...`);
+      // Extract body content
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      const bodyContent = bodyMatch ? bodyMatch[1].trim() : html;
 
-    if (!checkRequiredElements()) {
-      if (initAttempts < maxAttempts) {
-        console.log(`Missing elements, retrying in ${retryDelay}ms...`);
-        setTimeout(initializeConverter, retryDelay);
-        return;
-      } else {
-        console.error('Failed to find all required elements after maximum attempts');
-        return;
-      }
-    }
+      // Extract title
+      const titleMatch = headContent.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : 'Astro Component';
 
-    try {
-      console.log('All required elements found, creating controller...');
-      const controller = new HtmlToAstroController();
-      console.log('HTML to Astro converter initialized successfully');
+      return `---
+export interface Props {
+  title?: string;
+}
 
-      if (typeof window !== 'undefined') {
-        (window as any).astroController = controller;
-      }
-    } catch (error) {
-      console.error('Error initializing HTML to Astro converter:', error);
+const { title = "${title}" } = Astro.props;
+---
 
-      if (initAttempts < maxAttempts) {
-        console.log('Retrying initialization...');
-        setTimeout(initializeConverter, retryDelay * 2);
-      }
-    }
-  }
-
-  function startInitialization(): void {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeConverter);
-    } else if (document.readyState === 'interactive') {
-      setTimeout(initializeConverter, 50);
+${bodyContent}`;
     } else {
-      requestAnimationFrame(() => {
-        setTimeout(initializeConverter, 0);
+      return `---
+// Astro component
+export interface Props {
+  title?: string;
+}
+
+const { title = "Page Title" } = Astro.props;
+---
+
+${html}`;
+    }
+  }
+
+  function loadSample() {
+    console.log('Loading sample HTML...');
+    const htmlInput = document.getElementById('htmlInput');
+
+    if (htmlInput) {
+      const sampleHtml = `<div class="container">
+  <header class="header">
+    <h1>Welcome to Astro</h1>
+    <nav>
+      <ul class="nav-list">
+        <li><a href="#home" class="nav-link">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="main-content">
+    <section class="hero">
+      <h2>Hero Section</h2>
+      <p>This is a sample paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
+      <button type="submit" class="btn btn-primary">Click Me</button>
+    </section>
+  </main>
+</div>`;
+
+      htmlInput.value = sampleHtml;
+      console.log('Sample HTML loaded successfully');
+
+      // Trigger conversion
+      convert();
+
+      // Show success message
+      showMessage('Sample HTML loaded!', 'success');
+    } else {
+      console.error('htmlInput element not found');
+      showMessage('Error: Could not find input field', 'error');
+    }
+  }
+
+  function convert() {
+    console.log('Converting HTML to Astro...');
+    const htmlInput = document.getElementById('htmlInput');
+    const astroOutput = document.getElementById('astroOutput');
+
+    if (htmlInput && astroOutput) {
+      const html = htmlInput.value.trim();
+      if (html) {
+        const astro = convertHtmlToAstro(html);
+        astroOutput.value = astro;
+        console.log('Conversion completed successfully');
+        updateStats();
+      } else {
+        astroOutput.value = '';
+        updateStats();
+      }
+    } else {
+      console.error('Input or output elements not found');
+    }
+  }
+
+  function clear() {
+    console.log('Clearing all content...');
+    const htmlInput = document.getElementById('htmlInput');
+    const astroOutput = document.getElementById('astroOutput');
+
+    if (htmlInput) htmlInput.value = '';
+    if (astroOutput) astroOutput.value = '';
+
+    updateStats();
+    showMessage('Content cleared', 'success');
+  }
+
+  async function copy() {
+    console.log('Copying to clipboard...');
+    const astroOutput = document.getElementById('astroOutput');
+    const copyBtn = document.getElementById('copyBtn');
+
+    if (astroOutput && astroOutput.value.trim()) {
+      try {
+        await navigator.clipboard.writeText(astroOutput.value);
+
+        if (copyBtn) {
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '✅ Copied!';
+          copyBtn.classList.add('copied');
+
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        }
+
+        console.log('Successfully copied to clipboard');
+        showMessage('Copied to clipboard!', 'success');
+      } catch (error) {
+        console.error('Copy failed:', error);
+        showMessage('Failed to copy to clipboard', 'error');
+      }
+    } else {
+      showMessage('Nothing to copy', 'error');
+    }
+  }
+
+  function updateStats() {
+    const htmlInput = document.getElementById('htmlInput');
+    const astroOutput = document.getElementById('astroOutput');
+    const inputStats = document.getElementById('inputStats');
+    const outputStats = document.getElementById('outputStats');
+
+    if (htmlInput && inputStats) {
+      const inputValue = htmlInput.value || '';
+      const lines = inputValue.split('\n').length;
+      const chars = inputValue.length;
+      inputStats.textContent = `Lines: ${lines}, Characters: ${chars}`;
+    }
+
+    if (astroOutput && outputStats) {
+      const outputValue = astroOutput.value || '';
+      const lines = outputValue.split('\n').length;
+      const chars = outputValue.length;
+      outputStats.textContent = `Lines: ${lines}, Characters: ${chars}`;
+    }
+  }
+
+  function showMessage(text, type = 'success') {
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Hide all messages first
+    if (successMessage) successMessage.classList.add('hidden');
+    if (errorMessage) errorMessage.classList.add('hidden');
+
+    // Show the appropriate message
+    if (type === 'success' && successMessage) {
+      successMessage.textContent = text;
+      successMessage.classList.remove('hidden');
+      setTimeout(() => successMessage.classList.add('hidden'), 3000);
+    } else if (type === 'error' && errorMessage) {
+      errorMessage.textContent = text;
+      errorMessage.classList.remove('hidden');
+      setTimeout(() => errorMessage.classList.add('hidden'), 5000);
+    }
+  }
+
+  function bindEvents() {
+    console.log('Binding events to buttons...');
+
+    // Sample button (this is in the converter-header)
+    const sampleBtn = document.getElementById('sampleBtn');
+    if (sampleBtn) {
+      console.log('Sample button found, adding click handler');
+      sampleBtn.addEventListener('click', e => {
+        console.log('Sample button clicked!');
+        e.preventDefault();
+        loadSample();
+      });
+    } else {
+      console.error('Sample button not found!');
+    }
+
+    // Convert button
+    const convertBtn = document.getElementById('convertBtn');
+    if (convertBtn) {
+      convertBtn.addEventListener('click', e => {
+        console.log('Convert button clicked');
+        e.preventDefault();
+        convert();
       });
     }
+
+    // Clear button
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', e => {
+        console.log('Clear button clicked');
+        e.preventDefault();
+        clear();
+      });
+    }
+
+    // Copy button
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', e => {
+        console.log('Copy button clicked');
+        e.preventDefault();
+        copy();
+      });
+    }
+
+    // Input change event
+    const htmlInput = document.getElementById('htmlInput');
+    if (htmlInput) {
+      htmlInput.addEventListener('input', () => {
+        convert();
+      });
+    }
+
+    console.log('All events bound successfully');
   }
 
-  startInitialization();
+  function initialize() {
+    console.log('Initializing HTML to Astro converter...');
 
-  if (typeof window !== 'undefined') {
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (initAttempts === 0 || !checkRequiredElements()) {
-          console.log('Performing final initialization attempt...');
-          initializeConverter();
+    setTimeout(() => {
+      bindEvents();
+      updateStats();
+      console.log('Converter initialization complete');
+    }, 100);
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
+
+  // Fallback initialization
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const sampleBtn = document.getElementById('sampleBtn');
+      if (sampleBtn) {
+        console.log('Sample button verification: found');
+        // Test if click handler is working
+        const hasListeners =
+          sampleBtn.onclick || (sampleBtn.listeners && sampleBtn.listeners.length > 0);
+        if (!hasListeners) {
+          console.log('No click handlers detected, reinitializing...');
+          initialize();
         }
-      }, 500);
-    });
-  }
+      } else {
+        console.log('Sample button verification: NOT found, retrying...');
+        initialize();
+      }
+    }, 500);
+  });
 </script>
+
+<style>
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+</style>

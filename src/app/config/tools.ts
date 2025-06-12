@@ -71,13 +71,13 @@ export const toolsCss: ToolInfo[] = [
   {
     title: 'Neobrutalism CSS Button Generator',
     description: 'Create bold, eye-catching buttons with thick borders, vibrant colors, and dramatic shadows in the neobrutalism design style.',
-    href: '/tools/neobrutalism-button',
+    href: '/tools/neobrutalism-button/',
     icon: PaintbrushIcon,
   },
   {
     title: 'Box Shadow Generator',
     description: 'Create stunning CSS box shadows with multiple layers, custom colors, and real-time preview',
-    href: '/tools/box-shadow-generator',
+    href: '/tools/box-shadow-generator/',
     icon: BoxShadowIcon,
   },
 ];
