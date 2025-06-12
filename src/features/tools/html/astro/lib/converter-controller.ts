@@ -8,14 +8,51 @@ export class HtmlToAstroController extends BaseConverterController<HtmlToAstroEl
 
   constructor() {
     super();
+    this.delayedInit();
+  }
+
+  private delayedInit(): void {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.attemptInit());
+    } else {
+      setTimeout(() => this.attemptInit(), 100);
+    }
+  }
+
+  private attemptInit(): void {
+    this.initAttempts++;
+    console.log(`Astro Converter Attempt ${this.initAttempts}: Initializing...`);
+
+    try {
+      this.elements = this.initializeElements();
+      
+      if (this.validateElements()) {
+        this.bindEvents();
+        this.updateStats();
+        console.log('Astro Converter initialized successfully');
+      } else {
+        throw new Error('Required elements not found');
+      }
+    } catch (error) {
+      console.warn(`Astro Converter initialization attempt ${this.initAttempts} failed:`, error);
+      
+      if (this.initAttempts < this.maxAttempts) {
+        setTimeout(() => this.attemptInit(), 100);
+      } else {
+        console.error('Failed to initialize Astro converter after maximum attempts');
+      }
+    }
   }
 
   protected initializeElements(): HtmlToAstroElements {
+    const createElement = <T extends HTMLElement>(tag: string): T => 
+      document.createElement(tag) as T;
+
     return {
-      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || document.createElement('textarea'),
-      astroOutput: this.safeGetElement<HTMLTextAreaElement>('astroOutput') || document.createElement('textarea'),
-      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || document.createElement('div'),
-      successMessage: this.safeGetElement<HTMLElement>('successMessage') || document.createElement('div'),
+      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || createElement<HTMLTextAreaElement>('textarea'),
+      astroOutput: this.safeGetElement<HTMLTextAreaElement>('astroOutput') || createElement<HTMLTextAreaElement>('textarea'),
+      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || createElement<HTMLElement>('div'),
+      successMessage: this.safeGetElement<HTMLElement>('successMessage') || createElement<HTMLElement>('div'),
       inputStats: this.safeGetElement<HTMLElement>('inputStats'),
       outputStats: this.safeGetElement<HTMLElement>('outputStats'),
     };
@@ -26,13 +63,18 @@ export class HtmlToAstroController extends BaseConverterController<HtmlToAstroEl
   }
 
   protected bindEvents(): void {
-    this.updateStats();
+    if (!this.validateElements()) {
+      console.error('Cannot bind events: required elements not found');
+      return;
+    }
 
+    // Main input event
     this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
       this.convert();
       this.updateStats();
     });
 
+    // Action buttons
     const convertBtn = this.safeGetElement('convertBtn');
     this.safeAddEventListener(convertBtn, 'click', () => this.convert());
 
@@ -44,15 +86,20 @@ export class HtmlToAstroController extends BaseConverterController<HtmlToAstroEl
 
     const sampleBtn = this.safeGetElement('sampleBtn');
     this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
+
+    console.log('Astro Converter events bound successfully');
   }
 
   protected convert(): void {
-    const html = this.elements.htmlInput?.value?.trim() || '';
+    if (!this.validateElements()) {
+      console.warn('Cannot convert: elements not ready');
+      return;
+    }
+
+    const html = this.elements.htmlInput.value?.trim() || '';
 
     if (!html) {
-      if (this.elements.astroOutput) {
-        this.elements.astroOutput.value = '';
-      }
+      this.elements.astroOutput.value = '';
       this.hideMessages();
       this.updateStats();
       return;
@@ -60,187 +107,62 @@ export class HtmlToAstroController extends BaseConverterController<HtmlToAstroEl
 
     try {
       const astroCode = this.convertHtmlToAstro(html);
-      if (this.elements.astroOutput) {
-        this.elements.astroOutput.value = astroCode;
-      }
+      this.elements.astroOutput.value = astroCode;
       this.showSuccess('HTML successfully converted to Astro!');
       this.updateStats();
     } catch (error) {
       console.error('Conversion error:', error);
       this.showError(`Conversion error: ${(error as Error).message}`);
-      if (this.elements.astroOutput) {
-        this.elements.astroOutput.value = '';
-      }
+      this.elements.astroOutput.value = '';
       this.updateStats();
     }
   }
 
   private convertHtmlToAstro(html: string): string {
-    if (!html.trim()) {
-      return '';
-    }
+    if (!html.trim()) return '';
 
-    let result = html;
-
-    // Check if it's a complete HTML document
-    const isFullDocument = result.includes('<!DOCTYPE') || 
-                          (result.includes('<html') && result.includes('<head'));
+    const isFullDocument =
+      html.includes('<!DOCTYPE') || (html.includes('<html') && html.includes('<head'));
 
     if (isFullDocument) {
-      result = this.convertFullDocument(result);
-    } else {
-      result = this.convertFragment(result);
-    }
+      // Extract head content
+      const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+      const headContent = headMatch ? headMatch[1].trim() : '';
 
-    return result;
-  }
+      // Extract body content
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      const bodyContent = bodyMatch ? bodyMatch[1].trim() : html;
 
-  private convertFullDocument(html: string): string {
-    // Extract head content
-    const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-    const headContent = headMatch ? headMatch[1].trim() : '';
+      // Extract title
+      const titleMatch = headContent.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : 'Astro Component';
 
-    // Extract body content
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    const bodyContent = bodyMatch ? bodyMatch[1].trim() : html;
-
-    // Extract title
-    const titleMatch = headContent.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : 'Astro Component';
-
-    // Extract meta tags
-    const metaTags = this.extractMetaTags(headContent);
-
-    // Create frontmatter
-    const frontmatter = this.createFrontmatter(title, metaTags);
-
-    // Process body content
-    const processedBody = this.processHtmlContent(bodyContent);
-
-    return `---
-${frontmatter}---
-
-${processedBody}`;
-  }
-
-  private convertFragment(html: string): string {
-    const processedContent = this.processHtmlContent(html);
-    
-    return `---
-// Astro component
----
-
-${processedContent}`;
-  }
-
-  private extractMetaTags(headContent: string): string[] {
-    const metaTags: string[] = [];
-    const metaRegex = /<meta[^>]*>/gi;
-    let match;
-
-    while ((match = metaRegex.exec(headContent)) !== null) {
-      metaTags.push(match[0]);
-    }
-
-    return metaTags;
-  }
-
-  private createFrontmatter(title: string, metaTags: string[]): string {
-    let frontmatter = `export interface Props {
+      return `---
+export interface Props {
   title?: string;
 }
 
-const { title = "${title}" } = Astro.props;`;
+const { title = "${title}" } = Astro.props;
+---
 
-    if (metaTags.length > 0) {
-      frontmatter += '\n\n// Meta tags from original HTML';
-      metaTags.forEach(tag => {
-        frontmatter += `\n// ${tag}`;
-      });
+${bodyContent}`;
+    } else {
+      return `---
+// Astro component
+export interface Props {
+  title?: string;
+}
+
+const { title = "Page Title" } = Astro.props;
+---
+
+${html}`;
     }
-
-    return frontmatter;
-  }
-
-  private processHtmlContent(content: string): string {
-    let result = content;
-
-    // Convert class to class:list for dynamic classes
-    result = result.replace(/class="([^"]+)"/g, (match, className) => {
-      if (className.includes(' ')) {
-        const classes = className.split(' ').map(c => `'${c.trim()}'`).join(', ');
-        return `class:list={[${classes}]}`;
-      }
-      return `class="${className}"`;
-    });
-
-    // Convert style attributes to Astro format if they contain dynamic content
-    result = result.replace(/style="([^"]+)"/g, 'style="$1"');
-
-    // Add Astro-specific attributes for forms and inputs
-    result = result.replace(/<form([^>]*)>/g, '<form$1>');
-    
-    // Convert certain HTML attributes to Astro equivalents
-    result = result.replace(/onclick="([^"]+)"/g, 'onclick={$1}');
-    result = result.replace(/onchange="([^"]+)"/g, 'onchange={$1}');
-
-    // Add proper indentation
-    result = this.addIndentation(result);
-
-    return result;
-  }
-
-  private addIndentation(html: string): string {
-    const lines = html.split('\n');
-    let indentLevel = 0;
-    const indentedLines: string[] = [];
-
-    for (let line of lines) {
-      const trimmedLine = line.trim();
-      
-      if (!trimmedLine) {
-        indentedLines.push('');
-        continue;
-      }
-
-      // Decrease indent for closing tags
-      if (trimmedLine.startsWith('</')) {
-        indentLevel = Math.max(0, indentLevel - 1);
-      }
-
-      // Add indentation
-      indentedLines.push('  '.repeat(indentLevel) + trimmedLine);
-
-      // Increase indent for opening tags (but not self-closing or void elements)
-      if (trimmedLine.startsWith('<') && 
-          !trimmedLine.startsWith('</') && 
-          !trimmedLine.endsWith('/>') &&
-          !this.isVoidElement(trimmedLine)) {
-        indentLevel++;
-      }
-    }
-
-    return indentedLines.join('\n');
-  }
-
-  private isVoidElement(line: string): boolean {
-    const voidElements = [
-      'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-      'link', 'meta', 'param', 'source', 'track', 'wbr'
-    ];
-
-    for (const element of voidElements) {
-      if (line.includes(`<${element}`)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   private loadSample(): void {
     if (this.elements.htmlInput) {
-      this.elements.htmlInput.value = SAMPLE_HTML.astro || `<div class="container">
+      const sampleHtml = `<div class="container">
   <header class="header">
     <h1>Welcome to Astro</h1>
     <nav>
@@ -259,6 +181,8 @@ const { title = "${title}" } = Astro.props;`;
     </section>
   </main>
 </div>`;
+
+      this.elements.htmlInput.value = sampleHtml;
       this.convert();
       this.updateStats();
     }
@@ -284,5 +208,37 @@ const { title = "${title}" } = Astro.props;`;
       this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
       this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
     }
+  }
+
+  protected showSuccess(message: string): void {
+    if (this.elements.successMessage) {
+      this.elements.successMessage.textContent = message;
+      this.elements.successMessage.classList.remove('hidden');
+    }
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.classList.add('hidden');
+    }
+    
+    setTimeout(() => {
+      this.hideMessages();
+    }, 3000);
+  }
+
+  protected showError(message: string): void {
+    if (this.elements.errorMessage) {
+      this.elements.errorMessage.textContent = message;
+      this.elements.errorMessage.classList.remove('hidden');
+    }
+    if (this.elements.successMessage) {
+      this.elements.successMessage.classList.add('hidden');
+    }
+    
+    setTimeout(() => {
+      this.hideMessages();
+    }, 5000);
+  }
+
+  public isReady(): boolean {
+    return this.validateElements();
   }
 }

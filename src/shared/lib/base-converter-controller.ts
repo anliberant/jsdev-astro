@@ -1,14 +1,14 @@
 export abstract class BaseConverterController<T> {
-  protected elements: T;
+  protected elements: T | null = null;
   private isInitialized: boolean = false;
   private initAttempts: number = 0;
   private maxAttempts: number = 50;
 
   constructor() {
-    this.delayedInit();
+    // Don't call delayedInit here, let subclasses handle it
   }
 
-  private delayedInit(): void {
+  protected delayedInit(): void {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.attemptInit());
     } else {
@@ -20,24 +20,24 @@ export abstract class BaseConverterController<T> {
     this.initAttempts++;
     
     try {
-      console.log(`Attempt ${this.initAttempts}: Initializing converter...`);
+      console.log(`Base Controller Attempt ${this.initAttempts}: Initializing converter...`);
       
       this.elements = this.initializeElements();
       
       if (this.validateElements()) {
         this.bindEvents();
         this.isInitialized = true;
-        console.log('Converter initialized successfully');
+        console.log('Base Controller initialized successfully');
       } else {
         throw new Error('Required elements not found');
       }
     } catch (error) {
-      console.warn(`Initialization attempt ${this.initAttempts} failed:`, error);
+      console.warn(`Base Controller initialization attempt ${this.initAttempts} failed:`, error);
       
       if (this.initAttempts < this.maxAttempts) {
         setTimeout(() => this.attemptInit(), 100);
       } else {
-        console.error('Failed to initialize converter after maximum attempts');
+        console.error('Failed to initialize base controller after maximum attempts');
       }
     }
   }
@@ -46,7 +46,7 @@ export abstract class BaseConverterController<T> {
   protected abstract bindEvents(): void;
 
   protected validateElements(): boolean {
-    return true;
+    return this.elements !== null;
   }
 
   protected safeGetElement<E extends HTMLElement>(id: string): E | null {
@@ -180,6 +180,24 @@ export abstract class BaseConverterController<T> {
   }
 
   public isReady(): boolean {
-    return this.isInitialized;
+    return this.isInitialized && this.elements !== null;
+  }
+
+  // Helper method to safely access nested properties
+  protected safeAccess<K>(obj: any, path: string[]): K | null {
+    try {
+      let current = obj;
+      for (const key of path) {
+        if (current && typeof current === 'object' && key in current) {
+          current = current[key];
+        } else {
+          return null;
+        }
+      }
+      return current;
+    } catch (error) {
+      console.warn(`Error accessing path ${path.join('.')}:`, error);
+      return null;
+    }
   }
 }

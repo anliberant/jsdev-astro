@@ -293,11 +293,40 @@ ${html}`;
   function initialize() {
     console.log('Initializing HTML to Astro converter...');
 
-    setTimeout(() => {
+    const checkElements = () => {
+      const required = ['htmlInput', 'astroOutput'];
+      const missing = [];
+
+      for (const id of required) {
+        const element = document.getElementById(id);
+        if (!element) {
+          missing.push(id);
+        }
+      }
+
+      if (missing.length > 0) {
+        console.warn(`Missing required elements: ${missing.join(', ')}`);
+        return false;
+      }
+
+      return true;
+    };
+
+    if (checkElements()) {
       bindEvents();
       updateStats();
       console.log('Converter initialization complete');
-    }, 100);
+    } else {
+      setTimeout(() => {
+        if (checkElements()) {
+          bindEvents();
+          updateStats();
+          console.log('Converter initialization complete (delayed)');
+        } else {
+          console.error('Failed to find required elements after retry');
+        }
+      }, 500);
+    }
   }
 
   // Initialize when DOM is ready
@@ -310,21 +339,14 @@ ${html}`;
   // Fallback initialization
   window.addEventListener('load', () => {
     setTimeout(() => {
-      const sampleBtn = document.getElementById('sampleBtn');
-      if (sampleBtn) {
-        console.log('Sample button verification: found');
-        // Test if click handler is working
-        const hasListeners =
-          sampleBtn.onclick || (sampleBtn.listeners && sampleBtn.listeners.length > 0);
-        if (!hasListeners) {
-          console.log('No click handlers detected, reinitializing...');
-          initialize();
-        }
-      } else {
-        console.log('Sample button verification: NOT found, retrying...');
+      const htmlInput = document.getElementById('htmlInput');
+      const astroOutput = document.getElementById('astroOutput');
+
+      if (!htmlInput || !astroOutput) {
+        console.log('Elements still missing, attempting final initialization...');
         initialize();
       }
-    }, 500);
+    }, 1000);
   });
 </script>
 
