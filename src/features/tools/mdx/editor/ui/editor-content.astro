@@ -91,6 +91,56 @@ def greet():
       ></div>
     </div>
   </div>
+
+  <!-- Hidden error/success messages for compatibility -->
+  <div
+    id='errorMessage'
+    class='message error-message hidden'
+    role='alert'
+  ></div>
+  <div
+    id='successMessage'
+    class='message success-message hidden'
+    role='status'
+  ></div>
+
+  <!-- Hidden stats for compatibility -->
+  <div
+    id='inputStats'
+    class='stats hidden'
+  ></div>
+  <div
+    id='outputStats'
+    class='stats hidden'
+  ></div>
+
+  <!-- Hidden converter controls for compatibility -->
+  <button
+    id='convertBtn'
+    class='hidden'
+    style='display: none;'
+  ></button>
+  <button
+    id='clearBtn'
+    class='hidden'
+    style='display: none;'
+  ></button>
+  <input
+    type='checkbox'
+    id='modeToggle'
+    class='hidden'
+    style='display: none;'
+  />
+  <div
+    id='inputLabel'
+    class='hidden'
+    style='display: none;'
+  ></div>
+  <div
+    id='outputLabel'
+    class='hidden'
+    style='display: none;'
+  ></div>
 </div>
 
 <style>
@@ -99,6 +149,7 @@ def greet():
     height: calc(100vh - 200px);
     min-height: 500px;
     max-height: 800px;
+    position: relative;
   }
 
   .editor-pane,
@@ -328,6 +379,13 @@ def greet():
     color: #2563eb;
   }
 
+  .preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+  }
+
   .html-container {
     position: relative;
     height: 100%;
@@ -355,6 +413,23 @@ def greet():
     overflow-wrap: break-word;
     overflow-y: auto;
     height: 100%;
+  }
+
+  /* Hidden compatibility elements */
+  .message {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .stats {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
   }
 
   @media (max-width: 768px) {
