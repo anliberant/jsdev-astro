@@ -5,64 +5,13 @@ import { SAMPLE_HTML } from '@/shared/utils';
 
 export class HtmlToJsxConverterController extends BaseConverterController<HtmlToJsxElements> {
   private converter: JsxConverter | null = null;
-  private initAttempts: number = 0;
-  private maxAttempts: number = 50;
 
   constructor() {
-    super();
-    this.delayedInit();
+    super('HtmlToJsxConverter'); 
   }
 
-  private delayedInit(): void {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.attemptInit());
-    } else {
-      setTimeout(() => this.attemptInit(), 100);
-    }
-  }
-
-  private attemptInit(): void {
-    this.initAttempts++;
-    console.log(`JSX Converter Attempt ${this.initAttempts}: Initializing...`);
-
-    if (this.checkRequiredElements()) {
-      try {
-        this.elements = this.initializeElements();
-        this.converter = new JsxConverter(this.getOptions());
-        this.bindEvents();
-        this.updateStats();
-        console.log('JSX Converter initialized successfully');
-      } catch (error) {
-        console.error('Error initializing JSX converter:', error);
-        if (this.initAttempts < this.maxAttempts) {
-          setTimeout(() => this.attemptInit(), 200);
-        }
-      }
-    } else if (this.initAttempts < this.maxAttempts) {
-      console.log(`Missing elements, retrying in 100ms...`);
-      setTimeout(() => this.attemptInit(), 100);
-    } else {
-      console.error('Failed to initialize JSX converter after maximum attempts');
-    }
-  }
-
-  private checkRequiredElements(): boolean {
-    const required = ['htmlInput', 'jsxOutput'];
-    const missing = [];
-    
-    for (const id of required) {
-      const element = document.getElementById(id);
-      if (!element) {
-        missing.push(id);
-      }
-    }
-    
-    if (missing.length > 0) {
-      console.warn(`Missing required elements: ${missing.join(', ')}`);
-      return false;
-    }
-    
-    return true;
+  protected getRequiredElementIds(): string[] {
+    return ['htmlInput', 'jsxOutput'];
   }
 
   protected initializeElements(): HtmlToJsxElements {
@@ -85,7 +34,7 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
   }
 
   protected validateElements(): boolean {
-    return !!(this.elements.htmlInput && this.elements.jsxOutput);
+    return !!(this.elements?.htmlInput && this.elements?.jsxOutput);
   }
 
   protected bindEvents(): void {
@@ -94,8 +43,11 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
       return;
     }
 
+    // Initialize converter
+    this.converter = new JsxConverter(this.getOptions());
+
     // Main input event
-    this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
+    this.safeAddEventListener(this.elements!.htmlInput, 'input', () => {
       this.convert();
       this.updateStats();
     });
@@ -114,21 +66,36 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
     this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
 
     // Option change handlers
-    Object.values(this.elements.options).forEach(option => {
-      if (option && option.addEventListener) {
-        this.safeAddEventListener(option, 'change', () => {
-          if (this.converter) {
-            this.converter = new JsxConverter(this.getOptions());
-            this.convert();
-          }
-        });
-      }
-    });
+    if (this.elements!.options) {
+      Object.values(this.elements!.options).forEach(option => {
+        if (option && option.addEventListener) {
+          this.safeAddEventListener(option, 'change', () => {
+            if (this.converter) {
+              this.converter = new JsxConverter(this.getOptions());
+              this.convert();
+            }
+          });
+        }
+      });
+    }
 
     console.log('JSX Converter events bound successfully');
   }
 
+  protected onInitialized(): void {
+    // Update stats after initialization
+    this.updateStats();
+  }
+
   private getOptions(): JsxConversionOptions {
+    if (!this.elements?.options) {
+      return {
+        prettify: true,
+        camelCase: true,
+        useFragment: false,
+      };
+    }
+
     return {
       prettify: this.elements.options.prettify?.checked || false,
       camelCase: this.elements.options.camelCase?.checked || false,
@@ -142,10 +109,10 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
       return;
     }
 
-    const html = this.elements.htmlInput.value?.trim() || '';
+    const html = this.elements!.htmlInput.value?.trim() || '';
 
     if (!html) {
-      this.elements.jsxOutput.value = '';
+      this.elements!.jsxOutput.value = '';
       this.hideMessages();
       this.updateStats();
       return;
@@ -153,19 +120,19 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
 
     try {
       const jsxCode = this.converter.convertToJsx(html);
-      this.elements.jsxOutput.value = jsxCode;
+      this.elements!.jsxOutput.value = jsxCode;
       this.showSuccess('HTML successfully converted to JSX!');
       this.updateStats();
     } catch (error) {
       console.error('Conversion error:', error);
       this.showError(`Conversion error: ${(error as Error).message}`);
-      this.elements.jsxOutput.value = '';
+      this.elements!.jsxOutput.value = '';
       this.updateStats();
     }
   }
 
   private loadSample(): void {
-    if (this.elements.htmlInput) {
+    if (this.elements?.htmlInput) {
       this.elements.htmlInput.value = SAMPLE_HTML.jsx || '<div>Sample HTML</div>';
       this.convert();
       this.updateStats();
@@ -182,7 +149,7 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
   }
 
   private updateStats(): void {
-    if (!this.elements.inputStats || !this.elements.outputStats) {
+    if (!this.elements?.inputStats || !this.elements?.outputStats) {
       return;
     }
 
@@ -197,11 +164,11 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
   }
 
   protected showSuccess(message: string): void {
-    if (this.elements.successMessage) {
+    if (this.elements?.successMessage) {
       this.elements.successMessage.textContent = message;
       this.elements.successMessage.classList.remove('hidden');
     }
-    if (this.elements.errorMessage) {
+    if (this.elements?.errorMessage) {
       this.elements.errorMessage.classList.add('hidden');
     }
     
@@ -211,11 +178,11 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
   }
 
   protected showError(message: string): void {
-    if (this.elements.errorMessage) {
+    if (this.elements?.errorMessage) {
       this.elements.errorMessage.textContent = message;
       this.elements.errorMessage.classList.remove('hidden');
     }
-    if (this.elements.successMessage) {
+    if (this.elements?.successMessage) {
       this.elements.successMessage.classList.add('hidden');
     }
     
@@ -226,6 +193,6 @@ export class HtmlToJsxConverterController extends BaseConverterController<HtmlTo
 
   // Public method to check if converter is ready
   public isReady(): boolean {
-    return !!(this.converter && this.validateElements());
+    return this.validateElements() && this.converter !== null;
   }
 }

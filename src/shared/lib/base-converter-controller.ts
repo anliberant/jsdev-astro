@@ -1,15 +1,16 @@
-// src/shared/lib/base-converter-controller.ts
 export abstract class BaseConverterController<T> {
   protected elements: T | null = null;
   private isInitialized: boolean = false;
-  private initAttempts: number = 0;
-  private maxAttempts: number = 10; // Reduced from 50
-  private requiredElementIds: string[] = [];
+  private converterName: string;
 
-  constructor(requiredElementIds: string[] = []) {
-    this.requiredElementIds = requiredElementIds;
+  constructor(converterName?: string) {
+    this.converterName = converterName || this.constructor.name;
+    
+    // Only initialize if we're on the right page
     if (this.shouldInitialize()) {
       this.delayedInit();
+    } else {
+      console.log(`${this.converterName}: Not the right page, skipping initialization`);
     }
   }
 
@@ -18,10 +19,14 @@ export abstract class BaseConverterController<T> {
   private shouldInitialize(): boolean {
     const requiredIds = this.getRequiredElementIds();
     
-    const hasAnyElement = requiredIds.some(id => document.getElementById(id) !== null);
+    // Check if any of the required elements exist
+    const hasAnyElement = requiredIds.some(id => {
+      const element = document.getElementById(id);
+      return element !== null;
+    });
     
     if (!hasAnyElement) {
-      console.log(`Skipping initialization - required elements not found for ${this.constructor.name}`);
+      console.log(`${this.converterName}: Required elements not found, skipping`);
       return false;
     }
     
@@ -34,19 +39,18 @@ export abstract class BaseConverterController<T> {
       document.addEventListener('DOMContentLoaded', () => this.attemptInit());
     } else {
       // Document is already ready, but wait a bit for dynamic content
-      setTimeout(() => this.attemptInit(), 50);
+      setTimeout(() => this.attemptInit(), 100);
     }
   }
 
   private attemptInit(): void {
-    this.initAttempts++;
-    
     try {
-      console.log(`${this.constructor.name} Attempt ${this.initAttempts}: Initializing...`);
+      console.log(`${this.converterName}: Attempting initialization...`);
       
-      // Check if all required elements are present
-      if (!this.checkRequiredElements()) {
-        throw new Error('Required elements not found');
+      // Final check for required elements
+      if (!this.checkAllRequiredElements()) {
+        console.log(`${this.converterName}: Required elements still not found, aborting`);
+        return;
       }
       
       this.elements = this.initializeElements();
@@ -54,31 +58,30 @@ export abstract class BaseConverterController<T> {
       if (this.validateElements()) {
         this.bindEvents();
         this.isInitialized = true;
-        console.log(`${this.constructor.name} initialized successfully`);
+        console.log(`✅ ${this.converterName} initialized successfully`);
         
         // Call post-initialization hook
         this.onInitialized();
+        
+        // Store reference globally for debugging
+        if (typeof window !== 'undefined') {
+          (window as any)[`${this.converterName.toLowerCase()}Controller`] = this;
+        }
       } else {
         throw new Error('Element validation failed');
       }
     } catch (error) {
-      console.warn(`${this.constructor.name} initialization attempt ${this.initAttempts} failed:`, error);
-      
-      if (this.initAttempts < this.maxAttempts) {
-        setTimeout(() => this.attemptInit(), 200 * this.initAttempts); // Exponential backoff
-      } else {
-        console.error(`Failed to initialize ${this.constructor.name} after maximum attempts`);
-        this.onInitializationFailed();
-      }
+      console.error(`❌ ${this.converterName} initialization failed:`, error);
+      this.onInitializationFailed();
     }
   }
 
-  private checkRequiredElements(): boolean {
+  private checkAllRequiredElements(): boolean {
     const requiredIds = this.getRequiredElementIds();
     const missingElements = requiredIds.filter(id => !document.getElementById(id));
     
     if (missingElements.length > 0) {
-      console.warn(`${this.constructor.name}: Missing elements: ${missingElements.join(', ')}`);
+      console.log(`${this.converterName}: Missing elements: ${missingElements.join(', ')}`);
       return false;
     }
     
@@ -92,7 +95,7 @@ export abstract class BaseConverterController<T> {
 
   // Hook for when initialization fails
   protected onInitializationFailed(): void {
-    console.error(`${this.constructor.name} failed to initialize. Page may be missing required elements.`);
+    console.warn(`${this.converterName} failed to initialize.`);
   }
 
   protected abstract initializeElements(): T;
@@ -106,11 +109,11 @@ export abstract class BaseConverterController<T> {
     try {
       const element = document.getElementById(id) as E | null;
       if (!element) {
-        console.warn(`Element with id "${id}" not found`);
+        console.warn(`${this.converterName}: Element with id "${id}" not found`);
       }
       return element;
     } catch (error) {
-      console.error(`Error getting element "${id}":`, error);
+      console.error(`${this.converterName}: Error getting element "${id}":`, error);
       return null;
     }
   }
@@ -124,10 +127,10 @@ export abstract class BaseConverterController<T> {
       try {
         element.addEventListener(event, handler);
       } catch (error) {
-        console.error(`Error adding event listener to element:`, error);
+        console.error(`${this.converterName}: Error adding event listener:`, error);
       }
     } else {
-      console.warn(`Cannot add event listener to element: ${element}`);
+      console.warn(`${this.converterName}: Cannot add event listener to element:`, element);
     }
   }
 
@@ -143,7 +146,7 @@ export abstract class BaseConverterController<T> {
     const button = this.safeGetElement(buttonId);
 
     if (!outputElement) {
-      console.error(`Output element ${outputElementId} not found for copy operation`);
+      console.error(`${this.converterName}: Output element ${outputElementId} not found for copy operation`);
       return;
     }
 
@@ -153,7 +156,7 @@ export abstract class BaseConverterController<T> {
       await navigator.clipboard.writeText(text);
       this.temporaryButtonText(button, '✅ Copied!', 'Copy');
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      console.error(`${this.converterName}: Failed to copy to clipboard:`, error);
       this.temporaryButtonText(button, '❌ Failed', 'Copy');
     }
   }
@@ -249,7 +252,7 @@ export abstract class BaseConverterController<T> {
       }
       return current;
     } catch (error) {
-      console.warn(`Error accessing path ${path.join('.')}:`, error);
+      console.warn(`${this.converterName}: Error accessing path ${path.join('.')}:`, error);
       return null;
     }
   }
