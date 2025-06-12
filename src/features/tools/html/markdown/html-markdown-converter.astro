@@ -49,80 +49,66 @@ const converterOptions = [{ id: 'modeToggle', label: 'Markdown to HTML', checked
 </div>
 
 <script>
-  import { HtmlMarkdownController } from './lib/converter-controller';
+  // Only run if we're on the correct page
+  const requiredElements = ['htmlInput', 'markdownOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
+  const hasRequiredElements = requiredElements.some(id => document.getElementById(id) !== null);
 
-  let initAttempts = 0;
-  const maxAttempts = 50;
-  const retryDelay = 100;
-
-  function checkRequiredElements(): boolean {
-    const required = ['htmlInput', 'markdownOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
-    return required.every(id => {
-      const element = document.getElementById(id);
-      if (!element) {
-        console.warn(`Element ${id} not found`);
-        return false;
-      }
-      return true;
-    });
-  }
-
-  function initializeConverter(): void {
-    initAttempts++;
-
-    console.log(`Attempt ${initAttempts}: Initializing HTML ⇄ Markdown converter...`);
-
-    if (!checkRequiredElements()) {
-      if (initAttempts < maxAttempts) {
-        console.log(`Missing elements, retrying in ${retryDelay}ms...`);
-        setTimeout(initializeConverter, retryDelay);
-        return;
-      } else {
-        console.error('Failed to find all required elements after maximum attempts');
-        return;
-      }
-    }
-
-    try {
-      console.log('All required elements found, creating controller...');
-      const controller = new HtmlMarkdownController();
-      console.log('HTML ⇄ Markdown converter initialized successfully');
-
-      if (typeof window !== 'undefined') {
-        (window as any).markdownController = controller;
-      }
-    } catch (error) {
-      console.error('Error initializing HTML ⇄ Markdown converter:', error);
-
-      if (initAttempts < maxAttempts) {
-        console.log('Retrying initialization...');
-        setTimeout(initializeConverter, retryDelay * 2);
-      }
-    }
-  }
-
-  function startInitialization(): void {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeConverter);
-    } else if (document.readyState === 'interactive') {
-      setTimeout(initializeConverter, 50);
-    } else {
-      requestAnimationFrame(() => {
-        setTimeout(initializeConverter, 0);
-      });
-    }
-  }
-
-  startInitialization();
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (initAttempts === 0 || !checkRequiredElements()) {
-          console.log('Performing final initialization attempt...');
-          initializeConverter();
+  if (!hasRequiredElements) {
+    console.log('HTML-Markdown converter: Not the right page, skipping');
+  } else {
+    // Safe registration function
+    function safeRegisterConverter(name, elements, initFn, priority = 0) {
+      function attemptRegister() {
+        if (window.ConverterRegistry) {
+          const success = window.ConverterRegistry.register(name, elements, initFn, priority);
+          if (success) {
+            console.log(`✅ ${name} registered`);
+          }
+          return;
         }
-      }, 500);
+        setTimeout(attemptRegister, 50);
+      }
+      attemptRegister();
+    }
+
+    // Import and register
+    import('./lib/converter-controller').then(({ HtmlMarkdownController }) => {
+      safeRegisterConverter(
+        'HtmlMarkdownConverter',
+        requiredElements,
+        () => {
+          try {
+            const controller = new HtmlMarkdownController();
+            console.log('HTML-Markdown converter initialized');
+            
+            // Store for debugging
+            if (typeof window !== 'undefined') {
+              window.markdownController = controller;
+            }
+          } catch (error) {
+            console.error('HTML-Markdown converter failed:', error);
+          }
+        },
+        10 // High priority for main converter
+      );
+    }).catch(error => {
+      console.error('Failed to load HTML-Markdown converter:', error);
     });
   }
 </script>
+
+<style>
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+}

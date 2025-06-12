@@ -10,7 +10,8 @@ class UniversalConverterManager {
   private registeredConverters: Map<string, ConverterConfig> = new Map();
   private initializedConverters: Set<string> = new Set();
   private initAttempts: number = 0;
-  private maxAttempts: number = 10;
+  private maxAttempts: number = 3; // Reduced from 10
+  private retryDelay: number = 100; // Shorter delay
 
   static getInstance(): UniversalConverterManager {
     if (!UniversalConverterManager.instance) {
@@ -20,6 +21,12 @@ class UniversalConverterManager {
   }
 
   registerConverter(config: ConverterConfig): void {
+    // Don't register if elements don't exist
+    if (!this.checkElementsExist(config.requiredElements)) {
+      console.log(`${config.name}: Required elements not found, skipping registration`);
+      return;
+    }
+    
     this.registeredConverters.set(config.name, config);
     console.log(`Registered converter: ${config.name}`);
   }
@@ -27,7 +34,11 @@ class UniversalConverterManager {
   private checkElementsExist(requiredElements: string[]): boolean {
     return requiredElements.every(id => {
       const element = document.getElementById(id);
-      return element !== null;
+      if (!element) {
+        console.log(`Element '${id}' not found`);
+        return false;
+      }
+      return true;
     });
   }
 
@@ -35,8 +46,9 @@ class UniversalConverterManager {
     try {
       console.log(`Attempting to initialize ${config.name}...`);
 
+      // Double-check elements exist before initialization
       if (!this.checkElementsExist(config.requiredElements)) {
-        console.log(`${config.name}: Required elements not found, skipping`);
+        console.log(`${config.name}: Required elements not found during init, skipping`);
         return false;
       }
 
@@ -65,6 +77,12 @@ class UniversalConverterManager {
     this.initAttempts++;
     console.log(`🔄 Universal Converter Init Attempt ${this.initAttempts}`);
 
+    // Only proceed if we have registered converters
+    if (this.registeredConverters.size === 0) {
+      console.log(`ℹ️ No converters registered for this page`);
+      return;
+    }
+
     let anyInitialized = false;
     
     for (const [name, config] of this.registeredConverters) {
@@ -76,12 +94,13 @@ class UniversalConverterManager {
       }
     }
 
-    // If no converters were found and we haven't exceeded max attempts, try again
-    if (!anyInitialized && this.initAttempts < this.maxAttempts) {
-      console.log(`No converters initialized, retrying in 200ms...`);
-      setTimeout(() => this.initializeAll(), 200);
-    } else if (anyInitialized) {
-      console.log(`✅ Converter initialization complete`);
+    // Retry logic - only if we have pending converters and haven't exceeded attempts
+    const pendingConverters = this.registeredConverters.size - this.initializedConverters.size;
+    if (pendingConverters > 0 && this.initAttempts < this.maxAttempts) {
+      console.log(`${pendingConverters} converters pending, retrying in ${this.retryDelay}ms...`);
+      setTimeout(() => this.initializeAll(), this.retryDelay);
+    } else if (anyInitialized || this.initializedConverters.size > 0) {
+      console.log(`✅ Converter initialization complete (${this.initializedConverters.size} initialized)`);
     } else {
       console.log(`ℹ️ No converters found for this page`);
     }
@@ -93,6 +112,13 @@ class UniversalConverterManager {
 
   isConverterInitialized(name: string): boolean {
     return this.initializedConverters.has(name);
+  }
+
+  // Reset method for cleanup
+  reset(): void {
+    this.registeredConverters.clear();
+    this.initializedConverters.clear();
+    this.initAttempts = 0;
   }
 }
 
@@ -109,25 +135,48 @@ export function initializeConverters(): void {
   }
 }
 
-// Registration helper
+// Registration helper with enhanced safety
 export function registerConverter(config: ConverterConfig): void {
   const manager = UniversalConverterManager.getInstance();
-  manager.registerConverter(config);
+  
+  // Enhanced element checking with retry
+  const attemptRegistration = (attempts = 0) => {
+    if (safeElementCheck(config.requiredElements)) {
+      manager.registerConverter(config);
+    } else if (attempts < 2) {
+      // Retry registration after a short delay
+      setTimeout(() => attemptRegistration(attempts + 1), 100);
+    } else {
+      console.log(`${config.name}: Elements not found after retries, skipping registration`);
+    }
+  };
+
+  attemptRegistration();
 }
 
-// Safe element checker - can be used by individual converters
+// Enhanced safe element checker
 export function safeElementCheck(elementIds: string[]): boolean {
+  if (!Array.isArray(elementIds) || elementIds.length === 0) {
+    console.warn('No element IDs provided for checking');
+    return false;
+  }
+
   return elementIds.every(id => {
-    const element = document.getElementById(id);
-    if (!element) {
-      console.log(`Element '${id}' not found`);
+    try {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.log(`Element '${id}' not found`);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error(`Error checking element '${id}':`, error);
       return false;
     }
-    return true;
   });
 }
 
-// Helper to prevent multiple initializations
+// Helper to prevent multiple initializations with enhanced error handling
 export function createSafeInitializer(
   converterName: string,
   requiredElements: string[],
@@ -153,4 +202,24 @@ export function createSafeInitializer(
       console.error(`❌ Error initializing ${converterName}:`, error);
     }
   };
+}
+
+// Enhanced page-specific initialization
+export function initializePageConverters(pageConverters: ConverterConfig[]): void {
+  const manager = UniversalConverterManager.getInstance();
+  
+  // Reset previous state
+  manager.reset();
+  
+  // Only register converters whose elements exist
+  pageConverters.forEach(config => {
+    if (safeElementCheck(config.requiredElements)) {
+      manager.registerConverter(config);
+    }
+  });
+  
+  // Initialize if we have any registered converters
+  if (manager.getInitializedConverters().length > 0 || manager['registeredConverters'].size > 0) {
+    initializeConverters();
+  }
 }

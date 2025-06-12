@@ -2,6 +2,7 @@ export abstract class BaseConverterController<T> {
   protected elements: T | null = null;
   private isInitialized: boolean = false;
   private converterName: string;
+  private initializationTimer: number | null = null;
 
   constructor(converterName?: string) {
     this.converterName = converterName || this.constructor.name;
@@ -19,10 +20,20 @@ export abstract class BaseConverterController<T> {
   private shouldInitialize(): boolean {
     const requiredIds = this.getRequiredElementIds();
     
-    // Check if any of the required elements exist
+    if (!Array.isArray(requiredIds) || requiredIds.length === 0) {
+      console.warn(`${this.converterName}: No required elements specified`);
+      return false;
+    }
+    
+    // Check if ANY of the required elements exist
     const hasAnyElement = requiredIds.some(id => {
-      const element = document.getElementById(id);
-      return element !== null;
+      try {
+        const element = document.getElementById(id);
+        return element !== null;
+      } catch (error) {
+        console.error(`Error checking element ${id}:`, error);
+        return false;
+      }
     });
     
     if (!hasAnyElement) {
@@ -34,12 +45,17 @@ export abstract class BaseConverterController<T> {
   }
 
   protected delayedInit(): void {
+    // Clear any existing timer
+    if (this.initializationTimer) {
+      clearTimeout(this.initializationTimer);
+    }
+
     // Use a more robust initialization approach
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.attemptInit());
     } else {
       // Document is already ready, but wait a bit for dynamic content
-      setTimeout(() => this.attemptInit(), 100);
+      this.initializationTimer = setTimeout(() => this.attemptInit(), 100);
     }
   }
 
@@ -78,7 +94,14 @@ export abstract class BaseConverterController<T> {
 
   private checkAllRequiredElements(): boolean {
     const requiredIds = this.getRequiredElementIds();
-    const missingElements = requiredIds.filter(id => !document.getElementById(id));
+    const missingElements = requiredIds.filter(id => {
+      try {
+        return !document.getElementById(id);
+      } catch (error) {
+        console.error(`Error checking element ${id}:`, error);
+        return true; // Treat error as missing
+      }
+    });
     
     if (missingElements.length > 0) {
       console.log(`${this.converterName}: Missing elements: ${missingElements.join(', ')}`);
@@ -123,18 +146,28 @@ export abstract class BaseConverterController<T> {
     event: string,
     handler: EventListener
   ): void {
-    if (element && typeof element.addEventListener === 'function') {
-      try {
-        element.addEventListener(event, handler);
-      } catch (error) {
-        console.error(`${this.converterName}: Error adding event listener:`, error);
-      }
-    } else {
-      console.warn(`${this.converterName}: Cannot add event listener to element:`, element);
+    if (!element) {
+      console.warn(`${this.converterName}: Cannot add event listener to null element`);
+      return;
+    }
+
+    if (typeof element.addEventListener !== 'function') {
+      console.warn(`${this.converterName}: Element does not support addEventListener:`, element);
+      return;
+    }
+
+    try {
+      element.addEventListener(event, handler);
+    } catch (error) {
+      console.error(`${this.converterName}: Error adding event listener:`, error);
     }
   }
 
   protected calculateStats(text: string): { lines: number; characters: number } {
+    if (typeof text !== 'string') {
+      return { lines: 0, characters: 0 };
+    }
+    
     return {
       lines: text ? text.split('\n').length : 0,
       characters: text ? text.length : 0,
@@ -259,7 +292,17 @@ export abstract class BaseConverterController<T> {
 
   // Cleanup method
   public destroy(): void {
+    if (this.initializationTimer) {
+      clearTimeout(this.initializationTimer);
+      this.initializationTimer = null;
+    }
+    
     this.isInitialized = false;
     this.elements = null;
+    
+    // Remove global reference
+    if (typeof window !== 'undefined') {
+      delete (window as any)[`${this.converterName.toLowerCase()}Controller`];
+    }
   }
 }

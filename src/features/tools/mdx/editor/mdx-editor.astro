@@ -28,10 +28,34 @@ const breadcrumbItems = generateToolsBreadcrumbs('MDX Editor');
 </div>
 
 <script>
-  import { MdxEditorController } from './lib/editor-controller';
+  import { HtmlMarkdownController } from './lib/html-markdown-controller';
 
+  // Method 1: Using the enhanced global system
+  if (typeof window !== 'undefined' && window.safeInitializeConverter) {
+    window.safeInitializeConverter(
+      'HtmlMarkdownConverter',
+      ['htmlInput', 'markdownOutput', 'convertBtn', 'clearBtn', 'copyBtn'],
+      () => {
+        new HtmlMarkdownController();
+      }
+    );
+  }
+
+  // Method 2: Direct initialization with safety checks
   document.addEventListener('DOMContentLoaded', () => {
-    new MdxEditorController();
+    // Check if required elements exist before initializing
+    const requiredElements = ['htmlInput', 'markdownOutput', 'convertBtn'];
+    const elementsExist = requiredElements.every(id => document.getElementById(id));
+
+    if (elementsExist) {
+      try {
+        new HtmlMarkdownController();
+      } catch (error) {
+        console.error('Failed to initialize HtmlMarkdownController:', error);
+      }
+    } else {
+      console.log('HtmlMarkdownConverter: Required elements not found, skipping initialization');
+    }
   });
 </script>
 
