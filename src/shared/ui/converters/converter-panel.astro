@@ -19,7 +19,9 @@ const {
 const panelClass = `converter-panel ${type} ${className}`;
 ---
 
-<div class={panelClass}>
+<div
+  class={panelClass}
+  data-panel={type}>
   <div class='pane-header'>
     <div class='pane-title'>
       {icon && <span>{icon}</span>}
@@ -44,10 +46,14 @@ const panelClass = `converter-panel ${type} ${className}`;
         <div
           id='errorMessage'
           class='error-message hidden'
+          role='alert'
+          aria-live='polite'
         />
         <div
           id='successMessage'
           class='success-message hidden'
+          role='status'
+          aria-live='polite'
         />
       </>
     )
@@ -59,40 +65,141 @@ const panelClass = `converter-panel ${type} ${className}`;
     placeholder={placeholder}
     readonly={readonly}
     spellcheck='false'
+    aria-label={`${title} - ${type === 'input' ? 'Input area' : 'Output area'}`}
   ></textarea>
 
   {
     showStats && (
       <div class='stats'>
-        <span id={`${type}Stats`}>Lines: 0, Characters: 0</span>
+        <span
+          id={`${type}Stats`}
+          aria-label={`${type} statistics`}>
+          Lines: 0, Characters: 0
+        </span>
       </div>
     )
   }
 </div>
 
 <style>
-  .input-pane,
-  .output-pane {
-    width: 50%;
+  .converter-panel {
     background: white;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 400px;
   }
 
-  .input-pane {
+  .converter-panel.input {
     border-right: 1px solid #e2e8f0;
   }
 
+  .pane-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 60px;
+  }
+
+  .pane-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .textarea {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    padding: 1rem;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    flex: 1;
+    min-height: 300px;
+    background: white;
+    overflow: auto;
+  }
+
+  .textarea:focus {
+    box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.5);
+  }
+
+  .textarea.output {
+    background: #f8fafc;
+    color: #1e293b;
+  }
+
+  .textarea.readonly {
+    cursor: default;
+  }
+
+  .error-message,
+  .success-message {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    margin: 0;
+    border: none;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
+  .error-message {
+    background: #fef2f2;
+    color: #dc2626;
+    border-bottom: 1px solid #fecaca;
+  }
+
+  .success-message {
+    background: #f0fdf4;
+    color: #166534;
+    border-bottom: 1px solid #bbf7d0;
+  }
+
+  .stats {
+    padding: 0.5rem 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.75rem;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    min-height: 32px;
+    align-items: center;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
   @media (max-width: 768px) {
-    .input-pane,
-    .output-pane {
+    .converter-panel {
       width: 100%;
-      height: 50vh;
+      min-height: 300px;
     }
 
-    .input-pane {
+    .converter-panel.input {
       border-right: none;
       border-bottom: 1px solid #e2e8f0;
+    }
+
+    .pane-header {
+      padding: 0.75rem 1rem;
+      min-height: 50px;
+    }
+
+    .textarea {
+      min-height: 250px;
+      font-size: 13px;
     }
   }
 </style>

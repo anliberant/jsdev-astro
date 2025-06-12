@@ -1,107 +1,166 @@
-import { convertHtmlToAstro } from './html-converter';
-import { BaseConverterController } from '@/shared/lib/base-converter-controller';
-import type { HtmlToAstroElements } from '@/shared/types';
-import { SAMPLE_HTML } from '@/shared/utils';
+export class HtmlToAstroController {
+  convert(html: string): string {
+    if (!html.trim()) {
+      return '';
+    }
 
-export class HtmlToAstroConverterController extends BaseConverterController<HtmlToAstroElements> {
-  protected initializeElements(): HtmlToAstroElements {
-    return {
-      htmlInput: document.getElementById('htmlInput') as HTMLTextAreaElement,
-      astroOutput: document.getElementById(
-        'astroOutput'
-      ) as HTMLTextAreaElement,
-      errorMessage: document.getElementById('errorMessage') as HTMLElement,
-      successMessage: document.getElementById('successMessage') as HTMLElement,
-      inputStats: document.getElementById('inputStats') as HTMLElement,
-      outputStats: document.getElementById('outputStats') as HTMLElement,
-    };
+    let result = html;
+
+    // Check if it's a complete HTML document
+    const isFullDocument = result.includes('<!DOCTYPE') || 
+                          (result.includes('<html') && result.includes('<head'));
+
+    if (isFullDocument) {
+      // For full HTML documents, create a complete Astro component
+      result = this.convertFullDocument(result);
+    } else {
+      // For HTML fragments, create a simple component
+      result = this.convertFragment(result);
+    }
+
+    return result;
   }
 
-  protected bindEvents(): void {
-    this.elements.htmlInput.addEventListener('input', () => {
-      this.convert();
-      this.updateStats();
+  private convertFullDocument(html: string): string {
+    // Extract head content
+    const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+    const headContent = headMatch ? headMatch[1].trim() : '';
+
+    // Extract body content
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const bodyContent = bodyMatch ? bodyMatch[1].trim() : html;
+
+    // Extract title
+    const titleMatch = headContent.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : 'Astro Component';
+
+    // Extract meta tags
+    const metaTags = this.extractMetaTags(headContent);
+
+    // Create frontmatter
+    const frontmatter = this.createFrontmatter(title, metaTags);
+
+    // Process body content
+    const processedBody = this.processHtmlContent(bodyContent);
+
+    return `---
+${frontmatter}---
+
+${processedBody}`;
+  }
+
+  private convertFragment(html: string): string {
+    const processedContent = this.processHtmlContent(html);
+    
+    return `---
+// Astro component
+---
+
+${processedContent}`;
+  }
+
+  private extractMetaTags(headContent: string): string[] {
+    const metaTags: string[] = [];
+    const metaRegex = /<meta[^>]*>/gi;
+    let match;
+
+    while ((match = metaRegex.exec(headContent)) !== null) {
+      metaTags.push(match[0]);
+    }
+
+    return metaTags;
+  }
+
+  private createFrontmatter(title: string, metaTags: string[]): string {
+    let frontmatter = `export interface Props {
+  title?: string;
+}
+
+const { title = "${title}" } = Astro.props;`;
+
+    if (metaTags.length > 0) {
+      frontmatter += '\n\n// Meta tags from original HTML';
+      metaTags.forEach(tag => {
+        frontmatter += `\n// ${tag}`;
+      });
+    }
+
+    return frontmatter;
+  }
+
+  private processHtmlContent(content: string): string {
+    let result = content;
+
+    // Convert class to class:list for dynamic classes
+    result = result.replace(/class="([^"]+)"/g, (match, className) => {
+      if (className.includes(' ')) {
+        const classes = className.split(' ').map(c => `'${c.trim()}'`).join(', ');
+        return `class:list={[${classes}]}`;
+      }
+      return `class="${className}"`;
     });
 
-    document
-      .getElementById('convertBtn')
-      ?.addEventListener('click', () => this.convert());
-    document
-      .getElementById('clearBtn')
-      ?.addEventListener('click', () => this.clear());
-    document
-      .getElementById('copyBtn')
-      ?.addEventListener('click', () => this.copy());
-    document
-      .getElementById('sampleBtn')
-      ?.addEventListener('click', () => this.loadSample());
-  }
+    // Convert style attributes to Astro format if they contain dynamic content
+    result = result.replace(/style="([^"]+)"/g, 'style="$1"');
 
-  protected convert(): void {
-    const html = this.elements.htmlInput.value.trim();
-
-    if (!html) {
-      this.elements.astroOutput.value = '';
-      this.hideMessages();
-      this.updateStats();
-      return;
-    }
-
-    try {
-      const astroCode = convertHtmlToAstro(html);
-      this.elements.astroOutput.value = astroCode;
-      this.showSuccess('HTML successfully converted to Astro!');
-      this.updateStats();
-    } catch (error) {
-      console.error('Conversion error:', error);
-      this.showError(`Conversion error: ${(error as Error).message}`);
-      this.elements.astroOutput.value = '';
-      this.updateStats();
-    }
-  }
-
-  private loadSample(): void {
-    this.elements.htmlInput.value = SAMPLE_HTML.astro;
-    this.convert();
-    this.updateStats();
-  }
-
-  private clear(): void {
-    this.clearAll('htmlInput', 'astroOutput');
-    this.updateStats();
-  }
-
-  private async copy(): Promise<void> {
-    await this.handleCopy('astroOutput', 'copyBtn');
-  }
-
-  private updateStats(): void {
-    if (this.elements.inputStats && this.elements.outputStats) {
-      const inputStats = this.calculateStats(this.elements.htmlInput.value);
-      const outputStats = this.calculateStats(this.elements.astroOutput.value);
-
-      this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
-      this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
-    }
-  }
-
-  protected showSuccess(message: string): void {
-    this.elements.successMessage.textContent = message;
-    this.elements.successMessage.classList.remove('hidden');
-    this.elements.errorMessage.classList.add('hidden');
+    // Add Astro-specific attributes for forms and inputs
+    result = result.replace(/<form([^>]*)>/g, '<form$1>');
     
-    setTimeout(() => {
-      this.hideMessages();
-    }, 3000);
+    // Convert certain HTML attributes to Astro equivalents
+    result = result.replace(/onclick="([^"]+)"/g, 'onclick={$1}');
+    result = result.replace(/onchange="([^"]+)"/g, 'onchange={$1}');
+
+    // Add proper indentation
+    result = this.addIndentation(result);
+
+    return result;
   }
 
-  protected showError(message: string): void {
-    this.elements.errorMessage.textContent = message;
-    this.elements.errorMessage.classList.remove('hidden');
-    this.elements.successMessage.classList.add('hidden');
-    
-    setTimeout(() => {
-      this.hideMessages();
-    }, 5000);
+  private addIndentation(html: string): string {
+    const lines = html.split('\n');
+    let indentLevel = 0;
+    const indentedLines: string[] = [];
+
+    for (let line of lines) {
+      const trimmedLine = line.trim();
+      
+      if (!trimmedLine) {
+        indentedLines.push('');
+        continue;
+      }
+
+      // Decrease indent for closing tags
+      if (trimmedLine.startsWith('</')) {
+        indentLevel = Math.max(0, indentLevel - 1);
+      }
+
+      // Add indentation
+      indentedLines.push('  '.repeat(indentLevel) + trimmedLine);
+
+      // Increase indent for opening tags (but not self-closing or void elements)
+      if (trimmedLine.startsWith('<') && 
+          !trimmedLine.startsWith('</') && 
+          !trimmedLine.endsWith('/>') &&
+          !this.isVoidElement(trimmedLine)) {
+        indentLevel++;
+      }
+    }
+
+    return indentedLines.join('\n');
+  }
+
+  private isVoidElement(line: string): boolean {
+    const voidElements = [
+      'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+      'link', 'meta', 'param', 'source', 'track', 'wbr'
+    ];
+
+    for (const element of voidElements) {
+      if (line.includes(`<${element}`)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

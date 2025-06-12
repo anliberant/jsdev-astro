@@ -1,41 +1,71 @@
-// src/features/tools/html/markdown/lib/converter-controller.ts
-import { HtmlToMarkdownConverter } from './html-to-markdown-converter';
+import { HtmlMarkdownConverter } from './html-to-markdown-converter';
 import { BaseConverterController } from '@/shared/lib/base-converter-controller';
 import type { HtmlMarkdownElements, ConversionMode } from '@/shared/types';
 import { SAMPLE_HTML } from '@/shared/utils';
 
-export class HtmlMarkdownConverterController extends BaseConverterController<HtmlMarkdownElements> {
-  private converter: HtmlToMarkdownConverter;
+export class HtmlMarkdownController extends BaseConverterController<HtmlMarkdownElements> {
+  private converter: HtmlMarkdownConverter | null = null;
   private currentMode: ConversionMode = 'html-to-markdown';
+  private initAttempts: number = 0;
+  private maxAttempts: number = 20;
 
   constructor() {
     super();
-    this.converter = new HtmlToMarkdownConverter();
-    this.updateStats();
-    this.updateUI();
+    this.elements = this.initializeElements();
+    this.delayedInit();
+  }
+
+  private delayedInit(): void {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.attemptInit());
+    } else {
+      setTimeout(() => this.attemptInit(), 50);
+    }
+  }
+
+  private attemptInit(): void {
+    this.initAttempts++;
+    
+    if (this.checkRequiredElements()) {
+      this.converter = new HtmlMarkdownConverter();
+      this.updateLabels();
+      this.updateStats();
+    } else if (this.initAttempts < this.maxAttempts) {
+      setTimeout(() => this.attemptInit(), 100);
+    }
+  }
+
+  private checkRequiredElements(): boolean {
+    const required = ['htmlInput', 'markdownOutput'];
+    return required.every(id => document.getElementById(id) !== null);
   }
 
   protected initializeElements(): HtmlMarkdownElements {
+    const createElement = <T extends HTMLElement>(tag: string): T => 
+      document.createElement(tag) as T;
+
     return {
-      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || document.createElement('textarea'),
-      markdownOutput: this.safeGetElement<HTMLTextAreaElement>('markdownOutput') || document.createElement('textarea'),
-      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || document.createElement('div'),
-      successMessage: this.safeGetElement<HTMLElement>('successMessage') || document.createElement('div'),
-      inputStats: this.safeGetElement<HTMLElement>('inputStats') || document.createElement('div'),
-      outputStats: this.safeGetElement<HTMLElement>('outputStats') || document.createElement('div'),
-      modeToggle: this.safeGetElement<HTMLInputElement>('modeToggle') || document.createElement('button'),
-      inputLabel: this.safeGetElement<HTMLElement>('inputLabel') || document.createElement('span'),
-      outputLabel: this.safeGetElement<HTMLElement>('outputLabel') || document.createElement('span'),
+      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || createElement<HTMLTextAreaElement>('textarea'),
+      markdownOutput: this.safeGetElement<HTMLTextAreaElement>('markdownOutput') || createElement<HTMLTextAreaElement>('textarea'),
+      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || createElement<HTMLElement>('div'),
+      successMessage: this.safeGetElement<HTMLElement>('successMessage') || createElement<HTMLElement>('div'),
+      inputStats: this.safeGetElement<HTMLElement>('inputStats') || createElement<HTMLElement>('div'),
+      outputStats: this.safeGetElement<HTMLElement>('outputStats') || createElement<HTMLElement>('div'),
+      modeToggle: this.safeGetElement<HTMLInputElement>('modeToggle') || createElement<HTMLInputElement>('input'),
+      inputLabel: this.safeGetElement<HTMLElement>('inputLabel') || createElement<HTMLElement>('div'),
+      outputLabel: this.safeGetElement<HTMLElement>('outputLabel') || createElement<HTMLElement>('div'),
     };
   }
 
   protected bindEvents(): void {
+    if (!this.elements.htmlInput || !this.elements.markdownOutput) {
+      return;
+    }
+
     this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
       this.convert();
       this.updateStats();
     });
-
-    this.safeAddEventListener(this.elements.modeToggle, 'click', () => this.toggleMode());
 
     const convertBtn = this.safeGetElement('convertBtn');
     this.safeAddEventListener(convertBtn, 'click', () => this.convert());
@@ -49,56 +79,61 @@ export class HtmlMarkdownConverterController extends BaseConverterController<Htm
     const sampleBtn = this.safeGetElement('sampleBtn');
     this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
 
-    const downloadBtn = this.safeGetElement('downloadBtn');
-    this.safeAddEventListener(downloadBtn, 'click', () => this.downloadFile());
-
-    const fileImport = this.safeGetElement('fileImport');
-    this.safeAddEventListener(fileImport, 'change', (e) => this.importFile(e as Event));
+    if (this.elements.modeToggle) {
+      this.safeAddEventListener(this.elements.modeToggle, 'change', () => {
+        this.toggleMode();
+      });
+    }
   }
 
   private toggleMode(): void {
-    this.currentMode = this.currentMode === 'html-to-markdown' ? 'markdown-to-html' : 'html-to-markdown';
-    this.updateUI();
-    this.clear();
+    if (!this.elements.modeToggle) return;
+
+    this.currentMode = this.elements.modeToggle.checked ? 
+      'markdown-to-html' : 'html-to-markdown';
+    
+    this.updateLabels();
+    this.swapInputOutput();
+    this.convert();
   }
 
-  private updateUI(): void {
+  private updateLabels(): void {
     if (this.currentMode === 'html-to-markdown') {
       if (this.elements.inputLabel) {
         this.elements.inputLabel.textContent = '📝 HTML Input';
       }
       if (this.elements.outputLabel) {
-        this.elements.outputLabel.textContent = '📝 Markdown Output';
-      }
-      if (this.elements.htmlInput) {
-        this.elements.htmlInput.placeholder = 'Paste your HTML code here...';
-      }
-      if (this.elements.modeToggle) {
-        this.elements.modeToggle.textContent = '🔄 Switch to Markdown → HTML';
+        this.elements.outputLabel.textContent = '📄 Markdown Output';
       }
     } else {
       if (this.elements.inputLabel) {
-        this.elements.inputLabel.textContent = '📝 Markdown Input';
+        this.elements.inputLabel.textContent = '📄 Markdown Input';
       }
       if (this.elements.outputLabel) {
         this.elements.outputLabel.textContent = '📝 HTML Output';
       }
-      if (this.elements.htmlInput) {
-        this.elements.htmlInput.placeholder = 'Paste your Markdown content here...';
-      }
-      if (this.elements.modeToggle) {
-        this.elements.modeToggle.textContent = '🔄 Switch to HTML → Markdown';
-      }
     }
   }
 
+  private swapInputOutput(): void {
+    if (!this.elements.htmlInput || !this.elements.markdownOutput) return;
+
+    const inputValue = this.elements.htmlInput.value;
+    const outputValue = this.elements.markdownOutput.value;
+
+    this.elements.htmlInput.value = outputValue;
+    this.elements.markdownOutput.value = inputValue;
+  }
+
   protected convert(): void {
+    if (!this.converter || !this.elements.htmlInput || !this.elements.markdownOutput) {
+      return;
+    }
+
     const input = this.elements.htmlInput.value?.trim() || '';
 
     if (!input) {
-      if (this.elements.markdownOutput) {
-        this.elements.markdownOutput.value = '';
-      }
+      this.elements.markdownOutput.value = '';
       this.hideMessages();
       this.updateStats();
       return;
@@ -108,68 +143,33 @@ export class HtmlMarkdownConverterController extends BaseConverterController<Htm
       let result: string;
       
       if (this.currentMode === 'html-to-markdown') {
-        result = this.converter.convertHtmlToMarkdown(input);
-        this.showSuccess('HTML successfully converted to Markdown!');
+        result = this.converter.htmlToMarkdown(input);
+        this.showSuccess('HTML converted to Markdown successfully!');
       } else {
-        result = this.converter.convertMarkdownToHtml(input);
-        this.showSuccess('Markdown successfully converted to HTML!');
+        result = this.converter.markdownToHtml(input);
+        this.showSuccess('Markdown converted to HTML successfully!');
       }
 
-      if (this.elements.markdownOutput) {
-        this.elements.markdownOutput.value = result;
-      }
+      this.elements.markdownOutput.value = result;
       this.updateStats();
     } catch (error) {
       console.error('Conversion error:', error);
       this.showError(`Conversion error: ${(error as Error).message}`);
-      if (this.elements.markdownOutput) {
-        this.elements.markdownOutput.value = '';
-      }
+      this.elements.markdownOutput.value = '';
       this.updateStats();
     }
   }
 
   private loadSample(): void {
-    if (!this.elements.htmlInput) return;
-
-    if (this.currentMode === 'html-to-markdown') {
-      this.elements.htmlInput.value = SAMPLE_HTML.markdown;
-    } else {
-      this.elements.htmlInput.value = `# Sample Markdown
-
-This is a **sample** markdown document with *various* elements.
-
-## Features
-
-- Unordered lists
-- **Bold text**
-- *Italic text*
-- \`inline code\`
-
-### Code Block
-
-\`\`\`javascript
-function hello() {
-  console.log("Hello, World!");
-}
-\`\`\`
-
-> This is a blockquote with some **bold** text.
-
-[Link to Google](https://google.com)
-
----
-
-### Table
-
-| Feature | Status |
-|---------|--------|
-| Headers | ✅ |
-| Lists | ✅ |
-| Links | ✅ |`;
+    if (this.elements.htmlInput) {
+      if (this.currentMode === 'html-to-markdown') {
+        this.elements.htmlInput.value = SAMPLE_HTML.markdown;
+      } else {
+        this.elements.htmlInput.value = '# Sample Markdown\n\nThis is a **sample** markdown content with *emphasis* and [links](https://example.com).\n\n## Features\n\n- Lists\n- Tables\n- Code blocks\n\n```javascript\nfunction hello() {\n  console.log("Hello World!");\n}\n```';
+      }
+      this.convert();
+      this.updateStats();
     }
-    this.convert();
-    this.updateStats();
   }
 
   private clear(): void {
@@ -181,50 +181,19 @@ function hello() {
     await this.handleCopy('markdownOutput', 'copyBtn');
   }
 
-  private downloadFile(): void {
-    const content = this.elements.markdownOutput.value || '';
-    if (!content) {
-      this.showError('No content to download');
+  private updateStats(): void {
+    if (!this.elements.inputStats || !this.elements.outputStats) {
       return;
     }
 
-    const extension = this.currentMode === 'html-to-markdown' ? 'md' : 'html';
-    const mimeType = this.currentMode === 'html-to-markdown' ? 'text/markdown' : 'text/html';
-    const filename = `converted.${extension}`;
+    const inputValue = this.elements.htmlInput?.value || '';
+    const outputValue = this.elements.markdownOutput?.value || '';
 
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+    const inputStats = this.calculateStats(inputValue);
+    const outputStats = this.calculateStats(outputValue);
 
-  private importFile(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file && this.elements.htmlInput) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (this.elements.htmlInput) {
-          this.elements.htmlInput.value = e.target?.result as string || '';
-          this.convert();
-          this.updateStats();
-        }
-      };
-      reader.readAsText(file);
-    }
-  }
-
-  private updateStats(): void {
-    if (this.elements.inputStats && this.elements.outputStats) {
-      const inputStats = this.calculateStats(this.elements.htmlInput.value || '');
-      const outputStats = this.calculateStats(this.elements.markdownOutput.value || '');
-
-      this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
-      this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
-    }
+    this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
+    this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
   }
 
   protected showSuccess(message: string): void {

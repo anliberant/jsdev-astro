@@ -6,12 +6,6 @@ import ConverterPanel from '@/shared/ui/converters/converter-panel.astro';
 import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 
 const breadcrumbItems = generateToolsBreadcrumbs('HTML to Astro Converter');
-
-const converterOptions = [
-  { id: 'prettifyOption', label: 'Prettify', checked: true },
-  { id: 'camelCaseOption', label: 'camelCase Props', checked: true },
-  { id: 'fragmentOption', label: 'Use Fragment', checked: false },
-];
 ---
 
 <Breadcrumbs
@@ -21,14 +15,11 @@ const converterOptions = [
 
 <HeadingBlock
   title='HTML to Astro Converter'
-  description='Quickly convert HTML to Astro component syntax with this handy HTML to Astro converter.'
+  description='Convert HTML code to Astro component format with our free online tool.'
   class='mt-0'
 />
 
-<ConverterHeader
-  options={converterOptions}
-  class='mt-10'
-/>
+<ConverterHeader class='mt-10' />
 
 <div class='main-content'>
   <ConverterPanel
@@ -36,33 +27,97 @@ const converterOptions = [
     title='HTML Input'
     icon='📝'
     textareaId='htmlInput'
-    placeholder='Paste your HTML code here...'
+    placeholder='Paste your HTML content here...'
     showSampleButton={true}
     showStats={true}
   />
 
   <ConverterPanel
     type='output'
-    title='Astro Output'
+    title='Astro Component Output'
     icon='🚀'
     textareaId='astroOutput'
-    placeholder='Converted Astro code will appear here...'
+    placeholder='Astro component will appear here...'
     readonly={true}
     showStats={true}
   />
 </div>
 
 <script>
-  import { HtmlToAstroConverterController } from './lib/converter-controller';
+  import { HtmlToAstroController } from './lib/converter-controller';
 
-  document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM loaded, initializing HTML to Astro converter...');
+  let initAttempts = 0;
+  const maxAttempts = 50;
+  const retryDelay = 100;
+
+  function checkRequiredElements(): boolean {
+    const required = ['htmlInput', 'astroOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
+    return required.every(id => {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.warn(`Element ${id} not found`);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  function initializeConverter(): void {
+    initAttempts++;
+
+    console.log(`Attempt ${initAttempts}: Initializing HTML to Astro converter...`);
+
+    if (!checkRequiredElements()) {
+      if (initAttempts < maxAttempts) {
+        console.log(`Missing elements, retrying in ${retryDelay}ms...`);
+        setTimeout(initializeConverter, retryDelay);
+        return;
+      } else {
+        console.error('Failed to find all required elements after maximum attempts');
+        return;
+      }
+    }
 
     try {
-      const controller = new HtmlToAstroConverterController();
-      console.log('Converter initialized successfully');
+      console.log('All required elements found, creating controller...');
+      const controller = new HtmlToAstroController();
+      console.log('HTML to Astro converter initialized successfully');
+
+      if (typeof window !== 'undefined') {
+        (window as any).astroController = controller;
+      }
     } catch (error) {
-      console.error('Error initializing converter:', error);
+      console.error('Error initializing HTML to Astro converter:', error);
+
+      if (initAttempts < maxAttempts) {
+        console.log('Retrying initialization...');
+        setTimeout(initializeConverter, retryDelay * 2);
+      }
     }
-  });
+  }
+
+  function startInitialization(): void {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeConverter);
+    } else if (document.readyState === 'interactive') {
+      setTimeout(initializeConverter, 50);
+    } else {
+      requestAnimationFrame(() => {
+        setTimeout(initializeConverter, 0);
+      });
+    }
+  }
+
+  startInitialization();
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (initAttempts === 0 || !checkRequiredElements()) {
+          console.log('Performing final initialization attempt...');
+          initializeConverter();
+        }
+      }, 500);
+    });
+  }
 </script>

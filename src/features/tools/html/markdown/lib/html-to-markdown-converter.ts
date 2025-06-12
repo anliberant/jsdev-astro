@@ -1,185 +1,221 @@
-export class HtmlToMarkdownConverter {
-  convertHtmlToMarkdown(html: string): string {
+export class HtmlMarkdownConverter {
+  htmlToMarkdown(html: string): string {
     if (!html.trim()) {
       return '';
     }
 
-    let markdown = html;
+    let result = html;
 
-    // Remove DOCTYPE and html/body tags
-    markdown = markdown.replace(/<!DOCTYPE[^>]*>/gi, '');
-    markdown = markdown.replace(/<html[^>]*>/gi, '');
-    markdown = markdown.replace(/<\/html>/gi, '');
-    markdown = markdown.replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '');
-    markdown = markdown.replace(/<body[^>]*>/gi, '');
-    markdown = markdown.replace(/<\/body>/gi, '');
+    // Remove comments
+    result = result.replace(/<!--[\s\S]*?-->/g, '');
 
     // Convert headings
-    markdown = markdown.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n');
-    markdown = markdown.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n');
-    markdown = markdown.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n');
-    markdown = markdown.replace(/<h4[^>]*>(.*?)<\/h4>/gi, '#### $1\n\n');
-    markdown = markdown.replace(/<h5[^>]*>(.*?)<\/h5>/gi, '##### $1\n\n');
-    markdown = markdown.replace(/<h6[^>]*>(.*?)<\/h6>/gi, '###### $1\n\n');
-
-    // Convert paragraphs
-    markdown = markdown.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n');
-
-    // Convert line breaks
-    markdown = markdown.replace(/<br\s*\/?>/gi, '\n');
-
-    // Convert bold and italic
-    markdown = markdown.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**');
-    markdown = markdown.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**');
-    markdown = markdown.replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*');
-    markdown = markdown.replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*');
-
-    // Convert strikethrough
-    markdown = markdown.replace(/<s[^>]*>(.*?)<\/s>/gi, '~~$1~~');
-    markdown = markdown.replace(/<del[^>]*>(.*?)<\/del>/gi, '~~$1~~');
-
-    // Convert links
-    markdown = markdown.replace(/<a[^>]*href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gi, '[$2]($1)');
-
-    // Convert images
-    markdown = markdown.replace(/<img[^>]*src=["']([^"']*)["'][^>]*alt=["']([^"']*)["'][^>]*\/?>/gi, '![$2]($1)');
-    markdown = markdown.replace(/<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']*)["'][^>]*\/?>/gi, '![$1]($2)');
-    markdown = markdown.replace(/<img[^>]*src=["']([^"']*)["'][^>]*\/?>/gi, '![]($1)');
-
-    // Convert code
-    markdown = markdown.replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`');
-
-    // Convert pre/code blocks
-    markdown = markdown.replace(/<pre[^>]*><code[^>]*>(.*?)<\/code><\/pre>/gis, '```\n$1\n```\n\n');
-    markdown = markdown.replace(/<pre[^>]*>(.*?)<\/pre>/gis, '```\n$1\n```\n\n');
-
-    // Convert blockquotes
-    markdown = markdown.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gis, (match, content) => {
-      const lines = content.trim().split('\n');
-      return lines.map(line => `> ${line.trim()}`).join('\n') + '\n\n';
+    result = result.replace(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (match, level, content) => {
+      const cleanContent = this.stripHtml(content).trim();
+      return '#'.repeat(parseInt(level)) + ' ' + cleanContent + '\n\n';
     });
 
+    // Convert paragraphs
+    result = result.replace(/<p[^>]*>(.*?)<\/p>/gi, (match, content) => {
+      const cleanContent = this.stripHtml(content).trim();
+      return cleanContent + '\n\n';
+    });
+
+    // Convert line breaks
+    result = result.replace(/<br\s*\/?>/gi, '\n');
+
+    // Convert bold
+    result = result.replace(/<(strong|b)[^>]*>(.*?)<\/(strong|b)>/gi, '**$2**');
+
+    // Convert italic
+    result = result.replace(/<(em|i)[^>]*>(.*?)<\/(em|i)>/gi, '*$2*');
+
+    // Convert code
+    result = result.replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`');
+
+    // Convert pre/code blocks
+    result = result.replace(/<pre[^>]*><code[^>]*>(.*?)<\/code><\/pre>/gis, (match, content) => {
+      const cleanContent = this.decodeHtmlEntities(content).trim();
+      return '```\n' + cleanContent + '\n```\n\n';
+    });
+
+    result = result.replace(/<pre[^>]*>(.*?)<\/pre>/gis, (match, content) => {
+      const cleanContent = this.stripHtml(content).trim();
+      return '```\n' + cleanContent + '\n```\n\n';
+    });
+
+    // Convert links
+    result = result.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
+
+    // Convert images
+    result = result.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*\/?>/gi, '![$2]($1)');
+    result = result.replace(/<img[^>]*src="([^"]*)"[^>]*\/?>/gi, '![]($1)');
+
     // Convert unordered lists
-    markdown = markdown.replace(/<ul[^>]*>(.*?)<\/ul>/gis, (match, content) => {
-      let listContent = content.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
-      return listContent + '\n';
+    result = result.replace(/<ul[^>]*>(.*?)<\/ul>/gis, (match, content) => {
+      const items = content.match(/<li[^>]*>(.*?)<\/li>/gi);
+      if (items) {
+        const listItems = items.map(item => {
+          const cleanContent = this.stripHtml(item.replace(/<\/?li[^>]*>/gi, '')).trim();
+          return '- ' + cleanContent;
+        }).join('\n');
+        return listItems + '\n\n';
+      }
+      return match;
     });
 
     // Convert ordered lists
-    markdown = markdown.replace(/<ol[^>]*>(.*?)<\/ol>/gis, (match, content) => {
-      let counter = 1;
-      let listContent = content.replace(/<li[^>]*>(.*?)<\/li>/gi, () => {
-        return `${counter++}. $1\n`;
-      });
-      return listContent + '\n';
+    result = result.replace(/<ol[^>]*>(.*?)<\/ol>/gis, (match, content) => {
+      const items = content.match(/<li[^>]*>(.*?)<\/li>/gi);
+      if (items) {
+        const listItems = items.map((item, index) => {
+          const cleanContent = this.stripHtml(item.replace(/<\/?li[^>]*>/gi, '')).trim();
+          return `${index + 1}. ` + cleanContent;
+        }).join('\n');
+        return listItems + '\n\n';
+      }
+      return match;
+    });
+
+    // Convert blockquotes
+    result = result.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gis, (match, content) => {
+      const cleanContent = this.stripHtml(content).trim();
+      const lines = cleanContent.split('\n');
+      const quotedLines = lines.map(line => '> ' + line.trim()).join('\n');
+      return quotedLines + '\n\n';
+    });
+
+    // Convert tables
+    result = result.replace(/<table[^>]*>(.*?)<\/table>/gis, (match, content) => {
+      return this.convertTable(content) + '\n\n';
     });
 
     // Convert horizontal rules
-    markdown = markdown.replace(/<hr\s*\/?>/gi, '\n---\n\n');
+    result = result.replace(/<hr[^>]*\/?>/gi, '\n---\n\n');
 
-    // Convert tables (basic)
-    markdown = markdown.replace(/<table[^>]*>(.*?)<\/table>/gis, (match, content) => {
-      const rows = content.match(/<tr[^>]*>(.*?)<\/tr>/gi);
-      if (!rows) return match;
-
-      let tableMarkdown = '';
-      let isFirstRow = true;
-
-      rows.forEach(row => {
-        const cells = row.match(/<t[hd][^>]*>(.*?)<\/t[hd]>/gi);
-        if (!cells) return;
-
-        const cellContents = cells.map(cell => {
-          return cell.replace(/<t[hd][^>]*>(.*?)<\/t[hd]>/gi, '$1').trim();
-        });
-
-        tableMarkdown += '| ' + cellContents.join(' | ') + ' |\n';
-
-        if (isFirstRow) {
-          tableMarkdown += '| ' + cellContents.map(() => '---').join(' | ') + ' |\n';
-          isFirstRow = false;
-        }
-      });
-
-      return tableMarkdown + '\n';
-    });
-
-    // Clean up multiple newlines
-    markdown = markdown.replace(/\n{3,}/g, '\n\n');
-
-    // Remove remaining HTML tags
-    markdown = markdown.replace(/<[^>]*>/g, '');
+    // Strip remaining HTML tags
+    result = this.stripHtml(result);
 
     // Decode HTML entities
-    markdown = markdown.replace(/&lt;/g, '<');
-    markdown = markdown.replace(/&gt;/g, '>');
-    markdown = markdown.replace(/&amp;/g, '&');
-    markdown = markdown.replace(/&quot;/g, '"');
-    markdown = markdown.replace(/&#39;/g, "'");
-    markdown = markdown.replace(/&nbsp;/g, ' ');
+    result = this.decodeHtmlEntities(result);
 
-    return markdown.trim();
+    // Clean up whitespace
+    result = result.replace(/\n{3,}/g, '\n\n');
+    result = result.trim();
+
+    return result;
   }
 
-  convertMarkdownToHtml(markdown: string): string {
+  markdownToHtml(markdown: string): string {
     if (!markdown.trim()) {
       return '';
     }
 
-    let html = markdown;
+    let result = markdown;
 
     // Convert headings
-    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
-    html = html.replace(/^##### (.*$)/gim, '<h5>$1</h5>');
-    html = html.replace(/^###### (.*$)/gim, '<h6>$1</h6>');
+    result = result.replace(/^(#{1,6})\s+(.*)$/gm, (match, hashes, content) => {
+      const level = hashes.length;
+      return `<h${level}>${content.trim()}</h${level}>`;
+    });
 
-    // Convert horizontal rules
-    html = html.replace(/^---$/gim, '<hr>');
+    // Convert bold
+    result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-    // Convert code blocks
-    html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-
-    // Convert bold and italic
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // Convert strikethrough
-    html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+    // Convert italic
+    result = result.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     // Convert inline code
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Convert code blocks
+    result = result.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
 
     // Convert links
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 
     // Convert images
-    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
-
-    // Convert blockquotes
-    html = html.replace(/^> (.*)$/gim, '<blockquote>$1</blockquote>');
+    result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />');
 
     // Convert unordered lists
-    html = html.replace(/^[\-\*\+] (.*)$/gim, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    result = result.replace(/^- (.*)$/gm, '<li>$1</li>');
+    result = result.replace(/(<li>.*<\/li>)/s, '<ul>\n$1\n</ul>');
 
     // Convert ordered lists
-    html = html.replace(/^\d+\. (.*)$/gim, '<li>$1</li>');
+    result = result.replace(/^\d+\. (.*)$/gm, '<li>$1</li>');
 
-    // Convert line breaks to paragraphs
-    const paragraphs = html.split('\n\n');
-    html = paragraphs
-      .map(paragraph => {
-        paragraph = paragraph.trim();
-        if (paragraph && !paragraph.match(/^<(h[1-6]|hr|pre|ul|ol|blockquote)/)) {
-          return `<p>${paragraph}</p>`;
+    // Convert blockquotes
+    result = result.replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>');
+
+    // Convert horizontal rules
+    result = result.replace(/^---$/gm, '<hr>');
+
+    // Convert paragraphs
+    result = result.replace(/^(?!<[^>]+>)(.+)$/gm, '<p>$1</p>');
+
+    // Clean up multiple line breaks
+    result = result.replace(/\n\n+/g, '\n');
+
+    return result.trim();
+  }
+
+  private convertTable(tableHtml: string): string {
+    const rows = tableHtml.match(/<tr[^>]*>(.*?)<\/tr>/gis);
+    if (!rows) return '';
+
+    let markdown = '';
+    let isFirstRow = true;
+
+    for (const row of rows) {
+      const cells = row.match(/<t[hd][^>]*>(.*?)<\/t[hd]>/gis);
+      if (cells) {
+        const cellContents = cells.map(cell => {
+          return this.stripHtml(cell.replace(/<\/?t[hd][^>]*>/gi, '')).trim();
+        });
+
+        markdown += '| ' + cellContents.join(' | ') + ' |\n';
+
+        if (isFirstRow) {
+          markdown += '|' + cellContents.map(() => ' --- ').join('|') + '|\n';
+          isFirstRow = false;
         }
-        return paragraph;
-      })
-      .join('\n\n');
+      }
+    }
 
-    return html.trim();
+    return markdown;
+  }
+
+  private stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, '');
+  }
+
+  private decodeHtmlEntities(text: string): string {
+    const entities: Record<string, string> = {
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+      '&nbsp;': ' ',
+      '&copy;': '©',
+      '&reg;': '®',
+      '&trade;': '™',
+    };
+
+    let result = text;
+    for (const [entity, char] of Object.entries(entities)) {
+      result = result.replace(new RegExp(entity, 'g'), char);
+    }
+
+    // Decode numeric entities
+    result = result.replace(/&#(\d+);/g, (match, code) => {
+      return String.fromCharCode(parseInt(code, 10));
+    });
+
+    result = result.replace(/&#x([0-9a-fA-F]+);/g, (match, code) => {
+      return String.fromCharCode(parseInt(code, 16));
+    });
+
+    return result;
   }
 }
