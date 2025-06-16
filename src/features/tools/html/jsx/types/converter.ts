@@ -1,21 +1,5 @@
-export interface ConversionOptions {
-  prettify: boolean;
-  camelCase: boolean;
-  useFragment: boolean;
-}
-
-export interface ConversionResult {
-  success: boolean;
-  jsxCode?: string;
-  error?: string;
-}
-
-export interface ConversionStats {
-  lines: number;
-  characters: number;
-}
-
-export interface ConverterElements {
+// Обновленные типы для JSX конвертера
+export interface HtmlToJsxElements extends BaseConverterElements {
   htmlInput: HTMLTextAreaElement;
   jsxOutput: HTMLTextAreaElement;
   errorMessage: HTMLElement;
@@ -29,6 +13,8 @@ export interface ConverterElements {
   };
 }
 
-export interface HtmlToJsxAttributeMap {
-  [key: string]: string;
+export interface JsxConversionOptions {
+  prettify: boolean;
+  camelCase: boolean;
+  useFragment: boolean;
 }

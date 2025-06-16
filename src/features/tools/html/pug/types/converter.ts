@@ -1,21 +1,10 @@
-export interface ConversionOptions {
+export interface PugConversionOptions {
   prettify: boolean;
   combineText: boolean;
   preserveComments: boolean;
 }
 
-export interface ConversionResult {
-  success: boolean;
-  pugCode?: string;
-  error?: string;
-}
-
-export interface ConversionStats {
-  lines: number;
-  characters: number;
-}
-
-export interface ConverterElements {
+export interface HtmlToPugElements {
   htmlInput: HTMLTextAreaElement;
   pugOutput: HTMLTextAreaElement;
   errorMessage: HTMLElement;
@@ -27,4 +16,15 @@ export interface ConverterElements {
     combineText: HTMLInputElement;
     preserveComments: HTMLInputElement;
   };
+}
+
+export interface ConversionResult {
+  success: boolean;
+  pugCode?: string;
+  error?: string;
+}
+
+export interface ConversionStats {
+  lines: number;
+  characters: number;
 }

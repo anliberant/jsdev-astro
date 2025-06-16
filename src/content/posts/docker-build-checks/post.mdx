@@ -1,0 +1,333 @@
+---
+title: "Docker Build Checks: Validate Your Dockerfile Before Building"
+slug: docker-build-checks
+heading: Master Dockerfile Validation with Docker Build Checks
+image: ./images/docker-build-checks-guide.png
+permalink: docker-build-checks
+date: 2025-06-16
+author: anton liberant
+category: docker
+type: post
+tags: ['Dockerfile']
+desc: Learn Docker Build Checks in Dockerfile 1.8. Validate configurations, catch errors early, and follow best practices with practical examples and troubleshooting tips.
+---
+
+Docker Build Checks is a powerful linting feature introduced in Dockerfile 1.8 that validates your Dockerfile and build configuration before execution. Think of it as a sophisticated code reviewer that catches issues before they become problems in production.
+
+## How Docker Build Checks Work
+
+Instead of executing build steps, Docker Build Checks analyzes your Dockerfile and build options, reporting potential issues, anti-patterns, and best practice violations. This proactive approach saves time and prevents deployment issues.
+
+### Key Benefits
+
+- **Early Problem Detection**: Catch issues before build execution
+- **Best Practice Enforcement**: Ensure compliance with Docker standards  
+- **Cost Savings**: Reduce failed builds and debugging time
+- **Team Consistency**: Standardize Dockerfile quality across projects
+
+## Prerequisites and Support
+
+Docker Build Checks requires:
+- **Buildx**: Version 0.15.0 or higher
+- **GitHub Actions**: 
+  - `docker/build-push-action` v6.6.0+
+  - `docker/bake-action` v5.6.0+
+
+## Basic Usage Examples
+
+### Automatic Checks During Build
+
+Create a Dockerfile with a common issue:
+
+```dockerfile
+# Dockerfile with shell form CMD (problematic)
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD npm start
+```
+
+Build the image to see automatic checks:
+
+```bash
+$ docker build -t my-app .
+[+] Building 2.3s (8/8) FINISHED
+ => [internal] load build definition from Dockerfile
+ => [internal] load .dockerignore
+ => [internal] load metadata for docker.io/library/node:18-alpine
+ => [1/4] FROM docker.io/library/node:18-alpine
+ => [2/4] WORKDIR /app
+ => [3/4] COPY package*.json ./
+ => [4/4] RUN npm ci --only=production
+ => [5/4] COPY . .
+ => exporting to image
+
+1 warning found (use docker --debug to expand):
+- JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 7)
+```
+
+### Fixed Version with JSON Array
+
+```dockerfile
+# Corrected Dockerfile with exec form CMD
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+### Detailed Check Output
+
+Get comprehensive information about issues:
+
+```bash
+$ docker --debug build -t my-app .
+```
+
+Output includes:
+- Exact line numbers
+- Problem descriptions
+- Links to documentation
+- Code snippets showing issues
+
+### Check-Only Mode
+
+Validate without building:
+
+```bash
+$ docker build --check .
+```
+
+Example output:
+```
+[+] Building 0.4s (3/3) FINISHED
+ => [internal] load build definition from Dockerfile
+ => [internal] load metadata for docker.io/library/node:18-alpine
+ => [internal] load .dockerignore
+
+Check complete, 1 warning found!
+
+WARNING: JSONArgsRecommended - https://docs.docker.com/go/dockerfile/rule/json-args-recommended/
+JSON arguments recommended for CMD to prevent unintended behavior related to OS signals
+Dockerfile:7
+--------------------
+   6 |     EXPOSE 3000
+   7 | >>> CMD npm start
+   8 |
+--------------------
+```
+
+## Advanced Configuration
+
+### Fail Build on Violations
+
+Force build failure when checks find issues:
+
+```dockerfile
+# check=error=true
+FROM python:3.11-slim
+WORKDIR /usr/src/app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD python app.py
+```
+
+CLI equivalent:
+```bash
+$ docker build --build-arg "BUILDKIT_DOCKERFILE_CHECK=error=true" .
+```
+
+### Skip Specific Checks
+
+Ignore certain rules when necessary:
+
+```dockerfile
+# check=skip=JSONArgsRecommended
+FROM alpine
+RUN apk add --no-cache curl
+# Legacy script requires shell form
+CMD /legacy-startup.sh && exec "$@"
+```
+
+Skip multiple checks:
+```dockerfile
+# check=skip=JSONArgsRecommended,StageNameCasing
+FROM node:18 AS BUILD_STAGE
+COPY . .
+RUN npm run build
+CMD npm start
+```
+
+### Combine Error and Skip Parameters
+
+```dockerfile
+# check=skip=JSONArgsRecommended;error=true
+FROM python:3.11
+WORKDIR relative/path  # This will cause build failure
+COPY . .
+CMD python app.py      # This warning is skipped
+```
+
+## Experimental Features
+
+Enable experimental checks for cutting-edge validation:
+
+```dockerfile
+# check=experimental=all
+FROM node:18
+COPY . .
+# .dockerignore might exclude some copied files
+RUN npm install
+CMD ["npm", "start"]
+```
+
+Enable specific experimental checks:
+```dockerfile
+# check=experimental=CopyIgnoredFile
+FROM ubuntu:22.04
+COPY . /app/
+```
+
+## Complete Rule Reference
+
+### Stable Rules
+
+| Rule | Description | Example Fix |
+|------|-------------|-------------|
+| `StageNameCasing` | Stage names should be lowercase | `FROM node AS build` not `BUILD` |
+| `JSONArgsRecommended` | Use JSON arrays for CMD/ENTRYPOINT | `CMD ["npm", "start"]` |
+| `WorkdirRelativePath` | Avoid relative paths in WORKDIR | `WORKDIR /app` not `app` |
+| `UndefinedVar` | Define variables before use | Declare `ARG` before `FROM` |
+| `MaintainerDeprecated` | Use LABEL instead of MAINTAINER | `LABEL maintainer="email"` |
+
+### Experimental Rules
+
+- `CopyIgnoredFile`: Warns about copying files excluded by .dockerignore
+- `InvalidDefinitionDescription`: Enforces comment formatting standards
+
+## Real-World Examples
+
+### Multi-Stage Production Build
+
+```dockerfile
+# check=error=true;skip=StageNameCasing
+FROM node:18-alpine AS dependencies
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+FROM node:18-alpine AS build  
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:18-alpine AS production
+WORKDIR /app
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY package*.json ./
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+```
+
+### Python Application with Checks
+
+```dockerfile
+# check=experimental=all;error=true
+FROM python:3.11-slim AS base
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM base AS dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim AS production
+WORKDIR /app
+COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=dependencies /usr/local/bin /usr/local/bin
+COPY . .
+EXPOSE 8000
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+name: Docker Build with Checks
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Run Docker Build Checks
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          build-args: |
+            BUILDKIT_DOCKERFILE_CHECK=error=true
+```
+
+### GitLab CI Example
+
+```yaml
+docker-validate:
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker buildx create --use
+    - docker build --check --build-arg "BUILDKIT_DOCKERFILE_CHECK=error=true" .
+  only:
+    - merge_requests
+    - master
+```
+
+## Troubleshooting Common Issues
+
+### Check Not Running
+- Ensure Buildx version ≥ 0.15.0
+- Verify Dockerfile syntax is valid
+- Check for conflicting build arguments
+
+### False Positives
+Use targeted skip rules rather than `skip=all`:
+```dockerfile
+# check=skip=JSONArgsRecommended  # Only skip what's necessary
+```
+
+### CI/CD Integration Issues
+Set explicit build arguments in your pipeline:
+```bash
+docker build --build-arg "BUILDKIT_DOCKERFILE_CHECK=error=true" .
+```
+
+## Best Practices
+
+1. **Start Gradually**: Begin with warnings, then enable `error=true`
+2. **Document Skips**: Comment why specific checks are skipped
+3. **Regular Updates**: Keep build tools updated for latest checks
+4. **Team Standards**: Establish consistent check configurations
+5. **CI Integration**: Automate checks in your build pipeline
+
+Docker Build Checks transforms Dockerfile development from reactive debugging to proactive quality assurance, helping teams ship more reliable container images.

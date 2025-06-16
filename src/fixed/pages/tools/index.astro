@@ -1,0 +1,100 @@
+---
+import { toolsCss, toolsHtml, toolsText } from '@/app/config/tools';
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import ToolCard from '@/entities/tools/ui/tool-card.astro';
+import Separator from '@/shared/ui/base/separator.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+---
+
+<BaseLayout
+  title='Developer Tools | JSdev'
+  description='Useful web development tools and utilities'>
+  <main class='tools-page'>
+    <HeadingBlock
+      title='Developer Tools'
+      description='A curated collection of essential web development utilities, including tools for working with HTML, CSS, JSON, XML, and more. Streamline your workflow with formatters, validators, converters, and performance helpers—all in one place.'
+    />
+
+    <section class='tools-section'>
+      <h2 class='tools-heading'>Text Tools</h2>
+      <Separator />
+      <div class='tools-grid'>
+        {
+          toolsText.map(tool => (
+            <ToolCard
+              title={tool.title}
+              description={tool.description}
+              href={tool.href}
+              icon={tool.icon}
+            />
+          ))
+        }
+      </div>
+      <h2 class='tools-heading'>CSS Tools</h2>
+      <Separator />
+      <div class='tools-grid'>
+        {
+          toolsCss.map(tool => (
+            <ToolCard
+              title={tool.title}
+              description={tool.description}
+              href={tool.href}
+              icon={tool.icon}
+            />
+          ))
+        }
+      </div>
+      <h2 class='tools-heading'>HTML Tools</h2>
+      <Separator />
+
+      <div class='tools-grid'>
+        {
+          toolsHtml.map(tool => (
+            <ToolCard
+              title={tool.title}
+              description={tool.description}
+              href={tool.href}
+              icon={tool.icon}
+            />
+          ))
+        }
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .tools-page {
+    margin: 0 auto;
+  }
+
+  .tools-section {
+    margin-top: 3rem;
+  }
+
+  .tools-heading {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: hsl(var(--foreground));
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .tools-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .tools-heading {
+      font-size: 1.25rem;
+    }
+  }
+</style>

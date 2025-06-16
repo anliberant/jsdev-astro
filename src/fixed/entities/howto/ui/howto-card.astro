@@ -1,0 +1,119 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+import Card from '@/shared/ui/base/card.astro';
+
+export interface Props {
+  howto: CollectionEntry<'howtos'>;
+}
+
+const { howto } = Astro.props;
+const image = howto.data.icon || howto.data.image;
+const icon = howto.data.icon;
+---
+
+<div class='howto-card'>
+  <div class='howto-card-wrapper'>
+    <div class='howto-card-image'>
+      {
+        icon ?
+          <img
+            src={image.src || image}
+            alt={howto.data.category}
+            title={howto.data.category}
+            width='28'
+            height='28'
+            class='image'
+          />
+        : image && (
+            <Image
+              src={image}
+              alt={howto.data.title}
+              title={howto.data.title}
+              width='28'
+              height='28'
+              class='image'
+            />
+          )
+      }
+    </div>
+    <div class='howto-card-content'>
+      <a
+        title={howto.data.title}
+        href={`/${howto.data.permalink}/`}
+        class='howto-card-link'>
+        <h3 class='howto-card-title'>{howto.data.title}</h3>
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .howto-card {
+    max-height: fit-content;
+    padding: 0.75rem;
+    transition: box-shadow 0.2s ease-in-out;
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+    border-radius: var(--radius);
+  }
+
+  .howto-card:hover {
+    box-shadow: 0 4px 6px -1px black;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .howto-card:hover {
+      box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  .howto-card-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  @media (min-width: 768px) {
+    .howto-card-wrapper {
+      align-items: center;
+    }
+  }
+
+  .howto-card-image {
+    display: none;
+    width: 1.75rem;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 768px) {
+    .howto-card-image {
+      display: block;
+    }
+  }
+
+  .image {
+    border-radius: 0.375rem;
+    display: block;
+  }
+
+  .howto-card-content {
+    flex: 1;
+  }
+
+  .howto-card-link {
+    text-decoration: none;
+    color: inherit;
+    letter-spacing: -0.015em;
+  }
+
+  .howto-card-title {
+    margin: 0.25rem 0 0 0;
+    padding-left: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.75rem;
+    color: inherit;
+  }
+</style>

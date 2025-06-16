@@ -1,0 +1,488 @@
+---
+import Button from '@/shared/ui/base/button.astro';
+---
+
+<div class='config-panel'>
+  <div class='panel-header'>
+    <h2>Iframe Configuration</h2>
+  </div>
+
+  <div class='panel-content'>
+    <!-- Quick Presets -->
+    <div class='config-section'>
+      <h3>Quick Presets</h3>
+      <div class='preset-grid'>
+        <button
+          class='preset-btn'
+          id='preset-youtube'>
+          <span class='preset-icon'>🎥</span>
+          YouTube
+        </button>
+        <button
+          class='preset-btn'
+          id='preset-vimeo'>
+          <span class='preset-icon'>📹</span>
+          Vimeo
+        </button>
+        <button
+          class='preset-btn'
+          id='preset-googleMaps'>
+          <span class='preset-icon'>🗺️</span>
+          Maps
+        </button>
+        <button
+          class='preset-btn'
+          id='preset-codepen'>
+          <span class='preset-icon'>💻</span>
+          CodePen
+        </button>
+        <button
+          class='preset-btn'
+          id='preset-website'>
+          <span class='preset-icon'>🌐</span>
+          Website
+        </button>
+        <button
+          class='preset-btn'
+          id='preset-twitter'>
+          <span class='preset-icon'>🐦</span>
+          Twitter
+        </button>
+      </div>
+    </div>
+
+    <!-- Basic Settings -->
+    <div class='config-section'>
+      <h3>Basic Settings</h3>
+
+      <div class='form-group'>
+        <label for='src-input'>Source URL *</label>
+        <div class='input-with-button'>
+          <input
+            type='url'
+            id='src-input'
+            placeholder='https://example.com'
+            required
+          />
+          <Button
+            variant='outline'
+            size='sm'
+            id='validate-url'>
+            Validate
+          </Button>
+        </div>
+      </div>
+
+      <div class='form-row'>
+        <div class='form-group'>
+          <label for='width-input'>Width</label>
+          <input
+            type='text'
+            id='width-input'
+            value='100%'
+            placeholder='100% or 800'
+          />
+        </div>
+        <div class='form-group'>
+          <label for='height-input'>Height</label>
+          <input
+            type='text'
+            id='height-input'
+            value='400'
+            placeholder='400'
+          />
+        </div>
+      </div>
+
+      <div class='form-group'>
+        <label for='title-input'>Title (for accessibility)</label>
+        <input
+          type='text'
+          id='title-input'
+          placeholder='Describe the iframe content'
+        />
+      </div>
+    </div>
+
+    <!-- Advanced Settings -->
+    <div class='config-section'>
+      <h3>Advanced Settings</h3>
+
+      <div class='form-row'>
+        <div class='form-group'>
+          <label for='loading-select'>Loading</label>
+          <select id='loading-select'>
+            <option value='lazy'>Lazy</option>
+            <option value='eager'>Eager</option>
+            <option value='auto'>Auto</option>
+          </select>
+        </div>
+        <div class='form-group'>
+          <label for='scrolling-select'>Scrolling</label>
+          <select id='scrolling-select'>
+            <option value='auto'>Auto</option>
+            <option value='yes'>Yes</option>
+            <option value='no'>No</option>
+          </select>
+        </div>
+      </div>
+
+      <div class='form-group'>
+        <label for='referrer-policy-select'>Referrer Policy</label>
+        <select id='referrer-policy-select'>
+          <option value='no-referrer-when-downgrade'>No Referrer When Downgrade</option>
+          <option value='no-referrer'>No Referrer</option>
+          <option value='origin'>Origin</option>
+          <option value='origin-when-cross-origin'>Origin When Cross Origin</option>
+          <option value='same-origin'>Same Origin</option>
+          <option value='strict-origin'>Strict Origin</option>
+          <option value='strict-origin-when-cross-origin'>Strict Origin When Cross Origin</option>
+          <option value='unsafe-url'>Unsafe URL</option>
+        </select>
+      </div>
+
+      <div class='form-row'>
+        <div class='form-group'>
+          <label for='frame-border-input'>Frame Border</label>
+          <input
+            type='text'
+            id='frame-border-input'
+            value='0'
+            placeholder='0'
+          />
+        </div>
+        <div class='form-group checkbox-group'>
+          <label class='checkbox-label'>
+            <input
+              type='checkbox'
+              id='allow-fullscreen'
+            />
+            <span class='checkmark'></span>
+            Allow Fullscreen
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTML Attributes -->
+    <div class='config-section'>
+      <h3>HTML Attributes</h3>
+
+      <div class='form-group'>
+        <label for='name-input'>Name</label>
+        <input
+          type='text'
+          id='name-input'
+          placeholder='iframe-name'
+        />
+      </div>
+
+      <div class='form-group'>
+        <label for='id-input'>ID</label>
+        <input
+          type='text'
+          id='id-input'
+          placeholder='my-iframe'
+        />
+      </div>
+
+      <div class='form-group'>
+        <label for='class-input'>CSS Classes</label>
+        <input
+          type='text'
+          id='class-input'
+          placeholder='iframe-class another-class'
+        />
+      </div>
+
+      <div class='form-group'>
+        <label for='style-input'>Inline Styles</label>
+        <textarea
+          id='style-input'
+          rows='3'
+          placeholder='border: 1px solid #ccc; border-radius: 8px;'
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div class='config-section'>
+      <h3>Security - Sandbox Permissions</h3>
+      <p class='section-description'>
+        Sandbox restricts iframe capabilities for security. Only enable what's needed.
+      </p>
+      <div
+        class='permissions-container'
+        id='sandbox-permissions'>
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Feature Permissions -->
+    <div class='config-section'>
+      <h3>Feature Permissions</h3>
+      <p class='section-description'> Allow specific browser features for the embedded content. </p>
+      <div
+        class='permissions-container'
+        id='allow-permissions'>
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class='config-section'>
+      <div class='action-buttons'>
+        <Button
+          variant='destructive'
+          id='clear-all'>
+          🗑️ Clear All
+        </Button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .config-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .panel-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+  }
+
+  .panel-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .panel-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .config-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .config-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .config-section h3 {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .section-description {
+    margin: 0 0 1rem 0;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.4;
+  }
+
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .preset-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .preset-btn:hover {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+  }
+
+  .preset-icon {
+    font-size: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-size: 0.8125rem;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+  }
+
+  .input-with-button {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .input-with-button input {
+    flex: 1;
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 0;
+    font-size: 0.8125rem;
+    color: hsl(var(--foreground));
+  }
+
+  .checkbox-label input[type='checkbox'] {
+    display: none;
+  }
+
+  .checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid hsl(var(--border));
+    border-radius: var(--radius);
+    margin-right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+    background: hsl(var(--background));
+  }
+
+  .checkmark:after {
+    content: '';
+    width: 6px;
+    height: 10px;
+    border: solid hsl(var(--primary-foreground));
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .checkbox-label input[type='checkbox']:checked + .checkmark {
+    background: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+  }
+
+  .checkbox-label input[type='checkbox']:checked + .checkmark:after {
+    opacity: 1;
+  }
+
+  .permissions-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    background: hsl(var(--background));
+  }
+
+  .permission-item {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .permission-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .permission-item label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+
+  .permission-description {
+    display: block;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.25rem;
+    line-height: 1.3;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    .panel-content {
+      padding: 1rem;
+    }
+
+    .preset-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+</style>

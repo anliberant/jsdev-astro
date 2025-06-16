@@ -1,0 +1,78 @@
+---
+import { getCategoryInfo } from '@/shared/helpers/category.helpers';
+
+type Props = {
+  categoryName: string;
+  currentPage: number;
+  totalPosts: number;
+  type?: string;
+  class?: string;
+};
+
+const { categoryName, currentPage, totalPosts, type = 'post', class: className = '' } = Astro.props;
+
+const { name, heading, description } = getCategoryInfo(categoryName, type);
+---
+
+<header class={`category-header ${className}`}>
+  <div class='category-header__container'>
+    <h1 class='category-header__title'>
+      {name}
+      <span class='category-header__count'>({totalPosts} posts)</span>
+    </h1>
+
+    <p class='category-header__description'>
+      {description}
+    </p>
+  </div>
+</header>
+
+<style>
+  .category-header {
+    background: linear-gradient(135deg, #f9fbfd 0%, #edf2f7 100%);
+    color: var(--oposite-color);
+    padding: 1rem 1.5rem;
+    position: relative;
+  }
+  :global(.dark) .category-header {
+    background: linear-gradient(135deg, #070503 0%, #1d1720 100%);
+  }
+
+  .category-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  }
+
+  .category-header__container {
+    /* max-width: 1200px; */
+    margin: 0 auto;
+  }
+  .category-header__title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+  }
+
+  .category-header__count {
+    font-size: 1.4rem;
+    font-weight: 400;
+    opacity: 0.8;
+    display: block;
+    margin-top: 0.5rem;
+  }
+
+  .category-header__description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    margin: 0;
+    max-width: 1200px;
+  }
+</style>

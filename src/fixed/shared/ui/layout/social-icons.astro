@@ -1,0 +1,210 @@
+---
+import { siteConfig } from '@/app/config/site';
+
+export interface Props {
+  styleClass?: string;
+  strokeWidth?: number;
+  isFooter?: boolean;
+}
+
+const { styleClass = '', strokeWidth = 1, isFooter = false } = Astro.props;
+
+const size = isFooter ? 20 : 18;
+const { social } = siteConfig;
+
+const twitterIcon = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>`;
+
+const githubIcon = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>`;
+
+const facebookIcon = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`;
+
+const mastodonIcon = `<svg width="${isFooter ? '18' : '16'}" height="${isFooter ? '18' : '16'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" xmlns="http://www.w3.org/2000/svg"><path d="M23.268 5.313c-.35-2.578-2.617-4.61-5.304-5.004C17.51.242 15.792 0 11.813 0h-.03c-3.98 0-4.835.242-5.288.309C3.882.692 1.496 2.518.917 5.127.64 6.412.61 7.837.661 9.143c.074 1.874.088 3.745.26 5.611.118 1.24.325 2.47.62 3.68.55 2.237 2.777 4.098 4.96 4.857 2.336.792 4.849.923 7.256.38.265-.061.527-.132.786-.213.585-.184 1.27-.39 1.774-.753a.057.057 0 0 0 .023-.043v-1.809a.052.052 0 0 0-.02-.041.053.053 0 0 0-.046-.01 20.282 20.282 0 0 1-4.709.545c-2.73 0-3.463-1.284-3.674-1.818a5.593 5.593 0 0 1-.319-1.433.053.053 0 0 1 .066-.054c1.517.363 3.072.546 4.632.546.376 0 .75 0 1.125-.01 1.57-.044 3.224-.124 4.768-.422.038-.008.077-.015.11-.024 2.435-.464 4.753-1.92 4.989-5.604.008-.145.03-1.52.03-1.67.002-.512.167-3.63-.024-5.545zm-3.748 9.195h-2.561V8.29c0-1.309-.55-1.976-1.67-1.976-1.23 0-1.846.79-1.846 2.35v3.403h-2.546V8.663c0-1.56-.617-2.35-1.848-2.35-1.112 0-1.668.668-1.67 1.977v6.218H4.822V8.102c0-1.31.337-2.35 1.011-3.12.696-.77 1.608-1.164 2.74-1.164 1.311 0 2.302.5 2.962 1.498l.638 1.06.638-1.06c.66-.999 1.65-1.498 2.96-1.498 1.13 0 2.043.395 2.74 1.164.675.77 1.012 1.81 1.012 3.12z" /></svg>`;
+
+const telegramIcon = `<svg width="${isFooter ? '17' : '15'}" height="${isFooter ? '17' : '15'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" xmlns="http://www.w3.org/2000/svg"><title>Telegram</title><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>`;
+
+const bskyIcon = `<svg width="20" height="18" viewBox="0 0 20 18" stroke-width="${strokeWidth}" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Bsky</title><path d="M10 13.095C10 12.997 10.0375 13.1075 10.1185 13.345C10.5555 14.6335 12.263 19.6605 16.1665 15.6415C18.222 13.5255 17.2705 11.41 13.529 10.771C15.669 11.136 18.076 10.5325 18.736 8.16502C18.926 7.48402 19.25 3.28902 19.25 2.72252C19.25 -0.115484 16.77 0.776516 15.24 1.92902C13.119 3.52652 10.8375 6.76552 10 8.50402C9.1625 6.76552 6.881 3.52702 4.76 1.92902C3.23 0.776516 0.75 -0.114984 0.75 2.72252C0.75 3.28902 1.0735 7.48402 1.264 8.16502C1.924 10.5325 4.3305 11.1365 6.471 10.771C2.7295 11.41 1.778 13.526 3.8335 15.6415C7.737 19.6605 9.4445 14.6335 9.8815 13.3455C9.9625 13.1075 10 12.997 10 13.095Z" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+
+const substackIcon = `<svg width="18" height="18" viewBox="0 0 24 24" stroke-width="${strokeWidth}" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Substack</title><path d="M22.539 8.242H1.45996V5.406H22.54L22.539 8.242ZM1.45996 10.812V24L12 18.11L22.54 24V10.812H1.45996ZM22.54 0H1.45996V2.836H22.54V0Z" /></svg>`;
+
+const dailydevIcon = `<svg width="18" height="18" viewBox="0 0 40 40" stroke-width="${strokeWidth}" fill="none" xmlns="http://www.w3.org/2000/svg"><title>DailyDev</title><g id="Logo/Dark" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Icon" transform="translate(4.000000, 11.000000)" fill="#151618"><g id="Secound" opacity="0.56" transform="translate(21.000000, 0.930000)"><path  stroke="currentColor" d="M6.47910463,8.01371418 L2.94663391,4.48124347 L4.71194884,0.95 L10.4515234,6.68957458 C11.1828255,7.42087669 11.1828255,8.60655167 10.4515234,9.33785378 L3.38719562,16.4021816 C2.65589351,17.1334837 1.47021853,17.1334837 0.738916421,16.4021816 C0.00761431424,15.6708795 0.00761431424,14.4852045 0.738916421,13.7539024 L6.47910463,8.01371418 Z" id="Combined-Shape"></path></g><path stroke="currentColor" d="M21.7402327,0.548323198 C22.4715349,-0.182978908 23.6575166,-0.182672097 24.3888188,0.54863001 L25.7132652,1.87307642 L10.2610836,17.325258 C9.52978147,18.0565601 8.34379968,18.0562533 7.61249757,17.3249512 L6.28805116,16.0005048 L21.7402327,0.548323198 Z M15.1176939,5.40493351 L12.4688011,8.05382633 L8.93633036,4.52135561 L4.52089537,8.9367906 L8.05336609,12.4692613 L6.28805116,16.0005048 L0.54847658,10.2609302 C-0.182825527,9.52962809 -0.182825527,8.34395311 0.54847658,7.612651 L7.61249757,0.54863001 C8.34379968,-0.182672097 9.52978147,-0.182978908 10.2610836,0.548323198 L15.1176939,5.40493351 Z" id="Main"></path></g></g></svg>`;
+---
+
+<div class={`social-icons ${isFooter ? 'footer-layout' : ''} ${styleClass}`}>
+  <a
+    href={social.twitter}
+    aria-label='Twitter'
+    class='social-link'>
+    <span
+      class='icon'
+      set:html={twitterIcon}
+    />
+  </a>
+
+  <a
+    href={social.github}
+    aria-label='Github'
+    class='social-link'>
+    <span
+      class='icon'
+      set:html={githubIcon}
+    />
+  </a>
+
+  <a
+    href={social.facebook}
+    aria-label='Facebook'
+    class='social-link'>
+    <span
+      class='icon'
+      set:html={facebookIcon}
+    />
+  </a>
+
+  <a
+    href={social.mastodon}
+    aria-label='Mastodon'
+    class='social-link'>
+    <span
+      class='icon mastodon-icon'
+      set:html={mastodonIcon}
+    />
+  </a>
+
+  <a
+    href={social.telegram}
+    aria-label='Telegram'
+    class='social-link'>
+    <span
+      class='icon telegram-icon'
+      set:html={telegramIcon}
+    />
+  </a>
+
+  <a
+    href={social.bsky}
+    aria-label='BlueSky'
+    class='social-link'>
+    <span
+      class='icon bsky-icon'
+      set:html={bskyIcon}
+    />
+  </a>
+
+  <a
+    href={social.substack}
+    aria-label='Substack'
+    class='social-link'>
+    <span
+      class='icon substack-icon'
+      set:html={substackIcon}
+    />
+  </a>
+
+  <a
+    href={social.dailydev}
+    aria-label='DailyDev'
+    class='social-link'>
+    <span
+      class='icon dailydev-icon'
+      set:html={dailydevIcon}
+    />
+  </a>
+</div>
+
+<style>
+  .social-icons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .footer-layout {
+    gap: 2rem;
+  }
+
+  .social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .social-link:hover {
+    transform: scale(1.25);
+  }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .icon svg {
+    stroke: #000;
+    transition: all 0.3s ease;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .icon svg {
+      stroke: #fff;
+    }
+  }
+
+  .social-link:hover .icon svg {
+    fill: #dbeafe;
+    stroke: #dbeafe;
+  }
+
+  .mastodon-icon svg,
+  .telegram-icon svg,
+  .bsky-icon svg,
+  .substack-icon svg {
+    stroke: #000;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .mastodon-icon svg,
+    .telegram-icon svg,
+    .bsky-icon svg,
+    .substack-icon svg {
+      stroke: #fff;
+    }
+  }
+
+  .social-link:hover .mastodon-icon svg,
+  .social-link:hover .telegram-icon svg,
+  .social-link:hover .bsky-icon svg,
+  .social-link:hover .substack-icon svg {
+    fill: #dbeafe;
+    stroke: #dbeafe;
+  }
+
+  .dailydev-icon svg {
+    stroke: none;
+  }
+
+  .dailydev-icon svg path {
+    fill: #151618;
+    stroke: #000;
+    transition: all 0.3s ease;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dailydev-icon svg path {
+      stroke: #fff;
+    }
+  }
+
+  .social-link:hover .dailydev-icon svg path {
+    fill: #dbeafe;
+    stroke: #dbeafe;
+  }
+
+  .social-link:hover .dailydev-icon svg path {
+    transform: scale(1.25);
+  }
+</style>

@@ -1,0 +1,407 @@
+---
+import { siteConfig } from '@/app/config/site';
+import Footer from '@/widgets/footer/footer.astro';
+import Header from '@/widgets/header/header.astro';
+
+import '@/shared/styles/global.css';
+
+import ScrollToTop from '@/shared/ui/layout/scroll-to-top.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: string;
+}
+
+const {
+  title,
+  description = siteConfig.description,
+  image = siteConfig.image,
+  type = 'website',
+} = Astro.props;
+
+const fullTitle = title || siteConfig.title;
+const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/${image}`;
+---
+
+<!doctype html>
+<html
+  lang='en'
+  data-theme='light'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta
+      name='description'
+      content={description}
+    />
+    <meta
+      name='viewport'
+      content='width=device-width, initial-scale=1.0'
+    />
+    <link
+      rel='preconnect'
+      href='https://fonts.googleapis.com'
+    />
+    <link
+      rel='preconnect'
+      href='https://fonts.gstatic.com'
+      crossorigin
+    />
+    <link
+      rel='icon'
+      type='image/png'
+      href='/icon.png'
+    />
+    <meta
+      name='generator'
+      content={Astro.generator}
+    />
+    <title>{fullTitle}</title>
+
+    <!-- Umami Analytics -->
+    <script
+      defer
+      src='https://cloud.umami.is/script.js'
+      data-website-id='97be30e6-d00d-41c8-9353-a900d0f96dc7'
+    ></script>
+    <!-- Fonts -->
+    <link
+      href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
+      rel='preload'
+      as='style'
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
+        rel='stylesheet'
+      />
+    </noscript>
+    <link
+      rel='alternate'
+      type='application/rss+xml'
+      title={siteConfig.title}
+      href={new URL('rss.xml', Astro.site)}
+    />
+    <!-- SEO Meta Tags -->
+    <meta
+      property='og:title'
+      content={fullTitle}
+    />
+    <meta
+      property='og:description'
+      content={description}
+    />
+    <meta
+      property='og:image'
+      content={fullImageUrl}
+    />
+    <meta
+      property='og:url'
+      content={Astro.url}
+    />
+    <meta
+      property='og:type'
+      content={type}
+    />
+    <meta
+      property='og:site_name'
+      content={siteConfig.shortTitle}
+    />
+
+    <!-- Twitter Card -->
+    <meta
+      name='twitter:card'
+      content='summary_large_image'
+    />
+    <meta
+      name='twitter:title'
+      content={fullTitle}
+    />
+    <meta
+      name='twitter:description'
+      content={description}
+    />
+    <meta
+      name='twitter:image'
+      content={fullImageUrl}
+    />
+    {
+      siteConfig.twitterUsername && (
+        <meta
+          name='twitter:site'
+          content={siteConfig.twitterUsername}
+        />
+      )
+    }
+
+    <!-- Canonical URL (default, can be overridden) -->
+    <link
+      rel='canonical'
+      href={Astro.url}
+    />
+    <link
+      rel='sitemap'
+      href='/sitemap-index.xml'
+    />
+
+    <!-- Additional head content slot -->
+    <slot name='head' />
+  </head>
+  <body>
+    <div class='container'>
+      <Header />
+      <slot />
+      <Footer />
+      <ScrollToTop />
+    </div>
+  </body>
+</html>
+
+<script>
+  class ScrollToTop {
+    private button: HTMLButtonElement | null = null;
+    private showButton = false;
+    private isInitialized = false;
+    private scrollTimeout: number | null = null;
+
+    constructor() {
+      this.init();
+    }
+
+    private init(): void {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.setup());
+      } else {
+        this.setup();
+      }
+    }
+
+    private setup(): void {
+      try {
+        this.createButton();
+        this.bindEvents();
+        this.isInitialized = true;
+      } catch (error) {
+        console.error('Failed to initialize ScrollToTop:', error);
+      }
+    }
+
+    private createButton(): void {
+      const existingButton = document.querySelector('.scroll-to-top') as HTMLButtonElement;
+      if (existingButton) {
+        this.button = existingButton;
+        return;
+      }
+
+      this.button = document.createElement('button');
+      this.button.innerHTML = '↑';
+      this.button.className = 'scroll-to-top';
+      this.button.setAttribute('aria-label', 'Scroll to top');
+      this.button.style.display = 'none';
+
+      if (document.body) {
+        document.body.appendChild(this.button);
+      } else {
+        setTimeout(() => this.createButton(), 50);
+      }
+    }
+
+    private bindEvents(): void {
+      if (!this.button) {
+        console.warn('Cannot bind events: button not created');
+        return;
+      }
+
+      this.button.addEventListener('click', () => this.scrollToTop());
+
+      const handleScroll = () => {
+        if (this.scrollTimeout) {
+          clearTimeout(this.scrollTimeout);
+        }
+        this.scrollTimeout = window.setTimeout(() => {
+          this.handleScroll();
+        }, 16);
+      };
+
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    private scrollToTop(): void {
+      try {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      } catch (error) {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    private handleScroll(): void {
+      if (!this.button || !this.isInitialized) return;
+
+      const shouldShow = window.pageYOffset > 1200;
+
+      if (shouldShow !== this.showButton) {
+        this.showButton = shouldShow;
+
+        try {
+          if (shouldShow) {
+            this.button.style.display = 'block';
+            requestAnimationFrame(() => {
+              if (this.button) {
+                this.button.classList.add('visible');
+              }
+            });
+          } else {
+            this.button.classList.remove('visible');
+            setTimeout(() => {
+              if (this.button && !this.showButton) {
+                this.button.style.display = 'none';
+              }
+            }, 300);
+          }
+        } catch (error) {
+          console.error('Error updating scroll button visibility:', error);
+        }
+      }
+    }
+
+    public destroy(): void {
+      if (this.button && this.button.parentNode) {
+        this.button.parentNode.removeChild(this.button);
+      }
+      this.button = null;
+      this.isInitialized = false;
+    }
+  }
+
+  let scrollToTopInstance: ScrollToTop | null = null;
+
+  function initializeScrollToTop(): void {
+    if (scrollToTopInstance) {
+      return;
+    }
+
+    try {
+      scrollToTopInstance = new ScrollToTop();
+
+      if (typeof window !== 'undefined') {
+        (window as any).scrollToTop = scrollToTopInstance;
+      }
+    } catch (error) {
+      console.error('Failed to initialize ScrollToTop:', error);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeScrollToTop);
+  } else {
+    if (document.body) {
+      initializeScrollToTop();
+    } else {
+      setTimeout(initializeScrollToTop, 50);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      if (!scrollToTopInstance) {
+        setTimeout(initializeScrollToTop, 100);
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (scrollToTopInstance) {
+        scrollToTopInstance.destroy();
+        scrollToTopInstance = null;
+      }
+    });
+  }
+</script>
+
+<style>
+  .scroll-to-top {
+    position: fixed;
+    bottom: var(--space-xl);
+    right: var(--space-xl);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 1000;
+
+    transform: translateY(100px);
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    will-change: transform, opacity;
+
+    box-shadow: var(--shadow-lg);
+  }
+
+  .scroll-to-top.visible {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .scroll-to-top:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.2),
+      0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .scroll-to-top:active {
+    transform: translateY(0) scale(0.95);
+    transition-duration: 0.1s;
+  }
+
+  .scroll-to-top:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 768px) {
+    .scroll-to-top {
+      width: 2.5rem;
+      height: 2.5rem;
+      bottom: 1rem;
+      right: 1rem;
+      font-size: 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-to-top {
+      transition: opacity 0.2s ease;
+      transform: none !important;
+    }
+
+    .scroll-to-top:hover {
+      transform: none !important;
+    }
+
+    .scroll-to-top:active {
+      transform: none !important;
+    }
+  }
+
+  @media (max-height: 400px) {
+    .scroll-to-top {
+      display: none !important;
+    }
+  }
+</style>

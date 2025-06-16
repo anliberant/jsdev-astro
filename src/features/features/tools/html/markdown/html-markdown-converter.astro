@@ -1,0 +1,119 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import ConverterHeader from '@/shared/ui/converters/converter-header.astro';
+import ConverterPanel from '@/shared/ui/converters/converter-panel.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+const breadcrumbItems = generateToolsBreadcrumbs('HTML ⇄ Markdown Converter');
+
+const converterOptions = [{ id: 'modeToggle', label: 'Markdown to HTML', checked: false }];
+---
+
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
+
+<HeadingBlock
+  title='HTML ⇄ Markdown Converter'
+  description='Convert between HTML and Markdown formats easily with this bidirectional converter.'
+  class='mt-0'
+/>
+
+<ConverterHeader
+  options={converterOptions}
+  class='mt-10'
+/>
+
+<div class='main-content'>
+  <ConverterPanel
+    type='input'
+    title='HTML Input'
+    icon='📝'
+    textareaId='htmlInput'
+    placeholder='Paste your HTML content here...'
+    showSampleButton={true}
+    showStats={true}
+  />
+
+  <ConverterPanel
+    type='output'
+    title='Markdown Output'
+    icon='📄'
+    textareaId='markdownOutput'
+    placeholder='Markdown content will appear here...'
+    readonly={true}
+    showStats={true}
+  />
+</div>
+
+<script>
+  // Only run if we're on the correct page
+  const requiredElements = ['htmlInput', 'markdownOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
+  const hasRequiredElements = requiredElements.some(id => document.getElementById(id) !== null);
+
+  if (!hasRequiredElements) {
+    console.log('HTML-Markdown converter: Not the right page, skipping');
+  } else {
+    // Safe registration function
+    function safeRegisterConverter(name, elements, initFn, priority = 0) {
+      function attemptRegister() {
+        if (window.ConverterRegistry) {
+          const success = window.ConverterRegistry.register(name, elements, initFn, priority);
+          if (success) {
+            console.log(`✅ ${name} registered`);
+          }
+          return;
+        }
+        setTimeout(attemptRegister, 50);
+      }
+      attemptRegister();
+    }
+
+    // Import and register
+    import('./lib/converter-controller').then(({ HtmlMarkdownController }) => {
+      safeRegisterConverter(
+        'HtmlMarkdownConverter',
+        requiredElements,
+        () => {
+          try {
+            const controller = new HtmlMarkdownController();
+            console.log('HTML-Markdown converter initialized');
+            
+            // Store for debugging
+            if (typeof window !== 'undefined') {
+              window.markdownController = controller;
+            }
+          } catch (error) {
+            console.error('HTML-Markdown converter failed:', error);
+          }
+        },
+        10 // High priority for main converter
+      );
+    }).catch(error => {
+      console.error('Failed to load HTML-Markdown converter:', error);
+    });
+  }
+</script>
+
+<style>
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+}<style>
+  :global(body.dark) .main-content {
+    background-color: var(--color-surface-800);
+    color: var(--color-text-primary);
+  }
+</style>

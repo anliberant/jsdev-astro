@@ -20,6 +20,7 @@ export interface TagRemoverElements {
     convertEntities: HTMLInputElement;
   };
   tagListInput?: HTMLInputElement;
+  tagListPanel?: HTMLElement;
 }
 
 export interface RemovalResult {

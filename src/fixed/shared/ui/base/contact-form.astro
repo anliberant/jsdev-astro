@@ -1,0 +1,283 @@
+---
+import Button from './button.astro';
+---
+
+<form
+  class='contact-form'
+  action='/thanks'
+  method='post'
+  data-netlify='true'
+  data-netlify-honeypot='bot-field'>
+  <input
+    type='hidden'
+    name='bot-field'
+  />
+  <input
+    type='hidden'
+    name='form-name'
+    value='contact'
+  />
+
+  <div class='form-group'>
+    <label
+      for='name'
+      class='form-label'
+      >Name</label
+    >
+    <input
+      type='text'
+      id='name'
+      name='name'
+      class='form-input'
+      placeholder='Enter your name'
+      required
+      minlength='2'
+    />
+  </div>
+
+  <div class='form-group'>
+    <label
+      for='email'
+      class='form-label'
+      >Email</label
+    >
+    <input
+      type='email'
+      id='email'
+      name='email'
+      class='form-input'
+      placeholder='Enter your email'
+      required
+    />
+  </div>
+
+  <div class='form-group'>
+    <label
+      for='phone'
+      class='form-label'
+      >Phone</label
+    >
+    <input
+      type='tel'
+      id='phone'
+      name='phone'
+      class='form-input'
+      placeholder='Enter your phone number'
+    />
+  </div>
+
+  <div class='form-group'>
+    <label
+      for='message'
+      class='form-label'
+      >Message</label
+    >
+    <textarea
+      id='message'
+      name='message'
+      class='form-textarea'
+      placeholder='Enter your message'
+      rows='5'
+      required
+      minlength='20'
+    ></textarea>
+  </div>
+  <Button
+    type='submit'
+    class='form-button'
+    >Submit</Button
+  >
+</form>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('.contact-form') as HTMLFormElement;
+    const nameInput = document.getElementById('name') as HTMLInputElement;
+    const emailInput = document.getElementById('email') as HTMLInputElement;
+    const messageInput = document.getElementById('message') as HTMLTextAreaElement;
+
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        let isValid = true;
+
+        clearErrors();
+
+        if (!nameInput.value || nameInput.value.length < 2) {
+          showError(nameInput, 'Name must be at least 2 characters long');
+          isValid = false;
+        }
+
+        if (!emailInput.value || !isValidEmail(emailInput.value)) {
+          showError(emailInput, 'Please enter a valid email address');
+          isValid = false;
+        }
+
+        if (!messageInput.value || messageInput.value.length < 20) {
+          showError(messageInput, 'Message must be at least 20 characters long');
+          isValid = false;
+        }
+
+        if (!isValid) {
+          e.preventDefault();
+        }
+      });
+    }
+
+    function isValidEmail(email: string): boolean {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+
+    function showError(input: HTMLElement, message: string) {
+      input.classList.add('error');
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = message;
+      input.parentNode?.appendChild(errorDiv);
+    }
+
+    function clearErrors() {
+      const errorInputs = document.querySelectorAll('.error');
+      const errorMessages = document.querySelectorAll('.error-message');
+
+      errorInputs.forEach(input => input.classList.remove('error'));
+      errorMessages.forEach(message => message.remove());
+    }
+  });
+</script>
+
+<style>
+  .contact-form {
+    margin-bottom: 4rem;
+    margin-top: 1.25rem;
+    display: flex;
+    max-width: 80%;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #374151;
+    margin-bottom: 0.25rem;
+  }
+
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    line-height: 1.5;
+    background-color: #ffffff;
+    transition:
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out;
+  }
+
+  .form-input:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: #9ca3af;
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .form-button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease-in-out,
+      transform 0.15s ease-in-out;
+    align-self: flex-start;
+  }
+
+  .form-button:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  .form-button:active {
+    transform: translateY(0);
+  }
+
+  .form-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+
+  .form-input.error,
+  .form-textarea.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+
+  .error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  :global(.dark) .form-label {
+    color: #f3f4f6;
+  }
+
+  :global(.dark) .form-input,
+  :global(.dark) .form-textarea {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f3f4f6;
+  }
+
+  :global(.dark) .form-input:focus,
+  :global(.dark) .form-textarea:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  }
+
+  :global(.dark) .form-input::placeholder,
+  :global(.dark) .form-textarea::placeholder {
+    color: #6b7280;
+  }
+
+  @media (min-width: 768px) {
+    .contact-form {
+      max-width: 60%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .contact-form {
+      max-width: 50%;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .contact-form {
+      max-width: 100%;
+    }
+  }
+</style>

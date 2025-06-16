@@ -1,0 +1,163 @@
+---
+import { Picture } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { Fragment } from 'astro/jsx-runtime';
+
+import Badge from '@/shared/ui/base/badge.astro';
+import Card from '@/shared/ui/base/card.astro';
+import { formatDate } from '@/shared/utils/time';
+
+type Props = {
+  post: CollectionEntry<'posts'>;
+  class?: string;
+};
+
+const { post } = Astro.props;
+
+const truncatedDesc =
+  post.data.desc.length > 120 ? post.data.desc.substring(0, 120) + '...' : post.data.desc;
+---
+
+<Card class='post-card'>
+  <Fragment slot='header'>
+    <div class='post-image-container'>
+      {
+        post.data.image && (
+          <Picture
+            src={post.data.image}
+            alt={post.data.title}
+            title={post.data.title}
+            class='post-image'
+            width={400}
+            height={250}
+            loading='lazy'
+            decoding='async'
+            formats={['avif', 'webp']}
+            quality={80}
+            sizes='(max-width: 768px) 100vw, 400px'
+          />
+        )
+      }
+    </div>
+  </Fragment>
+
+  <Fragment slot='content'>
+    <div class='post-meta'>
+      <span class='post-date'>{formatDate(post.data.date)}</span>
+      <Badge title={post.data.category}>
+        {post.data.category}
+      </Badge>
+    </div>
+    <a
+      href={`/${post.data.permalink}/`}
+      title={post.data.title}
+      class='post-title-link'>
+      <h3 class='post-title'>
+        {post.data.title}
+      </h3>
+    </a>
+    <p class='post-description'>
+      {truncatedDesc}
+    </p>
+  </Fragment>
+</Card>
+
+<style>
+  .post-card {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--border-radius);
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+  }
+
+  .post-image-container {
+    display: none;
+    padding: 0;
+  }
+
+  @media (min-width: 768px) {
+    .post-image-container {
+      display: block;
+    }
+  }
+
+  .post-image {
+    height: 120px;
+    max-height: 120px;
+    width: 100%;
+    border-radius: var(--border-radius);
+    object-fit: cover;
+  }
+
+  @media (min-width: 768px) {
+    .post-image {
+      height: 240px;
+      max-height: none;
+    }
+  }
+
+  .post-meta {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+  }
+
+  @media (min-width: 768px) {
+    .post-meta {
+      padding: 0;
+    }
+  }
+
+  .post-date {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--muted-foreground, #64748b);
+  }
+  .post-title-link {
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .post-title {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    height: 100%;
+    font-family: var(--font-serif);
+    transition: text-decoration 0.2s;
+    font-weight: 400;
+    font-size: 1.5rem;
+    line-height: 1.5rem;
+    letter-spacing: -0.01562em;
+  }
+
+  .post-title:hover {
+    text-decoration: underline;
+  }
+
+  @media (min-width: 768px) {
+    .post-title {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .post-title {
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  .post-description {
+    margin-top: 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 0;
+  }
+</style>

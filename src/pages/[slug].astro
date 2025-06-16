@@ -12,7 +12,7 @@ import Separator from '@/shared/ui/base/separator.astro';
 import Tags from '@/shared/ui/layout/tags.astro';
 import Toc from '@/shared/ui/layout/toc.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
-import { formatDate } from '@/shared/utils';
+import { formatDate } from '@/shared/utils/index';
 
 export const getStaticPaths = (async () => {
   const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);

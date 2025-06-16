@@ -1,0 +1,24 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+import IframeGenerator from './ui/iframe-generator.astro';
+
+const { title, description } = Astro.props;
+
+const breadcrumbItems = generateToolsBreadcrumbs('HTML Iframe Generator');
+---
+
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
+
+<HeadingBlock
+  title={title}
+  description={description}
+  class='mt-0'
+/>
+
+<IframeGenerator />

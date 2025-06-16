@@ -1,0 +1,29 @@
+---
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import ContactForm from '@/shared/ui/base/contact-form.astro';
+
+const title = 'Contact Page';
+const description =
+  "Get in touch with us through our Contact page. Whether you have questions, feedback, or need support, we're here to help. Find our contact details, email, and social media links for quick and easy communication.";
+---
+
+<BaseLayout
+  title={title}
+  description={description}>
+  <main class='main mt-10'>
+    <h1 class='post-title'>Get in Touch with Us</h1>
+    <p class='intro-text'>
+      Welcome to our Contact page! We're here to assist you with any questions, feedback, or
+      inquiries you may have. Feel free to reach out to us via the provided form, email, or social
+      media. We look forward to connecting with you!
+    </p>
+    <ContactForm />
+  </main>
+</BaseLayout>
+
+<style>
+  .intro-text {
+    margin-top: 1rem;
+    line-height: 1.6;
+  }
+</style>

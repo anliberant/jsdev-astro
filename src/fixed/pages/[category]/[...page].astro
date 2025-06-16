@@ -1,0 +1,139 @@
+---
+import { getCollection } from 'astro:content';
+
+import { siteConfig } from '@/app/config/site';
+import BaseLayout from '@/app/layouts/base-layout.astro';
+import CategoryHead from '@/entities/categories/ui/category-head.astro';
+import Posts from '@/entities/post/posts.astro';
+import { generateCategoryBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import Pagination from '@/shared/ui/layout/pagination.astro';
+
+export const getStaticPaths = async ({ paginate }) => {
+  try {
+    const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);
+
+    if (allPosts.length === 0) {
+      console.warn('⚠️ No posts found!');
+      return [];
+    }
+
+    const postsByCategory = allPosts.reduce((acc, post) => {
+      const categories = Array.isArray(post.data.category)
+        ? post.data.category
+        : post.data.category
+          ? [post.data.category]
+          : [];
+
+      categories.forEach(category => {
+        if (category && typeof category === 'string') {
+          const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
+          if (!acc[categorySlug]) {
+            acc[categorySlug] = {
+              name: category,
+              posts: [],
+            };
+          }
+          acc[categorySlug].posts.push(post);
+        }
+      });
+
+      return acc;
+    }, {});
+
+    if (Object.keys(postsByCategory).length === 0) {
+      console.warn('⚠️ No categories found!');
+      return [];
+    }
+
+    Object.keys(postsByCategory).forEach(categorySlug => {
+      postsByCategory[categorySlug].posts.sort((a, b) => {
+        const dateA = new Date(a.data.date);
+        const dateB = new Date(b.data.date);
+        return dateB.getTime() - dateA.getTime();
+      });
+    });
+
+    const allPaths = [];
+
+    for (const [categorySlug, categoryData] of Object.entries(
+      postsByCategory
+    )) {
+      const pages = paginate(categoryData.posts, {
+        params: { category: categorySlug },
+        pageSize: siteConfig.postsPerPage,
+        props: {
+          categoryName: categoryData.name,
+          totalPosts: categoryData.posts.length,
+        },
+      });
+
+      allPaths.push(...pages);
+    }
+
+    return allPaths;
+  } catch (error) {
+    console.error('❌ Error in getStaticPaths:', error);
+    throw error;
+  }
+};
+
+const { category } = Astro.params;
+const page = Astro.props.page;
+const { categoryName, totalPosts } = Astro.props;
+
+const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
+const currentPage = page.currentPage;
+
+if (!category || !page || !categoryName) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const breadcrumbItems = generateCategoryBreadcrumbs(
+  categoryName,
+  category,
+  currentPage > 1 ? currentPage : undefined
+);
+
+const pageTitle =
+  currentPage === 1
+    ? `${categoryName} Articles | JSdev`
+    : `${categoryName} Articles - Page ${currentPage} | JSdev`;
+
+const pageDescription = `Explore ${totalPosts} ${categoryName.toLowerCase()} posts and tutorials. ${
+  currentPage > 1
+    ? `Page ${currentPage} of ${page.lastPage}.`
+    : 'Learn from our comprehensive guides and examples.'
+}`;
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <main class='main'>
+    {currentPage > 1 && <Breadcrumbs items={breadcrumbItems} class='mt-10' />}
+
+    {
+      currentPage === 1 ? (
+        <CategoryHead
+          categoryName={categoryName}
+          currentPage={currentPage}
+          totalPosts={totalPosts}
+          class='mt-10'
+        />
+      ) : (
+        <h1>
+          {categoryName} Page {page.currentPage}
+        </h1>
+      )
+    }
+    <Posts posts={page.data} />
+    {
+      numberOfPages > 1 && (
+        <Pagination
+          numPages={page.lastPage}
+          currentPage={currentPage}
+          slug={category}
+        />
+      )
+    }
+  </main>
+</BaseLayout>

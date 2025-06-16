@@ -1,0 +1,509 @@
+---
+import Button from '@/shared/ui/base/button.astro';
+
+const defaultContent = `# Welcome to MDX Editor
+
+This is a **markdown** editor with *live preview*!
+
+## Features
+
+- Live preview
+- Markdown syntax support
+- Import/Export files
+- Responsive design
+
+### Code Example
+
+\`\`\`javascript
+function hello() {
+  console.log("Hello, World!");
+}
+\`\`\`
+
+\`\`\`python
+def greet():
+    print("Hello, World!")
+\`\`\`
+
+> This is a quote with **bold** text.
+
+---
+
+### List Example
+
+1. First item
+2. Second item
+   - Nested item
+   - Another nested item
+3. Third item
+
+### Table Example
+
+| Feature | Status |
+|---------|--------|
+| Live Preview | ✅ |
+| Export | ✅ |
+| Import | ✅ |
+| Syntax Highlighting | ✅ |
+
+### Links
+
+[Markdown Guide](https://www.markdownguide.org/)
+[Astro](https://astro.build/)`;
+---
+
+<div class='main-content'>
+  <div
+    class='editor-pane'
+    id='editorPane'>
+    <textarea
+      class='editor'
+      id='editor'
+      placeholder='Start writing your Markdown content...'
+      spellcheck='false'
+      >{defaultContent}</textarea
+    >
+  </div>
+
+  <div
+    class='preview-pane'
+    id='previewPane'>
+    <div
+      class='preview'
+      id='preview'
+    ></div>
+  </div>
+
+  <div
+    class='html-pane hidden'
+    id='htmlPane'>
+    <div class='html-container'>
+      <Button
+        variant='copy'
+        size='sm'
+        class='copy-button'
+        id='copyHtmlBtn'>
+        Copy HTML
+      </Button>
+      <div
+        class='html-output'
+        id='htmlOutput'
+      ></div>
+    </div>
+  </div>
+
+  <!-- Hidden error/success messages for compatibility -->
+  <div
+    id='errorMessage'
+    class='message error-message hidden'
+    role='alert'
+  ></div>
+  <div
+    id='successMessage'
+    class='message success-message hidden'
+    role='status'
+  ></div>
+
+  <!-- Hidden stats for compatibility -->
+  <div
+    id='inputStats'
+    class='stats hidden'
+  ></div>
+  <div
+    id='outputStats'
+    class='stats hidden'
+  ></div>
+
+  <!-- Hidden converter controls for compatibility -->
+  <button
+    id='convertBtn'
+    class='hidden'
+    style='display: none;'
+  ></button>
+  <button
+    id='clearBtn'
+    class='hidden'
+    style='display: none;'
+  ></button>
+  <input
+    type='checkbox'
+    id='modeToggle'
+    class='hidden'
+    style='display: none;'
+  />
+  <div
+    id='inputLabel'
+    class='hidden'
+    style='display: none;'
+  ></div>
+  <div
+    id='outputLabel'
+    class='hidden'
+    style='display: none;'
+  ></div>
+</div>
+
+<style>
+  .main-content {
+    display: flex;
+    height: calc(100vh - 200px);
+    min-height: 500px;
+    max-height: 800px;
+    position: relative;
+  }
+
+  .editor-pane,
+  .preview-pane,
+  .html-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    overflow: hidden;
+  }
+
+  .editor-pane {
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .preview-pane {
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .html-pane {
+    background: #f8fafc;
+  }
+
+  .editor-pane.full-width,
+  .preview-pane.full-width,
+  .html-pane.full-width {
+    flex: none;
+    width: 100%;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .editor {
+    width: 100%;
+    height: 100%;
+    padding: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    border: none;
+    outline: none;
+    resize: none;
+    background: white;
+    color: #1e293b;
+    tab-size: 2;
+    white-space: pre-wrap;
+  }
+
+  .editor::placeholder {
+    color: #94a3b8;
+  }
+
+  .editor:focus {
+    background: #fefefe;
+  }
+
+  .preview {
+    padding: 1.5rem;
+    max-width: none;
+    line-height: 1.6;
+    color: #1e293b;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  .preview h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 2rem 0 1.5rem 0;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+  }
+
+  .preview h1:first-child {
+    margin-top: 0;
+  }
+
+  .preview h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem 0;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 0.25rem;
+  }
+
+  .preview h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem 0;
+    color: #1e293b;
+  }
+
+  .preview h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 1.25rem 0 0.5rem 0;
+    color: #374151;
+  }
+
+  .preview p {
+    margin-bottom: 1rem;
+    color: #374151;
+  }
+
+  .preview strong {
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .preview em {
+    font-style: italic;
+  }
+
+  .preview del {
+    text-decoration: line-through;
+    color: #6b7280;
+  }
+
+  .preview code {
+    background: #f1f5f9;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    color: #dc2626;
+    border: 1px solid #e2e8f0;
+  }
+
+  .preview pre {
+    background: #1e293b;
+    color: #10b981;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    border: 1px solid #334155;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    line-height: 1.5;
+  }
+
+  .preview pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    border: none;
+    font-size: 0.8125rem;
+  }
+
+  .preview blockquote {
+    border-left: 4px solid #3b82f6;
+    background: #f8fafc;
+    margin: 1rem 0;
+    padding: 1rem 1.5rem;
+    border-radius: 0.375rem;
+    color: #475569;
+    font-style: italic;
+  }
+
+  .preview hr {
+    border: none;
+    border-top: 2px solid #e2e8f0;
+    margin: 2rem 0;
+  }
+
+  .preview ul,
+  .preview ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+  }
+
+  .preview li {
+    margin-bottom: 0.5rem;
+    color: #374151;
+  }
+
+  .preview ul {
+    list-style-type: disc;
+  }
+
+  .preview ol {
+    list-style-type: decimal;
+  }
+
+  .preview ul ul,
+  .preview ol ul {
+    list-style-type: circle;
+  }
+
+  .preview table {
+    border-collapse: collapse;
+    border: 1px solid #e2e8f0;
+    margin: 1rem 0;
+    width: 100%;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .preview th,
+  .preview td {
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    text-align: left;
+  }
+
+  .preview th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .preview td {
+    color: #374151;
+  }
+
+  .preview a {
+    color: #3b82f6;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .preview a:hover {
+    color: #2563eb;
+  }
+
+  .preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  .html-container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+  }
+
+  .html-output {
+    padding: 1.5rem;
+    padding-top: 4rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    background: #f8fafc;
+    color: #1e293b;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  /* Hidden compatibility elements */
+  .message {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .stats {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      flex-direction: column;
+      height: auto;
+      min-height: 400px;
+    }
+
+    .editor-pane,
+    .preview-pane,
+    .html-pane {
+      width: 100%;
+      height: 50vh;
+      border-right: none;
+    }
+
+    .editor-pane {
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .preview-pane {
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .editor {
+      padding: 1rem;
+      font-size: 0.8125rem;
+    }
+
+    .preview {
+      padding: 1rem;
+    }
+
+    .html-output {
+      padding: 1rem;
+      padding-top: 3rem;
+    }
+
+    .copy-button {
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+  }
+
+  :global(.dark) .editor-pane,
+  :global(.dark) .preview-pane,
+  :global(.dark) .html-pane {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  :global(.dark) .editor {
+    background: #1f2937;
+    color: #f3f4f6;
+  }
+
+  :global(.dark) .editor:focus {
+    background: #1f2937;
+  }
+
+  :global(.dark) .preview {
+    color: #f3f4f6;
+  }
+
+  :global(.dark) .preview h1,
+  :global(.dark) .preview h2,
+  :global(.dark) .preview h3 {
+    color: #f3f4f6;
+    border-color: #4b5563;
+  }
+
+  :global(.dark) .html-output {
+    background: #111827;
+    color: #f3f4f6;
+  }
+</style>

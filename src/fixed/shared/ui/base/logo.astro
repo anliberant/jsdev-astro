@@ -1,0 +1,42 @@
+---
+const { isHeader = true } = Astro.props;
+const width = isHeader ? 80 : 128;
+const height = isHeader ? 24.5 : 36;
+---
+
+<svg
+  width={width}
+  height={height}
+  viewBox='0 0 64 18'
+  fill='none'
+  xmlns='http://www.w3.org/2000/svg'
+>
+  <title>JavaScript Development Space</title>
+  <path
+    d='M48.1183 2.29162V0L37.2471 0.000838592V17.4708H48.1183V15.1788H39.5064V9.881H46.8475V7.58939H39.5064V2.29162H48.1183Z'
+    class='fill-foreground'></path>
+  <path
+    d='M0 0V2.29162H4.47775V13.8143L3.30281 15.0056H0V17.2972H4.23507V17.2934L4.23879 17.2972L6.73667 14.7494V0H0Z'
+    class='fill-main'></path>
+  <path
+    d='M35.2359 8.76351L26.6417 0.0297852H24.3828V17.4998H26.6417L35.2359 8.76351ZM26.6417 3.28753L32.0431 8.76561L26.6417 14.2437V3.28753Z'
+    class='fill-foreground'></path>
+  <path
+    d='M19.5588 5.1552V0H9.81738V9.59377H17.2995V15.1796H12.0767V12.316H9.81738V17.4708H19.5588V7.3055L12.0767 7.30341V2.29162H17.2995V5.1552H19.5588Z'
+    class='fill-main'></path>
+  <path
+    d='M50.2373 0V2.2912L56.3385 18H57.8992L63.9996 2.2912H64.0005V0H50.2373ZM57.1191 13.7468L52.6661 2.29162H61.5712L57.1191 13.7468Z'
+    class='fill-foreground'></path>
+</svg>
+
+<style>
+  .fill-foreground {
+    fill: hsl(var(--foreground));
+  }
+  .dark .fill-foreground {
+    fill: white;
+  }
+  .fill-main {
+    fill: #558ca2;
+  }
+</style>

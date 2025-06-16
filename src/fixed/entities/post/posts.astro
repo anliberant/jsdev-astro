@@ -1,0 +1,37 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+import MinimalPostCard from './ui/minimal-post-card.astro';
+
+type Props = {
+  posts?: CollectionEntry<'posts'>[];
+  className?: string;
+};
+
+const { posts = [], className = '' } = Astro.props;
+
+const firstNinePosts = posts.slice(0, 9);
+const remainingPosts = posts.slice(9);
+---
+
+<section class='posts-section'>
+  <div class={`container-center first-batch ${className}`}>
+    {firstNinePosts.map(post => <MinimalPostCard post={post} />)}
+  </div>
+
+  {
+    remainingPosts.length > 0 && (
+      <div class={`container-center second-batch ${className}`}>
+        {remainingPosts.map(post => (
+          <MinimalPostCard post={post} />
+        ))}
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .posts-section {
+    overflow: hidden;
+  }
+</style>

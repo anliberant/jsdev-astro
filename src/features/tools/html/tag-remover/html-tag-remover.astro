@@ -31,6 +31,33 @@ const converterOptions = [
   class='mt-10'
 />
 
+<!-- Tag List Panel (initially hidden) -->
+<div
+  id='tagListPanel'
+  class='tag-list-panel hidden'>
+  <div class='tag-list-content'>
+    <label
+      for='tagListInput'
+      class='tag-list-label'>
+      Specific tags to remove (comma-separated):
+    </label>
+    <input
+      type='text'
+      id='tagListInput'
+      class='tag-list-input'
+      placeholder='e.g. script, style, div, span'
+    />
+    <div class='tag-list-help'>
+      <p>Enter tag names separated by commas. Examples:</p>
+      <ul>
+        <li><code>script, style</code> - Remove script and style tags</li>
+        <li><code>div, span, p</code> - Remove specific HTML tags</li>
+        <li><code>a, img</code> - Remove links and images</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 <div class='main-content'>
   <ConverterPanel
     type='input'
@@ -131,3 +158,105 @@ const converterOptions = [
     });
   }
 </script>
+
+<style>
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .tag-list-panel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius);
+    margin-top: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .tag-list-panel.hidden {
+    display: none;
+  }
+
+  .tag-list-content {
+    max-width: 100%;
+  }
+
+  .tag-list-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.875rem;
+  }
+
+  .tag-list-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    background: white;
+    color: #374151;
+    margin-bottom: 1rem;
+  }
+
+  .tag-list-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .tag-list-input::placeholder {
+    color: #9ca3af;
+  }
+
+  .tag-list-help {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .tag-list-help p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    color: #374151;
+    font-weight: 500;
+  }
+
+  .tag-list-help ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+  }
+
+  .tag-list-help li {
+    margin-bottom: 0.25rem;
+    font-size: 0.8125rem;
+    color: #6b7280;
+  }
+
+  .tag-list-help code {
+    background: #f3f4f6;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #374151;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .tag-list-panel {
+      margin-top: 0.5rem;
+      padding: 1rem;
+    }
+  }
+</style>

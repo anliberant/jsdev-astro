@@ -6,6 +6,9 @@ import { remarkReadingTime } from './src/shared/utils/remark-reading-time.mjs';
 
 export default defineConfig({
   site: 'https://jsdev.space',
+  alias: {
+    '@': './src'
+  },
 
   integrations: [
     mdx(),

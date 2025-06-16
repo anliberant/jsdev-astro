@@ -1,0 +1,47 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+import { cn } from '@/shared/utils/classes';
+
+import PostCard from './ui/post-card.astro';
+
+export interface Props {
+  posts?: CollectionEntry<'posts'>[];
+  class?: string;
+}
+
+const { posts = [], class: className = '' } = Astro.props;
+
+const sectionClasses = cn('featured-posts', className);
+---
+
+<section class={sectionClasses}>
+  {
+    posts.map((post, idx) => {
+      return <PostCard post={post} />;
+    })
+  }
+</section>
+
+<style>
+  .featured-posts {
+    margin-top: 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    justify-content: space-between;
+    column-gap: 1.25rem;
+    row-gap: 2.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .featured-posts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .featured-posts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

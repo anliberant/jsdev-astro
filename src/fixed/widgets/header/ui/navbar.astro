@@ -1,0 +1,93 @@
+---
+import { Github, Rss } from '@lucide/astro';
+
+import SearchWithData from '@/features/search/ui/search-with-data.astro';
+import Logo from '@/shared/ui/base/logo.astro';
+
+import Navigation from './navigation.astro';
+import ThemeSwitcher from './theme-switcher.astro';
+---
+
+<>
+  <a
+    href='/'
+    aria-label='Main page'
+    class='logo'>
+    <Logo />
+  </a>
+  <Navigation />
+  <div class='header-panel'>
+    <!-- <Search /> -->
+    <SearchWithData placeholder='Search posts, tutorials, and more...' />
+    <div class='header-icons'>
+      <ThemeSwitcher />
+      <a
+        href='https://jsdev.space/rss.xml'
+        aria-label='RSS'
+        class='group cursor-pointer'>
+        <Rss
+          size={20}
+          stroke-width={1}
+          class='transition-all duration-300 hover:scale-125 hover:fill-blueLight hover:stroke-blueLight'
+        />
+      </a>
+      <a
+        href='https://github.com/anliberant/jsdev-astro'
+        aria-label='RSS'
+        class='group cursor-pointer'>
+        <Github
+          size={20}
+          stroke-width={1}
+          class='transition-all duration-300 hover:scale-125 hover:fill-blueLight hover:stroke-blueLight'
+        /></a
+      >
+    </div>
+  </div>
+</>
+<style>
+  .logo {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+  .header-panel {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    min-width: 80px;
+    min-height: 64px;
+  }
+  @media (min-width: 768px) {
+    .header-panel {
+      gap: 0.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .header-panel {
+      gap: 1rem;
+    }
+    .logo {
+      margin-right: 1rem;
+    }
+  }
+  @media (min-width: 1280px) {
+    .header-panel {
+      min-width: 280px;
+      gap: 2.5rem;
+    }
+    .logo {
+      margin-right: 1.5rem;
+    }
+  }
+  .header-icons {
+    display: flex !important;
+    gap: 0.75rem;
+    align-items: center;
+    padding-right: 1rem;
+  }
+</style>

@@ -51,6 +51,8 @@ export interface HtmlToJsxElements extends BaseConverterElements {
 export interface HtmlToPugElements extends BaseConverterElements {
   htmlInput: HTMLTextAreaElement;
   pugOutput: HTMLTextAreaElement;
+  errorMessage: HTMLElement;
+  successMessage: HTMLElement;
   inputStats: HTMLElement;
   outputStats: HTMLElement;
   options: {
@@ -212,6 +214,8 @@ export interface HtmlMarkdownElements extends BaseConverterElements {
 export interface HtmlEncoderElements extends BaseConverterElements {
   htmlInput: HTMLTextAreaElement;
   htmlOutput: HTMLTextAreaElement;
+  errorMessage: HTMLElement;
+  successMessage: HTMLElement;
   inputStats: HTMLElement;
   outputStats: HTMLElement;
   options: {
