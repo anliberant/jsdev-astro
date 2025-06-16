@@ -28,8 +28,8 @@ export class HtmlMarkdownController extends BaseConverterController<HtmlMarkdown
       inputStats: this.safeGetElement<HTMLElement>('inputStats') || createElement<HTMLElement>('div'),
       outputStats: this.safeGetElement<HTMLElement>('outputStats') || createElement<HTMLElement>('div'),
       modeToggle: this.safeGetElement<HTMLInputElement>('modeToggle') || createElement<HTMLInputElement>('input'),
-      inputLabel: this.safeGetElement<HTMLElement>('inputLabel') || createElement<HTMLElement>('div'),
-      outputLabel: this.safeGetElement<HTMLElement>('outputLabel') || createElement<HTMLElement>('div')
+      inputLabel: createElement<HTMLElement>('div'),
+      outputLabel: createElement<HTMLElement>('div')
     };
   }
 
@@ -53,7 +53,16 @@ export class HtmlMarkdownController extends BaseConverterController<HtmlMarkdown
     this.safeAddEventListener(copyBtn, 'click', () => this.handleCopy('markdownOutput', 'copyBtn'));
 
     const sampleBtn = this.safeGetElement('sampleBtn');
-    this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
+    if (sampleBtn) {
+      console.log('Sample button found, adding click handler');
+      this.safeAddEventListener(sampleBtn, 'click', (e) => {
+        console.log('Sample button clicked!');
+        e.preventDefault();
+        this.loadSample();
+      });
+    } else {
+      console.error('Sample button not found!');
+    }
 
     if (this.elements.modeToggle) {
       this.safeAddEventListener(this.elements.modeToggle, 'change', () => this.toggleMode());

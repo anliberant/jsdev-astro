@@ -25,19 +25,23 @@ export abstract class BaseConverterController<T> {
       return false;
     }
     
-    // Check if ANY of the required elements exist
-    const hasAnyElement = requiredIds.some(id => {
+    // Check if ALL required elements exist (изменено с ANY на ALL)
+    const hasAllElements = requiredIds.every(id => {
       try {
         const element = document.getElementById(id);
-        return element !== null;
+        const exists = element !== null;
+        if (!exists) {
+          console.log(`${this.converterName}: Missing required element: ${id}`);
+        }
+        return exists;
       } catch (error) {
         console.error(`Error checking element ${id}:`, error);
         return false;
       }
     });
     
-    if (!hasAnyElement) {
-      console.log(`${this.converterName}: Required elements not found, skipping`);
+    if (!hasAllElements) {
+      console.log(`${this.converterName}: Not all required elements found, skipping`);
       return false;
     }
     
@@ -304,5 +308,91 @@ export abstract class BaseConverterController<T> {
     if (typeof window !== 'undefined') {
       delete (window as any)[`${this.converterName.toLowerCase()}Controller`];
     }
+  }
+
+  protected findSampleButton(): HTMLElement | null {
+    // Пробуем разные способы найти кнопку Sample
+    let sampleBtn = this.safeGetElement('sampleBtn');
+    
+    if (!sampleBtn) {
+      // Пробуем найти по тексту
+      const buttons = document.querySelectorAll('button');
+      for (const button of buttons) {
+        if (button.textContent?.trim().toLowerCase() === 'sample') {
+          sampleBtn = button;
+          break;
+        }
+      }
+    }
+    
+    if (!sampleBtn) {
+      // Пробуем найти по классу или другим атрибутам
+      sampleBtn = document.querySelector('button[variant="sample"]') as HTMLElement;
+    }
+    
+    if (!sampleBtn) {
+      // Последняя попытка - ищем в converter-panel
+      const inputPanel = document.querySelector('[data-panel="input"]');
+      if (inputPanel) {
+        sampleBtn = inputPanel.querySelector('button') as HTMLElement;
+      }
+    }
+    
+    return sampleBtn;
+  }
+
+  protected bindSampleButton(loadSampleFn: () => void): void {
+    const bindSample = () => {
+      const sampleBtn = this.findSampleButton();
+      if (sampleBtn) {
+        console.log(`${this.converterName}: Sample button found, binding event`);
+        this.safeAddEventListener(sampleBtn, 'click', (e) => {
+          console.log(`${this.converterName}: Sample button clicked!`);
+          e.preventDefault();
+          loadSampleFn();
+        });
+        return true;
+      }
+      return false;
+    };
+
+    if (!bindSample()) {
+      console.log(`${this.converterName}: Sample button not found immediately, retrying...`);
+      
+      setTimeout(() => {
+        if (!bindSample()) {
+          setTimeout(() => {
+            if (!bindSample()) {
+              console.warn(`${this.converterName}: Failed to find Sample button after multiple attempts`);
+            }
+          }, 1000);
+        }
+      }, 500);
+    }
+  }
+
+  protected debugDOMElements(): void {
+    console.log(`${this.converterName}: DOM Debug Info:`);
+    console.log('- Required elements check:');
+    
+    this.getRequiredElementIds().forEach(id => {
+      const element = document.getElementById(id);
+      console.log(`  ${id}: ${element ? '✓ found' : '✗ missing'}`);
+    });
+    
+    console.log('- All buttons on page:');
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach((btn, index) => {
+      console.log(`  Button ${index}: id="${btn.id}", text="${btn.textContent?.trim()}", classes="${btn.className}"`);
+    });
+    
+    console.log('- Sample button search results:');
+    const sampleById = document.getElementById('sampleBtn');
+    const sampleByText = Array.from(document.querySelectorAll('button')).find(btn => 
+      btn.textContent?.trim().toLowerCase() === 'sample'
+    );
+    
+    console.log(`  By ID (#sampleBtn): ${sampleById ? '✓ found' : '✗ missing'}`);
+    console.log(`  By text content: ${sampleByText ? '✓ found' : '✗ missing'}`);
   }
 }
