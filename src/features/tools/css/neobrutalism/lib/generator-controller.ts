@@ -98,24 +98,60 @@ export class NeobrutalistmButtonController {
   }
 
   private initializeInputValues(): void {
-    this.elements.textInput.value = this.currentConfig.text;
-    this.elements.backgroundColorInput.value = this.currentConfig.backgroundColor;
-    this.elements.textColorInput.value = this.currentConfig.textColor;
-    this.elements.borderColorInput.value = this.currentConfig.borderColor;
-    this.elements.shadowColorInput.value = this.currentConfig.shadowColor;
-    this.elements.fontSizeInput.value = this.currentConfig.fontSize.toString();
-    this.elements.borderWidthInput.value = this.currentConfig.borderWidth.toString();
-    this.elements.shadowOffsetXInput.value = this.currentConfig.shadowOffsetX.toString();
-    this.elements.shadowOffsetYInput.value = this.currentConfig.shadowOffsetY.toString();
-    this.elements.borderRadiusInput.value = this.currentConfig.borderRadius.toString();
-    this.elements.paddingXInput.value = this.currentConfig.paddingX.toString();
-    this.elements.paddingYInput.value = this.currentConfig.paddingY.toString();
-    this.elements.fontWeightSelect.value = this.currentConfig.fontWeight;
-    this.elements.fontFamilyInput.value = this.currentConfig.fontFamily;
-    this.elements.textTransformSelect.value = this.currentConfig.textTransform;
-    this.elements.letterSpacingInput.value = this.currentConfig.letterSpacing.toString();
-    this.elements.hoverEffectSelect.value = this.currentConfig.hoverEffect;
-    this.elements.animationDurationInput.value = this.currentConfig.animationDuration.toString();
+    if (this.elements.textInput instanceof HTMLInputElement) {
+      this.elements.textInput.value = this.currentConfig.text;
+    }
+    if (this.elements.backgroundColorInput instanceof HTMLInputElement) {
+      this.elements.backgroundColorInput.value = this.currentConfig.backgroundColor;
+    }
+    if (this.elements.textColorInput instanceof HTMLInputElement) {
+      this.elements.textColorInput.value = this.currentConfig.textColor;
+    }
+    if (this.elements.borderColorInput instanceof HTMLInputElement) {
+      this.elements.borderColorInput.value = this.currentConfig.borderColor;
+    }
+    if (this.elements.shadowColorInput instanceof HTMLInputElement) {
+      this.elements.shadowColorInput.value = this.currentConfig.shadowColor;
+    }
+    if (this.elements.fontSizeInput instanceof HTMLInputElement) {
+      this.elements.fontSizeInput.value = this.currentConfig.fontSize.toString();
+    }
+    if (this.elements.borderWidthInput instanceof HTMLInputElement) {
+      this.elements.borderWidthInput.value = this.currentConfig.borderWidth.toString();
+    }
+    if (this.elements.shadowOffsetXInput instanceof HTMLInputElement) {
+      this.elements.shadowOffsetXInput.value = this.currentConfig.shadowOffsetX.toString();
+    }
+    if (this.elements.shadowOffsetYInput instanceof HTMLInputElement) {
+      this.elements.shadowOffsetYInput.value = this.currentConfig.shadowOffsetY.toString();
+    }
+    if (this.elements.borderRadiusInput instanceof HTMLInputElement) {
+      this.elements.borderRadiusInput.value = this.currentConfig.borderRadius.toString();
+    }
+    if (this.elements.paddingXInput instanceof HTMLInputElement) {
+      this.elements.paddingXInput.value = this.currentConfig.paddingX.toString();
+    }
+    if (this.elements.paddingYInput instanceof HTMLInputElement) {
+      this.elements.paddingYInput.value = this.currentConfig.paddingY.toString();
+    }
+    if (this.elements.fontWeightSelect instanceof HTMLSelectElement) {
+      this.elements.fontWeightSelect.value = this.currentConfig.fontWeight;
+    }
+    if (this.elements.fontFamilyInput instanceof HTMLInputElement) {
+      this.elements.fontFamilyInput.value = this.currentConfig.fontFamily;
+    }
+    if (this.elements.textTransformSelect instanceof HTMLSelectElement) {
+      this.elements.textTransformSelect.value = this.currentConfig.textTransform;
+    }
+    if (this.elements.letterSpacingInput instanceof HTMLInputElement) {
+      this.elements.letterSpacingInput.value = this.currentConfig.letterSpacing.toString();
+    }
+    if (this.elements.hoverEffectSelect instanceof HTMLSelectElement) {
+      this.elements.hoverEffectSelect.value = this.currentConfig.hoverEffect;
+    }
+    if (this.elements.animationDurationInput instanceof HTMLInputElement) {
+      this.elements.animationDurationInput.value = this.currentConfig.animationDuration.toString();
+    }
 
     this.updateRangeDisplays();
   }
@@ -187,24 +223,24 @@ export class NeobrutalistmButtonController {
 
   private updateConfig(): void {
     this.currentConfig = {
-      text: this.elements.textInput.value || 'Click Me',
-      backgroundColor: this.elements.backgroundColorInput.value || '#FFEB3B',
-      textColor: this.elements.textColorInput.value || '#000000',
-      borderColor: this.elements.borderColorInput.value || '#000000',
-      shadowColor: this.elements.shadowColorInput.value || '#000000',
-      borderWidth: parseInt(this.elements.borderWidthInput.value) || 3,
-      shadowOffsetX: parseInt(this.elements.shadowOffsetXInput.value) || 4,
-      shadowOffsetY: parseInt(this.elements.shadowOffsetYInput.value) || 4,
-      borderRadius: parseInt(this.elements.borderRadiusInput.value) || 8,
-      fontSize: parseInt(this.elements.fontSizeInput.value) || 16,
-      paddingX: parseInt(this.elements.paddingXInput.value) || 24,
-      paddingY: parseInt(this.elements.paddingYInput.value) || 12,
-      fontWeight: this.elements.fontWeightSelect.value as ButtonConfig['fontWeight'] || '700',
-      fontFamily: this.elements.fontFamilyInput.value || 'Arial, sans-serif',
-      textTransform: this.elements.textTransformSelect.value as ButtonConfig['textTransform'] || 'uppercase',
-      letterSpacing: parseFloat(this.elements.letterSpacingInput.value) || 1,
-      hoverEffect: this.elements.hoverEffectSelect.value as ButtonConfig['hoverEffect'] || 'lift',
-      animationDuration: parseInt(this.elements.animationDurationInput.value) || 200
+      text: (this.elements.textInput as HTMLInputElement).value || 'Click Me',
+      backgroundColor: (this.elements.backgroundColorInput as HTMLInputElement).value || '#FFEB3B',
+      textColor: (this.elements.textColorInput as HTMLInputElement).value || '#000000',
+      borderColor: (this.elements.borderColorInput as HTMLInputElement).value || '#000000',
+      shadowColor: (this.elements.shadowColorInput as HTMLInputElement).value || '#000000',
+      borderWidth: parseInt((this.elements.borderWidthInput as HTMLInputElement).value) || 3,
+      shadowOffsetX: parseInt((this.elements.shadowOffsetXInput as HTMLInputElement).value) || 4,
+      shadowOffsetY: parseInt((this.elements.shadowOffsetYInput as HTMLInputElement).value) || 4,
+      borderRadius: parseInt((this.elements.borderRadiusInput as HTMLInputElement).value) || 8,
+      fontSize: parseInt((this.elements.fontSizeInput as HTMLInputElement).value) || 16,
+      paddingX: parseInt((this.elements.paddingXInput as HTMLInputElement).value) || 24,
+      paddingY: parseInt((this.elements.paddingYInput as HTMLInputElement).value) || 12,
+      fontWeight: (this.elements.fontWeightSelect as HTMLSelectElement).value as ButtonConfig['fontWeight'] || '700',
+      fontFamily: (this.elements.fontFamilyInput as HTMLInputElement).value || 'Arial, sans-serif',
+      textTransform: (this.elements.textTransformSelect as HTMLSelectElement).value as ButtonConfig['textTransform'] || 'uppercase',
+      letterSpacing: parseFloat((this.elements.letterSpacingInput as HTMLInputElement).value) || 1,
+      hoverEffect: (this.elements.hoverEffectSelect as HTMLSelectElement).value as ButtonConfig['hoverEffect'] || 'lift',
+      animationDuration: parseInt((this.elements.animationDurationInput as HTMLInputElement).value) || 200
     };
 
     this.updateRangeDisplays();
@@ -213,15 +249,48 @@ export class NeobrutalistmButtonController {
   }
 
   private updateRangeDisplays(): void {
-    this.elements.fontSizeValue.textContent = `${this.currentConfig.fontSize}px`;
-    this.elements.borderWidthValue.textContent = `${this.currentConfig.borderWidth}px`;
-    this.elements.shadowOffsetXValue.textContent = `${this.currentConfig.shadowOffsetX}px`;
-    this.elements.shadowOffsetYValue.textContent = `${this.currentConfig.shadowOffsetY}px`;
-    this.elements.borderRadiusValue.textContent = `${this.currentConfig.borderRadius}px`;
-    this.elements.paddingXValue.textContent = `${this.currentConfig.paddingX}px`;
-    this.elements.paddingYValue.textContent = `${this.currentConfig.paddingY}px`;
-    this.elements.letterSpacingValue.textContent = `${this.currentConfig.letterSpacing}px`;
-    this.elements.animationDurationValue.textContent = `${this.currentConfig.animationDuration}ms`;
+    if (this.elements.offsetXValue) {
+      this.elements.offsetXValue.textContent = `${this.elements.offsetXInput.value}px`;
+    }
+    if (this.elements.offsetYValue) {
+      this.elements.offsetYValue.textContent = `${this.elements.offsetYInput.value}px`;
+    }
+    if (this.elements.blurRadiusValue) {
+      this.elements.blurRadiusValue.textContent = `${this.elements.blurRadiusInput.value}px`;
+    }
+    if (this.elements.spreadRadiusValue) {
+      this.elements.spreadRadiusValue.textContent = `${this.elements.spreadRadiusInput.value}px`;
+    }
+    if (this.elements.opacityValue) {
+      this.elements.opacityValue.textContent = `${Math.round(parseFloat(this.elements.opacityInput.value) * 100)}%`;
+    }
+    if (this.elements.fontSizeValue) {
+      this.elements.fontSizeValue.textContent = `${this.currentConfig.fontSize}px`;
+    }
+    if (this.elements.borderWidthValue) {
+      this.elements.borderWidthValue.textContent = `${this.currentConfig.borderWidth}px`;
+    }
+    if (this.elements.shadowOffsetXValue) {
+      this.elements.shadowOffsetXValue.textContent = `${this.currentConfig.shadowOffsetX}px`;
+    }
+    if (this.elements.shadowOffsetYValue) {
+      this.elements.shadowOffsetYValue.textContent = `${this.currentConfig.shadowOffsetY}px`;
+    }
+    if (this.elements.borderRadiusValue) {
+      this.elements.borderRadiusValue.textContent = `${this.currentConfig.borderRadius}px`;
+    }
+    if (this.elements.paddingXValue) {
+      this.elements.paddingXValue.textContent = `${this.currentConfig.paddingX}px`;
+    }
+    if (this.elements.paddingYValue) {
+      this.elements.paddingYValue.textContent = `${this.currentConfig.paddingY}px`;
+    }
+    if (this.elements.letterSpacingValue) {
+      this.elements.letterSpacingValue.textContent = `${this.currentConfig.letterSpacing}px`;
+    }
+    if (this.elements.animationDurationValue) {
+      this.elements.animationDurationValue.textContent = `${this.currentConfig.animationDuration}ms`;
+    }
   }
 
   private applyHoverEffect(button: HTMLElement): void {
@@ -380,8 +449,12 @@ export class NeobrutalistmButtonController {
     const styles = this.generateButtonStyles();
     const html = this.generateHTML();
 
-    this.elements.cssOutput.value = this.generateFullCSS();
-    this.elements.htmlOutput.value = html;
+    if (this.elements.cssOutput instanceof HTMLTextAreaElement) {
+      this.elements.cssOutput.value = this.generateFullCSS();
+    }
+    if (this.elements.htmlOutput instanceof HTMLTextAreaElement) {
+      this.elements.htmlOutput.value = html;
+    }
   }
 
   private generateHTML(): string {
@@ -421,7 +494,9 @@ export class NeobrutalistmButtonController {
 
   private async copyCSS(): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.elements.cssOutput.value);
+      const cssContent = this.elements.cssOutput instanceof HTMLTextAreaElement ? 
+        this.elements.cssOutput.value : '';
+      await navigator.clipboard.writeText(cssContent);
       this.showCopySuccess('copy-css');
     } catch (error) {
       console.error('Failed to copy CSS:', error);
@@ -430,7 +505,9 @@ export class NeobrutalistmButtonController {
 
   private async copyHTML(): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.elements.htmlOutput.value);
+      const htmlContent = this.elements.htmlOutput instanceof HTMLTextAreaElement ? 
+        this.elements.htmlOutput.value : '';
+      await navigator.clipboard.writeText(htmlContent);
       this.showCopySuccess('copy-html');
     } catch (error) {
       console.error('Failed to copy HTML:', error);
@@ -439,7 +516,11 @@ export class NeobrutalistmButtonController {
 
   private async copyBoth(): Promise<void> {
     try {
-      const combined = `${this.elements.htmlOutput.value}\n\n<style>\n${this.elements.cssOutput.value}\n</style>`;
+      const htmlContent = this.elements.htmlOutput instanceof HTMLTextAreaElement ? 
+        this.elements.htmlOutput.value : '';
+      const cssContent = this.elements.cssOutput instanceof HTMLTextAreaElement ? 
+        this.elements.cssOutput.value : '';
+      const combined = `${htmlContent}\n\n<style>\n${cssContent}\n</style>`;
       await navigator.clipboard.writeText(combined);
       this.showCopySuccess('copy-both');
     } catch (error) {
