@@ -53,90 +53,43 @@ const converterOptions = [
 </div>
 
 <script>
-  import { HtmlToJsxConverterController } from './lib/converter-controller';
+  (() => {
+    const TOOL_NAME = 'html-jsx';
+    const REQUIRED_ELEMENTS = ['htmlInput', 'jsxOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
 
-  let controller = null;
-  let initAttempts = 0;
-  const maxAttempts = 50;
-  const retryDelay = 100;
-
-  function checkRequiredElements() {
-    const required = ['htmlInput', 'jsxOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
-    const missing = [];
-
-    for (const id of required) {
-      const element = document.getElementById(id);
-      if (!element) {
-        missing.push(id);
-      }
+    if (!window.location.pathname.includes('html-to-jsx')) {
+      console.log(`${TOOL_NAME}: Not on the correct page, skipping`);
+      return;
     }
 
-    if (missing.length > 0) {
-      console.warn(`Missing elements: ${missing.join(', ')}`);
-      return false;
-    }
-
-    return true;
-  }
-
-  function initializeConverter() {
-    initAttempts++;
-    console.log(`JSX Script Attempt ${initAttempts}: Checking elements...`);
-
-    if (!checkRequiredElements()) {
-      if (initAttempts < maxAttempts) {
-        console.log(`Retrying in ${retryDelay}ms...`);
-        setTimeout(initializeConverter, retryDelay);
-        return;
-      } else {
-        console.error('Failed to find all required elements after maximum attempts');
-        return;
+    const checkElements = () => {
+      const missing = REQUIRED_ELEMENTS.filter(id => !document.getElementById(id));
+      if (missing.length > 0) {
+        console.log(`${TOOL_NAME}: Missing elements [${missing.join(', ')}], skipping`);
+        return false;
       }
-    }
+      return true;
+    };
 
-    try {
-      console.log('All required elements found, creating controller...');
-      controller = new HtmlToJsxConverterController();
+    const initializeTool = async () => {
+      if (!checkElements()) return;
 
-      // Store controller globally for debugging
-      if (typeof window !== 'undefined') {
-        window.jsxController = controller;
+      try {
+        console.log(`${TOOL_NAME}: Initializing...`);
+        const { HtmlToJsxConverterController } = await import('./lib/converter-controller');
+        new HtmlToJsxConverterController();
+        console.log(`✅ ${TOOL_NAME}: Successfully initialized`);
+      } catch (error) {
+        console.error(`❌ ${TOOL_NAME}: Initialization failed:`, error);
       }
-
-      console.log('JSX converter initialized successfully');
-    } catch (error) {
-      console.error('Error initializing JSX converter:', error);
-
-      if (initAttempts < maxAttempts) {
-        console.log('Retrying initialization...');
-        setTimeout(initializeConverter, retryDelay * 2);
-      }
-    }
-  }
-
-  function startInitialization() {
-    console.log(`Document readyState: ${document.readyState}`);
+    };
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeConverter);
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initializeTool, 100);
+      });
     } else {
-      // Document is already loaded, start immediately but with a small delay
-      setTimeout(initializeConverter, 50);
+      setTimeout(initializeTool, 100);
     }
-  }
-
-  // Start the initialization process
-  startInitialization();
-
-  // Fallback initialization on window load
-  if (typeof window !== 'undefined') {
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (!controller || !controller.isReady()) {
-          console.log('Performing final initialization attempt...');
-          initializeConverter();
-        }
-      }, 500);
-    });
-  }
+  })();
 </script>

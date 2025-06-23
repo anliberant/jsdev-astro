@@ -1,19 +1,19 @@
+// src/features/tools/html/markdown/lib/converter-controller.ts
 import { HtmlMarkdownConverter } from './html-to-markdown-converter';
-import { BaseConverterController } from '@/shared/lib/base-converter-controller';
+import { SafeBaseConverterController } from '@/shared/lib/safe-tool-initializer';
 import type { HtmlMarkdownElements, ConversionMode } from '@/shared/types';
 import { SAMPLE_HTML } from '@/shared/utils';
 
-export class HtmlMarkdownController extends BaseConverterController<HtmlMarkdownElements> {
+export class HtmlMarkdownController extends SafeBaseConverterController<HtmlMarkdownElements> {
   private converter: HtmlMarkdownConverter | null = null;
   private currentMode: ConversionMode = 'html-to-markdown';
 
   constructor() {
-    super('HtmlMarkdownController');
-    this.delayedInit();
+    super('HtmlMarkdownController', 'html-markdown');
   }
 
   protected getRequiredElementIds(): string[] {
-    return ['htmlInput', 'markdownOutput'];
+    return ['htmlInput', 'markdownOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
   }
 
   protected initializeElements(): HtmlMarkdownElements {
@@ -47,22 +47,13 @@ export class HtmlMarkdownController extends BaseConverterController<HtmlMarkdown
     this.safeAddEventListener(convertBtn, 'click', () => this.performConversion());
 
     const clearBtn = this.safeGetElement('clearBtn');
-    this.safeAddEventListener(clearBtn, 'click', () => this.clearAll('htmlInput', 'markdownOutput'));
+    this.safeAddEventListener(clearBtn, 'click', () => this.clearAll());
 
     const copyBtn = this.safeGetElement('copyBtn');
-    this.safeAddEventListener(copyBtn, 'click', () => this.handleCopy('markdownOutput', 'copyBtn'));
+    this.safeAddEventListener(copyBtn, 'click', () => this.handleCopy());
 
     const sampleBtn = this.safeGetElement('sampleBtn');
-    if (sampleBtn) {
-      console.log('Sample button found, adding click handler');
-      this.safeAddEventListener(sampleBtn, 'click', (e) => {
-        console.log('Sample button clicked!');
-        e.preventDefault();
-        this.loadSample();
-      });
-    } else {
-      console.error('Sample button not found!');
-    }
+    this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
 
     if (this.elements.modeToggle) {
       this.safeAddEventListener(this.elements.modeToggle, 'change', () => this.toggleMode());
@@ -98,22 +89,19 @@ export class HtmlMarkdownController extends BaseConverterController<HtmlMarkdown
     } catch (error) {
       console.error('Conversion error:', error);
       this.showError(`Conversion error: ${(error as Error).message}`);
-      this.elements.markdownOutput.value = '';
+      if (this.elements.markdownOutput) {
+        this.elements.markdownOutput.value = '';
+      }
       this.updateStats();
     }
   }
 
   private loadSample(): void {
-    if (!this.elements?.htmlInput) {
-      console.error('htmlInput element not found');
-      return;
-    }
+    if (!this.elements?.htmlInput) return;
 
-    console.log('Loading sample for HTML to Markdown converter...');
-    
     let sampleContent = '';
     if (this.currentMode === 'html-to-markdown') {
-      sampleContent = this.getSampleInput();
+      sampleContent = SAMPLE_HTML.markdown;
     } else {
       sampleContent = `# Sample Markdown Document
 
@@ -144,11 +132,8 @@ function hello() {
     if (!this.elements?.modeToggle) return;
 
     this.currentMode = this.elements.modeToggle.checked ? 'markdown-to-html' : 'html-to-markdown';
-    
     this.updatePanelLabels();
-    
-    this.clearAll('htmlInput', 'markdownOutput');
-    
+    this.clearAll();
     console.log(`Switched to mode: ${this.currentMode}`);
   }
 
@@ -183,8 +168,83 @@ function hello() {
     }
   }
 
-  protected getSampleInput(): string {
-    return SAMPLE_HTML.markdown;
+  private calculateStats(text: string): { lines: number; characters: number } {
+    return {
+      lines: text ? text.split('\n').length : 0,
+      characters: text ? text.length : 0,
+    };
+  }
+
+  private clearAll(): void {
+    if (this.elements?.htmlInput) this.elements.htmlInput.value = '';
+    if (this.elements?.markdownOutput) this.elements.markdownOutput.value = '';
+    this.hideMessages();
+    this.updateStats();
+  }
+
+  private async handleCopy(): Promise<void> {
+    if (!this.elements?.markdownOutput) return;
+
+    const text = this.elements.markdownOutput.value || '';
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      this.showSuccess('Copied to clipboard!');
+      
+      const copyBtn = this.safeGetElement('copyBtn');
+      if (copyBtn) {
+        const originalText = copyBtn.textContent || 'Copy';
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Copy failed:', error);
+      this.showError('Failed to copy to clipboard');
+    }
+  }
+
+  private hideMessages(): void {
+    const errorMessage = this.safeGetElement('errorMessage');
+    const successMessage = this.safeGetElement('successMessage');
+
+    if (errorMessage) errorMessage.classList.add('hidden');
+    if (successMessage) successMessage.classList.add('hidden');
+  }
+
+  private showSuccess(message: string): void {
+    const successMessage = this.safeGetElement('successMessage');
+    const errorMessage = this.safeGetElement('errorMessage');
+
+    if (successMessage) {
+      successMessage.textContent = message;
+      successMessage.classList.remove('hidden');
+    }
+    if (errorMessage) {
+      errorMessage.classList.add('hidden');
+    }
+
+    setTimeout(() => {
+      this.hideMessages();
+    }, 3000);
+  }
+
+  private showError(message: string): void {
+    const errorMessage = this.safeGetElement('errorMessage');
+    const successMessage = this.safeGetElement('successMessage');
+
+    if (errorMessage) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
+    }
+    if (successMessage) {
+      successMessage.classList.add('hidden');
+    }
+
+    setTimeout(() => {
+      this.hideMessages();
+    }, 5000);
   }
 
   protected onInitialized(): void {
