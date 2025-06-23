@@ -53,52 +53,45 @@ const converterOptions = [
 </div>
 
 <script>
-  // Only run this script on the Pug converter page
-  const isPugConverterPage = () => {
-    return (
-      window.location.pathname.includes('pug') || document.getElementById('htmlInput') !== null
-    );
-  };
+  (() => {
+    const TOOL_NAME = 'html-pug';
+    const REQUIRED_ELEMENTS = ['htmlInput', 'pugOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
 
-  if (isPugConverterPage()) {
-    import('./lib/converter-controller')
-      .then(({ HtmlToPugConverterController }) => {
-        // Wait for DOM to be fully ready
-        const initializeWhenReady = () => {
-          // Double-check that we have the required elements
-          const htmlInput = document.getElementById('htmlInput');
-          const pugOutput = document.getElementById('pugOutput');
+    if (!window.location.pathname.includes('html-to-pug')) {
+      console.log(`${TOOL_NAME}: Not on the correct page, skipping`);
+      return;
+    }
 
-          if (htmlInput && pugOutput) {
-            try {
-              const controller = new HtmlToPugConverterController();
-              console.log('Pug converter initialized successfully');
+    const checkElements = () => {
+      const missing = REQUIRED_ELEMENTS.filter(id => !document.getElementById(id));
+      if (missing.length > 0) {
+        console.log(`${TOOL_NAME}: Missing elements [${missing.join(', ')}], skipping`);
+        return false;
+      }
+      return true;
+    };
 
-              // Store reference for debugging
-              if (typeof window !== 'undefined') {
-                (window as any).pugController = controller;
-              }
-            } catch (error) {
-              console.error('Error initializing Pug converter:', error);
-            }
-          } else {
-            console.log('Pug converter elements not found, skipping initialization');
-          }
-        };
+    const initializeTool = async () => {
+      if (!checkElements()) return;
 
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initializeWhenReady);
-        } else {
-          // DOM is already ready
-          initializeWhenReady();
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load Pug converter:', error);
+      try {
+        console.log(`${TOOL_NAME}: Initializing...`);
+        const { HtmlToPugConverterController } = await import('./lib/converter-controller');
+        new HtmlToPugConverterController();
+        console.log(`✅ ${TOOL_NAME}: Successfully initialized`);
+      } catch (error) {
+        console.error(`❌ ${TOOL_NAME}: Initialization failed:`, error);
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initializeTool, 100);
       });
-  } else {
-    console.log('Not on Pug converter page, skipping initialization');
-  }
+    } else {
+      setTimeout(initializeTool, 100);
+    }
+  })();
 </script>
 
 <style>
