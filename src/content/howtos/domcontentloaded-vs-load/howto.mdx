@@ -1,0 +1,154 @@
+---
+title: 'How to Handle DOMContentLoaded vs Load in JavaScript'
+slug: domcontentloaded-vs-load
+heading: 'Mastering JavaScript Page Load Events for Faster UI'
+icon: /icons/javascript.png
+image: /javascript.png
+permalink: howto/domcontentloaded-vs-load
+date: 2025-06-23
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn the real difference between DOMContentLoaded and load events in JavaScript. Improve page performance and avoid flickering or timing bugs.
+---
+
+In web development, page load timing is everything. Whether you're animating a loader, interacting with the DOM, or measuring images — understanding when the browser is *ready* makes or breaks the user experience. Today we’ll explore two critical events: `DOMContentLoaded` and `load`, and how to use them correctly.
+
+## 🍜 A Real-World Analogy
+
+Imagine visiting a restaurant:
+
+- **`DOMContentLoaded`**: The table is set. You can start eating.
+- **`load`**: All dishes have arrived. You can now enjoy the full meal.
+
+Let’s see how this plays out in JavaScript.
+
+## 📊 DOMContentLoaded vs load: Comparison Table
+
+| Feature                     | `DOMContentLoaded`                              | `load`                                            |
+|----------------------------|--------------------------------------------------|---------------------------------------------------|
+| Trigger timing             | When the DOM is fully parsed                    | When all resources (images, styles, iframes) are loaded |
+| Can manipulate DOM?        | ✅ Yes                                           | ✅ Yes                                            |
+| Includes images/styles?    | ❌ No                                            | ✅ Yes                                            |
+| Speed                      | ⚡ Faster                                        | 🐢 Slower                                         |
+| Usage                      | Early DOM manipulation                          | Post-image measurements or layout operations      |
+
+## 🧪 Practical Use Cases
+
+### ✅ 1. Fast DOM Interactions with `DOMContentLoaded`
+
+```js
+document.addEventListener('DOMContentLoaded', () => {
+  const titleElement = document.querySelector('.page-title');
+  if (titleElement) {
+    titleElement.textContent = 'Page Ready!';
+    titleElement.classList.add('highlight');
+  }
+});
+```
+
+### ✅ 2. Working with Images and External Resources using `load`
+
+```js
+window.addEventListener('load', () => {
+  const heroImage = document.getElementById('hero-img');
+  console.log(`Hero image size: ${heroImage.width}x${heroImage.height}`);
+});
+```
+
+## 🧠 Understanding `defer` and `async`
+
+```html
+<script src="init.js" defer></script>
+<script src="tracker.js" async></script>
+```
+
+| Attribute | Behavior                                      | Impact                            |
+|-----------|-----------------------------------------------|-----------------------------------|
+| `defer`   | Loads in background, executes after parsing   | ✅ Safe with DOMContentLoaded     |
+| `async`   | Loads and executes immediately when ready     | ⚠️ Can block or delay DOM parsing |
+
+## 🚀 Performance Optimization Tips
+
+### ✅ Move Critical Code Earlier
+
+```html
+<body>
+  <!-- ... -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      setupNavbar();
+      initThemeSwitcher();
+    });
+  </script>
+</body>
+```
+
+### 💤 Lazy Load Non-Critical Resources
+
+```js
+window.addEventListener('load', () => {
+  const lazyAssets = document.querySelectorAll('[data-src]');
+  lazyAssets.forEach((img) => {
+    img.src = img.dataset.src;
+  });
+});
+```
+
+## 🔁 Fallback for Older Browsers
+
+```js
+document.onreadystatechange = () => {
+  if (document.readyState === 'interactive') {
+    console.log('DOM is ready (like DOMContentLoaded)');
+  }
+  if (document.readyState === 'complete') {
+    console.log('All resources loaded (like load)');
+  }
+};
+```
+
+## 🧬 Modern Alternative: `readystatechange` for Granular Control
+
+```js
+document.addEventListener('readystatechange', () => {
+  console.log(`Current document state: ${document.readyState}`);
+});
+```
+
+## 🧩 Tricky Question: Timer Inside DOMContentLoaded
+
+```js
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    console.log('Will this run before or after "load"?');
+  }, 1000);
+});
+```
+
+## 🧭 Final Thoughts
+
+| ✅ Use `DOMContentLoaded` for:          |
+|----------------------------------------|
+| Fast UI interactions                  |
+| DOM structure manipulation             |
+| Adding event listeners                 |
+
+| ✅ Use `load` for:                      |
+|----------------------------------------|
+| Measuring images, fonts, and media     |
+| Lazy loading background assets         |
+| Initiating analytics or tracking       |
+
+## 📌 Key Takeaways
+
+- **DOMContentLoaded** = DOM is ready, lightning fast.
+- **load** = All assets loaded, safer for layout-dependent work.
+- Prefer `defer` over `async` for safe, sequential loading.
+- Use `readystate` for fine-grained control.
+- Always test for timing bugs when mixing images, JS, and animations.
+
+## 💬 What do you think?
+
+Have you ever hit a layout bug due to using `async` scripts or firing logic too early? Share your experience or questions below. In the next article, we’ll dig into real-world examples of lazy loading and script prioritization techniques.

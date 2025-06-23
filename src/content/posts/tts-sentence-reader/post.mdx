@@ -1,4 +1,5 @@
 ---
+
 title: 'Build a Sentence-Level Text-to-Speech Reader in JavaScript'
 slug: tts-sentence-reader
 heading: 'Build a Sentence-Level Reader with JS TTS & Highlights'
@@ -11,6 +12,8 @@ type: post
 tags: ['error-handling']
 desc: Create a sentence-by-sentence voice reader with JavaScript and HTML. Includes highlighting, playback controls, voice selection, and progress tracking.
 ---
+
+
 
 In this article, we'll build a simple web tool to explore how **Text-to-Speech (TTS)** works in JavaScript. We'll also dive into the logic of **sentence-level highlighting**. These two features are often combined to create accessible, dynamic reading experiences in the browser.
 
@@ -134,75 +137,75 @@ Our tool will:
 ## 🎨 CSS Styling
 ```css
 body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 2rem;
-      background: #f0f4f8;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .toolbar {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .toolbar button,
-    .toolbar select {
-      padding: 0.6rem 1.2rem;
-      border-radius: 4px;
-      border: none;
-      font-size: 1rem;
-    }
-    .toolbar button {
-      background: #0077cc;
-      color: white;
-      cursor: pointer;
-    }
-    .toolbar button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .text-block {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-    .line {
-      display: block;
-      margin-bottom: 1rem;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .line:hover {
-      background: #f9f9f9;
-    }
-    .line.active {
-      background: #fff3cd;
-      font-weight: bold;
-    }
-    .progress {
-      text-align: center;
-      margin-top: 1rem;
-    }
-    .bar {
-      height: 8px;
-      width: 100%;
-      background: #eee;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(to right, #0077cc, #005fa3);
-      transition: width 0.3s;
-    }
+  font-family: sans-serif;
+  margin: 0;
+  padding: 2rem;
+  background: #f0f4f8;
+  color: #333;
+}
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.toolbar {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.toolbar button,
+.toolbar select {
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 1rem;
+}
+.toolbar button {
+  background: #0077cc;
+  color: white;
+  cursor: pointer;
+}
+.toolbar button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.text-block {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.line {
+  display: block;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.line:hover {
+  background: #f9f9f9;
+}
+.line.active {
+  background: #fff3cd;
+  font-weight: bold;
+}
+.progress {
+  text-align: center;
+  margin-top: 1rem;
+}
+.bar {
+  height: 8px;
+  width: 100%;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(to right, #0077cc, #005fa3);
+  transition: width 0.3s;
+}
 ```
 
 ---
@@ -210,122 +213,122 @@ body {
 ## 💡 JavaScript Logic
 ```js
 const lines = document.querySelectorAll('.line');
-    const playBtn = document.getElementById('start');
-    const pauseBtn = document.getElementById('pause');
-    const resumeBtn = document.getElementById('resume');
-    const stopBtn = document.getElementById('stop');
-    const resetBtn = document.getElementById('reset');
-    const voiceSelect = document.getElementById('voices');
-    const progressText = document.getElementById('progressText');
-    const progressBar = document.getElementById('bar');
+const playBtn = document.getElementById('start');
+const pauseBtn = document.getElementById('pause');
+const resumeBtn = document.getElementById('resume');
+const stopBtn = document.getElementById('stop');
+const resetBtn = document.getElementById('reset');
+const voiceSelect = document.getElementById('voices');
+const progressText = document.getElementById('progressText');
+const progressBar = document.getElementById('bar');
 
-    const synth = window.speechSynthesis;
-    let voices = [];
-    let currentIndex = 0;
-    let currentUtterance = null;
-    let isPaused = false;
+const synth = window.speechSynthesis;
+let voices = [];
+let currentIndex = 0;
+let currentUtterance = null;
+let isPaused = false;
 
-    function populateVoices() {
-      voices = synth.getVoices();
-      voiceSelect.innerHTML = '';
-      voices.forEach((voice, index) => {
-        const opt = document.createElement('option');
-        opt.value = index;
-        opt.textContent = `${voice.name} (${voice.lang})`;
-        voiceSelect.appendChild(opt);
-      });
-    }
+function populateVoices() {
+  voices = synth.getVoices();
+  voiceSelect.innerHTML = '';
+  voices.forEach((voice, index) => {
+    const opt = document.createElement('option');
+    opt.value = index;
+    opt.textContent = `${voice.name} (${voice.lang})`;
+    voiceSelect.appendChild(opt);
+  });
+}
 
-    synth.onvoiceschanged = populateVoices;
-    populateVoices();
+synth.onvoiceschanged = populateVoices;
+populateVoices();
 
-    function updateUI() {
-      progressText.textContent = `${currentIndex + 1}/${lines.length}`;
-      progressBar.style.width = `${((currentIndex + 1) / lines.length) * 100}%`;
-    }
+function updateUI() {
+  progressText.textContent = `${currentIndex + 1}/${lines.length}`;
+  progressBar.style.width = `${((currentIndex + 1) / lines.length) * 100}%`;
+}
 
-    function highlightLine(index) {
-      lines.forEach((line, i) => {
-        line.classList.toggle('active', i === index);
-      });
-      lines[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+function highlightLine(index) {
+  lines.forEach((line, i) => {
+    line.classList.toggle('active', i === index);
+  });
+  lines[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
-    function speakLine(index) {
-      if (index >= lines.length) return;
-      const text = lines[index].textContent;
-      const utter = new SpeechSynthesisUtterance(text);
-      const selected = voiceSelect.value;
-      if (voices[selected]) utter.voice = voices[selected];
-      utter.rate = 1;
+function speakLine(index) {
+  if (index >= lines.length) return;
+  const text = lines[index].textContent;
+  const utter = new SpeechSynthesisUtterance(text);
+  const selected = voiceSelect.value;
+  if (voices[selected]) utter.voice = voices[selected];
+  utter.rate = 1;
 
-      utter.onstart = () => {
-        highlightLine(index);
-        playBtn.disabled = true;
-        pauseBtn.disabled = false;
-        resumeBtn.disabled = true;
-        stopBtn.disabled = false;
-      };
+  utter.onstart = () => {
+    highlightLine(index);
+    playBtn.disabled = true;
+    pauseBtn.disabled = false;
+    resumeBtn.disabled = true;
+    stopBtn.disabled = false;
+  };
 
-      utter.onend = () => {
-        if (!isPaused) {
-          currentIndex++;
-          if (currentIndex < lines.length) {
-            speakLine(currentIndex);
-          } else {
-            resetControls();
-          }
-        }
-      };
-
-      currentUtterance = utter;
-      synth.speak(utter);
-      updateUI();
-    }
-
-    function resetControls() {
-      playBtn.disabled = false;
-      pauseBtn.disabled = true;
-      resumeBtn.disabled = true;
-      stopBtn.disabled = true;
-    }
-
-    playBtn.onclick = () => {
-      currentIndex = 0;
-      speakLine(currentIndex);
-    };
-    pauseBtn.onclick = () => {
-      synth.pause();
-      isPaused = true;
-      pauseBtn.disabled = true;
-      resumeBtn.disabled = false;
-    };
-    resumeBtn.onclick = () => {
-      synth.resume();
-      isPaused = false;
-      pauseBtn.disabled = false;
-      resumeBtn.disabled = true;
-    };
-    stopBtn.onclick = () => {
-      synth.cancel();
-      resetControls();
-    };
-    resetBtn.onclick = () => {
-      synth.cancel();
-      currentIndex = 0;
-      highlightLine(currentIndex);
-      updateUI();
-    };
-
-    lines.forEach((line, index) => {
-      line.addEventListener('click', () => {
-        synth.cancel();
-        currentIndex = index;
+  utter.onend = () => {
+    if (!isPaused) {
+      currentIndex++;
+      if (currentIndex < lines.length) {
         speakLine(currentIndex);
-      });
-    });
+      } else {
+        resetControls();
+      }
+    }
+  };
 
-    updateUI();
+  currentUtterance = utter;
+  synth.speak(utter);
+  updateUI();
+}
+
+function resetControls() {
+  playBtn.disabled = false;
+  pauseBtn.disabled = true;
+  resumeBtn.disabled = true;
+  stopBtn.disabled = true;
+}
+
+playBtn.onclick = () => {
+  currentIndex = 0;
+  speakLine(currentIndex);
+};
+pauseBtn.onclick = () => {
+  synth.pause();
+  isPaused = true;
+  pauseBtn.disabled = true;
+  resumeBtn.disabled = false;
+};
+resumeBtn.onclick = () => {
+  synth.resume();
+  isPaused = false;
+  pauseBtn.disabled = false;
+  resumeBtn.disabled = true;
+};
+stopBtn.onclick = () => {
+  synth.cancel();
+  resetControls();
+};
+resetBtn.onclick = () => {
+  synth.cancel();
+  currentIndex = 0;
+  highlightLine(currentIndex);
+  updateUI();
+};
+
+lines.forEach((line, index) => {
+  line.addEventListener('click', () => {
+    synth.cancel();
+    currentIndex = index;
+    speakLine(currentIndex);
+  });
+});
+
+updateUI();
 ```
 
 ---
