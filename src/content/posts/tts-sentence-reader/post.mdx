@@ -1,0 +1,351 @@
+---
+title: 'Build a Sentence-Level Text-to-Speech Reader in JavaScript'
+slug: tts-sentence-reader
+heading: 'Build a Sentence-Level Reader with JS TTS & Highlights'
+image: ./images/tts-sentence-reader.png
+permalink: tts-sentence-reader
+date: 2025-06-23
+author: anton liberant
+category: javascript
+type: post
+tags: ['error-handling']
+desc: Create a sentence-by-sentence voice reader with JavaScript and HTML. Includes highlighting, playback controls, voice selection, and progress tracking.
+---
+
+In this article, we'll build a simple web tool to explore how **Text-to-Speech (TTS)** works in JavaScript. We'll also dive into the logic of **sentence-level highlighting**. These two features are often combined to create accessible, dynamic reading experiences in the browser.
+
+We’ll go step-by-step:
+1. Learn how TTS works in the browser
+2. Explore how to highlight sentences dynamically
+3. Build a working mini tool with HTML, CSS, and JavaScript ([Demo & Code](https://codepen.io/jsdevspace/pen/YPXRRjO))
+
+---
+
+## 📢 What is TTS in the browser?
+
+JavaScript provides built-in support for speech synthesis using the [`SpeechSynthesis`](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis) API. It allows us to speak text out loud using voices available in the system.
+
+### Core objects:
+- `speechSynthesis` — controller to play, pause, stop, and resume speech
+- `SpeechSynthesisUtterance` — represents the text that will be spoken
+
+### ✨ Simple example:
+```js
+const msg = new SpeechSynthesisUtterance("Hello, world!");
+window.speechSynthesis.speak(msg);
+```
+
+### ⚙️ Add voice and settings:
+```js
+const utter = new SpeechSynthesisUtterance("This is a test");
+const voices = window.speechSynthesis.getVoices();
+utter.voice = voices.find(v => v.lang === 'en-US');
+utter.rate = 1.2;
+utter.pitch = 1;
+window.speechSynthesis.speak(utter);
+```
+
+You can also track when speech starts and ends:
+```js
+utter.onstart = () => console.log('Started speaking');
+utter.onend = () => console.log('Finished speaking');
+```
+
+---
+
+## ✍️ Sentence-level Highlighting
+
+To show which sentence is currently being read, we’ll highlight that sentence using CSS and JavaScript.
+
+### Example HTML:
+```html
+<p>
+  <span class="sentence">First sentence.</span>
+  <span class="sentence">Second sentence.</span>
+</p>
+```
+
+### CSS for highlighting:
+```css
+.sentence.active {
+  background-color: yellow;
+  font-weight: bold;
+}
+```
+
+### JavaScript highlighting logic:
+```js
+function highlight(index) {
+  document.querySelectorAll('.sentence').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+  });
+}
+```
+
+---
+
+# 🚀 Project: Reader with TTS and Highlighting
+
+Our tool will:
+- Read sentences one-by-one
+- Highlight the current sentence
+- Provide Play, Pause, Resume, Stop buttons
+- Let the user select a voice
+
+---
+
+## 📄 HTML Structure
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Build an interactive sentence-level text-to-speech reader with highlight, playback controls, and local progress tracking using HTML and JavaScript." />
+  <title>Interactive TTS Article Reader</title>
+</head>
+<body>
+  <h1>Read Along TTS Demo</h1>
+  <div class="toolbar">
+    <button id="start">Play</button>
+    <button id="pause" disabled>Pause</button>
+    <button id="resume" disabled>Resume</button>
+    <button id="stop" disabled>Stop</button>
+    <button id="reset">Reset</button>
+    <select id="voices"></select>
+  </div>
+  <div class="text-block" id="reader">
+    <span class="line">Learning to code is a never-ending journey.</span>
+    <span class="line">Technologies evolve rapidly, requiring constant adaptation.</span>
+    <span class="line">JavaScript, HTML, and CSS are essential tools for web development.</span>
+    <span class="line">Frameworks like React and Vue enhance front-end capabilities.</span>
+    <span class="line">Back-end skills with Node.js extend JavaScript to the server.</span>
+  </div>
+  <div class="progress">
+    <span id="progressText">0/0</span>
+    <div class="bar"><div class="bar-fill" id="bar"></div></div>
+  </div>
+</body>
+</html>
+```
+
+---
+
+## 🎨 CSS Styling
+```css
+body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f0f4f8;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .toolbar button,
+    .toolbar select {
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      border: none;
+      font-size: 1rem;
+    }
+    .toolbar button {
+      background: #0077cc;
+      color: white;
+      cursor: pointer;
+    }
+    .toolbar button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .text-block {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .line {
+      display: block;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .line:hover {
+      background: #f9f9f9;
+    }
+    .line.active {
+      background: #fff3cd;
+      font-weight: bold;
+    }
+    .progress {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .bar {
+      height: 8px;
+      width: 100%;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(to right, #0077cc, #005fa3);
+      transition: width 0.3s;
+    }
+```
+
+---
+
+## 💡 JavaScript Logic
+```js
+const lines = document.querySelectorAll('.line');
+    const playBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+    const resumeBtn = document.getElementById('resume');
+    const stopBtn = document.getElementById('stop');
+    const resetBtn = document.getElementById('reset');
+    const voiceSelect = document.getElementById('voices');
+    const progressText = document.getElementById('progressText');
+    const progressBar = document.getElementById('bar');
+
+    const synth = window.speechSynthesis;
+    let voices = [];
+    let currentIndex = 0;
+    let currentUtterance = null;
+    let isPaused = false;
+
+    function populateVoices() {
+      voices = synth.getVoices();
+      voiceSelect.innerHTML = '';
+      voices.forEach((voice, index) => {
+        const opt = document.createElement('option');
+        opt.value = index;
+        opt.textContent = `${voice.name} (${voice.lang})`;
+        voiceSelect.appendChild(opt);
+      });
+    }
+
+    synth.onvoiceschanged = populateVoices;
+    populateVoices();
+
+    function updateUI() {
+      progressText.textContent = `${currentIndex + 1}/${lines.length}`;
+      progressBar.style.width = `${((currentIndex + 1) / lines.length) * 100}%`;
+    }
+
+    function highlightLine(index) {
+      lines.forEach((line, i) => {
+        line.classList.toggle('active', i === index);
+      });
+      lines[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function speakLine(index) {
+      if (index >= lines.length) return;
+      const text = lines[index].textContent;
+      const utter = new SpeechSynthesisUtterance(text);
+      const selected = voiceSelect.value;
+      if (voices[selected]) utter.voice = voices[selected];
+      utter.rate = 1;
+
+      utter.onstart = () => {
+        highlightLine(index);
+        playBtn.disabled = true;
+        pauseBtn.disabled = false;
+        resumeBtn.disabled = true;
+        stopBtn.disabled = false;
+      };
+
+      utter.onend = () => {
+        if (!isPaused) {
+          currentIndex++;
+          if (currentIndex < lines.length) {
+            speakLine(currentIndex);
+          } else {
+            resetControls();
+          }
+        }
+      };
+
+      currentUtterance = utter;
+      synth.speak(utter);
+      updateUI();
+    }
+
+    function resetControls() {
+      playBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = true;
+    }
+
+    playBtn.onclick = () => {
+      currentIndex = 0;
+      speakLine(currentIndex);
+    };
+    pauseBtn.onclick = () => {
+      synth.pause();
+      isPaused = true;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = false;
+    };
+    resumeBtn.onclick = () => {
+      synth.resume();
+      isPaused = false;
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = true;
+    };
+    stopBtn.onclick = () => {
+      synth.cancel();
+      resetControls();
+    };
+    resetBtn.onclick = () => {
+      synth.cancel();
+      currentIndex = 0;
+      highlightLine(currentIndex);
+      updateUI();
+    };
+
+    lines.forEach((line, index) => {
+      line.addEventListener('click', () => {
+        synth.cancel();
+        currentIndex = index;
+        speakLine(currentIndex);
+      });
+    });
+
+    updateUI();
+```
+
+---
+
+## ✅ How it All Works Together
+- Each sentence is a `<span class="sentence">`
+- We iterate over them and use `SpeechSynthesisUtterance` to read aloud
+- While speaking, we highlight the current sentence and scroll to it
+- On speech end, the next sentence is read automatically
+
+---
+
+## 🔚 Conclusion
+
+Now you understand:
+- How browser TTS works
+- How to apply dynamic sentence highlighting
+- How to build a full-featured reading UI from scratch
+
+You can extend this project by:
+- Saving progress to localStorage
+- Adding a visual progress bar
+- Loading external articles or user input

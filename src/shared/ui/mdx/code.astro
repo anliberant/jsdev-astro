@@ -1,12 +1,14 @@
 ---
+import { escapeHTML } from 'astro/runtime/server/index.js';
+
 export interface Props {
   code?: string;
   language?: string;
   file?: string;
   highlights?: string;
-  children?: any;
   class?: string;
   'data-language'?: string;
+  children?: any;
 }
 
 const {
@@ -14,13 +16,13 @@ const {
   language: propLanguage,
   file,
   highlights,
-  children,
   class: className,
   'data-language': dataLanguage,
+  children,
   ...props
 } = Astro.props;
 
-function simpleDecodeHtml(text) {
+function simpleDecodeHtml(text: string): string {
   if (!text) return '';
   return text
     .replace(/&lt;/g, '<')
@@ -30,57 +32,35 @@ function simpleDecodeHtml(text) {
     .replace(/&amp;/g, '&');
 }
 
-function parseHighlightRanges(raw) {
+function parseHighlightRanges(raw: string | undefined) {
   if (!raw) return [];
-  const ranges = raw.split(',');
-  const lineNumbers = [];
-  ranges.forEach(range => {
-    if (range.includes('-')) {
-      const [start, end] = range.split('-').map(Number);
-      for (let i = start; i <= end; i++) {
-        lineNumbers.push(i);
-      }
-    } else {
-      lineNumbers.push(Number(range));
-    }
-  });
-  return lineNumbers;
+  return raw
+    .split(',')
+    .flatMap(range =>
+      range.includes('-') ?
+        Array.from(
+          { length: Number(range.split('-')[1]) - Number(range.split('-')[0]) + 1 },
+          (_, i) => Number(range.split('-')[0]) + i
+        )
+      : [Number(range)]
+    );
 }
 
 let finalCode = '';
-let language = propLanguage || dataLanguage || 'js' || 'javascript';
+let language = propLanguage || dataLanguage || 'html';
 
 if (propCode) {
-  finalCode = simpleDecodeHtml(propCode);
-} else if (children) {
-  if (typeof children === 'string') {
-    finalCode = children.trim();
-  } else if (children && typeof children === 'object') {
-    if (children.children) {
-      finalCode = typeof children.children === 'string' ? children.children.trim() : '';
-    }
-  }
-
-  if (finalCode.includes('span class="line"') || finalCode.includes('span style="color:')) {
-    try {
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = finalCode;
-      finalCode = tempDiv.textContent || tempDiv.innerText || '';
-    } catch (e) {
-      console.log('Failed to extract clean text, using original');
-    }
-  }
-
-  finalCode = simpleDecodeHtml(finalCode);
+  finalCode = propCode;
+} else if (children && typeof children === 'string') {
+  finalCode = children.trim();
 } else {
   try {
     const slotContent = await Astro.slots.render('default');
     if (slotContent) {
       finalCode = slotContent.replace(/<[^>]*>/g, '').trim();
-      finalCode = simpleDecodeHtml(finalCode);
     }
-  } catch (e) {
-    console.log('Could not render slot');
+  } catch {
+    finalCode = '';
   }
 }
 
@@ -90,8 +70,11 @@ if (!finalCode || finalCode.trim() === '') {
 }`;
 }
 
-const highlightedLines = parseHighlightRanges(highlights || '');
+// Ensure finalCode is only escaped if not already HTML encoded
+finalCode = simpleDecodeHtml(finalCode);
+
 const codeLines = finalCode.split('\n');
+const highlightedLines = parseHighlightRanges(highlights);
 ---
 
 <div class='code-block'>
@@ -107,157 +90,115 @@ const codeLines = finalCode.split('\n');
 
   <div class='code-content'>
     <div class='line-numbers'>
-      {codeLines.map((line, index) => <span class='line-number'>{index + 1}</span>)}
+      {codeLines.map((_, index) => <span class='line-number'>{index + 1}</span>)}
     </div>
-    <pre class='code-pre'
-      ><code class="simple-code" data-lang={language} data-raw={finalCode} data-fallback={children}>{children || finalCode}</code></pre
-    >
+    <pre
+      class='code-pre'>
+      <code class="simple-code" data-lang={language} data-raw={finalCode}>{finalCode}</code>
+    </pre>
   </div>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    if (window.Prism) {
-      window.Prism = null;
+  function simpleHighlight(code, lang) {
+    if (!code) return 'No code';
+    let result = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    if (['javascript', 'js', 'ts', 'typescript', 'jsx', 'tsx'].includes(lang)) {
+      const tokens = [];
+
+      let match;
+      const commentRegex = /\/\/.*$/gm;
+      while ((match = commentRegex.exec(result)) !== null) {
+        tokens.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          color: '#6a9955',
+          style: 'font-style: italic;',
+        });
+      }
+
+      const stringRegex = /"[^"]*"/g;
+      while ((match = stringRegex.exec(result)) !== null) {
+        tokens.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          color: '#ce9178',
+          style: '',
+        });
+      }
+
+      const stringRegex2 = /'[^']*'/g;
+      while ((match = stringRegex2.exec(result)) !== null) {
+        tokens.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          color: '#ce9178',
+          style: '',
+        });
+      }
+
+      const keywordRegex =
+        /\b(function|return|const|let|var|import|export|from|default|async|await|if|else|class|new|this|true|false|null|undefined)\b/g;
+
+      while ((match = keywordRegex.exec(result)) !== null) {
+        tokens.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          color: '#569cd6',
+          style: 'font-weight: 600;',
+        });
+      }
+
+      tokens.sort((a, b) => a.start - b.start);
+      const validTokens = [];
+      let lastEnd = 0;
+      tokens.forEach(token => {
+        if (token.start >= lastEnd) {
+          validTokens.push(token);
+          lastEnd = token.end;
+        }
+      });
+
+      validTokens.reverse().forEach(token => {
+        const before = result.substring(0, token.start);
+        const content = result.substring(token.start, token.end);
+        const after = result.substring(token.end);
+        result =
+          before + `<span style="color: ${token.color}; ${token.style}">${content}</span>` + after;
+      });
     }
 
+    return result;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const codeElements = document.querySelectorAll('.simple-code');
+
+    codeElements.forEach(element => {
+      const rawCode = element.getAttribute('data-raw');
+      const lang = element.getAttribute('data-lang');
+
+      if (rawCode && rawCode.trim()) {
+        const highlighted = simpleHighlight(rawCode, lang);
+        element.innerHTML = highlighted;
+      }
+    });
     const copyButtons = document.querySelectorAll('.copy-button');
     copyButtons.forEach(button => {
-      button.addEventListener('click', async function () {
-        const codeBlock = this.closest('.code-block');
+      button.addEventListener('click', async () => {
+        const codeBlock = button.closest('.code-block');
         const codeElement = codeBlock.querySelector('.simple-code');
         const rawCode = codeElement.getAttribute('data-raw');
 
         try {
           await navigator.clipboard.writeText(rawCode);
-          this.classList.add('copied');
-          setTimeout(() => this.classList.remove('copied'), 1000);
+          button.classList.add('copied');
+          setTimeout(() => button.classList.remove('copied'), 1000);
         } catch (err) {
           console.error('Copy failed:', err);
         }
       });
-    });
-
-    function simpleHighlight(code, lang) {
-      if (!code) return 'No code';
-
-      let result = code;
-
-      result = result.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-      if (
-        lang === 'javascript' ||
-        lang === 'js' ||
-        lang === 'ts' ||
-        lang === 'typescript' ||
-        lang === 'jsx' ||
-        lang === 'tsx'
-      ) {
-        const tokens = [];
-
-        let match;
-        const commentRegex = /\/\/.*$/gm;
-        while ((match = commentRegex.exec(result)) !== null) {
-          tokens.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            type: 'comment',
-            color: '#6a9955',
-            style: 'font-style: italic;',
-          });
-        }
-
-        const stringRegex = /"[^"]*"/g;
-        while ((match = stringRegex.exec(result)) !== null) {
-          tokens.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            type: 'string',
-            color: '#ce9178',
-            style: '',
-          });
-        }
-
-        const stringRegex2 = /'[^']*'/g;
-        while ((match = stringRegex2.exec(result)) !== null) {
-          tokens.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            type: 'string',
-            color: '#ce9178',
-            style: '',
-          });
-        }
-
-        const keywordRegex =
-          /\b(function|return|const|let|var|import|export|from|default|async|await|if|else|class|new|this|true|false|null|undefined)\b/g;
-        while ((match = keywordRegex.exec(result)) !== null) {
-          tokens.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            type: 'keyword',
-            color: '#569cd6',
-            style: 'font-weight: 600;',
-          });
-        }
-
-        tokens.sort((a, b) => a.start - b.start);
-
-        const validTokens = [];
-        let lastEnd = 0;
-
-        tokens.forEach(token => {
-          if (token.start >= lastEnd) {
-            validTokens.push(token);
-            lastEnd = token.end;
-          }
-        });
-
-        validTokens.reverse().forEach(token => {
-          const before = result.substring(0, token.start);
-          const content = result.substring(token.start, token.end);
-          const after = result.substring(token.end);
-
-          result =
-            before +
-            `<span style="color: ${token.color}; ${token.style}">${content}</span>` +
-            after;
-        });
-      }
-
-      return result;
-    }
-
-    const codeElements = document.querySelectorAll('.simple-code');
-
-    codeElements.forEach((element, index) => {
-      let rawCode = element.getAttribute('data-raw');
-      const fallback = element.getAttribute('data-fallback');
-      const lang = element.getAttribute('data-lang');
-
-      if (!rawCode || rawCode.includes('span class=') || rawCode.includes('span style=')) {
-        const elementContent = element.textContent || element.innerText || '';
-
-        if (elementContent && !elementContent.includes('PLACEHOLDER')) {
-          if (!elementContent.includes('span class=') && !elementContent.includes('span style=')) {
-            rawCode = elementContent;
-          } else {
-            rawCode = elementContent
-              .replace(/<[^>]*>/g, '')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&amp;/g, '&')
-              .trim();
-          }
-        }
-      }
-
-      if (rawCode && rawCode.trim()) {
-        const highlighted = simpleHighlight(rawCode, lang);
-        element.innerHTML = highlighted;
-      } else {
-        element.innerHTML = 'Error: No code to highlight';
-      }
     });
   });
 </script>
@@ -271,7 +212,6 @@ const codeLines = finalCode.split('\n');
     overflow: hidden;
     max-width: 80%;
     border: 1px solid #333;
-    /* font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace; */
     font-family: var(--font-mono);
   }
 
