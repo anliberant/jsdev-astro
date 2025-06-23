@@ -15,6 +15,7 @@ export default defineConfig({
     sitemap(),
     netlify(),
   ],
+  adapter: netlify(),
 
   markdown: {
     remarkPlugins: [remarkReadingTime],
