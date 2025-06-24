@@ -1,15 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
 import HtmlToAstroConverter from '@/features/tools/html/astro/html-to-astro-converter.astro';
 
-const pageTitle = 'HTML to Astro Converter | JSdev Tools';
-const pageDescription = 'Convert HTML code to Astro template syntax with our free online tool.';
-
-export const prerender = false;
+const title = 'HTML to Astro Converter | JavaScript Development Tools';
+const description =
+  'Convert HTML to Astro component format with frontmatter support. Free online tool for developers.';
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
+<ToolsLayout
+  title={title}
+  description={description}>
   <HtmlToAstroConverter />
-</BaseLayout>
+</ToolsLayout>

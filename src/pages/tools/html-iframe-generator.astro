@@ -1,19 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
-import IframeGenerator from '@/features/tools/html/iframe/iframe-generator.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
+import HtmlIframeGenerator from '@/features/tools/html/iframe/html-iframe-generator.astro';
 
-const pageTitle = 'HTML Iframe Generator | JSdev Tools';
-const pageDescription =
-  'Generate secure and responsive HTML iframe embed codes with customizable settings, security options, and live preview. Perfect for YouTube, maps, and website embeds.';
-
-export const prerender = false;
+const title = 'HTML Iframe Generator | JavaScript Development Tools';
+const description =
+  'Generate secure iframe embed codes with live preview, security controls, and responsive design options.';
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
-  <IframeGenerator
-    title='HTML Iframe Generator'
-    description='Create secure and responsive iframe embed codes with live preview, security controls, and responsive design options for any website or content.'
-  />
-</BaseLayout>
+<ToolsLayout
+  title={title}
+  description={description}>
+  <HtmlIframeGenerator />
+</ToolsLayout>
