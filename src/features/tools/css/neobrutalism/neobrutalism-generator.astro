@@ -3,59 +3,226 @@ import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 
-import ControlsPanel from './ui/controls-panel.astro';
-import OutputPanel from './ui/output-panel.astro';
-
-const { title, description } = Astro.props;
-
-const breadcrumbItems = generateToolsBreadcrumbs('Neobrutalism CSS Button Generator');
+const breadcrumbItems = generateToolsBreadcrumbs('Neobrutalism Button Generator');
 ---
 
-<div class='neobrutalism-generator'>
-  <Breadcrumbs
-    items={breadcrumbItems}
-    class='mt-10'
-  />
-  <HeadingBlock
-    title={title}
-    description={description}
-    class='mt-0'
-  />
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
 
-  <div class='generator-content'>
-    <ControlsPanel />
-    <OutputPanel />
+<HeadingBlock
+  title='Neobrutalism CSS Button Generator'
+  description='Create bold, eye-catching buttons with thick borders, vibrant colors, and dramatic shadows.'
+  class='mt-0'
+/>
+
+<div class='generator-container'>
+  <div class='controls-panel'>
+    <div class='control-group'>
+      <label for='buttonText'>Button Text</label>
+      <input
+        type='text'
+        id='buttonText'
+        value='Click Me!'
+      />
+    </div>
+
+    <div class='control-group'>
+      <label for='backgroundColor'>Background Color</label>
+      <input
+        type='color'
+        id='backgroundColor'
+        value='#ff6b35'
+      />
+    </div>
+
+    <div class='control-group'>
+      <label for='textColor'>Text Color</label>
+      <input
+        type='color'
+        id='textColor'
+        value='#000000'
+      />
+    </div>
+
+    <div class='control-group'>
+      <label for='borderColor'>Border Color</label>
+      <input
+        type='color'
+        id='borderColor'
+        value='#000000'
+      />
+    </div>
+
+    <div class='control-group'>
+      <label for='borderWidth'>Border Width (px)</label>
+      <input
+        type='range'
+        id='borderWidth'
+        min='2'
+        max='8'
+        value='4'
+      />
+      <span id='borderWidthValue'>4</span>
+    </div>
+
+    <div class='control-group'>
+      <label for='shadowDistance'>Shadow Distance (px)</label>
+      <input
+        type='range'
+        id='shadowDistance'
+        min='2'
+        max='12'
+        value='6'
+      />
+      <span id='shadowDistanceValue'>6</span>
+    </div>
+
+    <div class='control-group'>
+      <label for='buttonSize'>Button Size</label>
+      <select id='buttonSize'>
+        <option value='small'>Small</option>
+        <option
+          value='medium'
+          selected
+          >Medium</option
+        >
+        <option value='large'>Large</option>
+      </select>
+    </div>
+  </div>
+
+  <div class='preview-panel'>
+    <div class='preview-container'>
+      <button
+        id='buttonPreview'
+        class='neobrutalism-button'
+        >Click Me!</button
+      >
+    </div>
+  </div>
+
+  <div class='output-panel'>
+    <div class='output-header'>
+      <h3>CSS Output</h3>
+      <button
+        id='copyBtn'
+        class='copy-btn'
+        >Copy CSS</button
+      >
+    </div>
+    <textarea
+      id='cssOutput'
+      class='css-output'
+      readonly
+    ></textarea>
   </div>
 </div>
 
 <style>
-  .generator-content {
+  .generator-container {
     display: grid;
-    grid-template-columns: 350px 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
     gap: 2rem;
-    margin-top: 2.5rem;
-    min-height: 600px;
+    margin-top: 2rem;
   }
 
-  @media (max-width: 1024px) {
-    .generator-content {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
+  .controls-panel {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+
+  .preview-panel {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .output-panel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .control-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .control-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .control-group input,
+  .control-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  .preview-container {
+    width: 100%;
+    height: 200px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .neobrutalism-button {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    border: 4px solid #000;
+    background: #ff6b35;
+    color: #000;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    box-shadow: 6px 6px 0px #000;
+  }
+
+  .neobrutalism-button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px #000;
+  }
+
+  .neobrutalism-button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #000;
+  }
+
+  .css-output {
+    width: 100%;
+    height: 200px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
   }
 
   @media (max-width: 768px) {
-    .generator-content {
-      margin-top: 2rem;
-      gap: 1rem;
+    .generator-container {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+    }
+
+    .controls-panel,
+    .preview-panel,
+    .output-panel {
+      grid-column: 1;
+    }
+
+    .preview-panel {
+      grid-row: 2;
+    }
+
+    .output-panel {
+      grid-row: 3;
     }
   }
 </style>
-
-<script>
-  import { NeobrutalistmButtonController } from './lib/generator-controller';
-
-  document.addEventListener('DOMContentLoaded', () => {
-    new NeobrutalistmButtonController();
-  });
-</script>

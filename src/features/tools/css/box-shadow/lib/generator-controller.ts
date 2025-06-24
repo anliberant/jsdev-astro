@@ -10,12 +10,53 @@ export class BoxShadowGeneratorController {
   private shadowCounter = 0;
 
   constructor() {
+    if (!this.isBoxShadowPage()) {
+      console.log('BoxShadowGeneratorController: Not on box-shadow page, skipping initialization');
+      return;
+    }
+
+    if (!this.checkRequiredElements()) {
+      console.log('BoxShadowGeneratorController: Required elements not found');
+      return;
+    }
+
     this.previewConfig = this.getDefaultPreviewConfig();
     this.initializeElements();
     this.bindEvents();
     this.addDefaultShadow();
     this.updatePreview();
     this.updateOutputs();
+    
+    console.log('✅ BoxShadowGeneratorController initialized successfully');
+  }
+
+  private isBoxShadowPage(): boolean {
+    return window.location.pathname.includes('/tools/box-shadow-generator/');
+  }
+
+  private checkRequiredElements(): boolean {
+    const requiredElements = [
+      'shadow-preview',
+      'css-output',
+      'html-output',
+      'shadows-list',
+      'add-shadow-btn',
+      'offset-x',
+      'offset-y',
+      'blur-radius',
+      'spread-radius',
+      'shadow-color',
+      'shadow-opacity'
+    ];
+
+    return requiredElements.every(id => {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.log(`Missing element: ${id}`);
+        return false;
+      }
+      return true;
+    });
   }
 
   private getDefaultPreviewConfig(): PreviewConfig {
@@ -55,7 +96,6 @@ export class BoxShadowGeneratorController {
       htmlOutput: this.safeGetElement('html-output') || document.createElement('textarea'),
       shadowsList: this.safeGetElement('shadows-list') || document.createElement('div'),
       addShadowBtn: this.safeGetElement('add-shadow-btn') || document.createElement('button'),
-      // Shadow controls
       offsetXInput: this.safeGetElement('offset-x') || document.createElement('input'),
       offsetYInput: this.safeGetElement('offset-y') || document.createElement('input'),
       blurRadiusInput: this.safeGetElement('blur-radius') || document.createElement('input'),
@@ -63,13 +103,11 @@ export class BoxShadowGeneratorController {
       colorInput: this.safeGetElement('shadow-color') || document.createElement('input'),
       opacityInput: this.safeGetElement('shadow-opacity') || document.createElement('input'),
       insetCheckbox: this.safeGetElement('inset-shadow') || document.createElement('input'),
-      // Range displays
       offsetXValue: this.safeGetElement('offset-x-value') || document.createElement('span'),
       offsetYValue: this.safeGetElement('offset-y-value') || document.createElement('span'),
       blurRadiusValue: this.safeGetElement('blur-radius-value') || document.createElement('span'),
       spreadRadiusValue: this.safeGetElement('spread-radius-value') || document.createElement('span'),
       opacityValue: this.safeGetElement('opacity-value') || document.createElement('span'),
-      // Preview customization
       previewWidthInput: this.safeGetElement('preview-width') || document.createElement('input'),
       previewHeightInput: this.safeGetElement('preview-height') || document.createElement('input'),
       previewBgColorInput: this.safeGetElement('preview-bg-color') || document.createElement('input'),
@@ -106,10 +144,8 @@ export class BoxShadowGeneratorController {
   }
 
   private bindEvents(): void {
-    // Add shadow button
     this.safeAddEventListener(this.elements.addShadowBtn, 'click', () => this.addShadow());
 
-    // Shadow control inputs
     this.safeAddEventListener(this.elements.offsetXInput, 'input', () => this.updateActiveShadow());
     this.safeAddEventListener(this.elements.offsetYInput, 'input', () => this.updateActiveShadow());
     this.safeAddEventListener(this.elements.blurRadiusInput, 'input', () => this.updateActiveShadow());
@@ -118,18 +154,15 @@ export class BoxShadowGeneratorController {
     this.safeAddEventListener(this.elements.opacityInput, 'input', () => this.updateActiveShadow());
     this.safeAddEventListener(this.elements.insetCheckbox, 'change', () => this.updateActiveShadow());
 
-    // Preview customization
     this.safeAddEventListener(this.elements.previewWidthInput, 'input', () => this.updatePreviewConfig());
     this.safeAddEventListener(this.elements.previewHeightInput, 'input', () => this.updatePreviewConfig());
     this.safeAddEventListener(this.elements.previewBgColorInput, 'input', () => this.updatePreviewConfig());
     this.safeAddEventListener(this.elements.previewShapeSelect, 'change', () => this.updatePreviewConfig());
 
-    // Tab events
     this.safeAddEventListener(this.tabElements.previewTab, 'click', () => this.switchTab('preview'));
     this.safeAddEventListener(this.tabElements.cssTab, 'click', () => this.switchTab('css'));
     this.safeAddEventListener(this.tabElements.htmlTab, 'click', () => this.switchTab('html'));
 
-    // Copy buttons
     const copyCSS = this.safeGetElement('copy-css');
     this.safeAddEventListener(copyCSS, 'click', () => this.copyCSS());
 
@@ -139,7 +172,6 @@ export class BoxShadowGeneratorController {
     const copyBoth = this.safeGetElement('copy-both');
     this.safeAddEventListener(copyBoth, 'click', () => this.copyBoth());
 
-    // Preset buttons
     this.safeAddEventListener(this.safeGetElement('preset-soft'), 'click', () => this.loadPreset('soft'));
     this.safeAddEventListener(this.safeGetElement('preset-material'), 'click', () => this.loadPreset('material'));
     this.safeAddEventListener(this.safeGetElement('preset-hard'), 'click', () => this.loadPreset('hard'));
@@ -147,7 +179,6 @@ export class BoxShadowGeneratorController {
     this.safeAddEventListener(this.safeGetElement('preset-colored'), 'click', () => this.loadPreset('colored'));
     this.safeAddEventListener(this.safeGetElement('preset-multi'), 'click', () => this.loadPreset('multi'));
 
-    // Reset button
     const resetButton = this.safeGetElement('reset-button');
     this.safeAddEventListener(resetButton, 'click', () => this.resetToDefault());
   }
@@ -332,7 +363,6 @@ export class BoxShadowGeneratorController {
   private generateSingleShadowCSS(shadow: BoxShadowConfig): string {
     const { offsetX, offsetY, blurRadius, spreadRadius, color, opacity, inset } = shadow;
     
-    // Convert hex color to rgba
     const hex = color.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
@@ -363,12 +393,10 @@ export class BoxShadowGeneratorController {
   private switchTab(tab: 'preview' | 'css' | 'html'): void {
     this.activeTab = tab;
 
-    // Update tab buttons
     this.tabElements.previewTab.classList.toggle('active', tab === 'preview');
     this.tabElements.cssTab.classList.toggle('active', tab === 'css');
     this.tabElements.htmlTab.classList.toggle('active', tab === 'html');
 
-    // Update panels
     this.tabElements.previewPanel.classList.toggle('hidden', tab !== 'preview');
     this.tabElements.cssPanel.classList.toggle('hidden', tab !== 'css');
     this.tabElements.htmlPanel.classList.toggle('hidden', tab !== 'html');

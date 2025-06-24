@@ -1,153 +1,126 @@
-import { JsxConverter } from './jsx-converter';
 import { BaseConverterController } from '@/shared/lib/base-converter-controller';
-import type { HtmlToJsxElements, JsxConversionOptions } from '@/shared/types';
+import type { HtmlToJsxElements } from '@/shared/types';
 import { SAMPLE_HTML } from '@/shared/utils';
 
 export class HtmlToJsxConverterController extends BaseConverterController<HtmlToJsxElements> {
-  private converter: JsxConverter | null = null;
-
-  constructor() {
-    super('HtmlToJsxConverter');
-    this.delayedInit();
-  }
-
-  protected getRequiredElementIds(): string[] {
-    return ['htmlInput', 'jsxOutput'];
-  }
-
-  protected hasRequiredElements(): boolean {
-    const requiredIds = this.getRequiredElementIds();
-    return requiredIds.every(id => {
-      try {
-        const element = document.getElementById(id);
-        return element !== null;
-      } catch (error) {
-        console.error(`Error checking element ${id}:`, error);
-        return false;
-      }
-    });
-  }
-
+  
   protected initializeElements(): HtmlToJsxElements {
-    const createElement = <T extends HTMLElement>(tag: string): T =>
-      document.createElement(tag) as T;
-
     return {
-      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || createElement<HTMLTextAreaElement>('textarea'),
-      jsxOutput: this.safeGetElement<HTMLTextAreaElement>('jsxOutput') || createElement<HTMLTextAreaElement>('textarea'),
-      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || createElement<HTMLElement>('div'),
-      successMessage: this.safeGetElement<HTMLElement>('successMessage') || createElement<HTMLElement>('div'),
-      inputStats: this.safeGetElement<HTMLElement>('inputStats') || createElement<HTMLElement>('div'),
-      outputStats: this.safeGetElement<HTMLElement>('outputStats') || createElement<HTMLElement>('div'),
-      options: {
-        prettify: this.safeGetElement<HTMLInputElement>('prettifyOption') || createElement<HTMLInputElement>('input'),
-        camelCase: this.safeGetElement<HTMLInputElement>('camelCaseOption') || createElement<HTMLInputElement>('input'),
-        fragment: this.safeGetElement<HTMLInputElement>('fragmentOption') || createElement<HTMLInputElement>('input'),
-      }
+      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput'),
+      jsxOutput: this.safeGetElement<HTMLTextAreaElement>('jsxOutput'),
+      convertBtn: this.safeGetElement<HTMLButtonElement>('convertBtn'),
+      clearBtn: this.safeGetElement<HTMLButtonElement>('clearBtn'),
+      copyBtn: this.safeGetElement<HTMLButtonElement>('copyBtn'),
+      sampleBtn: this.safeGetElement<HTMLButtonElement>('sampleBtn'),
+      inputCount: this.safeGetElement<HTMLSpanElement>('inputCount'),
+      outputCount: this.safeGetElement<HTMLSpanElement>('outputCount')
     };
-  }
-
-  protected getSampleInput(): string {
-    return SAMPLE_HTML.jsx;
-  }
-
-  protected convert(input: string): string {
-    if (!this.converter) {
-      const options: JsxConversionOptions = {
-        prettify: true,
-        camelCase: true,
-        useFragment: false
-      };
-      this.converter = new JsxConverter(options);
-    }
-    return this.converter.convertToJsx(input);
   }
 
   protected bindEvents(): void {
     if (!this.elements) return;
 
-    this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
-      this.performConversion();
-      this.updateStats();
+    this.safeAddEventListener(this.elements.convertBtn, 'click', (e) => {
+      e.preventDefault();
+      this.convert();
     });
 
-    const convertBtn = this.safeGetElement('convertBtn');
-    this.safeAddEventListener(convertBtn, 'click', () => this.performConversion());
+    this.safeAddEventListener(this.elements.clearBtn, 'click', (e) => {
+      e.preventDefault();
+      this.clear();
+    });
 
-    const clearBtn = this.safeGetElement('clearBtn');
-    this.safeAddEventListener(clearBtn, 'click', () => this.clearAll('htmlInput', 'jsxOutput'));
+    this.safeAddEventListener(this.elements.copyBtn, 'click', (e) => {
+      e.preventDefault();
+      this.copy();
+    });
 
-    const copyBtn = this.safeGetElement('copyBtn');
-    this.safeAddEventListener(copyBtn, 'click', () => this.handleCopy('jsxOutput', 'copyBtn'));
+    this.safeAddEventListener(this.elements.sampleBtn, 'click', (e) => {
+      e.preventDefault();
+      this.loadSample();
+    });
 
-    const sampleBtn = this.safeGetElement('sampleBtn');
-    this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
-
-    this.safeAddEventListener(this.elements.options.prettify, 'change', () => this.updateConverterOptions());
-    this.safeAddEventListener(this.elements.options.camelCase, 'change', () => this.updateConverterOptions());
-    this.safeAddEventListener(this.elements.options.fragment, 'change', () => this.updateConverterOptions());
+    this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
+      this.convert();
+    });
   }
 
-  private performConversion(): void {
-    if (!this.elements?.htmlInput || !this.elements?.jsxOutput) return;
+  protected updateStats(): void {
+    if (!this.elements) return;
 
-    const input = this.elements.htmlInput.value.trim();
+    const inputLength = this.elements.htmlInput?.value?.length || 0;
+    const outputLength = this.elements.pugOutput?.value?.length || 0;
+
+    if (this.elements.inputCount) {
+      this.elements.inputCount.textContent = inputLength.toString();
+    }
+    if (this.elements.outputCount) {
+      this.elements.outputCount.textContent = outputLength.toString();
+    }
+  }
+
+  protected getSampleInput(): string {
+    return SAMPLE_HTML;
+  }
+
+  private convert(): void {
+    if (!this.elements?.htmlInput || !this.elements?.pugOutput) return;
+
+    const htmlContent = this.elements.htmlInput.value;
     
     try {
-      const result = input ? this.convert(input) : '';
-      this.elements.jsxOutput.value = result;
-      this.updateStats();
+      // Simple HTML to Pug conversion (basic implementation)
+      let pugContent = htmlContent;
       
-      if (input && result) {
-        this.showSuccess('HTML successfully converted to JSX!');
-      }
+      // Remove closing tags and convert to Pug syntax
+      pugContent = pugContent.replace(/<(\w+)([^>]*)>(.*?)<\/\1>/g, '$1$2 $3');
+      pugContent = pugContent.replace(/class="([^"]*)"/g, '.$1');
+      pugContent = pugContent.replace(/id="([^"]*)"/g, '#$1');
+      
+      this.elements.pugOutput.value = pugContent;
+      this.updateStats();
     } catch (error) {
       console.error('Conversion error:', error);
-      this.showError(`Conversion error: ${(error as Error).message}`);
-      this.elements.jsxOutput.value = '';
+      this.elements.pugOutput.value = 'Error: Could not convert HTML to Pug';
     }
+  }
+
+  private clear(): void {
+    if (!this.elements) return;
+    
+    if (this.elements.htmlInput) this.elements.htmlInput.value = '';
+    if (this.elements.pugOutput) this.elements.pugOutput.value = '';
+    this.updateStats();
+  }
+
+  private async copy(): void {
+    if (!this.elements?.pugOutput) return;
+
+    try {
+      await navigator.clipboard.writeText(this.elements.pugOutput.value);
+      this.showCopySuccess();
+    } catch (error) {
+      console.error('Copy failed:', error);
+    }
+  }
+
+  private showCopySuccess(): void {
+    if (!this.elements?.copyBtn) return;
+    
+    const originalText = this.elements.copyBtn.textContent;
+    this.elements.copyBtn.textContent = 'Copied!';
+    
+    setTimeout(() => {
+      if (this.elements?.copyBtn && originalText) {
+        this.elements.copyBtn.textContent = originalText;
+      }
+    }, 2000);
   }
 
   private loadSample(): void {
-    if (this.elements?.htmlInput) {
-      this.elements.htmlInput.value = this.getSampleInput();
-      this.performConversion();
-    }
-  }
-
-  private updateConverterOptions(): void {
-    const prettifyOption = this.safeGetElement<HTMLInputElement>('prettifyOption');
-    const camelCaseOption = this.safeGetElement<HTMLInputElement>('camelCaseOption');
-    const fragmentOption = this.safeGetElement<HTMLInputElement>('fragmentOption');
-
-    const options: JsxConversionOptions = {
-      prettify: prettifyOption?.checked ?? true,
-      camelCase: camelCaseOption?.checked ?? true,
-      useFragment: fragmentOption?.checked ?? false
-    };
-
-    this.converter = new JsxConverter(options);
-    this.performConversion();
-  }
-
-  private updateStats(): void {
-    if (!this.elements?.htmlInput || !this.elements?.jsxOutput) return;
-
-    const inputValue = this.elements.htmlInput.value || '';
-    const outputValue = this.elements.jsxOutput.value || '';
-
-    const inputStats = this.calculateStats(inputValue);
-    const outputStats = this.calculateStats(outputValue);
-
-    const inputStatsElement = this.safeGetElement('inputStats');
-    const outputStatsElement = this.safeGetElement('outputStats');
-
-    if (inputStatsElement) {
-      inputStatsElement.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
-    }
-
-    if (outputStatsElement) {
-      outputStatsElement.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
-    }
+    if (!this.elements?.htmlInput) return;
+    
+    this.elements.htmlInput.value = this.getSampleInput();
+    this.convert();
   }
 }

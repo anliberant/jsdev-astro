@@ -1,10 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
 import HtmlToJsxConverter from '@/features/tools/html/jsx/html-to-jsx-converter.astro';
 
-export const prerender = false;
+const title = 'HTML to JSX Converter | JavaScript Development Tools';
+const description =
+  'Convert HTML to JSX with camelCase props, fragments, and formatting options. Free online tool for React developers.';
 ---
 
-<BaseLayout>
+<ToolsLayout
+  title={title}
+  description={description}>
   <HtmlToJsxConverter />
-</BaseLayout>
+</ToolsLayout>

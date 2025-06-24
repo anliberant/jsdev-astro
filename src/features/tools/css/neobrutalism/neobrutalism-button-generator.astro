@@ -1,0 +1,770 @@
+---
+import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
+
+const breadcrumbItems = generateToolsBreadcrumbs('Neobrutalism CSS Button Generator');
+---
+
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
+
+<HeadingBlock
+  title='Neobrutalism CSS Button Generator'
+  description='Create bold, eye-catching buttons with thick borders, vibrant colors, and dramatic shadows in the neobrutalism design style.'
+  class='mt-0'
+/>
+
+<div class='neobrutalism-generator'>
+  <div class='generator-content'>
+    <!-- Controls Panel -->
+    <div class='controls-panel'>
+      <div class='panel-section'>
+        <h3 class='section-title'>Button Text</h3>
+        <div class='control-group'>
+          <label for='button-text'>Text</label>
+          <input
+            type='text'
+            id='button-text'
+            value='Click Me!'
+            class='text-input'
+          />
+        </div>
+        <div class='control-row'>
+          <div class='control-group'>
+            <label for='font-size'>Font Size</label>
+            <input
+              type='range'
+              id='font-size'
+              min='12'
+              max='24'
+              value='16'
+              class='range-input'
+            />
+            <span
+              id='font-size-value'
+              class='range-value'
+              >16px</span
+            >
+          </div>
+          <div class='control-group'>
+            <label for='font-weight'>Weight</label>
+            <select
+              id='font-weight'
+              class='select-input'>
+              <option value='400'>Normal</option>
+              <option value='500'>Medium</option>
+              <option value='600'>Semibold</option>
+              <option
+                value='700'
+                selected
+                >Bold</option
+              >
+              <option value='800'>Extrabold</option>
+              <option value='900'>Black</option>
+            </select>
+          </div>
+        </div>
+        <div class='control-row'>
+          <div class='control-group'>
+            <label for='text-transform'>Transform</label>
+            <select
+              id='text-transform'
+              class='select-input'>
+              <option value='none'>None</option>
+              <option
+                value='uppercase'
+                selected
+                >Uppercase</option
+              >
+              <option value='lowercase'>Lowercase</option>
+              <option value='capitalize'>Capitalize</option>
+            </select>
+          </div>
+          <div class='control-group'>
+            <label for='letter-spacing'>Letter Spacing</label>
+            <input
+              type='range'
+              id='letter-spacing'
+              min='0'
+              max='3'
+              step='0.5'
+              value='1'
+              class='range-input'
+            />
+            <span
+              id='letter-spacing-value'
+              class='range-value'
+              >1px</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class='panel-section'>
+        <h3 class='section-title'>Colors</h3>
+        <div class='color-grid'>
+          <div class='control-group'>
+            <label for='background-color'>Background</label>
+            <div class='color-input-wrapper'>
+              <input
+                type='color'
+                id='background-color'
+                value='#FFEB3B'
+                class='color-input'
+              />
+              <span class='color-value'>#FFEB3B</span>
+            </div>
+          </div>
+          <div class='control-group'>
+            <label for='text-color'>Text</label>
+            <div class='color-input-wrapper'>
+              <input
+                type='color'
+                id='text-color'
+                value='#000000'
+                class='color-input'
+              />
+              <span class='color-value'>#000000</span>
+            </div>
+          </div>
+          <div class='control-group'>
+            <label for='border-color'>Border</label>
+            <div class='color-input-wrapper'>
+              <input
+                type='color'
+                id='border-color'
+                value='#000000'
+                class='color-input'
+              />
+              <span class='color-value'>#000000</span>
+            </div>
+          </div>
+          <div class='control-group'>
+            <label for='shadow-color'>Shadow</label>
+            <div class='color-input-wrapper'>
+              <input
+                type='color'
+                id='shadow-color'
+                value='#000000'
+                class='color-input'
+              />
+              <span class='color-value'>#000000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class='panel-section'>
+        <h3 class='section-title'>Dimensions</h3>
+        <div class='control-row'>
+          <div class='control-group'>
+            <label for='padding-x'>Padding X</label>
+            <input
+              type='range'
+              id='padding-x'
+              min='8'
+              max='40'
+              value='24'
+              class='range-input'
+            />
+            <span
+              id='padding-x-value'
+              class='range-value'
+              >24px</span
+            >
+          </div>
+          <div class='control-group'>
+            <label for='padding-y'>Padding Y</label>
+            <input
+              type='range'
+              id='padding-y'
+              min='6'
+              max='20'
+              value='12'
+              class='range-input'
+            />
+            <span
+              id='padding-y-value'
+              class='range-value'
+              >12px</span
+            >
+          </div>
+        </div>
+        <div class='control-row'>
+          <div class='control-group'>
+            <label for='border-width'>Border Width</label>
+            <input
+              type='range'
+              id='border-width'
+              min='1'
+              max='8'
+              value='3'
+              class='range-input'
+            />
+            <span
+              id='border-width-value'
+              class='range-value'
+              >3px</span
+            >
+          </div>
+          <div class='control-group'>
+            <label for='border-radius'>Border Radius</label>
+            <input
+              type='range'
+              id='border-radius'
+              min='0'
+              max='20'
+              value='8'
+              class='range-input'
+            />
+            <span
+              id='border-radius-value'
+              class='range-value'
+              >8px</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class='panel-section'>
+        <h3 class='section-title'>Shadow Effect</h3>
+        <div class='control-row'>
+          <div class='control-group'>
+            <label for='shadow-x'>Shadow X</label>
+            <input
+              type='range'
+              id='shadow-x'
+              min='0'
+              max='12'
+              value='4'
+              class='range-input'
+            />
+            <span
+              id='shadow-x-value'
+              class='range-value'
+              >4px</span
+            >
+          </div>
+          <div class='control-group'>
+            <label for='shadow-y'>Shadow Y</label>
+            <input
+              type='range'
+              id='shadow-y'
+              min='0'
+              max='12'
+              value='4'
+              class='range-input'
+            />
+            <span
+              id='shadow-y-value'
+              class='range-value'
+              >4px</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class='panel-section'>
+        <h3 class='section-title'>Animation</h3>
+        <div class='control-row'>
+          <div class='control-group'>
+            <label for='hover-effect'>Hover Effect</label>
+            <select
+              id='hover-effect'
+              class='select-input'>
+              <option value='none'>None</option>
+              <option
+                value='lift'
+                selected
+                >Lift</option
+              >
+              <option value='push'>Push</option>
+              <option value='glow'>Glow</option>
+              <option value='shake'>Shake</option>
+            </select>
+          </div>
+          <div class='control-group'>
+            <label for='animation-duration'>Duration</label>
+            <input
+              type='range'
+              id='animation-duration'
+              min='100'
+              max='500'
+              value='200'
+              class='range-input'
+            />
+            <span
+              id='animation-duration-value'
+              class='range-value'
+              >200ms</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class='panel-section'>
+        <h3 class='section-title'>Presets</h3>
+        <div class='presets-grid'>
+          <button
+            class='preset-button'
+            data-preset='electric'
+            >Electric</button
+          >
+          <button
+            class='preset-button'
+            data-preset='candy'
+            >Candy</button
+          >
+          <button
+            class='preset-button'
+            data-preset='midnight'
+            >Midnight</button
+          >
+          <button
+            class='preset-button'
+            data-preset='sunset'
+            >Sunset</button
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Panel -->
+    <div class='output-panel'>
+      <div class='output-tabs'>
+        <button
+          id='preview-tab'
+          class='tab-button active'
+          >Preview</button
+        >
+        <button
+          id='css-tab'
+          class='tab-button'
+          >CSS</button
+        >
+        <button
+          id='html-tab'
+          class='tab-button'
+          >HTML</button
+        >
+      </div>
+
+      <div class='output-content'>
+        <!-- Preview Panel -->
+        <div
+          id='preview-panel'
+          class='tab-panel'>
+          <div class='preview-container'>
+            <div
+              id='buttonPreview'
+              class='button-preview-area'>
+              <button class='neobrutalism-preview-button'>Click Me!</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CSS Panel -->
+        <div
+          id='css-panel'
+          class='tab-panel hidden'>
+          <div class='code-header'>
+            <span class='code-title'>CSS Code</span>
+            <button
+              id='copyBtn'
+              class='copy-button'
+              >Copy CSS</button
+            >
+          </div>
+          <textarea
+            id='cssOutput'
+            class='code-output'
+            readonly
+          ></textarea>
+        </div>
+
+        <!-- HTML Panel -->
+        <div
+          id='html-panel'
+          class='tab-panel hidden'>
+          <div class='code-header'>
+            <span class='code-title'>HTML Code</span>
+            <button
+              id='copy-html'
+              class='copy-button'
+              >Copy HTML</button
+            >
+          </div>
+          <textarea
+            id='html-output'
+            class='code-output'
+            readonly
+          ></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NO SCRIPTS - ToolsLayout handles initialization -->
+
+<style>
+  .neobrutalism-generator {
+    width: 100%;
+    max-width: 1400px;
+    margin: 2rem auto 0;
+  }
+
+  .generator-content {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+    min-height: 700px;
+  }
+
+  /* Controls Panel */
+  .controls-panel {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: fit-content;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .panel-section {
+    margin-bottom: 2rem;
+  }
+
+  .panel-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .control-group {
+    margin-bottom: 1rem;
+  }
+
+  .control-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .control-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .control-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+  }
+
+  .text-input,
+  .select-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: white;
+  }
+
+  .range-input {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+
+  .range-value {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .color-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .color-input {
+    width: 40px;
+    height: 30px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .color-value {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-family: monospace;
+  }
+
+  .presets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .preset-button {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .preset-button:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  /* Output Panel */
+  .output-panel {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    height: fit-content;
+  }
+
+  .output-tabs {
+    display: flex;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .tab-button {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-button.active {
+    background: white;
+    color: #1e293b;
+    border-bottom: 2px solid #3b82f6;
+  }
+
+  .tab-button:hover:not(.active) {
+    color: #374151;
+    background: #f1f5f9;
+  }
+
+  .output-content {
+    padding: 1.5rem;
+    min-height: 400px;
+  }
+
+  .tab-panel.hidden {
+    display: none;
+  }
+
+  /* Preview Panel */
+  .preview-container {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .preview-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" opacity="0.2"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  }
+
+  .button-preview-area {
+    position: relative;
+    z-index: 1;
+  }
+
+  .neobrutalism-preview-button {
+    background-color: #ffeb3b;
+    color: #000000;
+    border: 3px solid #000000;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 4px 4px 0 #000000;
+    cursor: pointer;
+    transition: all 200ms ease;
+    user-select: none;
+  }
+
+  .neobrutalism-preview-button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #000000;
+  }
+
+  .neobrutalism-preview-button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #000000;
+  }
+
+  /* Code Panels */
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .code-title {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .copy-button {
+    padding: 0.5rem 1rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .copy-button:hover {
+    background: #2563eb;
+  }
+
+  .code-output {
+    width: 100%;
+    height: 300px;
+    font-family: 'Fira Code', 'Monaco', 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #f8fafc;
+    color: #1e293b;
+    resize: vertical;
+  }
+
+  .code-output:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .generator-content {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .controls-panel {
+      max-height: none;
+      overflow-y: visible;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .neobrutalism-generator {
+      margin-top: 1rem;
+      padding: 0 1rem;
+    }
+
+    .generator-content {
+      gap: 1rem;
+    }
+
+    .controls-panel,
+    .output-panel {
+      padding: 1rem;
+    }
+
+    .color-grid,
+    .control-row,
+    .presets-grid {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .preview-container {
+      height: 200px;
+    }
+
+    .code-output {
+      height: 200px;
+    }
+  }
+
+  /* Scrollbar Styling */
+  .controls-panel::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .controls-panel::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .controls-panel::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .controls-panel::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* Shake animation */
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-2px);
+    }
+    75% {
+      transform: translateX(2px);
+    }
+  }
+</style>

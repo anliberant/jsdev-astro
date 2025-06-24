@@ -8,7 +8,7 @@ import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 const breadcrumbItems = generateToolsBreadcrumbs('HTML to JSX Converter');
 
 const converterOptions = [
-  { id: 'prettifyOption', label: 'Prettify', checked: true },
+  { id: 'prettifyOption', label: 'Pretty Format', checked: true },
   { id: 'camelCaseOption', label: 'camelCase Props', checked: true },
   { id: 'fragmentOption', label: 'Use Fragment', checked: false },
 ];
@@ -21,7 +21,7 @@ const converterOptions = [
 
 <HeadingBlock
   title='HTML to JSX Converter'
-  description='Easily convert HTML to JSX with this HTML to JSX converter'
+  description='Convert HTML to JSX with camelCase props, fragments, and formatting options.'
   class='mt-0'
 />
 
@@ -52,44 +52,18 @@ const converterOptions = [
   />
 </div>
 
-<script>
-  (() => {
-    const TOOL_NAME = 'html-jsx';
-    const REQUIRED_ELEMENTS = ['htmlInput', 'jsxOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
+<style>
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
 
-    if (!window.location.pathname.includes('html-to-jsx')) {
-      console.log(`${TOOL_NAME}: Not on the correct page, skipping`);
-      return;
+  @media (max-width: 768px) {
+    .main-content {
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
-
-    const checkElements = () => {
-      const missing = REQUIRED_ELEMENTS.filter(id => !document.getElementById(id));
-      if (missing.length > 0) {
-        console.log(`${TOOL_NAME}: Missing elements [${missing.join(', ')}], skipping`);
-        return false;
-      }
-      return true;
-    };
-
-    const initializeTool = async () => {
-      if (!checkElements()) return;
-
-      try {
-        console.log(`${TOOL_NAME}: Initializing...`);
-        const { HtmlToJsxConverterController } = await import('./lib/converter-controller');
-        new HtmlToJsxConverterController();
-        console.log(`✅ ${TOOL_NAME}: Successfully initialized`);
-      } catch (error) {
-        console.error(`❌ ${TOOL_NAME}: Initialization failed:`, error);
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(initializeTool, 100);
-      });
-    } else {
-      setTimeout(initializeTool, 100);
-    }
-  })();
-</script>
+  }
+</style>

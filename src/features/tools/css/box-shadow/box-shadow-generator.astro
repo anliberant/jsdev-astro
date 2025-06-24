@@ -3,59 +3,204 @@ import { generateToolsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 
-import ControlsPanel from './ui/controls-panel.astro';
-import OutputPanel from './ui/output-panel.astro';
-
-const { title, description } = Astro.props;
-
-const breadcrumbItems = generateToolsBreadcrumbs('Box Shadow CSS Generator');
+const breadcrumbItems = generateToolsBreadcrumbs('Box Shadow Generator');
 ---
 
-<div class='box-shadow-generator'>
-  <Breadcrumbs
-    items={breadcrumbItems}
-    class='mt-10'
-  />
-  <HeadingBlock
-    title={title}
-    description={description}
-    class='mt-0'
-  />
+<Breadcrumbs
+  items={breadcrumbItems}
+  class='mt-10'
+/>
 
-  <div class='generator-content'>
-    <ControlsPanel />
-    <OutputPanel />
+<HeadingBlock
+  title='Box Shadow Generator'
+  description='Create stunning CSS box shadows with multiple layers, custom colors, and real-time preview.'
+  class='mt-0'
+/>
+
+<div class='generator-container'>
+  <div class='controls-panel'>
+    <div class='control-group'>
+      <label for='offsetX'>Horizontal Offset (px)</label>
+      <input
+        type='range'
+        id='offsetX'
+        min='-50'
+        max='50'
+        value='0'
+      />
+      <span id='offsetXValue'>0</span>
+    </div>
+
+    <div class='control-group'>
+      <label for='offsetY'>Vertical Offset (px)</label>
+      <input
+        type='range'
+        id='offsetY'
+        min='-50'
+        max='50'
+        value='5'
+      />
+      <span id='offsetYValue'>5</span>
+    </div>
+
+    <div class='control-group'>
+      <label for='blurRadius'>Blur Radius (px)</label>
+      <input
+        type='range'
+        id='blurRadius'
+        min='0'
+        max='100'
+        value='10'
+      />
+      <span id='blurRadiusValue'>10</span>
+    </div>
+
+    <div class='control-group'>
+      <label for='spreadRadius'>Spread Radius (px)</label>
+      <input
+        type='range'
+        id='spreadRadius'
+        min='-50'
+        max='50'
+        value='0'
+      />
+      <span id='spreadRadiusValue'>0</span>
+    </div>
+
+    <div class='control-group'>
+      <label for='shadowColor'>Shadow Color</label>
+      <input
+        type='color'
+        id='shadowColor'
+        value='#000000'
+      />
+    </div>
+
+    <div class='control-group'>
+      <label for='opacity'>Opacity</label>
+      <input
+        type='range'
+        id='opacity'
+        min='0'
+        max='1'
+        step='0.1'
+        value='0.3'
+      />
+      <span id='opacityValue'>0.3</span>
+    </div>
+  </div>
+
+  <div class='preview-panel'>
+    <div class='preview-container'>
+      <div
+        id='shadowPreview'
+        class='shadow-preview'
+      ></div>
+    </div>
+  </div>
+
+  <div class='output-panel'>
+    <div class='output-header'>
+      <h3>CSS Output</h3>
+      <button
+        id='copyBtn'
+        class='copy-btn'
+        >Copy CSS</button
+      >
+    </div>
+    <textarea
+      id='cssOutput'
+      class='css-output'
+      readonly
+    ></textarea>
   </div>
 </div>
 
 <style>
-  .generator-content {
+  .generator-container {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
     gap: 2rem;
-    margin-top: 2.5rem;
-    min-height: 600px;
+    margin-top: 2rem;
   }
 
-  @media (max-width: 1024px) {
-    .generator-content {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
+  .controls-panel {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+
+  .preview-panel {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .output-panel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .control-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .control-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .control-group input[type='range'] {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .preview-container {
+    width: 100%;
+    height: 200px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .shadow-preview {
+    width: 120px;
+    height: 80px;
+    background: white;
+    border-radius: 8px;
+  }
+
+  .css-output {
+    width: 100%;
+    height: 150px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
   }
 
   @media (max-width: 768px) {
-    .generator-content {
-      margin-top: 2rem;
-      gap: 1rem;
+    .generator-container {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+    }
+
+    .controls-panel,
+    .preview-panel,
+    .output-panel {
+      grid-column: 1;
+    }
+
+    .preview-panel {
+      grid-row: 2;
+    }
+
+    .output-panel {
+      grid-row: 3;
     }
   }
 </style>
-
-<script>
-  import { BoxShadowGeneratorController } from './lib/generator-controller';
-
-  document.addEventListener('DOMContentLoaded', () => {
-    new BoxShadowGeneratorController();
-  });
-</script>
