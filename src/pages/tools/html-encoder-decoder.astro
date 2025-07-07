@@ -1,16 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
 import HtmlEncoderDecoder from '@/features/tools/html/encoder/html-encoder-decoder.astro';
 
-const pageTitle = 'HTML Encoder & Decoder | JSdev Tools';
-const pageDescription =
-  'Encode and decode HTML entities, special characters, and symbols quickly and easily with our bidirectional converter tool.';
-
-export const prerender = false;
+const title = 'HTML Encoder & Decoder | JavaScript Development Tools';
+const description =
+  'Encode and decode HTML entities, special characters, and symbols bidirectionally.';
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
+<ToolsLayout
+  title={title}
+  description={description}>
   <HtmlEncoderDecoder />
-</BaseLayout>
+</ToolsLayout>

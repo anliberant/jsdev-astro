@@ -1,19 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
-import NeobrutalismGenerator from '@/features/tools/css/neobrutalism/neobrutalism-generator.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
+import NeobrutalismButtonGenerator from '@/features/tools/css/neobrutalism/neobrutalism-button-generator.astro';
 
-const pageTitle = 'Neobrutalism CSS Button Generator | JSdev Tools';
-const pageDescription =
-  'Create stunning neobrutalism-style buttons with bold colors, thick borders, and dramatic shadows. Generate CSS and HTML code instantly with our interactive button generator.';
-
-export const prerender = false;
+const title = 'Neobrutalism CSS Button Generator | CSS Development Tools';
+const description =
+  'Create bold, eye-catching buttons with thick borders, vibrant colors, and dramatic shadows in the neobrutalism design style.';
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
-  <NeobrutalismGenerator
-    title='Neobrutalism CSS Button Generator'
-    description='Create bold, eye-catching buttons with the distinctive neobrutalism design style featuring thick borders, vibrant colors, and prominent shadows'
-  />
-</BaseLayout>
+<ToolsLayout
+  title={title}
+  description={description}>
+  <NeobrutalismButtonGenerator />
+</ToolsLayout>

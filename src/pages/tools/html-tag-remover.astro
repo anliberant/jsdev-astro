@@ -1,16 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
 import HtmlTagRemover from '@/features/tools/html/tag-remover/html-tag-remover.astro';
 
-const pageTitle = 'HTML Tag Remover | JSdev Tools';
-const pageDescription =
-  'Remove HTML tags from your content while preserving text. Configure removal options and convert HTML entities with our free online tool.';
-
-export const prerender = false;
+const title = 'HTML Tag Remover | JavaScript Development Tools';
+const description =
+  'Remove HTML tags from content while preserving text. Configure removal options and convert entities.';
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
+<ToolsLayout
+  title={title}
+  description={description}>
   <HtmlTagRemover />
-</BaseLayout>
+</ToolsLayout>

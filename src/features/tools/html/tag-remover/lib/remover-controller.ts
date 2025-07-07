@@ -1,197 +1,193 @@
-import { HtmlTagRemover } from './tag-remover';
 import { BaseConverterController } from '@/shared/lib/base-converter-controller';
-import type { TagRemoverElements, TagRemoverOptions } from '../types/remover';
+import type { HtmlTagRemoverElements } from '@/shared/types';
 import { SAMPLE_HTML } from '@/shared/utils';
 
-export class HtmlTagRemoverController extends BaseConverterController<TagRemoverElements> {
-  private remover: HtmlTagRemover | null = null;
-
-  constructor() {
-    super('HtmlTagRemoverController');
-    this.delayedInit();
-  }
-
-  protected getRequiredElementIds(): string[] {
-    return ['htmlInput', 'textOutput'];
-  }
-
-  protected initializeElements(): TagRemoverElements {
-    const createElement = <T extends HTMLElement>(tag: string): T =>
-      document.createElement(tag) as T;
-
+export class HtmlTagRemoverController extends BaseConverterController<HtmlTagRemoverElements> {
+  
+  protected initializeElements(): HtmlTagRemoverElements {
     return {
-      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput') || createElement<HTMLTextAreaElement>('textarea'),
-      textOutput: this.safeGetElement<HTMLTextAreaElement>('textOutput') || createElement<HTMLTextAreaElement>('textarea'),
-      errorMessage: this.safeGetElement<HTMLElement>('errorMessage') || createElement<HTMLElement>('div'),
-      successMessage: this.safeGetElement<HTMLElement>('successMessage') || createElement<HTMLElement>('div'),
-      inputStats: this.safeGetElement<HTMLElement>('inputStats') || createElement<HTMLElement>('div'),
-      outputStats: this.safeGetElement<HTMLElement>('outputStats') || createElement<HTMLElement>('div'),
-      options: {
-        preserveText: this.safeGetElement<HTMLInputElement>('preserveTextOption') || createElement<HTMLInputElement>('input'),
-        preserveWhitespace: this.safeGetElement<HTMLInputElement>('preserveWhitespaceOption') || createElement<HTMLInputElement>('input'),
-        removeSpecificTags: this.safeGetElement<HTMLInputElement>('removeSpecificTagsOption') || createElement<HTMLInputElement>('input'),
-        convertEntities: this.safeGetElement<HTMLInputElement>('convertEntitiesOption') || createElement<HTMLInputElement>('input'),
-      },
+      htmlInput: this.safeGetElement<HTMLTextAreaElement>('htmlInput'),
+      htmlOutput: this.safeGetElement<HTMLTextAreaElement>('htmlOutput'),
+      convertBtn: this.safeGetElement<HTMLButtonElement>('convertBtn'),
+      clearBtn: this.safeGetElement<HTMLButtonElement>('clearBtn'),
+      copyBtn: this.safeGetElement<HTMLButtonElement>('copyBtn'),
+      sampleBtn: this.safeGetElement<HTMLButtonElement>('sampleBtn'),
       tagListInput: this.safeGetElement<HTMLInputElement>('tagListInput'),
-      tagListPanel: this.safeGetElement<HTMLElement>('tagListPanel')
+      tagListPanel: this.safeGetElement<HTMLElement>('tagListPanel'),
+      inputCount: this.safeGetElement<HTMLSpanElement>('inputCount'),
+      outputCount: this.safeGetElement<HTMLSpanElement>('outputCount'),
+      errorMessage: this.safeGetElement<HTMLElement>('errorMessage'),
+      successMessage: this.safeGetElement<HTMLElement>('successMessage')
     };
   }
 
   protected bindEvents(): void {
     if (!this.elements) return;
 
+    this.safeAddEventListener(this.elements.convertBtn, 'click', (e) => {
+      e.preventDefault();
+      this.removeTags();
+    });
+
+    this.safeAddEventListener(this.elements.clearBtn, 'click', (e) => {
+      e.preventDefault();
+      this.clear();
+    });
+
+    this.safeAddEventListener(this.elements.copyBtn, 'click', (e) => {
+      e.preventDefault();
+      this.copy();
+    });
+
+    this.safeAddEventListener(this.elements.sampleBtn, 'click', (e) => {
+      e.preventDefault();
+      this.loadSample();
+    });
+
     this.safeAddEventListener(this.elements.htmlInput, 'input', () => {
-      this.performConversion();
-      this.updateStats();
+      this.removeTags();
     });
 
-    const convertBtn = this.safeGetElement('convertBtn');
-    this.safeAddEventListener(convertBtn, 'click', () => this.performConversion());
-
-    const clearBtn = this.safeGetElement('clearBtn');
-    this.safeAddEventListener(clearBtn, 'click', () => this.clearAll('htmlInput', 'textOutput'));
-
-    const copyBtn = this.safeGetElement('copyBtn');
-    this.safeAddEventListener(copyBtn, 'click', () => this.handleCopy('textOutput', 'copyBtn'));
-
-    const sampleBtn = this.safeGetElement('sampleBtn');
-    this.safeAddEventListener(sampleBtn, 'click', () => this.loadSample());
-
-    Object.values(this.elements.options).forEach(option => {
-      if (option) {
-        this.safeAddEventListener(option, 'change', () => {
-          this.updateRemoverOptions();
-          this.performConversion();
-          this.updateTagListVisibility();
-        });
-      }
+    // Handle specific tags option
+    const removeSpecificOption = this.safeGetElement<HTMLInputElement>('removeSpecificTagsOption');
+    this.safeAddEventListener(removeSpecificOption, 'change', () => {
+      this.toggleTagListPanel();
     });
-
-    if (this.elements.tagListInput) {
-      this.safeAddEventListener(this.elements.tagListInput, 'input', () => {
-        this.updateRemoverOptions();
-        this.performConversion();
-      });
-    }
-
-    this.initializeRemover();
-    this.updateTagListVisibility();
   }
 
-  private initializeRemover(): void {
-    const options = this.getOptions();
-    this.remover = new HtmlTagRemover(options);
-  }
+  protected updateStats(): void {
+    if (!this.elements) return;
 
-  private getOptions(): TagRemoverOptions {
-    if (!this.elements) {
-      return {
-        preserveText: true,
-        preserveWhitespace: false,
-        removeSpecificTags: false,
-        convertEntities: true,
-        tagList: []
-      };
+    const inputLength = this.elements.htmlInput?.value?.length || 0;
+    const outputLength = this.elements.htmlOutput?.value?.length || 0;
+
+    if (this.elements.inputCount) {
+      this.elements.inputCount.textContent = inputLength.toString();
     }
-
-    const tagList = this.elements.tagListInput?.value
-      ?.split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0) || [];
-
-    return {
-      preserveText: this.elements.options.preserveText?.checked ?? true,
-      preserveWhitespace: this.elements.options.preserveWhitespace?.checked ?? false,
-      removeSpecificTags: this.elements.options.removeSpecificTags?.checked ?? false,
-      convertEntities: this.elements.options.convertEntities?.checked ?? true,
-      tagList: tagList
-    };
-  }
-
-  private updateRemoverOptions(): void {
-    const options = this.getOptions();
-    if (this.remover) {
-      this.remover.updateOptions(options);
-    } else {
-      this.remover = new HtmlTagRemover(options);
-    }
-  }
-
-  private performConversion(): void {
-    if (!this.elements?.htmlInput || !this.elements?.textOutput || !this.remover) return;
-
-    const input = this.elements.htmlInput.value.trim();
-    
-    try {
-      const result = input ? this.remover.removeTags(input) : '';
-      this.elements.textOutput.value = result;
-      this.updateStats();
-      
-      if (input && result) {
-        this.showSuccess('HTML tags successfully removed!');
-      }
-    } catch (error) {
-      console.error('Tag removal error:', error);
-      this.showError(`Error removing tags: ${(error as Error).message}`);
-      this.elements.textOutput.value = '';
-      this.updateStats();
-    }
-  }
-
-  private loadSample(): void {
-    if (this.elements?.htmlInput) {
-      this.elements.htmlInput.value = this.getSampleInput();
-      this.performConversion();
-      this.updateStats();
-    }
-  }
-
-  private updateStats(): void {
-    if (!this.elements?.htmlInput || !this.elements?.textOutput) return;
-
-    const inputValue = this.elements.htmlInput.value || '';
-    const outputValue = this.elements.textOutput.value || '';
-
-    const inputStats = this.calculateStats(inputValue);
-    const outputStats = this.calculateStats(outputValue);
-
-    if (this.elements.inputStats) {
-      this.elements.inputStats.textContent = `Lines: ${inputStats.lines}, Characters: ${inputStats.characters}`;
-    }
-
-    if (this.elements.outputStats) {
-      this.elements.outputStats.textContent = `Lines: ${outputStats.lines}, Characters: ${outputStats.characters}`;
-    }
-  }
-
-  private updateTagListVisibility(): void {
-    if (!this.elements?.tagListPanel || !this.elements?.options?.removeSpecificTags) return;
-
-    const isSpecificTagsMode = this.elements.options.removeSpecificTags.checked;
-    
-    if (isSpecificTagsMode) {
-      this.elements.tagListPanel.style.display = 'block';
-    } else {
-      this.elements.tagListPanel.style.display = 'none';
+    if (this.elements.outputCount) {
+      this.elements.outputCount.textContent = outputLength.toString();
     }
   }
 
   protected getSampleInput(): string {
-    return `<div class="content">
-  <h1>Sample HTML Document</h1>
-  <p>This is a <strong>paragraph</strong> with <em>emphasis</em>.</p>
-  <script>alert('This script will be removed');</script>
-  <style>.hidden { display: none; }</style>
-  <span>Some text with <a href="#link">a link</a>.</span>
-  <ul>
-    <li>First item</li>
-    <li>Second item</li>
-  </ul>
-</div>`;
+    return '<div class="container"><h1>Title</h1><p>This is a <strong>sample</strong> paragraph with <a href="#">links</a> and <em>emphasis</em>.</p></div>';
   }
 
-  protected onInitialized(): void {
+  private removeTags(): void {
+    if (!this.elements?.htmlInput || !this.elements?.htmlOutput) return;
+
+    const input = this.elements.htmlInput.value;
+    
+    try {
+      const cleaned = this.processHtml(input);
+      this.elements.htmlOutput.value = cleaned;
+      this.updateStats();
+    } catch (error) {
+      console.error('Tag removal error:', error);
+      this.elements.htmlOutput.value = 'Error: Could not process HTML';
+    }
+  }
+
+  private processHtml(html: string): string {
+    let result = html;
+
+    // Check options
+    const preserveText = this.safeGetElement<HTMLInputElement>('preserveTextOption')?.checked ?? true;
+    const preserveWhitespace = this.safeGetElement<HTMLInputElement>('preserveWhitespaceOption')?.checked ?? false;
+    const removeSpecific = this.safeGetElement<HTMLInputElement>('removeSpecificTagsOption')?.checked ?? false;
+    const convertEntities = this.safeGetElement<HTMLInputElement>('convertEntitiesOption')?.checked ?? true;
+
+    if (removeSpecific && this.elements.tagListInput) {
+      // Remove only specific tags
+      const tags = this.elements.tagListInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+      if (tags.length > 0) {
+        tags.forEach(tag => {
+          const regex = new RegExp(`<${tag}[^>]*>.*?<\/${tag}>`, 'gi');
+          result = result.replace(regex, preserveText ? '$1' : '');
+        });
+      }
+    } else {
+      // Remove all HTML tags
+      if (preserveText) {
+        result = result.replace(/<[^>]*>/g, '');
+      } else {
+        result = result.replace(/<.*?>/g, '');
+      }
+    }
+
+    // Convert HTML entities if requested
+    if (convertEntities) {
+      result = this.decodeHtmlEntities(result);
+    }
+
+    // Handle whitespace
+    if (!preserveWhitespace) {
+      result = result.replace(/\s+/g, ' ').trim();
+    }
+
+    return result;
+  }
+
+  private decodeHtmlEntities(str: string): string {
+    const entityMap: Record<string, string> = {
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+      '&nbsp;': ' '
+    };
+
+    return str.replace(/&[#\w]+;/g, (entity) => entityMap[entity] || entity);
+  }
+
+  private toggleTagListPanel(): void {
+    if (!this.elements?.tagListPanel) return;
+
+    const removeSpecificOption = this.safeGetElement<HTMLInputElement>('removeSpecificTagsOption');
+    if (removeSpecificOption?.checked) {
+      this.elements.tagListPanel.classList.remove('hidden');
+    } else {
+      this.elements.tagListPanel.classList.add('hidden');
+    }
+  }
+
+  private clear(): void {
+    if (!this.elements) return;
+    
+    if (this.elements.htmlInput) this.elements.htmlInput.value = '';
+    if (this.elements.htmlOutput) this.elements.htmlOutput.value = '';
     this.updateStats();
-    console.log('HTML Tag Remover initialized successfully');
+  }
+
+  private async copy(): void {
+    if (!this.elements?.htmlOutput) return;
+
+    try {
+      await navigator.clipboard.writeText(this.elements.htmlOutput.value);
+      this.showCopySuccess();
+    } catch (error) {
+      console.error('Copy failed:', error);
+    }
+  }
+
+  private showCopySuccess(): void {
+    if (!this.elements?.copyBtn) return;
+    
+    const originalText = this.elements.copyBtn.textContent;
+    this.elements.copyBtn.textContent = 'Copied!';
+    
+    setTimeout(() => {
+      if (this.elements?.copyBtn && originalText) {
+        this.elements.copyBtn.textContent = originalText;
+      }
+    }, 2000);
+  }
+
+  private loadSample(): void {
+    if (!this.elements?.htmlInput) return;
+    
+    this.elements.htmlInput.value = this.getSampleInput();
+    this.removeTags();
   }
 }

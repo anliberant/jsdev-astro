@@ -7,7 +7,11 @@ import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 
 const breadcrumbItems = generateToolsBreadcrumbs('HTML ⇄ Markdown Converter');
 
-const converterOptions = [{ id: 'modeToggle', label: 'Markdown to HTML', checked: false }];
+const converterOptions = [
+  { id: 'bidirectionalOption', label: 'Bidirectional Mode', checked: true },
+  { id: 'preserveTablesOption', label: 'Preserve Tables', checked: true },
+  { id: 'prettifyOption', label: 'Pretty Format', checked: true },
+];
 ---
 
 <Breadcrumbs
@@ -17,7 +21,7 @@ const converterOptions = [{ id: 'modeToggle', label: 'Markdown to HTML', checked
 
 <HeadingBlock
   title='HTML ⇄ Markdown Converter'
-  description='Convert between HTML and Markdown formats easily with this bidirectional converter.'
+  description='Bidirectional converter between HTML and Markdown with table support and formatting options.'
   class='mt-0'
 />
 
@@ -26,13 +30,27 @@ const converterOptions = [{ id: 'modeToggle', label: 'Markdown to HTML', checked
   class='mt-10'
 />
 
+<div class='converter-mode-toggle'>
+  <label class='mode-switch'>
+    <input
+      type='checkbox'
+      id='modeToggle'
+    />
+    <span class='slider'></span>
+    <span class='mode-labels'>
+      <span class='html-to-md'>HTML → Markdown</span>
+      <span class='md-to-html'>Markdown → HTML</span>
+    </span>
+  </label>
+</div>
+
 <div class='main-content'>
   <ConverterPanel
     type='input'
     title='HTML Input'
     icon='📝'
     textareaId='htmlInput'
-    placeholder='Paste your HTML content here...'
+    placeholder='Paste your HTML or Markdown content here...'
     showSampleButton={true}
     showStats={true}
   />
@@ -42,55 +60,78 @@ const converterOptions = [{ id: 'modeToggle', label: 'Markdown to HTML', checked
     title='Markdown Output'
     icon='📄'
     textareaId='markdownOutput'
-    placeholder='Markdown content will appear here...'
+    placeholder='Converted content will appear here...'
     readonly={true}
     showStats={true}
   />
 </div>
 
-<script>
-  (() => {
-    const TOOL_NAME = 'html-markdown';
-    const REQUIRED_ELEMENTS = ['htmlInput', 'markdownOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
-    
-    if (!window.location.pathname.includes('html-markdown')) {
-      console.log(`${TOOL_NAME}: Not on the correct page, skipping`);
-      return;
-    }
-
-    const checkElements = () => {
-      const missing = REQUIRED_ELEMENTS.filter(id => !document.getElementById(id));
-      if (missing.length > 0) {
-        console.log(`${TOOL_NAME}: Missing elements [${missing.join(', ')}], skipping`);
-        return false;
-      }
-      return true;
-    };
-
-    const initializeTool = async () => {
-      if (!checkElements()) return;
-
-      try {
-        console.log(`${TOOL_NAME}: Initializing...`);
-        const { HtmlMarkdownController } = await import('./lib/converter-controller');
-        new HtmlMarkdownController();
-        console.log(`✅ ${TOOL_NAME}: Successfully initialized`);
-      } catch (error) {
-        console.error(`❌ ${TOOL_NAME}: Initialization failed:`, error);
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(initializeTool, 100);
-      });
-    } else {
-      setTimeout(initializeTool, 100);
-    }
-  })();
-</script>
-
 <style>
+  .converter-mode-toggle {
+    margin: 1rem 0;
+    text-align: center;
+  }
+
+  .mode-switch {
+    position: relative;
+    display: inline-block;
+    width: 300px;
+    height: 50px;
+  }
+
+  .mode-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #3b82f6;
+    transition: 0.4s;
+    border-radius: 25px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: '';
+    height: 42px;
+    width: 42px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: #10b981;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(146px);
+  }
+
+  .mode-labels {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    pointer-events: none;
+  }
+
   .main-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -103,5 +144,19 @@ const converterOptions = [{ id: 'modeToggle', label: 'Markdown to HTML', checked
       grid-template-columns: 1fr;
       gap: 1rem;
     }
+
+    .mode-switch {
+      width: 250px;
+      height: 40px;
+    }
+
+    .slider:before {
+      height: 32px;
+      width: 32px;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(121px);
+    }
   }
-}
+</style>

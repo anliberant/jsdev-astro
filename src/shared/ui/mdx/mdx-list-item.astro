@@ -11,23 +11,3 @@ const { ...props } = Astro.props;
   {...props}>
   <slot />
 </li>
-
-<style>
-  .mdx-list-item {
-    margin-bottom: 0.5rem;
-    line-height: 1.6;
-    color: hsl(var(--foreground));
-  }
-
-  .mdx-list-item:last-child {
-    margin-bottom: 0;
-  }
-
-  .mdx-list-item:has(> .mdx-list) {
-    margin-bottom: 0.75rem;
-  }
-
-  :global(.dark) .mdx-list-item {
-    color: hsl(var(--foreground));
-  }
-</style>

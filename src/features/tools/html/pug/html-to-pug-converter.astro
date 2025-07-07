@@ -8,9 +8,8 @@ import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 const breadcrumbItems = generateToolsBreadcrumbs('HTML to Pug Converter');
 
 const converterOptions = [
-  { id: 'prettifyOption', label: 'Prettify', checked: true },
-  { id: 'combineTextOption', label: 'Combine Text', checked: false },
-  { id: 'preserveCommentsOption', label: 'Preserve Comments', checked: false },
+  { id: 'prettifyOption', label: 'Pretty Format', checked: true },
+  { id: 'compactOption', label: 'Compact Output', checked: false },
 ];
 ---
 
@@ -21,7 +20,7 @@ const converterOptions = [
 
 <HeadingBlock
   title='HTML to Pug Converter'
-  description='Convert HTML markup to clean Pug template syntax quickly and easily'
+  description='Transform HTML markup into clean, indented Pug template syntax.'
   class='mt-0'
 />
 
@@ -44,55 +43,13 @@ const converterOptions = [
   <ConverterPanel
     type='output'
     title='Pug Output'
-    icon='🎯'
+    icon='🐶'
     textareaId='pugOutput'
     placeholder='Converted Pug code will appear here...'
     readonly={true}
     showStats={true}
   />
 </div>
-
-<script>
-  (() => {
-    const TOOL_NAME = 'html-pug';
-    const REQUIRED_ELEMENTS = ['htmlInput', 'pugOutput', 'convertBtn', 'clearBtn', 'copyBtn'];
-
-    if (!window.location.pathname.includes('html-to-pug')) {
-      console.log(`${TOOL_NAME}: Not on the correct page, skipping`);
-      return;
-    }
-
-    const checkElements = () => {
-      const missing = REQUIRED_ELEMENTS.filter(id => !document.getElementById(id));
-      if (missing.length > 0) {
-        console.log(`${TOOL_NAME}: Missing elements [${missing.join(', ')}], skipping`);
-        return false;
-      }
-      return true;
-    };
-
-    const initializeTool = async () => {
-      if (!checkElements()) return;
-
-      try {
-        console.log(`${TOOL_NAME}: Initializing...`);
-        const { HtmlToPugConverterController } = await import('./lib/converter-controller');
-        new HtmlToPugConverterController();
-        console.log(`✅ ${TOOL_NAME}: Successfully initialized`);
-      } catch (error) {
-        console.error(`❌ ${TOOL_NAME}: Initialization failed:`, error);
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(initializeTool, 100);
-      });
-    } else {
-      setTimeout(initializeTool, 100);
-    }
-  })();
-</script>
 
 <style>
   .main-content {
