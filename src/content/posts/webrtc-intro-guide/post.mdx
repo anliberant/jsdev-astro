@@ -1,0 +1,268 @@
+---
+title: 'Master WebRTC: From Media Capture to Peer Connection'
+slug: webrtc-intro-guide
+heading: A Complete Beginner's Guide to Real-Time Communication with WebRTC
+image: ./images/webrtc-intro-guide.png
+permalink: webrtc-intro-guide
+date: 2025-07-07
+author: anton liberant
+category: javascript
+type: post
+tags: ['WebRTC']
+desc: Learn how WebRTC enables real-time audio/video communication in browsers using peer-to-peer connections. Includes media capture, signaling, and streaming examples.
+---
+
+## 🚀 Introduction
+
+WebRTC (Web Real-Time Communication) is a powerful technology that allows browsers and mobile apps to exchange audio, video, and data in real-time — all without needing an intermediary server. It’s the backbone of modern video calls, screen sharing tools, and real-time collaboration platforms.
+
+This article covers the full WebRTC pipeline: from accessing user media to establishing a secure peer-to-peer (P2P) connection, with practical TypeScript-flavored JavaScript examples.
+
+## 🎥 Capturing Media Streams
+
+### What is a Media Stream?
+
+A stream is a continuous flow of data — in WebRTC, that means audio or video in real time.
+
+### Capturing Audio and Video with `getUserMedia`
+
+```js 
+const constraints = { audio: true, video: true };
+
+navigator.mediaDevices
+  .getUserMedia(constraints)
+  .then((mediaStream) => {
+    console.log('Media stream received:', mediaStream);
+  })
+  .catch((err) => {
+    console.error('Failed to get media:', err);
+  });
+```
+
+💡 The browser will ask for user permission before providing access.
+
+### Displaying Video in a `<video>` Element
+
+```html 
+<video autoplay playsinline id="local-video"></video>
+```
+
+```ts 
+const videoElement = document.getElementById('local-video') as HTMLVideoElement;
+
+navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+  videoElement.srcObject = stream;
+});
+```
+
+## 🎛 Listing and Selecting Devices
+
+You can list all available input/output devices with:
+
+```ts 
+navigator.mediaDevices.enumerateDevices().then((devices) => {
+  devices.forEach((device) => {
+    console.log(`${device.kind}: ${device.label}`);
+  });
+});
+```
+
+🛠 To react to newly connected devices:
+
+```ts 
+navigator.mediaDevices.addEventListener('devicechange', () => {
+  console.log('Device list updated!');
+});
+```
+
+## 🧪 Using Media Constraints
+
+Want to select specific cameras or set video resolution?
+
+```ts 
+const preferredDeviceId = 'abc123'; // from enumerateDevices()
+
+const constraints = {
+  video: {
+    deviceId: { exact: preferredDeviceId },
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    frameRate: { ideal: 30 },
+  },
+  audio: {
+    echoCancellation: true,
+  },
+};
+
+navigator.mediaDevices.getUserMedia(constraints);
+```
+
+## 🖥 Capturing the Screen
+
+```ts 
+const screenStream = await navigator.mediaDevices.getDisplayMedia({
+  video: true,
+});
+document.querySelector('video').srcObject = screenStream;
+```
+
+📌 Note: Browsers may prompt users to select a window or screen.
+
+## 🎚 Managing Media Tracks
+
+Each stream contains one or more tracks (audio/video). You can disable, stop, or access them individually:
+
+```ts 
+const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+const tracks = stream.getTracks();
+
+// Disable track
+tracks[0].enabled = false;
+
+// Stop track completely
+tracks.forEach((track) => track.stop());
+```
+
+## 🌐 Establishing a Peer Connection
+
+WebRTC’s `RTCPeerConnection` allows peers to connect directly:
+
+```ts 
+const config = {
+  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+};
+
+const peerConnection = new RTCPeerConnection(config);
+```
+
+## 📡 ICE, STUN, TURN Explained
+
+- **ICE**: Helps find a working network path between peers.
+- **STUN**: Discovers public IP/port behind NAT.
+- **TURN**: Relays media if direct connection fails.
+
+Example config with TURN:
+
+```ts 
+const config = {
+  iceServers: [
+    { urls: ['stun:stun.l.google.com:19302'] },
+    {
+      urls: 'turn:turn.example.com',
+      username: 'user',
+      credential: 'pass',
+    },
+  ],
+};
+```
+
+## 🔄 ICE Candidate Exchange
+
+ICE candidates must be exchanged manually via signaling (e.g., WebSocket):
+
+**Sending ICE candidates:**
+
+```ts 
+peerConnection.onicecandidate = (event) => {
+  if (event.candidate) {
+    signalingServer.send('ice-candidate', event.candidate);
+  }
+};
+```
+
+**Receiving:**
+
+```ts 
+signalingServer.on('ice-candidate', async (candidate) => {
+  await peerConnection.addIceCandidate(candidate);
+});
+```
+
+## 🤝 Offer/Answer Exchange (SDP)
+
+**Creating an offer:**
+
+```ts 
+const offer = await peerConnection.createOffer();
+await peerConnection.setLocalDescription(offer);
+signalingServer.send('offer', offer);
+```
+
+**Handling offer:**
+
+```ts 
+peerConnection.setRemoteDescription(offer).then(async () => {
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+  signalingServer.send('answer', answer);
+});
+```
+
+## 🎤 Adding Local Media to the Connection
+
+```ts 
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+stream.getTracks().forEach((track) => {
+  peerConnection.addTrack(track, stream);
+});
+```
+
+**Receiving remote media:**
+
+```ts 
+peerConnection.addEventListener('track', (event) => {
+  const remoteStream = event.streams[0];
+  document.getElementById('remote-video').srcObject = remoteStream;
+});
+```
+
+## 🔁 Dynamically Managing Tracks
+
+**Toggle microphone:**
+
+```ts 
+const sender = peerConnection
+  .getSenders()
+  .find((s) => s.track?.kind === 'audio');
+if (sender) sender.track.enabled = false; // or true
+```
+
+**Add new track after connection:**
+
+```ts 
+const newTrack = stream.getVideoTracks()[0];
+peerConnection.addTrack(newTrack, stream);
+```
+
+## ❌ Closing a WebRTC Connection
+
+```ts 
+peerConnection.getSenders().forEach((sender) => sender.track.stop());
+peerConnection.close();
+```
+
+## 👥 Group Calls: Mesh vs SFU vs MCU
+
+### Mesh
+
+Each participant connects directly to all others. Simple, but CPU/network-intensive.
+
+### SFU (Selective Forwarding Unit)
+
+Server forwards media without decoding. Lower client load.
+
+Popular options:
+
+- LiveKit
+- mediasoup
+- Mirotalk
+
+### MCU (Multipoint Control Unit)
+
+Server decodes and mixes streams. Lowest load on client, but higher latency and server cost.
+
+## 🧩 Summary
+
+WebRTC empowers real-time video/audio/data streaming with just a few lines of JavaScript. While simple to get started with, it involves deep concepts like ICE, SDP, and signaling.
+
+Whether you're building a Zoom alternative or live coding interviews — understanding how to capture, send, and receive streams peer-to-peer is the first step.
