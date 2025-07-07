@@ -1,17 +1,13 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
-import BoilerplateGenerator from '@/features/tools/html/boilerplate/boilerplate-generator.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
+import HtmlBoilerplateGenerator from '@/features/tools/html/boilerplate/boilerplate-generator.astro';
 
-const pageTitle = 'HTML Boilerplate Generator | JSdev Tools';
-const pageDescription =
-  'Generate customized HTML5 boilerplates for your projects with our free online tool.';
-
-export const prerender = false;
+const title = 'HTML Boilerplate Generator | JavaScript Development Tools';
+const description = 'Generate customized HTML5 boilerplates with meta tags and structure.';
 ---
 
-<BaseLayout>
-  <BoilerplateGenerator
-    title='HTML Boilerplate Generator'
-    description='Generate customized HTML5 boilerplates for your projects'
-  />
-</BaseLayout>
+<ToolsLayout
+  title={title}
+  description={description}>
+  <HtmlBoilerplateGenerator />
+</ToolsLayout>

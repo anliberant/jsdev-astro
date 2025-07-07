@@ -21,7 +21,7 @@ const converterOptions = [
 
 <HeadingBlock
   title='HTML Encoder & Decoder'
-  description='Encode and decode HTML entities quickly and easily with our bidirectional converter tool.'
+  description='Encode and decode HTML entities, special characters, and symbols bidirectionally.'
   class='mt-0'
 />
 
@@ -29,6 +29,21 @@ const converterOptions = [
   options={converterOptions}
   class='mt-10'
 />
+
+<div class='encoder-controls'>
+  <div class='control-buttons'>
+    <button
+      id='encodeBtn'
+      class='action-btn encode-btn'
+      >Encode HTML</button
+    >
+    <button
+      id='decodeBtn'
+      class='action-btn decode-btn'
+      >Decode HTML</button
+    >
+  </div>
+</div>
 
 <div class='main-content'>
   <ConverterPanel
@@ -52,24 +67,45 @@ const converterOptions = [
   />
 </div>
 
-<script>
-  import {
-    initializeConverters,
-    registerConverter,
-  } from '@/shared/lib/universal-converter-initializer';
-
-  import { HtmlEncoderDecoderController } from './lib/encoder-controller';
-
-  registerConverter({
-    name: 'HtmlEncoderDecoder',
-    requiredElements: ['htmlInput', 'htmlOutput', 'convertBtn', 'clearBtn', 'copyBtn'],
-    controllerClass: HtmlEncoderDecoderController,
-  });
-
-  initializeConverters();
-</script>
-
 <style>
+  .encoder-controls {
+    margin: 1rem 0;
+    text-align: center;
+  }
+
+  .control-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .action-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .encode-btn {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .encode-btn:hover {
+    background: #2563eb;
+  }
+
+  .decode-btn {
+    background: #10b981;
+    color: white;
+  }
+
+  .decode-btn:hover {
+    background: #059669;
+  }
+
   .main-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -81,6 +117,15 @@ const converterOptions = [
     .main-content {
       grid-template-columns: 1fr;
       gap: 1rem;
+    }
+
+    .control-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .action-btn {
+      width: 200px;
     }
   }
 </style>

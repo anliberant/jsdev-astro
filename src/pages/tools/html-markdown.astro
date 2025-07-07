@@ -1,16 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
 import HtmlMarkdownConverter from '@/features/tools/html/markdown/html-markdown-converter.astro';
 
-const pageTitle = 'HTML ⇄ Markdown Converter | JSdev Tools';
-const pageDescription =
-  'Convert between HTML and Markdown formats easily with this bidirectional converter. Import and export files with full support for tables, links, images, and more.';
-
-export const prerender = false;
+const title = 'HTML ⇄ Markdown Converter | JavaScript Development Tools';
+const description =
+  'Bidirectional converter between HTML and Markdown with table support and formatting options.';
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
+<ToolsLayout
+  title={title}
+  description={description}>
   <HtmlMarkdownConverter />
-</BaseLayout>
+</ToolsLayout>

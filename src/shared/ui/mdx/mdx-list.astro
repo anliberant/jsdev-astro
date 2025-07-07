@@ -13,36 +13,3 @@ const Tag = ordered ? 'ol' : 'ul';
   {...props}>
   <slot />
 </Tag>
-
-<style>
-  .mdx-list {
-    margin: 1.5rem 0;
-    padding-left: 2rem;
-    line-height: 1.6;
-  }
-
-  .mdx-list.unordered {
-    list-style-type: disc;
-  }
-
-  .mdx-list.ordered {
-    list-style-type: decimal;
-  }
-
-  .mdx-list .mdx-list {
-    margin: 0.5rem 0;
-    padding-left: 1.5rem;
-  }
-
-  .mdx-list.unordered .mdx-list.unordered {
-    list-style-type: circle;
-  }
-
-  .mdx-list.unordered .mdx-list.unordered .mdx-list.unordered {
-    list-style-type: square;
-  }
-
-  :global(.dark) .mdx-list {
-    color: hsl(var(--foreground));
-  }
-</style>

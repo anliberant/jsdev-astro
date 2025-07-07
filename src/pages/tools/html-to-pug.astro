@@ -1,10 +1,14 @@
 ---
-import BaseLayout from '@/app/layouts/base-layout.astro';
+import ToolsLayout from '@/app/layouts/tools-layout.astro';
 import HtmlToPugConverter from '@/features/tools/html/pug/html-to-pug-converter.astro';
 
-export const prerender = false;
+const title = 'HTML to Pug Converter | JavaScript Development Tools';
+const description =
+  'Transform HTML markup into clean, indented Pug template syntax. Free online converter tool.';
 ---
 
-<BaseLayout>
+<ToolsLayout
+  title={title}
+  description={description}>
   <HtmlToPugConverter />
-</BaseLayout>
+</ToolsLayout>

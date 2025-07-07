@@ -11,22 +11,3 @@ const { ...props } = Astro.props;
   {...props}>
   <slot />
 </blockquote>
-
-<style>
-  .mdx-blockquote {
-    border-left: 2px solid #d1d5db;
-    color: #6b7280;
-    padding-left: 1rem;
-    margin: 1.5rem 0;
-    font-style: italic;
-    background-color: #f9fafb;
-    padding: 1rem;
-    border-radius: var(--radius);
-  }
-
-  :global(.dark) .mdx-blockquote {
-    border-left-color: #4b5563;
-    color: #9ca3af;
-    background-color: #1f2937;
-  }
-</style>
