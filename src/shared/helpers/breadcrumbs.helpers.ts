@@ -25,10 +25,11 @@ export function generateTagBreadcrumbs(
 export function generateCategoryBreadcrumbs(
   categoryName: string,
   categorySlug: string,
-  currentPage?: number
+  currentPage?: number,
+  isHowto = false,
 ): BreadcrumbItem[] {
   const items: BreadcrumbItem[] = [
-    { label: 'Categories', href: '/categories/' },
+    { label: isHowto ? 'Howto' : 'Categories', href: isHowto ? '/howto/' : '/categories/' },
     { label: categoryName, href: `/${categorySlug}/` },
   ];
 
