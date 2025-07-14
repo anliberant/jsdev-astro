@@ -1,0 +1,271 @@
+---
+title: '3D Image Gallery with Three.js: Interactive Image Switching'
+slug: 3d-image-gallery
+heading: 'Building a 3D Image Gallery with Three.js for Interactive Navigation'
+image: ./images/3d-image-gallery.png
+permalink: 3d-image-gallery
+date: 2025-07-14
+author: anton liberant
+category: threejs
+type: post
+tags: ['3d-gallery']
+desc: Learn how to create an interactive 3D image gallery using Three.js. Switch images smoothly and navigate with thumbnail previews in this engaging web app.
+---
+
+In this tutorial, we'll create an interactive 3D image gallery using HTML, CSS, and Three.js. The user can switch between images displayed in a 3D space by clicking on the thumbnail images. This creates a dynamic and visually appealing experience.
+
+## Key Features:
+
+- **3D transitions**: Images are displayed with smooth 3D transitions.
+- **Thumbnail navigation**: Clicking on thumbnails switches the active image in the 3D canvas.
+- **Responsive design**: The gallery adapts to different screen sizes.
+
+## Technologies Used:
+
+- **Three.js**: A JavaScript library for rendering 3D scenes.
+- **CSS3**: For styling and transitions.
+- **HTML5**: Basic HTML structure for the gallery.
+
+<p class="codepen" data-height="300" data-default-tab="html,result" data-slug-hash="ByoNLjg" data-pen-title="3D Image Switching Effect" data-user="jsdevspace" style="height: 300px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;">
+  <span>See the Pen <a href="https://codepen.io/jsdevspace/pen/ByoNLjg">
+  3D Image Switching Effect</a> by JSDev Space (<a href="https://codepen.io/jsdevspace">@jsdevspace</a>)
+  on <a href="https://codepen.io">CodePen</a>.</span>
+</p>
+<script async src="https://public.codepenassets.com/embed/index.js"></script>
+
+## Step 1: HTML Structure
+
+The HTML structure defines the main gallery container, a canvas for rendering 3D images, and the thumbnail navigation container.
+
+```html 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <title>3D Image Gallery</title>
+    <style>
+        /* CSS styles for the gallery */
+    </style>
+</head>
+<body>
+    <div class="gallery-container">
+        <div class="border-outside">
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <span class="border-inside"></span>
+            </div>
+        </div>
+        <div class="thumbnails" id="thumbnails"></div>
+    </div>
+    <script type="module">
+        // JavaScript for 3D rendering
+    </script>
+</body>
+</html>
+```
+
+## Step 2: CSS Styling
+
+The CSS defines the layout of the gallery, including the **3D canvas**, **borders**, and **thumbnails**.
+
+```css 
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background: #ffdfc4;
+}
+
+.gallery-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('https://img.blacklead.work/grid.svg');
+}
+
+.canvas-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 350px;
+    height: 350px;
+    transform: translate(-50%, -50%);
+    clip-path: circle(50% at 50% 50%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.border-inside {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 340px;
+    height: 340px;
+    border: 10px solid black;
+    border-radius: 100%;
+    transform: translate(-50%, -50%);
+}
+
+.border-outside {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 364px;
+    height: 364px;
+    background: black;
+    border-radius: 100%;
+    transform: translate(-50%, -50%);
+}
+
+.thumbnails {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.thumbnail {
+    width: 74px;
+    height: 105px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.4s ease;
+}
+
+.thumbnail img {
+    width: 66px;
+    height: 99px;
+    object-fit: cover;
+}
+```
+
+## Step 3: JavaScript for 3D Image Switching
+
+The JavaScript code initializes the **Three.js** scene, loads the images, and enables the thumbnail interaction.
+
+```js 
+let renderer, scene, camera;
+let textures = [];
+let activeImage = 0;
+let isAnimating = false;
+
+const images = [
+    {
+        url: 'https://images.pexels.com/photos/31097480/pexels-photo-31097480.jpeg',
+        title: 'Image 1',
+    },
+    {
+        url: 'https://images.pexels.com/photos/29538442/pexels-photo-29538442.jpeg',
+        title: 'Image 2',
+    },
+    {
+        url: 'https://images.pexels.com/photos/31495882/pexels-photo-31495882.jpeg',
+        title: 'Image 3',
+    },
+];
+
+const imagesThumbnail = [
+    {
+        url: 'https://images.pexels.com/photos/31097480/pexels-photo-31097480.jpeg',
+        title: 'Image 1',
+    },
+    {
+        url: 'https://images.pexels.com/photos/29538442/pexels-photo-29538442.jpeg',
+        title: 'Image 2',
+    },
+    {
+        url: 'https://images.pexels.com/photos/31495882/pexels-photo-31495882.jpeg',
+        title: 'Image 3',
+    },
+];
+
+function init() {
+    const container = document.getElementById('canvasWrapper');
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.z = 10;
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(350, 350);
+    container.appendChild(renderer.domElement);
+
+    const loader = new THREE.TextureLoader();
+    let loadCount = 0;
+    images.forEach((img, idx) => {
+        loader.load(img.url, (tex) => {
+            textures[idx] = tex;
+            loadCount++;
+            if (loadCount === images.length) {
+                createScene();
+                animate();
+            }
+        });
+    });
+
+    createThumbnails();
+}
+
+function createScene() {
+    const geometry = new THREE.PlaneGeometry(8, 8);
+    const material = new THREE.MeshBasicMaterial({ map: textures[activeImage] });
+    const plane = new THREE.Mesh(geometry, material);
+    scene.add(plane);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+
+function createThumbnails() {
+    const thumbsContainer = document.getElementById('thumbnails');
+    imagesThumbnail.forEach((img, idx) => {
+        const thumb = document.createElement('div');
+        thumb.classList.add('thumbnail');
+        const imgElement = document.createElement('img');
+        imgElement.src = img.url;
+        thumb.appendChild(imgElement);
+        thumb.addEventListener('click', () => handleThumbnailClick(idx));
+        thumbsContainer.appendChild(thumb);
+    });
+}
+
+function handleThumbnailClick(index) {
+    if (isAnimating) return;
+
+    // Remove any existing active state from thumbnails
+    const thumbs = document.querySelectorAll('.thumbnail');
+    thumbs.forEach(thumb => thumb.classList.remove('active'));
+
+    // Add active state to the clicked thumbnail
+    const clickedThumbnail = document.querySelectorAll('.thumbnail')[index];
+    clickedThumbnail.classList.add('active');
+
+    // Change active image and update the scene
+    activeImage = index;
+    isAnimating = true;
+
+    // Update texture on the 3D plane
+    setTimeout(() => {
+        scene.children[0].material.map = textures[activeImage];
+        isAnimating = false;
+    }, 600); // Wait for the transition effect
+}
+
+document.addEventListener('DOMContentLoaded', init);
+```
+
+### Key Concepts and Changes:
+
+1. **Texture Loader**: We use THREE.TextureLoader to load the images and apply them as textures to a 3D plane.
+2. **Thumbnail Interaction**: Clicking on a thumbnail updates the displayed image in the 3D canvas.
+3. **Active State for Thumbnails**: The clicked thumbnail is visually highlighted with an active class.
+4. **Smooth Transition**: The image switch includes a smooth transition using the setTimeout to allow for animation.
+
+## Conclusion
+
+In this tutorial, we've learned how to create an interactive 3D image gallery using Three.js and CSS. This setup allows users to click on thumbnails to switch images with smooth transitions, making the gallery visually engaging.
+
+Feel free to customize the gallery, change the images, and adjust the styles and transitions to better fit your needs. Let me know if you need further improvements or have additional questions!
