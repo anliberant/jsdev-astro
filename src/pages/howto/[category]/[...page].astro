@@ -88,8 +88,9 @@ if (!category || !page || !categoryName) {
 
 const breadcrumbItems = generateCategoryBreadcrumbs(
   categoryName,
-  category,
-  currentPage > 1 ? currentPage : undefined
+  'howto/' + category,
+  currentPage > 1 ? currentPage : undefined,
+  true
 );
 
 const pageTitle =
@@ -134,9 +135,9 @@ const pageDescription = `Explore ${totalPosts} ${categoryName.toLowerCase()} pos
     {
       numberOfPages > 1 && (
         <Pagination
-          numPages={page.lastPage}
+          numPages={numberOfPages}
           currentPage={currentPage}
-          slug={category}
+          slug={'howto/' + category}
         />
       )
     }

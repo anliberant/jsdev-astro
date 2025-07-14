@@ -93,8 +93,8 @@ const pageDescription =
 
 const canonicalUrl =
   isFirstPage ?
-    `${siteConfig.siteUrl}/tags/${tag}/`
-  : `${siteConfig.siteUrl}/tags/${tag}/${currentPage}/`;
+    `${siteConfig.siteUrl}/tag/${tag}/`
+  : `${siteConfig.siteUrl}/tag/${tag}/${currentPage}/`;
 
 const shouldIndex = isFirstPage;
 const robotsContent = shouldIndex ? 'index, follow' : 'noindex, follow';
