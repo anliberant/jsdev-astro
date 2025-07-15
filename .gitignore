@@ -24,6 +24,7 @@ pnpm-debug.log*
 
 # Editor specific
 .idea/
+.netlify/
 *.swp
 *.swo
 .vscode/
