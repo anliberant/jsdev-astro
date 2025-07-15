@@ -2,7 +2,6 @@
 import { siteConfig } from '@/app/config/site';
 import Footer from '@/widgets/footer/footer.astro';
 import Header from '@/widgets/header/header.astro';
-import PostHog from '@/shared/ui/layout/posthog.astro';
 
 import '@/shared/styles/global.css';
 
@@ -146,10 +145,8 @@ const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}${
       rel='sitemap'
       href='/sitemap-index.xml'
     />
-
     <!-- Additional head content slot -->
     <slot name='head' />
-    <PostHog />
   </head>
   <body>
     <div class='container'>
