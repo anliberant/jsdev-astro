@@ -23,7 +23,10 @@ const {
 } = Astro.props;
 
 const fullTitle = title || siteConfig.title;
-const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}/${image}`;
+const fullImageUrl =
+  image.startsWith('http') ?
+    new URL(image).toString()
+  : new URL(image.replace(/^\.?\//, ''), siteConfig.siteUrl).toString();
 ---
 
 <!doctype html>
