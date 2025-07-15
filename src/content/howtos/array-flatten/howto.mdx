@@ -1,0 +1,146 @@
+---
+title: How to Flatten Arrays in JavaScript Like a Pro
+slug: array-flatten
+heading: Mastering Array Flattening in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/array-flatten
+date: 2025-07-15
+author: anton liberant
+category: javascript
+type: howto
+tags: ['flatten']
+desc: Learn how to flatten nested arrays in JavaScript using recursion, iteration, and modern techniques. Includes full ES5, ES6, reduce, stack, and spread implementations
+---
+
+Flattening arrays is a common task in JavaScript development, especially when dealing with nested structures. In this article, you’ll learn how to implement your own `Array.prototype.myFlat` method from scratch—just like the native `flat()`—using different techniques.
+
+## 🔍 What Is Array Flattening?
+
+Flattening means converting a deeply nested array into a single-level array:
+
+```js
+const arr = [0, 1, [2, [3, [4, 5]]]];
+// After flattening: [0, 1, 2, 3, 4, 5]
+```
+
+---
+
+## ✅ Understanding Native `flat()`
+
+```js
+[1, [2, [3]]].flat(2);         // [1, 2, 3]
+[1, , 2].flat();               // [1, 2]
+[1, [2, 3]].flat("2");        // [1, 2, 3]
+[1, [2, [3]]].flat(Infinity); // [1, 2, 3]
+```
+
+**Key behaviors:**
+
+- Doesn't mutate the original array
+- Default depth is `1`
+- Converts depth to a number (e.g. "2" → 2, NaN → 0)
+- Skips empty slots in sparse arrays
+
+---
+
+## 📐 ES6 Implementation with Recursion
+
+```js
+Array.prototype.myFlat = function (depth = 1) {
+  const arr = this;
+  depth = Number.isNaN(+depth) ? 0 : Math.floor(depth);
+  if (depth < 1) return arr.filter(() => true);
+
+  const result = [];
+  for (let i = 0; i < arr.length; i++) {
+    if (!Object.hasOwn(arr, i)) continue;
+    const item = arr[i];
+    result.push(...(Array.isArray(item) ? item.myFlat(depth - 1) : [item]));
+  }
+  return result;
+};
+```
+
+---
+
+## 🔁 Reduce-Based Functional Version
+
+```js
+Array.prototype.myFlat = function (depth = 1) {
+  const arr = this;
+  depth = Number.isNaN(+depth) ? 0 : Math.floor(depth);
+  if (depth < 1) return arr.filter(() => true);
+
+  return arr.reduce((acc, curr, i) => {
+    if (!Object.hasOwn(arr, i)) return acc;
+    return acc.concat(Array.isArray(curr) ? curr.myFlat(depth - 1) : [curr]);
+  }, []);
+};
+```
+
+---
+
+## 🧱 Stack-Based Iterative Implementation
+
+```js
+Array.prototype.myFlat = function (depth = 1) {
+  const arr = this;
+  depth = Number.isNaN(+depth) ? 0 : Math.floor(depth);
+  if (depth < 1) return arr.filter(() => true);
+
+  const result = [];
+  const stack = arr.filter(() => true).map(item => ({ value: item, depth: 1 }));
+
+  while (stack.length > 0) {
+    const { value, depth: d } = stack.pop();
+    if (Array.isArray(value) && d <= depth) {
+      stack.push(...value.filter(() => true).map(v => ({ value: v, depth: d + 1 })));
+    } else {
+      result.unshift(value);
+    }
+  }
+  return result;
+};
+```
+
+---
+
+## ✨ Spread-Based Deep Flatten (No Depth Limit)
+
+```js
+Array.prototype.myFlat = function () {
+  let arr = this.filter(() => true);
+  while (arr.some(item => Array.isArray(item))) {
+    arr = [].concat(...arr).filter(() => true);
+  }
+  return arr;
+};
+```
+
+> ⚠️ Spread version fully flattens the array. No depth control.
+
+---
+
+## 🧪 Examples
+
+```js
+const array = [1, , 2, undefined, [3, [4, [5, 6]]]];
+
+console.log(array.myFlat());       // [1, 2, undefined, 3, [4, [5, 6]]]
+console.log(array.myFlat(2));      // [1, 2, undefined, 3, 4, [5, 6]]
+console.log(array.myFlat(Infinity)); // [1, 2, undefined, 3, 4, 5, 6]
+```
+
+---
+
+## 🧠 Summary
+
+We’ve covered multiple strategies for flattening arrays:
+
+- Recursive with `for` loop
+- Functional with `reduce`
+- Iterative with a stack
+- Deep flatten using `spread`
+
+The recursive approach is readable, but a stack is safer for large depths. Now you can flatten like a pro, with or without `.flat()`!
