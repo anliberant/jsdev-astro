@@ -1,0 +1,180 @@
+---
+title: 'How to Master Regular Expressions for Frontend Development'
+slug: regex-guide-frontend
+heading: The Ultimate Guide to Using Regular Expressions in Frontend
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/regex-guide-frontend
+date: 2025-07-15
+author: anton liberant
+category: javascript
+type: howto
+tags: ['RegEx']
+desc: Learn how to use regular expressions to validate forms, extract data, and clean strings. Master regex from basics to advanced use cases with real examples.
+---
+
+## Introduction
+
+Regular expressions (regex) are powerful tools for string manipulation—enabling you to search, match, clean, extract, and format text efficiently. In frontend development, mastering regex can save you from writing tens of lines of imperative code by compressing logic into a single elegant pattern.
+
+This guide walks you through everything from beginner syntax to advanced techniques like assertions, modifiers, and practical use cases that solve 90% of frontend string processing needs.
+
+## Why Regular Expressions Matter
+
+### ✅ Advantages
+- **Concise logic**: A single regex pattern can replace loops and conditionals.
+- **Fast performance**: Optimized engines under the hood beat manual operations.
+- **Wide applicability**: From form validation to data parsing, regex fits everywhere.
+
+## 7 Real-World Use Cases
+
+```ts
+// 1. Form validation (phone/email)
+const phone = /^1[3-9]\d{9}$/;
+const email = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+
+// 2. Remove HTML tags
+const cleanHTML = (str) => str.replace(/<[^>]+>/g, "");
+
+// 3. Dynamic route parsing
+const path = "/user/123/profile";
+const match = path.match(/^\/user\/(\d+)\/(\w+)$/);
+console.log(match?.[1]); // "123"
+```
+
+## Creating Regular Expressions
+
+### 📌 Two Ways to Define Regex
+
+```ts
+const regex1 = /\d{3}/g;
+const pattern = "\\d{3}";
+const regex2 = new RegExp(pattern, "gi");
+```
+
+## Modifiers in Depth
+
+| Modifier | Purpose | Example |
+|----------|---------|---------|
+| `g` | Global match | `"a1a2".match(/a/g)` → `["a", "a"]` |
+| `i` | Case-insensitive | `"Apple".match(/apple/i)` |
+| `m` | Multi-line anchors | `"a\nb".match(/^a|b$/gm)` |
+
+```ts
+const lines = `1.Apple\n2.Banana\n3.Orange`;
+lines.match(/^\d+/gm); // ["1", "2", "3"]
+```
+
+## Metacharacters & Character Classes
+
+```ts
+const hexColor = /^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/;
+const nonAlpha = /[^a-zA-Z]/g;
+console.log("Hi123!".replace(nonAlpha, "_")); // "Hi___"
+```
+
+## Quantifiers
+
+| Syntax | Description | Example |
+|--------|-------------|---------|
+| `{n}` | Exactly `n` | `\d{4}` |
+| `{n,}` | At least `n` | `\w{3,}` |
+| `{n,m}` | Between `n` and `m` | `\s{1,3}` |
+| `?` | 0 or 1 | `-?\d+` |
+| `+` | 1 or more | `[a-z]+` |
+| `*` | 0 or more | `.*` |
+
+```ts
+const lazyMatch = /<div>.*?<\/div>/g;
+"<div>A</div><div>B</div>".match(lazyMatch); // ["<div>A</div>", "<div>B</div>"]
+```
+
+## Grouping and Assertions
+
+```ts
+const repeat = /(bye\s){2}/;
+console.log(repeat.test("bye bye ")); // true
+
+const date = /(\d{4})-(\d{2})-(\d{2})/;
+"2025-04-02".replace(date, "$2/$3/$1"); // "04/02/2025"
+```
+
+| Type | Syntax | Meaning |
+|------|--------|---------|
+| Lookahead | `(?=abc)` | Must be followed |
+| Negative LA | `(?!abc)` | Must NOT be followed |
+| Lookbehind | `(?<=abc)` | Must be preceded |
+| Negative LB | `(?<!abc)` | Must NOT be preceded |
+
+```ts
+const password = /^(?=.*[a-zA-Z])(?=.*\d).{6,12}$/;
+const price = "￥123.45元";
+price.match(/(?<=￥)\d+\.?\d*/); // ["123.45"]
+```
+
+## RegExp and String Methods
+
+```ts
+const hasDigits = /\d+/;
+console.log(hasDigits.test("abc123")); // true
+
+const pattern = /\d+/g;
+let result;
+while ((result = pattern.exec("a1 b2 c3")) !== null) {
+  console.log(result[0], result.index);
+}
+
+"2025-04-02".split(/-/); // ["2025", "04", "02"]
+"let x = 1;".replace(/(let)/g, '<span>$1</span>');
+```
+
+## 6 Regex Examples
+
+```ts
+const banned = ["violence", "spam"];
+const censor = new RegExp(banned.join("|"), "gi");
+console.log("No violence here".replace(censor, "***"));
+
+const markdown = `# Title\n## Subtitle\nText`;
+markdown.match(/^#+\s(.+)$/gm);
+
+const toCamel = (s) => s.replace(/[-_](.)/g, (_, c) => c.toUpperCase());
+toCamel("user-name"); // "userName"
+
+(1234567.89).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+const params = {};
+"example.com?name=John&age=30".replace(/([^?=&]+)=([^&]*)/g, (_, k, v) => params[k] = v);
+
+const code = "let x = 123; // comment";
+code
+  .replace(/\/\/.*$/gm, '<span class="comment">$&</span>')
+  .replace(/\blet\b/g, '<span class="keyword">$&</span>');
+```
+
+## Pitfalls to Avoid
+
+- **Greedy Match**  
+  ❌ `/div>.*<\/div>/`  
+  ✅ `/div>.*?<\/div>/g`
+
+- **Escaping Errors**  
+  ❌ `new RegExp("a.b")`  
+  ✅ `new RegExp("a\\.b")`
+
+- **Backtracking**  
+  ❌ `/(a+)+b/`  
+  ✅ `/a+b/`
+
+- **Unicode Matching**  
+  ❌ `/[一-龥]/`  
+  ✅ `/\p{Script=Han}/u`
+
+## Tools
+
+- [**Regex101**](https://regex101.com/) – Online test & explanation  
+- [**Debuggex**](https://www.debuggex.com/) – Flow-based regex debugger  
+
+## Final Thoughts
+
+Regular expressions are a frontend superpower. With this guide, you’ve covered everything from creation to debugging and common pitfalls. Practice often and bookmark this as your regex cheat sheet!
