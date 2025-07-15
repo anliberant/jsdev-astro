@@ -1,0 +1,175 @@
+---
+title: 'How to Replace JSON.parse(JSON.stringify()) with structuredClone'
+slug: modern-deep-clone-js
+heading: "Ditch JSON.parse(JSON.stringify()): Modern Deep Cloning with structuredClone"
+icon: /icons/javascript.png
+image: ./images/icon.png
+permalink: howto/modern-deep-clone-js
+date: 2025-07-15
+author: anton liberant
+category: javascript
+type: howto
+tags: ['structuredClone']
+desc: Stop using JSON.parse(JSON.stringify())! Learn how to use structuredClone for fast, native deep cloning with circular reference support in JavaScript.
+---
+
+Deep copying objects in JavaScript has long been a challenge. Many developers default to `JSON.parse(JSON.stringify(obj))`—but that approach fails with circular references, functions, and complex data structures.
+
+In this guide, you’ll learn how to safely and efficiently perform deep cloning using the modern, built-in `structuredClone()` API.
+
+---
+
+## 🧨 The Problem with JSON.stringify()
+
+Let’s look at a common bug caused by circular references:
+
+```js
+const a = {};
+const b = { parent: a };
+a.child = b; // Circular reference
+
+const clone = JSON.parse(JSON.stringify(a));
+// ❌ Throws: Converting circular structure to JSON
+```
+
+The classic `JSON.parse(JSON.stringify(...))` trick fails here because JSON doesn't support circular references or special objects like `Date`, `RegExp`, `Map`, or `Set`.
+
+---
+
+## 🔁 A Recursive Solution
+
+A custom deep clone function can solve this:
+
+```js
+function deepClone(obj, hash = new Map()) {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  if (hash.has(obj)) return hash.get(obj);
+
+  const clone = Array.isArray(obj) ? [] : {};
+  hash.set(obj, clone);
+
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      clone[key] = deepClone(obj[key], hash);
+    }
+  }
+  return clone;
+}
+
+// Test
+const a = {};
+const b = { parent: a };
+a.child = b;
+const cloned = deepClone(a);
+console.log(cloned.child.parent === cloned); // ✅ true
+```
+
+This works—but it’s verbose and easy to get wrong.
+
+---
+
+## ✨ Introducing structuredClone()
+
+Say hello to `structuredClone()`—a native API built into modern browsers and Node.js.
+
+```js
+const clone = structuredClone(value);
+```
+
+It deeply clones most types of values, including circular references, arrays, maps, sets, dates, and more.
+
+### ✅ Example
+```js
+const a = {};
+const b = { parent: a };
+a.child = b;
+
+const clone = structuredClone(a);
+
+console.log(clone !== a); // true
+console.log(clone.child.parent === clone); // true
+```
+
+---
+
+## ✅ What structuredClone Supports
+
+| Type             | Supported |
+|------------------|-----------|
+| Object / Array   | ✔️        |
+| Map / Set        | ✔️        |
+| Date / RegExp    | ✔️        |
+| ArrayBuffer / TypedArray | ✔️ |
+| Blob / File / FileList | ✔️ |
+| ImageData / DOMException | ✔️ |
+| Circular Refs    | ✔️        |
+| BigInt / Symbol  | ✔️ (symbol references retained) |
+
+### ❌ Not Supported:
+- Functions
+- DOM Nodes
+- WeakMap / WeakSet
+
+---
+
+## 💡 Real-World Examples
+
+### 1. Clone Nested Object
+```js
+const obj = { a: 1, b: { c: 2 } };
+const clone = structuredClone(obj);
+console.log(clone); // { a: 1, b: { c: 2 } }
+```
+
+### 2. Handle Circular References
+```js
+const obj = { name: 'X' };
+obj.self = obj;
+const clone = structuredClone(obj);
+console.log(clone.self === clone); // true
+```
+
+### 3. Clone Complex Data
+```js
+const complex = {
+  map: new Map([['key', 'value']]),
+  set: new Set([1, 2, 3]),
+  date: new Date(),
+  regex: /abc/i
+};
+const clone = structuredClone(complex);
+console.log(clone);
+```
+
+---
+
+## 🌍 Compatibility
+
+| Environment       | Version       |
+|-------------------|---------------|
+| Chrome            | 98+           |
+| Firefox           | 94+           |
+| Safari            | 15+           |
+| Node.js           | 17+ (`global.structuredClone`) |
+
+If you're targeting modern environments—structuredClone is your best choice.
+
+---
+
+## 🛠️ Fallback Options
+
+For older browsers:
+- Use `lodash.cloneDeep()`
+- Use MessageChannel-based polyfills
+
+---
+
+## 🧠 Final Thoughts
+
+`structuredClone()` is fast, reliable, and handles edge cases natively. It's now the go-to option for deep cloning in modern JavaScript.
+
+### ✅ Use it when:
+- You work in modern browsers or Node.js 17+
+- You want to handle complex or circular data structures
+
+Let go of brittle stringification hacks—embrace the modern way to deep clone!
