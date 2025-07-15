@@ -1,0 +1,257 @@
+---
+title: Why Your await fetch() is Slowing Down — And How to Fix It
+slug: await-fetch-slow
+heading: "Optimizing await fetch(): Why It Slows Down and How to Speed It Up"
+permalink: await-fetch-slow
+image: ./images/await-fetch-slow.png
+date: 2025-07-15
+author: anton liberant
+category: javascript
+type: post
+tags: ['fetch']
+desc: Learn why await fetch() might be causing delays in your JavaScript applications and how to optimize it for better performance. 
+---
+
+When developing JavaScript applications, it's easy to overlook performance issues related to `fetch()`. However, even simple code like `await fetch()` can unexpectedly slow down your app, causing delays in network requests and frustrating users. In this article, we’ll explore the reasons why `fetch()` may cause slowdowns and provide solutions to fix it.
+
+## 1. Cold TCP Connections: 200ms Delays Out of Nowhere
+
+Symptoms:
+
+- The first request to an API consistently takes longer than others.
+- When performing bulk operations, `t₉₅` (the 95th percentile of request time) spikes dramatically.
+
+Each `fetch()` creates a new socket connection, which involves:
+
+1. **DNS Lookup**: Resolving the domain to an IP address.
+2. **TCP Handshake**: Establishing a TCP connection.
+3. **TLS Handshake**: Securing the connection over HTTPS.
+
+In regions like Europe, the average round-trip time (RTT) is around 50ms, meaning hundreds of extra milliseconds are spent on each new request.
+
+**Fix:**
+
+```js 
+import { Agent } from 'undici';
+
+const apiAgent = new Agent({
+  keepAliveTimeout: 30_000,   // Keep socket open for 30 seconds
+  connections: 100,           // Connection pool size
+});
+
+const fetchOrders = async () => {
+  const response = await fetch('https://api.payments.local/v1/orders', {
+    dispatcher: apiAgent
+  });
+  return response.json();
+};
+```
+
+In this code:
+
+- `apiAgent` is responsible for managing the keep-alive connections.
+- The `fetchOrders()` function uses undici to efficiently fetch data by reusing open connections.
+
+## 2. DNS + TLS: The Hidden Dragons
+
+Even with keep-alive, the first request to a new domain is still slow due to DNS lookups and TLS handshakes.
+
+- **DNS Lookup**: Blocks the JavaScript thread and can take up to 100ms on mobile networks.
+- **TLS Handshake**: Involves three round trips, unlike the single trip of TCP.
+
+**Fix:**
+
+- **DNS Caching**: Cache DNS queries to avoid repeated lookups.
+- Increase `maxSockets` for handling multiple domains.
+
+Example for **Nginx**:
+
+```nginx
+resolver 9.9.9.9 valid=300s;  // Cache DNS responses for 300 seconds
+```
+
+In **Node.js**:
+
+```js 
+const agentWithDnsCache = new Agent({
+  connect: { lookup: dnsCache.lookup }, // Use DNS cache for faster lookups
+});
+
+const fetchFromNewDomain = async () => {
+  const response = await fetch('https://newapi.domain.com/v1/data', {
+    dispatcher: agentWithDnsCache,
+  });
+  return response.json();
+};
+```
+
+**Alternative: QUIC/HTTP-3**
+
+For faster connections, use **QUIC/HTTP-3** with 0-RTT to bypass these delays.
+
+## 3. `response.json()` Blocking the Event Loop
+
+When a server sends large JSON responses (5-10MB or more), the call to `response.json()` blocks the event loop, consuming 100% of the CPU.
+
+**Fix: Streaming Parsing**
+
+```js 
+import { parse } from 'stream-json';
+import { chain } from 'stream-chain';
+import { finished } from 'stream';
+
+const streamJsonResponse = async (response) => {
+  const pipeline = chain([
+    response.body,    // ReadableStream from fetch
+    parse(),          // Parse the JSON stream
+    ({ key, value }) => { /* Process fragments */ },
+  ]);
+
+  await finished(pipeline);
+};
+```
+
+This code processes the JSON stream as it's being fetched, which avoids loading large chunks of data into memory all at once.
+
+## 4. Optimizing Response Size: Compression and Formats
+
+If the network speed is fine but loading is still slow, it’s often due to inefficient data formats or lack of compression.
+
+**Fix:**
+
+Request compression (e.g., Brotli) on the frontend:
+
+```js 
+const fetchDataWithCompression = async (url) => {
+  const response = await fetch(url, {
+    headers: { 'Accept-Encoding': 'br, gzip' },
+  });
+  return response.json();
+};
+
+```
+
+Enable Brotli compression in **Fastify** on the backend:
+
+```js 
+const fastify = require('fastify')();
+fastify.register(require('@fastify/compress'), {
+  brotliOptions: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } }
+});
+```
+
+**Brotli** compression can save up to 25% more space compared to **Gzip**.
+
+## 5. `await` in a Loop: The Concurrency Killer
+
+When you perform many asynchronous tasks inside a loop, they are executed sequentially, even if they can run concurrently.
+
+**Common Mistake:**
+
+```js 
+for (const id of ids) {
+  const res = await fetch(`/api/item/${id}`);
+  items.push(await res.json());
+}
+```
+
+This results in the requests being queued up one after another, causing delays.
+
+**Fix: Limit Concurrency**
+
+```js 
+const maxConcurrency = 10; // Limit the number of concurrent requests
+const requestQueue = [...ids]; // Array of IDs for the API requests
+const results = [];
+
+const fetchItemsConcurrently = async () => {
+  await Promise.all(
+    Array.from({ length: maxConcurrency }, async () => {
+      while (requestQueue.length) {
+        const itemId = requestQueue.pop();
+        const response = await fetch(`/api/item/${itemId}`);
+        const itemData = await response.json();
+        results.push(itemData);
+      }
+    })
+  );
+};
+```
+
+This approach ensures that only a limited number of requests are sent concurrently, preventing overloading the backend.
+
+## 6. Using `undici.request` for Faster Requests
+
+For improved performance, consider using undici’s `request` function instead of the built-in `fetch`, as it is faster and reduces overhead.
+
+```js 
+import { request } from 'undici';
+
+const postDataWithUndici = async (url, payload) => {
+  const { body } = await request(url, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return await body.json();
+};
+```
+
+## 7. Simplifying CORS Preflight with Server Configuration
+
+CORS preflight requests add extra round-trip delays. Simplifying the requests and caching preflight responses can help reduce this overhead.
+
+```js 
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors({
+  origin: 'https://your-frontend.com',
+  credentials: true,
+  maxAge: 86400,  // Cache preflight response for 24 hours
+}));
+
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
+});
+```
+
+## 8. HOL Blocking in HTTP/2: Large File Uploads Affect All Requests
+
+In **HTTP/2**, large file uploads can block other requests due to multiplexing over a single TCP connection. To avoid this, separate large and small requests.
+
+```js 
+const { Agent } = require('undici');
+const largeUploadAgent = new Agent({ maxStreamsPerConnection: 1 });
+
+const uploadLargeFile = async (largeFileUrl, bigFile) => {
+  await fetch(largeFileUrl, { dispatcher: largeUploadAgent, body: bigFile });
+};
+```
+
+For even better performance, use **HTTP/3**, which works over UDP and avoids the bottleneck of TCP.
+
+## 9. `JSON.stringify()` Before Sending
+
+Serializing large payloads using `JSON.stringify()` can block the event loop. Instead, use streaming multipart uploads or other efficient serialization methods.
+
+```js 
+import { Readable } from 'node:stream';
+
+const streamPayload = async (largeData) => {
+  const encoder = new TextEncoder();
+  const stream = Readable.from(
+    largeData.map(item => encoder.encode(JSON.stringify(item) + '\n'))
+  );
+  await fetch('/bulk/ingest', { method: 'POST', body: stream });
+};
+```
+
+This approach keeps memory usage low, even with large datasets.
+
+## Conclusion
+
+Optimizing the performance of `await fetch()` involves addressing several bottlenecks. From reusing connections to switching to efficient streaming formats, each fix contributes to faster and more efficient network requests. Consider Undici for faster requests, avoid unnecessary serialization with `JSON.stringify()`, and implement strategies like concurrency control and caching to significantly improve your app’s performance.
+
+Keep testing, measure performance regularly, and consider alternatives like **GraphQL-over-HTTP/2**, **gRPC-web**, or **msgpack** to further optimize your application. 
