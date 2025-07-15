@@ -1,4 +1,5 @@
 ---
+// @ts-ignore
 import { escapeHTML } from 'astro/runtime/server/index.js';
 
 export interface Props {
@@ -70,8 +71,8 @@ if (!finalCode || finalCode.trim() === '') {
 }`;
 }
 
-// Ensure finalCode is only escaped if not already HTML encoded
 finalCode = simpleDecodeHtml(finalCode);
+finalCode = finalCode.replace(/^\s*\n+/g, '');
 
 const codeLines = finalCode.split('\n');
 const highlightedLines = parseHighlightRanges(highlights);
@@ -289,7 +290,7 @@ const highlightedLines = parseHighlightRanges(highlights);
   .line-numbers {
     display: flex;
     flex-direction: column;
-    padding: 1rem 0.1rem 1rem 1rem;
+    padding: 1.25rem 0.5rem 1rem 1rem;
     background-color: transparent;
     border-right: 1px solid #333;
     user-select: none;
@@ -312,6 +313,7 @@ const highlightedLines = parseHighlightRanges(highlights);
     font-size: 0.875rem;
     line-height: 1.5;
     flex: 1;
+    padding-top: 0;
     overflow: visible;
   }
 
