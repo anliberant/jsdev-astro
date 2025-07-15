@@ -8,7 +8,11 @@ const parser = new MarkdownIt();
 
 export async function GET(context) {
 	const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);
-	const sortedPosts = allPosts.sort((a, b) => {
+	const allHowtos = await getCollection('howtos', ({ data }) => !data.isDraft);
+	const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
+	const allFridays = await getCollection('fridays', ({ data }) => !data.isDraft);
+	const allContent = [...allPosts, ...allHowtos, ...allSnippets, ...allFridays];
+	const sortedPosts = allContent.sort((a, b) => {
 		return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
 	});
 	return rss({
@@ -24,7 +28,7 @@ export async function GET(context) {
 			title: post.data.title,
 			date: post.data.date,
 			description: post.data.desc,
-			link: `/${post.data.slug}/`,
+			link: `/${post.data.permalink}/`,
 			content: sanitizeHtml(parser.render(post.body), {
 				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])
 			}),
