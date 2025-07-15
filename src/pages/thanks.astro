@@ -1,0 +1,26 @@
+---
+import BaseLayout from '@/app/layouts/base-layout.astro';
+
+const title = 'Thank You';
+const description =
+  "Thank you for reaching out to us. We've received your message and will get back to you as soon as possible.";
+---
+
+<BaseLayout title={title} description={description}>
+  <main class="main mt-10">
+    <h1 class="post-title">Thank You for Contacting Us!</h1>
+    <p class="intro-text">
+      We’ve successfully received your message. One of our team members will respond as soon as possible. In the meantime, feel free to explore the rest of our site.
+    </p>
+    <p class="intro-text">
+      Need something urgent? Reach out to us directly via email or social media.
+    </p>
+  </main>
+</BaseLayout>
+
+<style>
+  .intro-text {
+    margin-top: 1rem;
+    line-height: 1.6;
+  }
+</style>
