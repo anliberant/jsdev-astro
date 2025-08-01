@@ -1,0 +1,151 @@
+---
+title: 'Git Smarter: 7 Essential Commands Every Dev Should Know'
+slug: git-time-saving-commands
+permalink: git-time-saving-commands
+heading: 'Simplify Your Workflow with These Powerful Git Tricks'
+image: ./images/git-time-saving-commands.png
+date: 2025-08-01
+author: anton liberant
+category: git
+type: post
+tags: ['git-commands']
+desc: Master these 7 Git commands to debug faster, manage branches safely, and simplify version control without stress. 
+---
+
+Working with Git is a daily routine for developers—but it's also where a lot of frustration begins. Ever lost progress due to a bad reset? Struggled to find the commit that broke everything? Or needed to switch branches but didn’t want to lose your work? These aren’t just inconveniences—they're time killers. In this guide, you'll discover 7 practical Git commands that will help you debug smarter, switch faster, and manage your repository without stress.
+
+We recently wrote about Git in more detail — you can read it [here](https://jsdev.space/15-git-commands/).
+
+## 1. `git bisect` – Find the Breaking Commit with Binary Search
+
+Let’s say your app started failing somewhere between versions `v1.2.0` and `v2.0.0`. You could guess randomly… or use `git bisect` to track the exact commit that broke it.
+
+```bash
+git bisect start
+git bisect bad v2.0.0
+git bisect good v1.2.0
+```
+
+Git will check out the midpoint commit. You test it:
+
+- If the bug is present: `git bisect bad`
+- If the bug is gone: `git bisect good`
+
+Repeat this a few times until Git pinpoints the exact faulty commit and the author.
+
+---
+
+## 2. `git switch` – Quick and Safe Branch Navigation
+
+Instead of the all-in-one (and confusing) `git checkout`, use `git switch` to focus solely on moving between branches:
+
+```bash
+git switch feature/signup-form     # move to existing branch
+git switch -                       # return to previous branch
+git switch -c bugfix/404-page      # create & switch to new branch
+```
+
+It’s faster and safer, especially when multitasking across branches.
+
+---
+
+## 3. `git restore` – Revert Changes File-by-File
+
+Need to undo local changes but only for specific files? `git restore` is your friend:
+
+```bash
+git restore src/App.tsx                     # restore one file
+git restore --staged *.css                  # unstage .css files
+git restore --source=HEAD~1 --worktree .    # revert all files to previous commit
+```
+
+Unlike `reset`, this is a surgical tool that avoids unnecessary data loss.
+
+---
+
+## 4. `git rebase -i` – Clean Up Commit History
+
+Need to squash, reorder, or reword commits before pushing? Try:
+
+```bash
+git rebase -i HEAD~3
+```
+
+Then you'll see something like:
+
+```
+pick a1b2c3d Fix login bug
+pick b2c3d4e Add error logger
+pick c3d4e5f Remove debug print
+```
+
+Reorder or combine them with:
+
+```
+pick c3d4e5f Remove debug print
+squash b2c3d4e Add error logger
+reword a1b2c3d Fix login bug
+```
+
+You now have a tidy commit history ready to share.
+
+---
+
+## 5. `git stash` – Hide Unfinished Work Temporarily
+
+Need to pause what you're doing and switch tasks without committing half-done work?
+
+```bash
+git stash save "WIP: login refactor"
+git stash list
+git stash apply stash@0    # apply without removing
+git stash pop                # apply and remove
+```
+
+You can stash multiple times and retrieve only the changes you need.
+
+---
+
+## 6. `git cherry-pick` – Bring Over Specific Commits
+
+Want to copy a fix from another branch without merging everything?
+
+```bash
+git cherry-pick abc1234                 # single commit
+git cherry-pick 111aaa..444ddd          # commit range (excludes first)
+git cherry-pick --continue              # resume after conflict resolution
+```
+
+This is useful when you want just one hotfix, not the whole feature branch.
+
+---
+
+## 7. `git log --graph` – Visualize Your Project History
+
+Understand how your branches diverged or merged with:
+
+```bash
+git log --graph --decorate --oneline --all
+```
+
+- `--graph` draws tree structure
+- `--decorate` shows branch/tags
+- `--oneline` simplifies view
+- `--all` includes all branches
+
+Make it easier by aliasing it:
+
+```bash
+git config --global alias.graph "log --graph --decorate --oneline --all"
+git graph
+```
+
+Great for understanding what really happened in your project timeline.
+
+---
+
+## 🧠 Final Thought
+
+Git isn’t just about commit and push. The right command at the right time can prevent bugs, save hours, and keep your repo clean.
+
+Which command saved you the most time? Share your Git gems—we might feature them next.
