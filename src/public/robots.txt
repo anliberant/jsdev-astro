@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /debug*
-Disallow: /api/
-
-Sitemap: https://jsdev.space/sitemap-index.xml

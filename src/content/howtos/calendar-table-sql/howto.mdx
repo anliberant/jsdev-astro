@@ -1,0 +1,116 @@
+---
+title: Howto Generate a Calendar Table in SQL
+slug: calendar-table-sql
+heading: Build Dynamic Date Ranges in SQL with Ease
+icon: /icons/sql.png
+image: /icon.png
+permalink: howto/calendar-table-sql
+date: 2025-08-01
+author: anton liberant
+category: sql
+type: howto
+tags: ['']
+desc: Learn how to generate a calendar table for any month using SQL in MySQL, PostgreSQL, SQL Server, and Oracle—no manual date input required. 
+---
+
+Whether you're creating reports, analyzing trends, or just looking for days with zero activity, a dynamic calendar table can be a lifesaver. Instead of manually listing dates, use these SQL snippets to generate them on the fly based on the current month.
+
+![Howto Generate a Calendar Table in SQL](./images/calendar-table-sql.png)
+
+We’ll cover MySQL, PostgreSQL, SQL Server, and Oracle—so pick your database and get coding.
+
+---
+
+## 🐬 MySQL (8.0+)
+
+MySQL supports recursive CTEs which allow date series generation elegantly.
+
+```sql
+WITH RECURSIVE calendar AS (
+  SELECT DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE()) - 1 DAY) AS date_val
+  UNION ALL
+  SELECT DATE_ADD(date_val, INTERVAL 1 DAY)
+  FROM calendar
+  WHERE date_val < LAST_DAY(CURDATE())
+)
+SELECT date_val AS calendar_date FROM calendar;
+```
+
+**How it works:**
+- Start from the first day of the month using `DATE_SUB`.
+- Add one day recursively until reaching the end of the month.
+
+---
+
+## 🐘 PostgreSQL
+
+PostgreSQL has the most elegant solution using `generate_series()`:
+
+```sql
+SELECT GENERATE_SERIES(
+  DATE_TRUNC('month', CURRENT_DATE),
+  (DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month - 1 day')::date,
+  '1 day'
+)::date AS calendar_date;
+```
+
+**How it works:**
+- `DATE_TRUNC` gives the first of the month.
+- Add a month and subtract a day to get the last date.
+- Generate one date per day.
+
+---
+
+## 🪟 SQL Server (2022+)
+
+SQL Server now has its own `GENERATE_SERIES()` (finally).
+
+```sql
+SELECT DATEADD(day, n, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AS calendar_date
+FROM GENERATE_SERIES(0, DAY(EOMONTH(GETDATE())) - 1) AS n;
+```
+
+**Explanation:**
+- Calculate the first day of the month.
+- Generate day offsets 0 to N-1.
+- Add those to the base date.
+
+### 🔁 For legacy SQL Server (pre-2022)
+
+Use a recursive CTE:
+
+```sql
+WITH DateGen AS (
+  SELECT DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AS d
+  UNION ALL
+  SELECT DATEADD(day, 1, d)
+  FROM DateGen
+  WHERE MONTH(DATEADD(day, 1, d)) = MONTH(GETDATE())
+)
+SELECT d AS calendar_date FROM DateGen
+OPTION (MAXRECURSION 366);
+```
+
+---
+
+## 🍊 Oracle
+
+Oracle’s `CONNECT BY LEVEL` can easily generate date ranges.
+
+```sql
+SELECT TRUNC(SYSDATE, 'MM') + LEVEL - 1 AS calendar_date
+FROM dual
+CONNECT BY TRUNC(SYSDATE, 'MM') + LEVEL - 1 <= LAST_DAY(SYSDATE);
+```
+
+**Explanation:**
+- `TRUNC(SYSDATE, 'MM')` gives the first day.
+- Increment using `LEVEL` until the last day of the month.
+
+---
+
+## 🧠 Final Notes
+
+Calendar tables are a must-have for clean reporting, spotting missing data, and simplifying JOINs. Modern SQL engines make this easier than ever with native functions like `generate_series()` or recursion patterns.
+
+Choose the version that matches your DB engine—and stop hardcoding your dates.
