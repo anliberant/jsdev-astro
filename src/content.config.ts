@@ -26,7 +26,7 @@ const posts = defineCollection({
 
 const howtos = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/howtos/' }),
-  schema: z.object({
+  schema: ({ image }) => z.object({
     title: z.string().max(65, {
       message: 'Title cannot be longer than 65 characters',
     }),
