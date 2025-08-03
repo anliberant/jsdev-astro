@@ -1,0 +1,95 @@
+---
+title: Howto Prevent Orphaned Words in English Using JavaScript
+slug: prevent-orphaned-words-js
+heading: Fix Orphaned Words in English Text Using JavaScript
+icon: /icons/javascript.png
+image: ./images/prevent-orphaned-words-js.png
+permalink: howto/prevent-orphaned-words-js
+date: 2025-08-03
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Use JavaScript to prevent short prepositions and conjunctions from appearing at the end of lines by replacing spaces with non-breaking spaces.
+---
+
+![Prevent Orphaned Words](./images/prevent-orphaned-words-js.png)
+
+Orphaned words—tiny prepositions or conjunctions stuck at the end of a line—can make English text look awkward. This simple JavaScript snippet scans your content and replaces normal spaces with non-breaking spaces (`&nbsp;`) after certain short words. It’s especially useful for better typography on blogs and publishing platforms.
+
+---
+
+## ✍️ JavaScript Code to Fix Orphans
+
+```js
+document.addEventListener('DOMContentLoaded', () => {
+  const elements = document.querySelectorAll('p, span, h1, h2, h3, h4, h5, h6, li, dt, dd');
+
+  const smallWords = [
+    'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'of',
+    'on', 'or', 'the', 'to', 'up', 'with'
+  ];
+
+  elements.forEach(el => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(node => {
+      node.nodeValue = node.nodeValue.replace(/(^|\s)([a-zA-Z]{1,3})\s/g, (match, space, word) => {
+        return smallWords.includes(word.toLowerCase())
+          ? space + word + '\u00A0'
+          : match;
+      });
+    });
+  });
+});
+```
+
+---
+
+## 🔍 How It Works
+
+### 1. Target Text Nodes
+
+Selects common text containers like paragraphs, headers, list items, etc.
+
+### 2. Word List
+
+The `smallWords` array contains prepositions, articles, and conjunctions typically best kept with the next word.
+
+### 3. TreeWalker Usage
+
+This safely walks all text nodes inside an element—including deeply nested ones.
+
+### 4. Regular Expression
+
+It looks for 1–3 letter words (`[a-zA-Z](1, 3)`) followed by a space. If the word is in `smallWords`, that space is replaced with `\u00A0`.
+
+---
+
+## ✅ Example
+
+**Before:**  
+"This is an example of a text with orphaned words at the end of lines."
+
+**After:**  
+"This is an example of a text with orphaned words..."
+
+---
+
+## 💡 Customize It
+
+- Add more tags to the `querySelectorAll`.
+- Add more words to `smallWords` depending on your style guide.
+- Tweak the regex for longer or shorter words.
+
+---
+
+## ⚠️ Limitations
+
+Not all orphaning issues are fixable with JS. Combine this with CSS (`overflow-wrap`, `hyphens`) and good layout practices for best results.
+
+---
+
+This solution helps your English text look cleaner and more professional—especially in long-form content or when typography matters.
