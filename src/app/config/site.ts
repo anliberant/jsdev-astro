@@ -3,7 +3,7 @@ export const siteConfig = {
   shortTitle: `JavaScript Development Space`,
   siteUrl: `https://jsdev.space`,
   twitterUsername: `@jsdevspace`,
-  image: 'images/icon.png',
+  image: '/images/icon.png',
   description: `Explore the world of JavaScript at our blog, your ultimate resource for guides, tutorials, and articles. Uncover the latest insights, tips, and trends.`,
   navigation: [
     {
