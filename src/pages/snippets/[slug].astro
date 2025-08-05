@@ -9,10 +9,7 @@ import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
 
 export const getStaticPaths = (async () => {
-  const allSnippets = await getCollection(
-    'snippets',
-    ({ data }) => !data.isDraft
-  );
+  const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
   return allSnippets.map(snippet => ({
     params: {
       slug: snippet.data.slug,
@@ -32,19 +29,20 @@ const { snippet } = Astro.props;
 
 const { Content } = await render(snippet);
 
-const breadcrumbItems = [
-  { label: 'Snippets', href: '/snippets/' },
-  { label: snippet.data.title },
-];
+const breadcrumbItems = [{ label: 'Snippets', href: '/snippets/' }, { label: snippet.data.title }];
 ---
 
 <BaseLayout
   title={snippet.data.title}
   description={snippet.data.desc}
   image={snippet.data.image}
->
+  contentType={snippet.data.type}
+  slug={snippet.data.slug}>
   <main class='main'>
-    <Breadcrumbs items={breadcrumbItems} class='mt-10' />
+    <Breadcrumbs
+      items={breadcrumbItems}
+      class='mt-10'
+    />
     <article class='post-article'>
       <h1 class='post-title'>{snippet.data.title}</h1>
       <Content components={mdxComponents} />

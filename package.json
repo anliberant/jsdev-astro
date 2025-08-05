@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "generate:og && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "clean": "rimraf node_modules/.vite dist .astro",
@@ -14,7 +14,8 @@
     "lint:fix": "eslint . --ext .js,.ts,.astro --fix",
     "prettier": "prettier --write \"src/**/*.{js,ts,astro,json,md}\"",
     "prettier:check": "prettier --check .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "generate:og": "tsx generate-og-images.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.0",
@@ -22,11 +23,14 @@
     "@astrojs/rss": "^4.0.11",
     "@astrojs/sitemap": "^3.4.0",
     "@lucide/astro": "^0.511.0",
+    "@resvg/resvg-js": "^2.6.2",
     "astro": "^5.8.0",
+    "gray-matter": "^4.0.3",
     "markdown-it": "^14.1.0",
     "mdast-util-to-string": "^4.0.0",
     "reading-time": "^1.5.0",
-    "sanitize-html": "^2.17.0"
+    "sanitize-html": "^2.17.0",
+    "satori": "^0.16.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -41,6 +45,7 @@
     "prettier-plugin-astro": "^0.14.1",
     "rimraf": "^5.0.5",
     "sharp": "^0.34.2",
+    "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }
 }
