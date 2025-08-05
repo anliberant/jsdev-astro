@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "generate:og": "tsx generate-og-images.ts",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "generate:og && astro build",
@@ -14,8 +15,7 @@
     "lint:fix": "eslint . --ext .js,.ts,.astro --fix",
     "prettier": "prettier --write \"src/**/*.{js,ts,astro,json,md}\"",
     "prettier:check": "prettier --check .",
-    "type-check": "tsc --noEmit",
-    "generate:og": "tsx generate-og-images.ts"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.0",
