@@ -12,6 +12,8 @@ export interface Props {
   description?: string;
   image?: string;
   type?: string;
+  slug?: string;
+  contentType?: string;
 }
 
 const {
@@ -19,10 +21,24 @@ const {
   description = siteConfig.description,
   image = siteConfig.image,
   type = 'website',
+  slug = '',
+  contentType = '',
 } = Astro.props;
 
 const fullTitle = title || siteConfig.title;
-const fullImageUrl = image.startsWith('http') ? image : `${siteConfig.siteUrl}${image}`;
+const hasImage = typeof image === 'string' && image.trim() !== '';
+const shouldUseGeneratedOG = ['howto', 'snippets'].includes(contentType.toLowerCase());
+console.log('category', contentType);
+
+const fullImageUrl =
+  shouldUseGeneratedOG ? `${siteConfig.siteUrl}/og/${slug}.png`
+  : typeof image === 'string' && image.trim() !== '' ?
+    image.startsWith('http') ?
+      image
+    : `${siteConfig.siteUrl}${image}`
+  : siteConfig.image;
+
+console.log('shouldUseGeneratedOG', shouldUseGeneratedOG);
 ---
 
 <!doctype html>

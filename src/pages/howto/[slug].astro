@@ -42,7 +42,9 @@ const breadcrumbItems = [
 <BaseLayout
   title={howto.data.title}
   description={howto.data.desc}
-  image={howto.data.image}>
+  image={howto.data.image}
+  contentType={howto.data.type}
+  slug={howto.data.slug}>
   <main class='main'>
     <Breadcrumbs
       items={breadcrumbItems}
