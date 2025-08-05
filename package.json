@@ -6,7 +6,7 @@
     "generate:og": "tsx generate-og-images.ts",
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "generate:og && astro build",
+    "build": "npm run generate:og && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "clean": "rimraf node_modules/.vite dist .astro",
