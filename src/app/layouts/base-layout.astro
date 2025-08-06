@@ -28,7 +28,6 @@ const {
 const fullTitle = title || siteConfig.title;
 const hasImage = typeof image === 'string' && image.trim() !== '';
 const shouldUseGeneratedOG = ['howto', 'snippets'].includes(contentType.toLowerCase());
-console.log('category', contentType);
 
 const fullImageUrl =
   shouldUseGeneratedOG ? `${siteConfig.siteUrl}/og/${slug}.png`
@@ -37,8 +36,6 @@ const fullImageUrl =
       image
     : `${siteConfig.siteUrl}${image}`
   : siteConfig.image;
-
-console.log('shouldUseGeneratedOG', shouldUseGeneratedOG);
 ---
 
 <!doctype html>
