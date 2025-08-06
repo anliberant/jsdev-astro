@@ -1,0 +1,149 @@
+---
+title: How to Type QueryOptions in React Query with TypeScript
+slug: react-query-types
+heading: "Typed Queries in React Query: From Basics to Generics"
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/react-query-types
+date: 2025-08-06
+author: anton liberant
+category: react
+type: howto
+tags: ['react-query']
+desc: Learn how to properly type QueryOptions, useQuery, and query functions in React Query using TypeScript for strong type safety and autocompletion.
+---
+
+React Query is powerful for data fetching, but proper TypeScript integration can make it even better. In this guide, you’ll learn how to type `useQuery`, `QueryOptions`, and query functions with complete confidence.
+
+TypeScript support helps you write resilient data hooks that scale — with autocomplete, compile-time checks, and reusability. We’ll walk through everything from basic usage to generic query wrappers.
+
+---
+
+## ✅ Basic Typing Example
+
+Let’s start with a typical query:
+
+```ts
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+
+type User = {
+  id: string;
+  name: string;
+};
+
+const fetchUser = async (): Promise<User> => {
+  const res = await fetch('/api/user');
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+};
+
+export function useUserQuery() {
+  return useQuery<User>(['user'], fetchUser);
+}
+```
+
+---
+
+## 🧠 Typing `QueryOptions` Manually
+
+You can extract and reuse the `UseQueryOptions` type:
+
+```ts
+import { UseQueryOptions } from '@tanstack/react-query';
+
+type User = { id: string; name: string };
+
+const fetchUser = async (): Promise<User> => {
+  const res = await fetch('/api/user');
+  return res.json();
+};
+
+type UserQueryOptions = UseQueryOptions<
+  User,         // TQueryFnData
+  Error,        // TError
+  User,         // TData
+  ['user']      // TQueryKey
+>;
+```
+
+Usage:
+
+```ts
+export const useUserQuery = (options?: UserQueryOptions) => {
+  return useQuery(['user'], fetchUser, options);
+};
+```
+
+---
+
+## 🧱 Typing Generic Query Hook
+
+For reusable logic:
+
+```ts
+import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
+
+export function useTypedQuery<TData, TError = Error, TQueryKey extends readonly unknown[] = any>(
+  key: TQueryKey,
+  queryFn: () => Promise<TData>,
+  options?: UseQueryOptions<TData, TError, TData, TQueryKey>
+): UseQueryResult<TData, TError> {
+  return useQuery(key, queryFn, options);
+}
+```
+
+Usage:
+
+```ts
+type Product = { id: number; name: string };
+
+function useProductQuery(id: number) {
+  return useTypedQuery<Product>(['product', id], () =>
+    fetch(`/api/products/${id}`).then(res => res.json())
+  );
+}
+```
+
+---
+
+## 💡 Tip: `queryFn` infers return type
+
+When `queryFn` is inline with a `Promise<T>` return:
+
+```ts
+useQuery(['user'], async (): Promise<User> => {
+  return fetch('/api/user').then(res => res.json());
+});
+```
+
+No extra typing needed!
+
+---
+
+## 📦 Bonus: With Axios
+
+```ts
+const fetchUsers = async (): Promise<User[]> => {
+  const { data } = await axios.get<User[]>('/api/users');
+  return data;
+};
+
+useQuery<User[], Error>(['users'], fetchUsers);
+```
+
+---
+
+## ✅ Summary
+
+| Generic        | Role                                 |
+|----------------|--------------------------------------|
+| `TQueryFnData` | Return value of queryFn              |
+| `TError`       | Error type                           |
+| `TData`        | Data passed to your component        |
+| `TQueryKey`    | Key that identifies the query        |
+
+---
+
+By mastering these generics, you can turn every query into a safe, typed, and reusable hook. This improves maintainability and prevents subtle bugs at scale.
+
+Whether you’re building a hobby project or a production-grade dashboard, strong typing in React Query is an investment worth making.
