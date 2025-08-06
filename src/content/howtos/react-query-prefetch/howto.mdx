@@ -1,0 +1,139 @@
+---
+title: How to Prefetch Data with TanStack Query (React Query)
+slug: react-query-prefetch
+heading: "Smart Prefetching with TanStack Query for Instant UX"
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/react-query-prefetch
+date: 2025-08-06
+author: anton liberant
+category: react
+type: howto
+tags: ['react-query']
+desc: Learn how to prefetch data using React Query (TanStack Query) for faster navigation and improved perceived performance in your React apps.
+---
+
+Prefetching data is one of the most powerful techniques in React Query. It helps you improve perceived performance by loading data **before** the user needs it — resulting in near-instant navigation.
+
+In this guide, you'll learn how to:
+- Use `queryClient.prefetchQuery`
+- Prefetch on hover or intent
+- Handle error cases
+- Combine it with `useQuery` for cache re-use
+
+Let’s explore the cleanest and most efficient way to prefetch in React apps using TanStack Query.
+
+---
+
+## 🧠 What is Prefetching?
+
+Prefetching means fetching and caching data **ahead of time**, before the component that uses it is mounted.
+
+You might trigger it when:
+- The user **hovers** a link
+- The user is likely to **navigate** soon
+- You want to **warm the cache** at app load
+
+---
+
+## 🛠 Basic Example Using `prefetchQuery`
+
+```ts
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+const fetchPost = async (id: number) => {
+  const res = await fetch(`/api/posts/${id}`);
+  if (!res.ok) throw new Error('Post fetch failed');
+  return res.json();
+};
+
+export default function PostLink({ id }: { id: number }) {
+  const queryClient = useQueryClient();
+
+  return (
+    <a
+      href={`/posts/${id}`}
+      onMouseEnter={() => {
+        queryClient.prefetchQuery(['post', id], () => fetchPost(id));
+      }}
+    >
+      View Post #{id}
+    </a>
+  );
+}
+```
+
+This example will **prefetch** the post data when the user hovers the link.
+
+---
+
+## ❗ Handling Errors in `prefetchQuery`
+
+Because `prefetchQuery` is fire-and-forget by default, it won't throw on error unless you `await` it:
+
+```ts
+try {
+  await queryClient.prefetchQuery(['post', id], () => fetchPost(id));
+} catch (err) {
+  console.error('Prefetch failed:', err);
+}
+```
+
+If you want error handling (e.g. logging, fallback), always `await` the result. This is especially useful in `useEffect`, SSR, or proactive preloading.
+
+---
+
+## 🔄 How it Works with `useQuery`
+
+When the user navigates to the post page:
+
+```ts
+const { data } = useQuery(['post', id], () => fetchPost(id));
+```
+
+React Query will first check the **cache** — and instantly return the prefetched result.
+
+No loading spinner. No delay. Just speed.
+
+---
+
+## 📦 Prefetching in `useEffect` (on page load)
+
+You can also prefetch on mount:
+
+```ts
+useEffect(() => {
+  queryClient.prefetchQuery(['settings'], fetchSettings);
+}, []);
+```
+
+Useful for dashboards, config pages, or background tasks.
+
+---
+
+## 🤝 Combine with `ensureQueryData`
+
+TanStack Query 5+ provides `ensureQueryData`, which will **fetch or return cached**:
+
+```ts
+await queryClient.ensureQueryData({
+  queryKey: ['user'],
+  queryFn: () => fetchUser(),
+});
+```
+
+This is useful for layout-level data (e.g. user auth or settings).
+
+---
+
+## ✅ Summary
+
+| Method                 | Use Case                           |
+|------------------------|-------------------------------------|
+| `prefetchQuery`        | Triggered on hover or load         |
+| `ensureQueryData`      | Preload or hydrate with fallback   |
+| `useQuery`             | Uses prefetched data automatically |
+
+---
+
+Prefetching in React Query isn’t just a trick — it’s a UX superpower. Use it to deliver blazing-fast transitions and real-time feeling apps without loading spinners.
