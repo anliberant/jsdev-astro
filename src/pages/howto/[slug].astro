@@ -6,7 +6,9 @@ import { CollectionEntry, getCollection, render } from 'astro:content';
 import BaseLayout from '@/app/layouts/base-layout.astro';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import RelatedPosts from '@/shared/ui/base/related-posts/related-posts.astro';
+import Toc from '@/shared/ui/layout/toc.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
+import { formatDate } from '@/shared/utils';
 
 export const getStaticPaths = (async () => {
   const allHowtos = await getCollection('howtos', ({ data }) => !data.isDraft);
@@ -27,7 +29,7 @@ type Props = {
 };
 const { howto } = Astro.props;
 
-const { Content } = await render(howto);
+const { Content, remarkPluginFrontmatter, headings } = await render(howto);
 
 const breadcrumbItems = [
   { label: 'How-to', href: '/howto/' },
@@ -37,6 +39,8 @@ const breadcrumbItems = [
   },
   { label: howto.data.title },
 ];
+
+const newDate = formatDate(howto.data.date);
 ---
 
 <BaseLayout
@@ -52,6 +56,23 @@ const breadcrumbItems = [
     />
     <article class='post-article'>
       <h1 class='post-title'>{howto.data.title}</h1>
+      <span class='read-meta'>
+        <span>{newDate}</span>
+        <span class='read-time'>
+          <svg
+            width='15'
+            height='13'
+            viewBox='0 0 15 13'
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'>
+            <path
+              d='M7.5 2.38804V12.138M7.5 2.38804C7.5 2.38804 4.25 -0.397677 1 1.92375V12.138C4.25 9.81661 7.5 12.138 7.5 12.138C7.5 12.138 10.75 9.81661 14 12.138V1.92375C10.75 -0.397677 7.5 2.38804 7.5 2.38804Z'
+            ></path>
+          </svg>
+          {remarkPluginFrontmatter.minutesRead}
+        </span>
+      </span>
+      <Toc items={headings} />
       <Content components={mdxComponents} />
       <RelatedPosts
         collection='howtos'
