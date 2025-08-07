@@ -1,0 +1,136 @@
+---
+title: Howto Replace Barrel Files with Better Import Strategies
+slug: top-using-barrel-files
+heading: Why Barrel Files Are Hurting Your Codebase
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/top-using-barrel-files
+date: 2025-08-07
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Barrel files look convenient — until they break type safety, slow builds, and complicate refactors. Here's why you should stop using them now.
+---
+
+Barrel files (`index.ts` or `index.js`) are often introduced in JavaScript and TypeScript projects to simplify imports. Instead of writing:
+
+```ts
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+```
+
+You can write:
+
+```ts
+import { Button, Modal } from '@/components/ui';
+```
+
+It’s shorter, cleaner — and a trap.
+
+While barrel files may appear to reduce friction in small projects, they become a serious liability in large codebases. From performance degradation to broken types and circular dependencies, the problems outweigh the benefits.
+
+## 🚨 What Is a Barrel File?
+
+A barrel file is an `index.ts` or `index.js` file used to re-export modules from a directory:
+
+```ts
+// components/ui/index.ts
+export * from './Button';
+export * from './Modal';
+export * from './Dropdown';
+```
+
+This allows you to import everything from a central location.
+
+## 🔍 Why Barrel Files Are Problematic
+
+### 1. **They Obscure Dependency Graphs**
+
+Barrels flatten your module structure, making it harder to understand what depends on what. This hides circular dependencies that can cause runtime bugs or infinite loops in module resolution.
+
+### 2. **They Break Tree-Shaking**
+
+Barrels often force all exports to be bundled — even if you only import one module. This kills tree-shaking and increases bundle size, especially when using `export *`.
+
+### 3. **They Hurt Performance in Monorepos**
+
+In tools like Vite, Turbopack, and Rspack, barrels make it hard for the bundler to optimize file watching and cache invalidation. Touching one file in the barrel can trigger a full rebuild or reload.
+
+### 4. **They Break Type Safety in TypeScript**
+
+TypeScript may lose track of source locations when everything is re-exported. IntelliSense, go-to-definition, and refactors often fail silently.
+
+### 5. **They Obfuscate Refactors**
+
+Refactoring a single component becomes risky. Changing its name or location may require updating several barrels, or worse — you might miss one and end up with silent runtime bugs.
+
+## ✅ What You Should Do Instead
+
+### 1. **Use Explicit Imports**
+
+Always import directly from the module you need:
+
+```ts
+import { Button } from '@/components/ui/Button';
+```
+
+It may be longer, but it’s clearer and easier to debug.
+
+### 2. **Use Aliases Instead of Barrels**
+
+Use TypeScript's `paths` or bundler aliasing to simplify imports without flattening:
+
+```json
+// tsconfig.json
+"paths": {
+  "@ui/*": ["src/components/ui/*"]
+}
+```
+
+```ts
+// usage
+import { Button } from '@ui/Button';
+```
+
+### 3. **Split Types and Components**
+
+Avoid re-exporting types and components together. If you must use a barrel, limit it to types only or define a strict public API.
+
+### 4. **Use Code Generators for Large Projects**
+
+Tools like Nx, Plop, or Hygen can automate import scaffolding without needing barrels.
+
+## 💡 When Are Barrels Okay?
+
+- For **types-only exports** that won’t be bundled
+- For **public APIs of libraries** (not apps)
+- In **design systems** where component exposure is intentional
+
+Still, even in those cases, you should prefer named exports and strict boundaries over `export *`.
+
+## 🚫 A Real-World Example of Breakage
+
+Consider this file structure:
+
+```
+components/
+  ui/
+    Button.tsx
+    Modal.tsx
+    index.ts
+```
+
+```ts
+// index.ts
+export * from './Button';
+export * from './Modal';
+```
+
+Now, if `Modal.tsx` imports `Button`, and another file imports both from `ui`, you’ve created a hidden circular dependency. You won’t notice until something randomly breaks in production.
+
+## 🧼 Clean Imports > Clever Imports
+
+Barrel files are clever — until they’re not. If you value type safety, refactor confidence, and performance, it’s time to rethink your import strategy.
+
+**Stop flattening your architecture.** Embrace clear, explicit, and maintainable imports.
