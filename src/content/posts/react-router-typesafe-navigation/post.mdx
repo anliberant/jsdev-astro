@@ -1,0 +1,199 @@
+---
+title: 'Type-Safe Routing in React Router with TypeScript'
+slug: react-router-typesafe-navigation
+heading: Navigate Safely with TypeScript and React Router
+image: ./images/react-typesafe-navigation.png
+permalink: react-router-typesafe-navigation
+date: 2025-08-07
+author: anton liberant
+category: react
+type: post
+tags: ['React router', 'routing', 'TanStack router']
+desc: 'Eliminate broken links, enable autocomplete in your IDE, and refactor routes fearlessly with type-safe navigation in React Router.'
+---
+
+## Navigate Safely with TypeScript and React Router
+
+Type-safe routing in React Router solves a long-standing frontend problem: broken links after refactors, no autocomplete in editors, and fragile string-based paths. Whether you’re a junior developer avoiding typos or a senior architect designing complex route structures — type safety makes navigation robust and refactor-friendly.
+
+### Why String-Based Routing Fails
+
+```ts 
+const navigate = useNavigate();
+
+// Somewhere in the app
+navigate('/dashboard/items/42/edit');
+
+// Somewhere else
+navigate('/dashboard/items/' + itemId + '/edit');
+
+// Oops, a typo
+navigate('/dasboard/items/42/edit'); // 404
+```
+
+In string-based routing, paths are just strings. TypeScript can’t validate them, provide autocomplete, or warn you about typos. If you rename a route or refactor the URL structure, the app might break silently — especially painful in large apps with hundreds of routes.
+
+## What Is Type-Safe Routing?
+
+Type-safe routing replaces fragile strings with typed route builders and validated params. Instead of writing:
+
+```ts 
+navigate('/dashboard/items/42/edit');
+```
+
+You write:
+
+```ts 
+navigate(routes.dashboard.items.edit({ id: '42' }));
+```
+
+Now, TypeScript validates that:
+
+- /dashboard/items/edit is a valid path
+- The id parameter is required and correctly typed
+- Any changes in the route structure are reflected across the app
+
+Benefits include:
+
+- IDE autocomplete
+- Compile-time validation
+- Easier, safer refactoring
+
+## Basic Setup with React Router v6 and TypeScript
+
+Start by defining all possible routes and their parameter types:
+
+```ts 
+interface AppRoutes {
+  '/': {};
+  '/dashboard': {};
+  '/dashboard/items': {};
+  '/dashboard/items/:id': { id: string };
+  '/dashboard/items/:id/edit': { id: string };
+}
+```
+
+Now create a type-safe navigation hook:
+
+```ts 
+import { useNavigate } from 'react-router-dom';
+
+function useTypedNavigate<T extends keyof AppRoutes>() {
+  const navigate = useNavigate();
+
+  return (path: T, params?: AppRoutes[T]) => {
+    let url = path as string;
+
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        url = url.replace(`:${key}`, value);
+      }
+    }
+
+    navigate(url);
+  };
+}
+```
+
+You can also type `useParams` for route parameter safety:
+
+```ts 
+import { useParams } from 'react-router-dom';
+
+function useTypedParams<T extends keyof AppRoutes>() {
+  return useParams() as AppRoutes[T];
+}
+
+// Usage
+const { id } = useTypedParams<'/dashboard/items/:id/edit'>();
+```
+
+## Centralizing Routes
+
+Create a single `routes.config.ts` file to manage all route paths:
+
+```ts 
+export const routeConfig = {
+  home: '/',
+  dashboard: {
+    root: '/dashboard',
+    items: {
+      list: '/dashboard/items',
+      edit: '/dashboard/items/:id/edit',
+      create: '/dashboard/items/new',
+    },
+  },
+} as const;
+```
+
+Use TypeScript’s inference to automatically derive path types, reducing duplication and ensuring consistency.
+
+## Using Modern Libraries
+
+If you're building a large application, consider using libraries that support typed routing out of the box:
+
+### Example: TanStack Router
+
+```ts 
+const itemEditRoute = new Route({
+  getParentRoute: () => dashboardRoute,
+  path: '/items/$itemId/edit',
+  component: ItemEdit,
+});
+
+function ItemEdit() {
+  const { itemId } = itemEditRoute.useParams(); // itemId is typed as string
+}
+```
+
+## Incremental Adoption Strategy
+
+You don’t need to rewrite the entire app at once. Instead:
+
+1. Introduce `useTypedNavigate` and `useTypedParams` for new features
+2. Gradually refactor older components
+3. Use lint rules to enforce consistency
+
+### ESLint Example:
+
+```json
+"rules": {
+  "no-hardcoded-routes": "error"
+}
+```
+
+This rule prevents the use of raw strings in navigation, enforcing your typed route system.
+
+## Where Typed Routing Shines
+
+Type-safe routing is especially useful in:
+
+- **Admin dashboards**: Dozens of views and deep linking
+- **E-commerce apps**: Dynamic filters and nested routes
+- **SPAs with stateful URLs**: Integration with Redux, Zustand, or URL-based state
+
+Example:
+
+```ts 
+interface ECommerceRoutes {
+  '/shop': {};
+  '/shop/:category': { category: string };
+  '/shop/:category/:itemId': { category: string; itemId: string };
+  '/checkout': {};
+}
+```
+
+Integrating with state managers like [Zustand](https://zustand-demo.pmnd.rs/):
+
+```ts 
+const useStore = create((set) => ({
+  currentRoute: '/',
+  navigateTo: (route: keyof AppRoutes) => set({ currentRoute: route }),
+}));
+```
+
+## Final Thoughts
+
+Type-safe navigation is becoming a standard for modern React development. It improves confidence, prevents runtime failures, and makes refactoring painless — especially in large-scale apps.
+
+If your app still relies on string-based paths, you’re likely wasting time debugging preventable issues. Adopting typed routes means fewer Friday-night deploy disasters caused by a single misspelled URL.
