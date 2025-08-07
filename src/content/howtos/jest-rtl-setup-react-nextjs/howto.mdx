@@ -1,0 +1,252 @@
+---
+title: Howto Set Up Jest and React Testing Library in React & Next.js
+slug: jest-rtl-setup-react-nextjs
+heading: "Properly Configuring Jest for React and Next.js"
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/jest-rtl-setup-react-nextjs
+date: 2025-08-07
+author: anton liberant
+category: react
+type: howto
+tags: ['jest', 'testing', 'react-testing-library']
+desc: A complete guide to configuring Jest and React Testing Library in TypeScript-based React or Next.js apps — with SCSS, SVG, Babel and more.
+---
+
+Unit tests are the foundation of modern frontend quality. This guide walks you through setting up Jest and React Testing Library (RTL) in React and Next.js projects with support for TypeScript, SCSS, SVG, and more.
+
+## 🚀 Installing Jest
+
+```bash
+npm install --save-dev jest @types/jest
+```
+
+Generate a base config:
+
+```bash
+npx jest --init
+```
+
+When prompted:
+
+- ✅ Add test script to package.json
+- ✅ Use TypeScript: yes
+- ✅ Test environment: jsdom
+- ❌ Coverage: no (optional)
+- ✅ Use Babel: yes
+- ✅ Clear mocks: yes
+
+## 🔧 Basic jest.config.ts
+
+```ts
+export default {
+  clearMocks: true,
+  testEnvironment: 'jsdom',
+  coveragePathIgnorePatterns: ['\\node_modules\\'],
+  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
+  moduleDirectories: ['node_modules'],
+  modulePaths: ['<rootDir>src'],
+  testMatch: ['<rootDir>src/**/*(*.)@(spec|test).[tj]s?(x)'],
+  rootDir: '../../',
+  transformIgnorePatterns: ['node_modules/(?!axios)'],
+  reporters: [
+    'default',
+    [
+      'jest-html-reporters',
+      {
+        publicPath: '<rootDir>/reports/unit',
+        filename: 'report.html',
+        inlineSource: true,
+      },
+    ],
+  ],
+};
+```
+
+## ✅ ESLint Integration
+
+Update `.eslintrc.js`:
+
+```js
+env: {
+  jest: true,
+},
+rules: {
+  'max-len': ['error', { ignoreComments: true, code: 125 }],
+}
+```
+
+## 🧪 First Test
+
+```ts
+describe('basic tests', () => {
+  test('should pass', () => {
+    expect(true).toBe(true);
+  });
+});
+```
+
+## ⚙️ Jest + Next.js
+
+Install extra packages:
+
+```bash
+npm install -D jest jest-environment-jsdom @testing-library/jest-dom ts-node
+```
+
+Update jest.config.ts with `next/jest`:
+
+```ts
+import { Config } from 'jest';
+import nextJest from 'next/jest';
+
+const createJestConfig = nextJest({ dir: './' });
+
+const config: Config = {
+  clearMocks: true,
+  testEnvironment: 'jsdom',
+  coverageProvider: 'v8',
+  modulePaths: ['<rootDir>src'],
+  testMatch: ['<rootDir>src/**/*(*.)@(spec|test).[tj]s?(x)'],
+  reporters: [/* same as before */],
+};
+
+export default createJestConfig(config);
+```
+
+Add dummy export to fix TS module error:
+
+```ts
+export {};
+```
+
+Run tests:
+
+```bash
+npm run test:unit
+```
+
+## 🔬 Test Setup
+
+```bash
+npm install --save-dev @testing-library/react @testing-library/dom
+```
+
+`setupTests.ts`:
+
+```ts
+import '@testing-library/jest-dom';
+```
+
+In `jest.config.ts`:
+
+```ts
+setupFilesAfterEnv: ['<rootDir>/config/jest/setupTests.ts']
+```
+
+In `tsconfig.json`:
+
+```json
+"include": ["./config/jest/setupTests.ts"]
+```
+
+## 🧪 Example RTL Test
+
+```tsx
+describe('Button', () => {
+  test('renders correctly', () => {
+    render(<Button>Click</Button>);
+    expect(screen.getByText('Click')).toBeInTheDocument();
+  });
+});
+```
+
+## 🎨 SCSS & SVG Setup
+
+```bash
+npm i identity-obj-proxy
+```
+
+In `jest.config.ts`:
+
+```ts
+moduleNameMapper: {
+  '\.(s?css)$': 'identity-obj-proxy',
+}
+```
+
+To mock SVGs:
+
+```ts
+moduleNameMapper: {
+  '\.(s?css)$': 'identity-obj-proxy',
+  '\.svg': path.resolve(__dirname, 'jestEmptyComponent.tsx'),
+}
+```
+
+`jestEmptyComponent.tsx`:
+
+```tsx
+const JestEmptyComponent = () => <div />;
+export default JestEmptyComponent;
+```
+
+## 🧪 SVG Mocks in Next.js
+
+```ts
+jest.mock('../../assets/icons/arrowLeft.svg', () => () => <div data-testid="svg-mock" />);
+```
+
+Alternatively, extend `next/jest` config dynamically:
+
+```ts
+const jestConfig = async () => {
+  const nextJestConfig = await createJestConfig(customJestConfig)();
+  return {
+    ...nextJestConfig,
+    moduleNameMapper: {
+      '\.svg$': path.resolve(__dirname, 'jestEmptyComponent.tsx'),
+      ...nextJestConfig.moduleNameMapper,
+    },
+  };
+};
+```
+
+## ⚙️ Babel Setup
+
+Install TypeScript and React presets:
+
+```bash
+npm i @babel/preset-typescript @babel/preset-react
+```
+
+Update `babel.config.json`:
+
+```json
+{
+  "presets": [
+    "@babel/preset-env",
+    "@babel/preset-typescript",
+    [
+      "@babel/preset-react",
+      { "runtime": "automatic" }
+    ]
+  ]
+}
+```
+
+## ⚡ Async Test Support
+
+```bash
+npm i -D regenerator-runtime
+```
+
+In `setupTests.ts`:
+
+```ts
+import 'regenerator-runtime/runtime';
+```
+
+---
+
+Jest is flexible, fast, and battle-tested for unit testing in React and Next.js. With proper setup, you'll catch bugs early and confidently ship reliable code.

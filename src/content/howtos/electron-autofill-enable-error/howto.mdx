@@ -1,0 +1,71 @@
+---
+title: Howto Fix Autofill.enable Errors in Electron DevTools
+slug: electron-autofill-enable-error
+heading: "DevTools Autofill Errors in Electron: What They Are and How to Fix Them"
+icon: /icons/electron.png
+image: /icon.png
+permalink: howto/electron-autofill-enable-error
+date: 2025-08-07
+author: anton liberant
+category: electron
+type: howto
+tags: []
+desc: Resolve 'Autofill.enable' and 'Autofill.setAddresses' warnings in Electron DevTools caused by unsupported Chrome DevTools Protocol commands.
+---
+
+When running an Electron app with DevTools open, you may encounter the following warnings:
+
+```
+[65260:0807/105754.978:ERROR:CONSOLE:1] "Request Autofill.enable failed. {"code":-32601,"message":"'Autofill.enable' wasn't found"}", source: devtools://devtools/bundled/core/protocol_client/protocol_client.js (1)
+[65260:0807/105754.978:ERROR:CONSOLE:1] "Request Autofill.setAddresses failed. {"code":-32601,"message":"'Autofill.setAddresses' wasn't found"}", source: devtools://devtools/bundled/core/protocol_client/protocol_client.js (1)
+```
+
+These messages don’t come from your code. Instead, they originate from **Chrome DevTools attempting to call internal debugging APIs** — APIs that are not supported in Electron’s version of Chromium.
+
+## 🧠 Why This Happens in Electron
+
+Electron provides DevTools via Chromium, but not all internal Chrome DevTools Protocol methods are available. Features like `Autofill.enable` or `Autofill.setAddresses` are **only supported in full Chrome builds**, not in Electron’s stripped-down implementation.
+
+These warnings typically appear:
+
+- In development environments
+- In Electron versions 30 and newer
+- When DevTools experiments or panels attempt to inspect autofill or form data
+
+## ✅ How to Fix or Suppress in Electron
+
+### 1. **Disable Experimental DevTools Features**
+
+To suppress the warnings:
+
+1. Open DevTools (`F12` or `Cmd+Opt+I`)
+2. Click the ⚙️ **Settings** icon
+3. Navigate to **Experiments**
+4. Uncheck anything related to Autofill or form debugging
+5. Restart DevTools
+
+### 2. **Ignore the Warnings**
+
+If you aren’t working with autofill logic, these messages are harmless. You can safely ignore them.
+
+### 3. **Track Electron’s DevTools Compatibility**
+
+Electron doesn't allow direct modification of DevTools internals, so it's not currently possible to disable specific protocol methods like `Autofill.enable` at runtime.
+
+Monitor the [Electron GitHub issues](https://github.com/electron/electron/issues) for discussions and future support.
+
+## 🧪 Developer Notes
+
+- These warnings do not affect IPC or Electron’s main/renderer process interaction.
+- They are unrelated to application functionality.
+- They can appear randomly depending on DevTools experiments, Chrome updates, or plugins.
+
+## 🧼 Summary
+
+| Environment     | Message Source            | Fix                              |
+|------------------|----------------------------|-----------------------------------|
+| Electron DevTools | DevTools Protocol (Chrome) | Disable experiments or ignore it |
+
+If you see this error, your app is **not broken** — Electron DevTools is just being noisy.
+
+No changes to your code are required unless you're actively working with Chrome Autofill APIs (which most apps are not).
