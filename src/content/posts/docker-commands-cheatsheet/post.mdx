@@ -1,0 +1,166 @@
+---
+title: "Docker Command Cheatsheet Every Developer Should Know"
+slug: docker-commands-cheatsheet
+heading: "Docker for Developers: Essential Commands in One Cheatsheet"
+image: ./images/docker-commands-cheatsheet.png
+permalink: docker-commands-cheatsheet
+date: 2025-08-08
+author: anton liberant
+category: docker
+type: post
+tags: ['Cheatsheet']
+desc: Forget the DevOps-only myth — Docker is your everyday dev toolkit. Learn essential commands for images, containers, volumes, networks, and more.
+---
+
+Forget the myth that Docker is only for DevOps. Today, it’s a must-have tool for any developer — as essential as Git or VS Code. Docker lets your code run consistently on every machine — local, staging, or production. No more “works on my machine” nightmares.
+
+This article is a practical cheatsheet of commands — not theory. Whether you’re just getting into containerization or looking for a solid reference, this is your fast track.
+
+## 🧱 Images
+
+Images are templates that contain your app and everything it needs to run.
+
+- **List all images:**  
+  `docker images` or `docker image ls`
+
+- **Pull an image:**  
+  `docker pull redis:7-alpine`
+
+- **Remove an image:**  
+  `docker rmi redis:7-alpine`
+
+- **Prune dangling images:**  
+  `docker image prune` or `docker image prune -a`
+
+- **Inspect image history:**  
+  `docker history <image>`
+
+- **Inspect full image info (JSON):**  
+  `docker inspect <image>`
+
+## 📦 Containers
+
+Containers are running instances of images — isolated environments where your app runs.
+
+- **List running containers:**  
+  `docker ps`
+
+- **List all containers (incl. stopped):**  
+  `docker ps -a`
+
+- **Run a container:**  
+```bash
+docker run -d -p 8080:80 --name my_nginx nginx
+docker run --rm -it ubuntu /bin/bash
+docker run -v $(pwd):/app node:18-alpine
+```
+
+Key flags:
+
+- `-d`: Detached mode (background)
+- `-p`: Port mapping
+- `-v`: Volume mount
+- `--name`: Custom container name
+- `--rm`: Remove on exit
+- `-it`: Interactive terminal
+- `-e`: Set environment variable
+- `--network`: Attach to network
+
+- **Start/stop/restart containers:**  
+  `docker start/stop/restart <name>`
+
+- **Remove container:**  
+  `docker rm -f <name>` or `docker container prune`
+
+- **View logs:**  
+  `docker logs -f --tail 50 <name>`
+
+- **Execute inside a container:**  
+  `docker exec -it <name> /bin/bash`
+
+- **Copy files:**  
+  From host to container:  
+  `docker cp ./local/file.txt container:/app/`  
+  From container to host:  
+  `docker cp container:/app/file.txt ./`
+
+- **Inspect container info:**  
+  `docker inspect <container>`
+
+## 🏗️ Build with Dockerfile
+
+```bash
+docker build -t my_app:1.0 .
+docker build --platform linux/amd64 -t my_app_amd64 .
+```
+
+Useful flags:
+
+- `-t`: Tag the image
+- `-f`: Specify Dockerfile path
+- `--no-cache`: Disable layer caching
+- `--build-arg`: Pass build-time variables
+
+## 🧩 Docker Compose
+
+Define multi-container setups in `docker-compose.yml`.
+
+- **Run and build services:**  
+  `docker-compose up -d --build`
+
+- **Stop and remove everything:**  
+  `docker-compose down -v`
+
+- **View container logs:**  
+  `docker-compose logs -f <service>`
+
+- **Execute inside a service container:**  
+  `docker-compose exec db psql -U user -d database`
+
+- **Other helpful commands:**  
+  - `docker-compose ps`
+  - `docker-compose build`
+  - `docker-compose pull`
+  - `docker-compose restart`
+  - `docker-compose stop/start`
+
+## 🌐 Networks
+
+Docker lets containers communicate over custom networks.
+
+```bash
+docker network ls
+docker network create my_net
+docker network inspect my_net
+docker network connect my_net my_container
+docker network disconnect my_net my_container
+```
+
+## 💾 Volumes
+
+Volumes persist data across container restarts.
+
+```bash
+docker volume ls
+docker volume create data_store
+docker volume inspect data_store
+docker volume rm data_store
+docker volume prune
+```
+
+## ✅ Best Practices for Devs
+
+- Use `.dockerignore` to reduce image size and cache misses.
+- Optimize layer order in Dockerfile for caching.
+- Use **multi-stage builds** for lean production images.
+- Avoid running as root unless needed.
+- Clean up regularly: `docker system prune -af`.
+- Add aliases to save time:  
+  `alias dps='docker ps -a'`  
+  `alias dlogs='docker-compose logs -f'`
+
+## 📌 Summary
+
+This cheatsheet gives you everything you need to start using Docker like a pro — no fluff, just the commands that matter.
+
+Start small. Build habits. And soon these will be second nature.
