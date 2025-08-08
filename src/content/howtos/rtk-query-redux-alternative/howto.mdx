@@ -1,0 +1,161 @@
+---
+title: Howto Simplify Redux with RTK Query in React Projects
+slug: rtk-query-redux-alternative
+heading: Is RTK Query the New Simpler Way to Use Redux?
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/rtk-query-redux-alternative
+date: 2025-08-08
+author: anton liberant
+category: react
+type: howto
+tags: []
+desc: Ditch redux-saga for simple queries? Learn how RTK Query from Redux Toolkit can drastically reduce boilerplate in your React apps.
+---
+
+Managing data in React with Redux has traditionally required a lot of boilerplate — slice creation, sagas, selectors, and loading states. But what if your data needs are simple? Enter **RTK Query**, a tool built into Redux Toolkit that makes fetching and caching data a breeze.
+
+## 🔁 Classic Redux + Saga Example
+
+Let’s revisit the standard approach using `createSlice`, saga, and selectors:
+
+```ts
+enum EStatus {
+  initial = 'initial',
+  pending = 'pending',
+  error = 'error',
+  success = 'success',
+}
+
+const initialState = {
+  items: [],
+  status: EStatus.initial,
+};
+
+const itemsSlice = createSlice({
+  name: 'items',
+  initialState,
+  reducers: {
+    getItems: (state) => { state.status = EStatus.pending },
+    setItems: (state, { payload }) => { state.items = payload },
+    setStatus: (state, { payload }) => { state.status = payload },
+  },
+});
+
+function* getItemsSaga() {
+  try {
+    const res = yield call(API.getItems);
+    yield put(setItems(res));
+    yield put(setStatus(EStatus.success));
+  } catch {
+    yield put(setStatus(EStatus.error));
+  }
+}
+```
+
+To use this in a component, you also need selectors, hooks, and conditionals.
+
+## ⚡ Refactoring with RTK Query
+
+RTK Query reduces this entire setup to just a few lines:
+
+### 1. Define Your API Slice
+
+```ts
+interface IItem { id: number }
+
+const api = createApi({
+  reducerPath: 'itemsApi',
+  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  endpoints: (build) => ({
+    getItems: build.query<IItem[], void>({
+      query: () => '/items?client=true',
+    }),
+  }),
+});
+
+export const { useGetItemsQuery } = api;
+```
+
+### 2. Use in Component
+
+```tsx
+const Component = () => {
+  const { data, isFetching, isError } = useGetItemsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  if (isFetching) return <div>Loading...</div>;
+  if (isError) return <div>Error!</div>;
+  return <ul>{data?.map((item) => <li key={item.id}>{item.id}</li>)}</ul>;
+};
+```
+
+This gives you built-in loading states, error handling, caching, and revalidation.
+
+## 🔄 Lazy Queries
+
+Need to trigger the query manually? Use a lazy query:
+
+```tsx
+const Component = () => {
+  const [trigger, { data, isFetching, isError, isUninitialized }] =
+    useLazyGetItemsQuery();
+
+  useEffect(() => {
+    trigger();
+  }, []);
+
+  if (isUninitialized || isFetching) return <div>Loading...</div>;
+  if (isError) return <div>Error!</div>;
+  return <>{data?.map((item) => <p key={item.id}>{item.id}</p>)}</>;
+};
+```
+
+Lazy queries are ideal when your argument isn’t available immediately.
+
+## ✏️ Updating with Mutations
+
+You can also use `build.mutation` to POST, PUT, or PATCH data:
+
+```ts
+updateItems: build.mutation<IItem[], { param: string }>({
+  queryFn: async ({ param }, api, _arg, baseQuery) => {
+    const result = await baseQuery(`/items/?param=${param}`);
+    if ('error' in result) return { error: result.error };
+
+    api.dispatch(
+      itemsRtkApi.util.updateQueryData('getItems', undefined, (draft) => {
+        draft.push(...result.data);
+      })
+    );
+
+    return { data: result.data };
+  },
+});
+```
+
+This also lets you optimistically update cache using `updateQueryData`.
+
+## 🤔 When NOT to Use RTK Query
+
+RTK Query is amazing for **simple** requests and component-based loading. But for advanced patterns like:
+
+- Pagination with shared params
+- Infinite scroll with external state
+- Complex loading flows or caching logic
+
+…it may be better to stick with **redux-saga** or custom middleware.
+
+## ✅ Final Thoughts
+
+RTK Query removes much of Redux's boilerplate for API requests. If you're just fetching and displaying data, it's a game changer.
+
+Use it for:
+
+- Simple GETs and POSTs
+- Built-in cache & re-fetch
+- Status flags (`isLoading`, `isError`, etc.)
+- Auto invalidation with tags
+
+Skip it when your logic goes beyond component boundaries and starts requiring global state orchestration.
