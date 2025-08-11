@@ -1,0 +1,223 @@
+---
+title: 'How to Speed Up API Work with TanStack Query & API Factory'
+slug: tanstack-query-api-factory
+heading: Accelerating API Development with TanStack Query
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/tanstack-query-api-factory
+date: 2025-08-11
+author: anton liberant
+category: react
+type: howto
+tags: ['tanstack-router']
+desc: Learn how TanStack Query and an API factory pattern cut boilerplate, centralize data handling, and accelerate API-driven development.
+---
+
+In modern frontend development, working with APIs can be repetitive, error‑prone, and time‑consuming. **TanStack Query** already helps with caching, background refetching, and status management — but pairing it with an **API factory** can eliminate tons of boilerplate and make changes safer.
+
+## The Problem with Repetitive API Hooks
+
+Without a centralized abstraction, each API call typically needs its own hook:
+
+- Define `queryKey` and `queryFn`
+- Handle loading and error states
+- Map/validate data manually
+- Repeat retry, cache, and invalidation logic
+
+This leads to copy‑pasted code and risky cross‑cutting changes.
+
+## The Factory Solution (Complete Example)
+
+A factory function can generate ready‑to‑use hooks for CRUD operations, removing repetition and centralizing behavior.
+
+### Minimal `apiService` (replace with axios/fetch in your app)
+
+```ts
+// api-service.ts
+export const apiService = {
+  async get(url: string, params?: Record<string, any>) {
+    const qs = params
+      ? "?" + new URLSearchParams(params as Record<string, string>).toString()
+      : "";
+    const res = await fetch(url + qs, { credentials: "include" });
+    if (!res.ok) throw new Error(`GET ${url}: ${res.status}`);
+    return { data: await res.json() };
+  },
+  async post<T>(url: string, body: T) {
+    const res = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`POST ${url}: ${res.status}`);
+    return { data: await res.json() };
+  },
+  async put<T>(url: string, body: T) {
+    const res = await fetch(url, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`PUT ${url}: ${res.status}`);
+    return { data: await res.json() };
+  },
+  async delete(url: string) {
+    const res = await fetch(url, { method: "DELETE", credentials: "include" });
+    if (!res.ok) throw new Error(`DELETE ${url}: ${res.status}`);
+    return { data: true };
+  },
+};
+```
+
+### The Factory
+
+```ts
+// api-factory.ts
+import { useQuery, useMutation, UseQueryOptions } from "@tanstack/react-query";
+import { apiService } from "./api-service";
+
+type QueryParams = Record<string, any> | undefined;
+
+export function createApi<T>(opts: {
+  baseEndpoint: string;
+  entityKey: string;
+}) {
+  const { baseEndpoint, entityKey } = opts;
+
+  return {
+    useGetListQuery: (params?: QueryParams, options?: UseQueryOptions<T[]>) =>
+      useQuery<T[]>({
+        queryKey: [entityKey, "list", params],
+        queryFn: async () => {
+          const res = await apiService.get(baseEndpoint, params);
+          return res.data as T[];
+        },
+        ...(options as any),
+      }),
+
+    useGetByIDQuery: (id: number | string, options?: UseQueryOptions<T>) =>
+      useQuery<T>({
+        queryKey: [entityKey, "byId", id],
+        queryFn: async () => {
+          const res = await apiService.get(`${baseEndpoint}/${id}`);
+          return res.data as T;
+        },
+        enabled: id != null,
+        ...(options as any),
+      }),
+
+    useCreateMutation: () =>
+      useMutation({
+        mutationFn: async (data: Partial<T>) => {
+          const res = await apiService.post(baseEndpoint, data);
+          return res.data as T;
+        },
+      }),
+
+    useUpdateMutation: () =>
+      useMutation({
+        mutationFn: async (input: { id: number | string } & Partial<T>) => {
+          const { id, ...data } = input;
+          const res = await apiService.put(`${baseEndpoint}/${id}`, data);
+          return res.data as T;
+        },
+      }),
+
+    useDeleteMutation: () =>
+      useMutation({
+        mutationFn: async (id: number | string) => {
+          await apiService.delete(`${baseEndpoint}/${id}`);
+          return id;
+        },
+      }),
+  };
+}
+```
+
+### Define an Entity API
+
+```ts
+// product-api.ts
+import { createApi } from "./api-factory";
+
+export type Product = {
+  id: number;
+  name: string;
+  price: number;
+};
+
+export const productApi = createApi<Product>({
+  baseEndpoint: "/products",
+  entityKey: "products",
+});
+```
+
+### Use in a Component
+
+```tsx
+// ProductList.tsx
+import { productApi } from "./product-api";
+
+export function ProductList() {
+  const { data, isLoading, isError } = productApi.useGetListQuery();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Failed to load</div>;
+
+  return (
+    <ul>
+      {data?.map((p) => (
+        <li key={p.id}>
+          {p.name} — ${p.price}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Create / Update / Delete
+
+```tsx
+// ProductEditor.tsx
+import { productApi } from "./product-api";
+
+export function ProductEditor() {
+  const createProduct = productApi.useCreateMutation();
+  const updateProduct = productApi.useUpdateMutation();
+  const deleteProduct = productApi.useDeleteMutation();
+
+  return (
+    <div>
+      <button
+        onClick={() => createProduct.mutate({ name: "New", price: 100 })}
+      >
+        Create
+      </button>
+
+      <button
+        onClick={() => updateProduct.mutate({ id: 1, price: 150 })}
+      >
+        Update #1
+      </button>
+
+      <button onClick={() => deleteProduct.mutate(1)}>
+        Delete #1
+      </button>
+    </div>
+  );
+}
+```
+
+## Benefits of This Approach
+
+- **Less Boilerplate** — One factory replaces dozens of repetitive hooks.  
+- **Consistency** — All queries share retry logic, caching, and data handling.  
+- **Scalability** — Adding new endpoints is quick and predictable.  
+- **Centralized Maintenance** — API changes require edits in one place.  
+
+## When to Use It
+
+The factory pattern shines in medium‑to‑large projects with many endpoints and frequent API changes. For very small/stable APIs, it might be optional overhead.
