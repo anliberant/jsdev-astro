@@ -1,0 +1,83 @@
+---
+title: GEMINI.md Example Snippet for Project Context
+slug: gemini-md-example
+heading: Sample GEMINI.md to Help Gemini Understand Your Project
+icon: /icons/ai.png
+image: /icon.png
+permalink: snippets/gemini-md-example
+date: 2025-08-13
+author: anton liberant
+category: ai
+type: snippets
+tags: ['gemini']
+desc: A practical GEMINI.md template that provides Gemini CLI with clear project context, goals, and coding standards to improve AI responses.
+---
+
+## Introduction
+
+The `GEMINI.md` file defines your project’s **system prompt** for Gemini CLI.  
+It tells the AI what your project is about, its goals, technologies, and style preferences.  
+A good `GEMINI.md` helps Gemini give more accurate, relevant, and consistent answers.
+
+---
+
+## GEMINI.md Example
+
+```md 
+# Project Context: Marketplace
+
+## 1. Project Overview
+
+*   **Goal:** A brief description of the project. E.g., "This is a marketplace for selling digital goods, built with Next.js and Payload CMS."
+*   **Core Features:** 2-3 key features. E.g., "User authentication, file uploads and sales, category system."
+
+## 2. Tech Stack
+
+*   **Framework:** Next.js
+*   **CMS:** Payload CMS
+*   **Language:** TypeScript
+*   **Styling:** Tailwind CSS
+*   **Package Manager:** Bun
+*   **UI Components:** shadcn/ui (or others)
+
+## 3. Project Structure
+
+A brief description of key directories to help with navigation.
+
+*   `src/app`: Main Next.js routing and pages.
+*   `src/collections`: Payload CMS collection definitions (data models).
+*   `src/widgets`: Large, composite components (e.g., `Header`, `Footer`).
+*   `src/shared/ui`: Basic, reusable UI components (buttons, inputs).
+*   `src/shared/lib`: Helper functions and utilities.
+
+## 4. Key Commands
+
+A list of frequently used commands will save us time.
+
+*   `bun run dev`: Starts the development server.
+*   `bun run build`: Builds the project for production.
+*   `bun run lint`: Lints the code for errors and style issues.
+*   `bun run generate:types`: Generates TypeScript types from the Payload schema.
+
+## 5. Coding Conventions
+
+If you have specific coding rules, list them here.
+
+*   **Imports:** "Always use `@/...` aliases for imports from the `src` directory."
+*   **Style:** "Follow the standard Prettier and ESLint configurations."
+*   **Components:** "Prefer functional components with hooks."
+
+## 6. Current Goals
+
+What are you trying to do right now? This helps me understand your immediate context.
+
+*   **What I'm working on:** "Right now, I'm trying to set up type generation for Payload and fix build warnings."
+```
+
+Place this file at the root of your project (or in .gemini/) and Gemini CLI will use it as the default project context.
+
+## Conclusion
+
+A detailed `GEMINI.md` ensures Gemini CLI understands your project’s purpose, stack, and style rules.
+This leads to better answers, more relevant code examples, and fewer misunderstandings when working with the AI.
+
