@@ -124,6 +124,11 @@ pre {
   background-color: var(--code-hover);
 }
 
+td code,
+td pre {
+  background-color: transparent;
+}
+
 p code {
   background-color: var(--code-hover);
   border-radius: 0.25rem;
