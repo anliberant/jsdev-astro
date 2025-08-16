@@ -1,0 +1,231 @@
+---
+title: 'How to Master CSS Centered Layouts: From Basics to Advanced'
+slug: css-centered-layout-guide
+heading: The Complete Guide to Centering in CSS
+permalink: howto/css-centered-layout-guide
+icon: /icons/css.png
+image: /icon.png
+date: 2025-08-17
+author: anton liberant
+category: css
+type: howto
+tags: []
+desc: Learn how to center elements in CSS with text-align, margin auto, line-height, flexbox, grid, and more — from simple fixes to advanced solutions.
+---
+
+# How to Master CSS Centered Layouts: From Basics to Advanced
+
+Centering layouts is one of the most common requirements in front-end development — and a favorite interview question. In this guide, we’ll walk through **horizontal centering, vertical centering, and combined centering**, explore the principles behind each method, and explain when to use them.
+
+---
+
+## 1. Horizontal Centering
+
+### 1.1 Centering text or inline elements
+```css
+.container { 
+  text-align: center; 
+}
+```
+- Works for inline elements (`<span>`, `<img>`) and text.  
+- Acts on the parent container; children inherit alignment.  
+
+### 1.2 Centering block-level elements
+```css
+.box { 
+  width: 200px; 
+  margin: 0 auto; 
+}
+```
+- Requires a fixed width.  
+- The browser distributes remaining space equally on both sides.  
+
+---
+
+## 2. Vertical Centering (Single Line)
+
+### 2.1 Using `line-height`
+```css
+.container { 
+  height: 100px; 
+  line-height: 100px; 
+}
+```
+- Only works for single-line text.  
+- Text must not exceed container height.  
+
+### 2.2 Using `padding`
+```css
+.container { 
+  padding: 40px 0; 
+}
+```
+- Handles multiple lines.  
+- No need to calculate line-height.  
+
+---
+
+## 3. Horizontal + Vertical (Fixed Size Elements)
+
+### 3.1 Absolute positioning + negative margins
+```css
+.parent { position: relative; } 
+.child { 
+  position: absolute; 
+  width: 300px; height: 200px;
+  top: 50%; left: 50%;
+  margin-top: -100px; 
+  margin-left: -150px;
+}
+```
+- Requires knowing element size.  
+
+### 3.2 Absolute positioning + `margin: auto` (Recommended)
+```css
+.child { 
+  position: absolute; 
+  width: 300px; height: 200px;
+  top: 0; left: 0; right: 0; bottom: 0;
+  margin: auto; 
+}
+```
+- Concise, easy to maintain.  
+- Compatible with IE8+.  
+
+### 3.3 Using `calc()`
+```css
+.child { 
+  position: absolute; 
+  top: calc(50% - 100px); 
+  left: calc(50% - 150px); 
+}
+```
+- Less readable, lower performance.  
+
+---
+
+## 4. Centering Without Knowing Size
+
+### 4.1 Absolute positioning + transform (Modern Solution)
+```css
+.child { 
+  position: absolute; 
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+```
+- Works regardless of element size.  
+- Widely supported in modern browsers.  
+
+### 4.2 `line-height` + `vertical-align`
+```css
+.parent { 
+  line-height: 300px; 
+  text-align: center; 
+}
+.child { 
+  display: inline-block; 
+  vertical-align: middle; 
+  line-height: initial; 
+}
+```
+- Old browser-friendly.  
+
+### 4.3 Using `writing-mode`
+```css
+.parent { 
+  writing-mode: vertical-lr; 
+  text-align: center; 
+}
+.child { 
+  writing-mode: horizontal-tb; 
+  display: inline-block; 
+}
+```
+- Rare use case; changes text flow.  
+
+### 4.4 Table-cell method
+```css
+.parent { 
+  display: table-cell; 
+  width: 100vw; height: 100vh;
+  vertical-align: middle; text-align: center; 
+}
+.child { display: inline-block; }
+```
+- Mimics table layout.  
+- Requires explicit parent dimensions.  
+
+---
+
+## 5. Flexbox (The Ultimate Solution)
+
+```css
+.parent { 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+}
+```
+- Minimal code, handles any size.  
+- Great for responsive layouts.  
+
+For multiple elements:
+```css
+.parent { 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+}
+```
+
+---
+
+## 6. CSS Grid (2D Centering)
+
+```css
+.parent { 
+  display: grid; 
+  place-items: center; 
+}
+```
+Equivalent:
+```css
+.parent { 
+  display: grid; 
+  justify-content: center; 
+  align-content: center; 
+}
+```
+- Ideal for complex grid systems.  
+
+---
+
+## 7. Comparison & Best Practices
+
+| Method            | Use Case                           | Compatibility | Flexibility |
+|-------------------|------------------------------------|---------------|-------------|
+| `text-align`      | Inline/inline-block content        | All           | ★★☆         |
+| Negative margins  | Known size elements                | IE6+          | ★☆☆         |
+| `transform`       | Unknown size elements              | IE10+         | ★★★         |
+| Flexbox           | Modern layouts, responsive design  | IE11+         | ★★★         |
+| Grid              | Complex 2D layouts                 | IE11+         | ★★★         |
+| Table-cell        | Legacy browser support             | IE8+          | ★★☆         |
+
+**Selection tips**:
+- **Known size** → `margin: auto` or negative margins  
+- **Unknown size** → Flexbox (modern) or `transform` (legacy-friendly)  
+- **Text only** → `line-height` or `padding`  
+
+---
+
+## Summary
+
+The art of centering in CSS is about understanding **space distribution and positioning reference systems**.  
+
+- Horizontal centering = equal left/right spacing  
+- Vertical centering = line-height, offsets, or alignment  
+- Absolute positioning requires a positioned parent  
+- Modern CSS simplifies centering with **transform**, **Flexbox**, and **Grid**  
+
+With these tools, you can confidently tackle interview questions and real-world projects alike.  
