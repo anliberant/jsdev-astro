@@ -1,0 +1,190 @@
+---
+title: 'The Future of JavaScript: What Awaits Us'
+slug: future-of-javascript
+heading: 'What’s Next for JavaScript?'
+permalink: future-of-javascript
+image: ./images/future-of-js.png
+date: 2025-08-20
+author: anton liberant
+category: javascript
+type: post
+tags: []
+desc: Explore upcoming JavaScript proposals from TC39 — from resource management and async arrays to seeded randomness and immutable buffers.
+---
+
+JavaScript continues to evolve rapidly, driven by the work of TC39 and active contributors like the Deno team. At the recent **108th TC39 meeting**, nine proposals moved forward across stages — from early concepts (Stage 0) to fully standardized features (Stage 4).  
+
+Here’s an overview of what’s coming soon, what’s experimental, and how these changes might impact the way we write JavaScript.
+
+---
+
+## Stage 4: Ready for Use
+
+### Explicit Resource Management (`using`)
+
+JavaScript is finally getting deterministic resource cleanup through the new `using` keyword (and its async variant `await using`). Inspired by C# and Python, this feature ensures resources like files or sockets are properly released when leaving a block of code.  
+
+Objects can implement `[Symbol.dispose]()` or `[Symbol.asyncDispose]()` methods, which are called automatically.  
+
+```js
+class FileHandle {
+  constructor(name) {
+    this.name = name; // open file...
+  }
+  [Symbol.dispose]() {
+    console.log(`${this.name} closed`);
+  }
+}
+
+function readFile() {
+  {
+    using file = new FileHandle("data.txt");
+    // File operations...
+  }
+  // file.[Symbol.dispose]() is automatically called here
+}
+```
+
+✅ Already supported in Chrome 134, Firefox 134, and **Deno v2.3**.  
+
+In **Deno**, this applies to resources like `Deno.File` and `Deno.Conn`. Example:  
+
+```js
+using server = Deno.serve({ port: 8000 }, () => {
+  return new Response("Hello, world!");
+});
+
+const response = await fetch("http://localhost:8000");
+console.log(await response.text()); // "Hello, world!"
+// server stops automatically
+```
+
+The Deno team also proposes extending `using` to simplify **async context propagation** (tracing, logging, spans).  
+
+---
+
+### Array.fromAsync
+
+Like `Array.from`, but works with async iterables and returns a Promise that resolves to an array.  
+
+```js
+async function* generate() {
+  yield await Promise.resolve(1);
+  yield await Promise.resolve(2);
+}
+
+const nums = await Array.fromAsync(generate()); 
+console.log(nums); // [1, 2]
+```
+
+✅ Supported in all browsers, **Deno v1.38**, and **Node.js v22**.  
+
+---
+
+### Error.isError
+
+A new reliable way to detect errors across realms or inheritance.  
+
+```js
+Error.isError(new TypeError("oops")); // true
+Error.isError({ name: "TypeError", message: "oops" }); // false
+```
+
+✅ Supported in all browsers and **Deno v2.2**.  
+
+---
+
+## Stage 3: Candidate Features
+
+### Immutable ArrayBuffer
+
+Introduces `transferToImmutable()` and `sliceToImmutable()` for safe, immutable binary data.  
+
+```js
+let buf = new ArrayBuffer(100);
+let imm = buf.transferToImmutable();
+
+console.log(buf.byteLength, imm.byteLength); // 0, 100
+imm[0] = 1; // ❌ TypeError
+```
+
+Useful for **multi-threading, workers, and binary APIs** like `Deno.writeFile()` without unnecessary copies.  
+
+---
+
+## Stage 2: Drafts
+
+### Random.Seeded
+
+Deterministic randomness with reproducible sequences.  
+
+```js
+const prng = new Random.Seeded(42);
+console.log(prng.random()); // same sequence every run
+```
+
+Great for simulations, games, and tests.  
+
+---
+
+### Number.prototype.clamp
+
+A clean alternative to `Math.min(Math.max(x, min), max)`.  
+
+```js
+(5).clamp(0, 10);  // 5
+(-5).clamp(0, 10); // 0
+(15).clamp(0, 10); // 10
+```
+
+---
+
+## Stage 1: Early Proposals
+
+### Trailing Zeros in Intl.NumberFormat
+
+New option `trailingZeroDisplay` for cleaner number formatting.  
+
+```js
+new Intl.NumberFormat("en", { 
+  minimumFractionDigits: 2, 
+  trailingZeroDisplay: "auto" 
+}).format(1.5); // "1.50"
+
+new Intl.NumberFormat("en", { 
+  trailingZeroDisplay: "stripIfInteger" 
+}).format(2); // "2"
+```
+
+---
+
+### Comparisons
+
+A standardized way to generate **diff-like outputs** for values, useful for testing frameworks and logging.  
+
+---
+
+### Random Namespace
+
+Convenient helpers for numbers, arrays, and sampling.  
+
+```js
+Random.int(-5, 5);       // -1
+Random.sample(["A", "B"]); // "B"
+Random.shuffle([1,2,3]); // [3,1,2]
+```
+
+---
+
+## What’s Next
+
+JavaScript’s evolution is far from slowing down. TC39 is shaping the language for modern use cases: async workflows, safer data handling, reproducibility, and developer ergonomics.  
+
+**Deno** remains a strong advocate of these changes, integrating them early to showcase their real-world benefits. The next TC39 meeting is scheduled for late September, where discussions on these proposals will continue.  
+
+---
+
+🔗 Sources:  
+- [Deno Official Blog](https://deno.com/blog)  
+- [TC39 Proposals](https://github.com/tc39/proposals)  
+- [ECMAScript Draft](https://tc39.es/ecma262/)  
