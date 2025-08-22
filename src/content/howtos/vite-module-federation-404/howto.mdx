@@ -1,0 +1,231 @@
+---
+title: How to Fix Vite Module Federation 404 Errors on Separate Start
+heading: Fixing Vite Module Federation Errors When Starting Apps Separately
+slug: vite-module-federation-404
+icon: /icons/nodejs.png
+image: ./images/vite-module-federation-error.png
+permalink: howto/vite-module-federation-404
+date: 2025-08-22
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['vite', 'module-federation', '404-error', 'setup']
+desc: Learn how to fix remoteEntry.js 404 errors when running Vite Module Federation apps separately. Covers setup, common pitfalls, and working solutions
+---
+
+![Vite Module Federation 404 Errors](./images/vite-module-federation-error.png)
+
+When using **Vite Module Federation** with multiple React (or Vue) apps — typically a **host** and a **remote (microfrontend)** — everything may work fine when launched together with a single command. But if you start them separately, the host can fail with a dreaded **404 on `remoteEntry.js`**:  
+
+```
+GET http://localhost:5001/assets/remoteEntry.js net::ERR_ABORTED 404
+Failed to fetch dynamically imported module…
+```  
+
+This guide explains **why this happens** and provides **practical recipes** to fix it.  
+
+---
+
+## The Setup  
+
+### Remote (Microfrontend)  
+
+```js
+// vite.config.js (remote)
+import federation from '@originjs/vite-plugin-federation'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    federation({
+      name: "remote_app",
+      filename: "remoteEntry.js",
+      exposes: { './Button': './src/components/Button' },
+      shared: ['react','react-dom']
+    })
+  ]
+})
+```
+
+### Host (Main App)  
+
+```js
+// vite.config.js (host)
+import federation from '@originjs/vite-plugin-federation'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    federation({
+      name: 'app',
+      remotes: {
+        remoteApp: 'http://localhost:5001/assets/remoteEntry.js',
+      },
+      shared: ['react','react-dom']
+    })
+  ]
+})
+```
+
+### Usage in Host  
+
+```jsx
+// src/App.jsx (host)
+import Button from 'remoteApp/Button';
+
+export default function App() {
+  return <Button />
+}
+```
+
+---
+
+## The Problem  
+
+- **When running separately:**  
+  The host immediately requests `http://localhost:5001/assets/remoteEntry.js`. If the remote isn’t ready yet or is serving a different path depending on mode (`dev` vs `preview`), you get a **404**.  
+
+- **When running together:**  
+  If started with something like:  
+  ```bash
+  pnpm --parallel --filter "./**" preview
+  ```  
+  both services launch in sync, the remote is ready, and everything works.  
+
+**Root cause:**  
+- Race condition — host tries to fetch remote before it’s serving.  
+- Mode mismatch — `dev` builds remoteEntry virtually, `preview` serves it from `dist`.  
+
+---
+
+## Visual Diagram: Race Condition  
+
+```text
+Timeline (separate start)
+
+[Host starts] ----------------------> tries http://localhost:5001/assets/remoteEntry.js (404)
+                    [Remote not ready yet] -----> builds/serves remoteEntry.js
+
+Timeline (parallel start)
+
+[Host starts] ----------------------> request remoteEntry.js
+[Remote ready in time] --------------> serves remoteEntry.js ✔
+```
+
+---
+
+## How to Reproduce  
+
+```bash
+# Terminal 1
+pnpm --filter "react-vite/remote" preview
+
+# Terminal 2 (right after or even earlier)
+pnpm --filter "react-vite/host" preview
+```
+
+If the host starts too soon → **404 on `remoteEntry.js`**.  
+
+---
+
+## How to Fix It  
+
+Here are **working recipes** to eliminate the error:  
+
+### 1. Use the Same Mode for Both  
+
+- Run both apps in `dev`, or both in `preview`.  
+- Avoid mixing `host preview` with `remote dev`.  
+
+```bash
+# ✅ good
+pnpm --filter "react-vite/remote" dev
+pnpm --filter "react-vite/host" dev
+
+# ✅ good
+pnpm --filter "react-vite/remote" preview
+pnpm --filter "react-vite/host" preview
+```
+
+---
+
+### 2. Ensure Startup Order  
+
+Wait for **remote** to start before opening the host.  
+
+---
+
+### 3. Use Environment Variables for Dynamic URLs  
+
+```js
+// vite.config.js (host)
+import { defineConfig, loadEnv } from 'vite'
+import federation from '@originjs/vite-plugin-federation'
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  return {
+    plugins: [
+      federation({
+        remotes: {
+          remoteApp: env.VITE_REMOTE_URL
+        },
+        shared: ['react','react-dom']
+      })
+    ]
+  }
+})
+```
+
+`.env.development`  
+
+```
+VITE_REMOTE_URL=http://localhost:5001/assets/remoteEntry.js
+```
+
+Now dev/preview builds can each load the correct remote entry.  
+
+---
+
+### 4. Add a Retry or Manual Refresh  
+
+Sometimes the simplest fix is:  
+- Start host,  
+- Wait for remote,  
+- Refresh the page — Vite will pick up the remote entry.  
+
+---
+
+### 5. Use a Monorepo Script  
+
+Keep both host and remote in one workspace and run them in parallel:  
+
+```bash
+pnpm --parallel --filter "./**" preview
+```
+
+This reduces the chance of race conditions.  
+
+---
+
+## Quick Checklist  
+
+- ✅ Ports match (host expects 5001, remote serves 5001).  
+- ✅ Same mode: `dev ↔ dev`, `preview ↔ preview`.  
+- ✅ Remote really serves `remoteEntry.js` (open in browser).  
+- ✅ Startup order respected (remote first, host second).  
+
+---
+
+## Conclusion  
+
+If you see **404 on `remoteEntry.js`** when running Vite Module Federation apps separately:  
+
+- The cause is usually **startup race conditions** or **mismatched modes**.  
+- Solutions:  
+  - Run both in the same mode,  
+  - Wait for the remote before starting host,  
+  - Externalize the remote URL into env variables,  
+  - Add retries or launch with a monorepo script.  
+
+Following these practices makes your setup **predictable and stable**, both locally and in CI/CD pipelines.  

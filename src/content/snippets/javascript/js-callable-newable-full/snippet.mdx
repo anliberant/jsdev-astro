@@ -1,0 +1,116 @@
+---
+title: "Callable & Newable Objects in JavaScript: Full Example"
+slug: js-callable-newable-full
+heading: Turning a JavaScript Instance into Both Function and Constructor
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/js-callable-newable-full
+date: 2025-08-22
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['']
+desc: "A deep dive into prototype manipulation in JavaScript: build an object that’s both callable and instantiable, supports inheritance"
+---
+
+👉 This code is a mind-bending exploration of JavaScript’s prototype system. It’s not recommended for everyday development but great for understanding how constructors, prototypes, and callable objects can interact in surprising ways.
+
+## Full Code Example
+
+```js 
+'use strict';
+
+const ogp = Object.getPrototypeOf;
+const ohp = Object.prototype.hasOwnProperty;
+
+/**
+ * Base constructor that returns a self-referential
+ * callable/newable function.
+ */
+const Cstr = function () {
+  const root = this;
+  const main = this.constructor;
+  const isItSelf = main === Cstr;
+
+  const Self = function () {
+    if (new.target) {
+      const isSelfInside = this.constructor === Self;
+      const isCstrInside = this.constructor === Cstr;
+
+      if (!isSelfInside && !isCstrInside) {
+        Object.setPrototypeOf(ogp(this), root);
+        return Cstr.call(this);
+      }
+
+      const Constructor = isItSelf ? Cstr : main;
+      return new Constructor();
+    }
+    return Self;
+  };
+
+  Object.setPrototypeOf(Self, root);
+  Self.prototype.constructor = root;
+  Self.value++;
+  return Self;
+};
+
+Object.setPrototypeOf(Cstr.prototype, Cstr);
+Cstr.prototype.value = 0;
+
+/* ---------------- DEMO ---------------- */
+
+console.log('\n=== basic construction ===');
+const item = new Cstr();
+console.log('item instanceof Cstr:', item instanceof Cstr);
+console.log('item instanceof Function:', item instanceof Function);
+console.log('item.value:', item.value);
+
+new item; // works
+item();   // works
+
+console.log('\n=== class extension ===');
+class ExtendedCstr extends Cstr {}
+const entity = new ExtendedCstr();
+console.log('entity instanceof ExtendedCstr:', entity instanceof ExtendedCstr);
+console.log('entity instanceof Cstr:', entity instanceof Cstr);
+new entity; // works
+entity();   // works
+
+console.log('\n=== deep extension & sequencing ===');
+class ExtendedExtendedCstr extends ExtendedCstr {
+  constructor() {
+    super();
+  }
+}
+const exEx = new ExtendedExtendedCstr();
+exEx();           // callable
+const exEx2 = new exEx(); // newable
+
+class ItemExtendedCstr extends exEx2.constructor {
+  constructor() {
+    super();
+  }
+}
+const itemItem = new ItemExtendedCstr();
+itemItem();                   // callable
+const postItemItem = new itemItem(); // newable
+
+console.log('\n=== checks ===');
+console.log('itemItem instanceof ItemExtendedCstr:', itemItem instanceof ItemExtendedCstr);
+console.log('postItemItem instanceof ItemExtendedCstr:', postItemItem instanceof ItemExtendedCstr);
+console.log('postItemItem.value:', postItemItem.value);
+console.log('has own "value" on postItemItem:', ohp.call(postItemItem, 'value'));
+console.log('proto(value):', ogp(postItemItem).value);
+console.log('proto^2(value):', ogp(ogp(postItemItem)).value);
+```
+
+### What This Code Demonstrates
+
+1. Basic behavior
+    new `Cstr()` creates an object that is both a function and a constructor. You can call it (`item()`) or instantiate it again (`new item`).
+2. Class inheritance
+    When you extend `Cstr` with `class`, the new instances keep the dual behavior.
+3. Deep extension & sequencing
+    Even if you subclass multiple times, the pattern still holds: objects can keep reconstructing themselves while preserving the prototype chain.
+4. Prototype checks
+    The logging at the end shows how the prototype chain is preserved and how the `value` property is carried through inheritance.
