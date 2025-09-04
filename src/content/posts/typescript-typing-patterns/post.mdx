@@ -1,0 +1,182 @@
+---
+title: 'Choosing TypeScript Typing Patterns to Reduce Tech Debt'
+slug: typescript-typing-patterns
+heading: 'Making Smarter Decisions with TypeScript Typing Patterns'
+image: ./images/typescript-typing-patterns.png
+permalink: typescript-typing-patterns
+date: 2025-09-04
+author: anton liberant
+category: typescript
+type: post
+tags: []
+desc: Learn how different TypeScript typing patterns affect tech debt, scalability, and readability. Discover when to use interfaces, generics, mapped types, or Record.
+---
+
+TypeScript typing patterns directly influence **technical debt**. Poorly chosen patterns lead to boilerplate, errors, and costly refactoring. Clear, type-safe approaches accelerate onboarding, reduce debugging time, and keep your codebase predictable.  
+
+Let’s explore four major strategies for modeling discriminated unions in TypeScript, compare their pros and cons, and see how they affect long-term maintainability.
+
+---
+
+## Example Setup
+
+We’ll define a set of segment types for a simple vector drawing tool. Each segment type requires different coordinates:
+
+```ts
+// Segment kinds
+const segmentKinds = ["line", "quadratic"] as const;
+type SegmentKind = typeof segmentKinds[number];
+
+// Coordinates depending on segment kind
+type SegmentCoordinates<T extends SegmentKind> =
+  T extends "line"
+    ? [x: number, y: number]
+    : T extends "quadratic"
+    ? [cx: number, cy: number, x: number, y: number]
+    : never;
+```
+
+---
+
+## Pattern 1: Mapped Types with Indexed Access
+
+This approach automatically maps each segment type to its coordinates.  
+
+```ts
+type PathPiece = {
+  [K in SegmentKind]: {
+    kind: K;
+    coords: SegmentCoordinates<K>;
+  };
+}[SegmentKind];
+
+// ✅ Strictly enforces type-coordinates relationship
+const piece1: PathPiece = { kind: "line", coords: [10, 20] };
+const piece2: PathPiece = { kind: "quadratic", coords: [5, 15, 25, 35] };
+// ❌ Error: wrong number of coordinates
+// const piece3: PathPiece = { kind: "line", coords: [1, 2, 3] };
+```
+
+**Pros:**  
+- Strong type safety  
+- Auto-scales when adding new segment types  
+
+**Cons:**  
+- Nested syntax is harder to read  
+
+---
+
+## Pattern 2: Record Utility Type
+
+Using `Record` is shorter, but loses some precision.  
+
+```ts
+type SegmentRecord = Record<
+  SegmentKind,
+  { kind: SegmentKind; coords: SegmentCoordinates<SegmentKind> }
+>;
+
+type PathPieceAlt = SegmentRecord[keyof SegmentRecord];
+
+const example: PathPieceAlt = { kind: "line", coords: [50, 60] }; // Works
+```
+
+**Pros:**  
+- Familiar and concise  
+
+**Cons:**  
+- Coordinates aren’t strictly tied to `kind` (less strict than Pattern 1)  
+
+---
+
+## Pattern 3: Generic Discriminated Union
+
+Generics allow flexible but still strict definitions.  
+
+```ts
+type PathPieceGeneric<K extends SegmentKind = SegmentKind> = {
+  kind: K;
+  coords: SegmentCoordinates<K>;
+};
+
+const linePiece: PathPieceGeneric<"line"> = {
+  kind: "line",
+  coords: [5, 5],
+};
+
+const quadPiece: PathPieceGeneric<"quadratic"> = {
+  kind: "quadratic",
+  coords: [10, 20, 30, 40],
+};
+```
+
+**Pros:**  
+- Easy to read  
+- Good balance of flexibility and type safety  
+
+**Cons:**  
+- Requires generic parameter knowledge  
+
+---
+
+## Pattern 4: Interface Inheritance
+
+Interfaces model discriminated unions in a very explicit way.  
+
+```ts
+interface BasePiece {
+  kind: SegmentKind;
+}
+
+interface LinePiece extends BasePiece {
+  kind: "line";
+  coords: [x: number, y: number];
+}
+
+interface QuadraticPiece extends BasePiece {
+  kind: "quadratic";
+  coords: [cx: number, cy: number, x: number, y: number];
+}
+
+type PathPieceInterface = LinePiece | QuadraticPiece;
+
+const segment: PathPieceInterface = {
+  kind: "line",
+  coords: [1, 2],
+};
+```
+
+**Pros:**  
+- Very explicit, great readability  
+- Familiar to developers with OOP background  
+
+**Cons:**  
+- Adding new segment kinds requires new interfaces (more boilerplate)  
+
+---
+
+## Comparison Table
+
+| Pattern                        | Type Safety | Readability | Scalability | Best For                  |
+|--------------------------------|-------------|-------------|-------------|---------------------------|
+| Mapped Types + Indexed Access  | ⭐⭐⭐⭐        | ⭐⭐          | ⭐⭐⭐⭐        | Complex, evolving schemas |
+| Record Utility Type             | ⭐⭐⭐         | ⭐⭐⭐         | ⭐⭐⭐⭐        | Quick prototyping         |
+| Generic Union                  | ⭐⭐⭐⭐        | ⭐⭐⭐⭐        | ⭐⭐⭐⭐        | Flexible APIs             |
+| Interface Inheritance           | ⭐⭐⭐⭐        | ⭐⭐⭐⭐        | ⭐⭐⭐         | Teams with juniors        |
+
+---
+
+## Recommendations
+
+- **For junior-heavy teams:** Interface inheritance is easiest to read and maintain.  
+- **For large projects with many evolving types:** Mapped types provide the best auto-scaling.  
+- **For balanced teams:** Generics offer clarity and flexibility.  
+- **Avoid:** Overusing `Record` for discriminated unions—type safety is weaker.  
+
+---
+
+## Final Thoughts
+
+The **choice of typing pattern directly impacts tech debt**. Over time, stricter, more maintainable patterns pay off in fewer bugs, easier onboarding, and faster development.  
+
+TypeScript gives us many ways to express the same idea—choosing the right one is about balancing **team experience**, **project size**, and **future scalability**.  
