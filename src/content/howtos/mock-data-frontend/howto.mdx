@@ -1,0 +1,192 @@
+---
+title: Howto Mock Realistic Data in the Frontend (No Backend Needed)
+heading: Mocking Frontend Data Without a Backend
+icon: /icons/nodejs.png
+image: /icon.png
+slug: mock-data-frontend
+permalink: howto/mock-data-frontend
+date: 2025-09-04
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['mock']
+desc: Learn how to use Mock.js and MSW to generate realistic mock data for frontend development without waiting for backend APIs.
+---
+
+Front-end work often gets blocked by unfinished APIs, missing fixtures, or flaky network conditions. **Mocking** lets you keep shipping: you simulate responses and behavior so UI, state, and edge cases can be built and tested without a live server.
+
+Below is a practical, modern guide to mocking: core ideas, when to use it, and polished code you can paste into a project (with improved naming and structure).
+
+---
+
+## What “mocking” actually means
+
+**Mocking** creates stand-in data and behaviors for external dependencies (APIs, DBs, services). Good mocks let you:
+
+- **Isolate tests** from infra.
+- **Control scenarios** (success, error, timeouts, empty states).
+- **Speed up development** by removing network wait time.
+
+Imagine you’re building a bookstore UI, but `/api/books` isn’t ready. With mocks, your components still render, paginate, and sort—today.
+
+---
+
+## When mocking makes the biggest difference
+
+- **Feature prototyping** before backend exists.
+- **Storybook/visual testing** with steady data.
+- **CI** where network access is limited/unreliable.
+- **Edge-case drills** (500s, slow responses, empty lists, partial results).
+
+---
+
+## Option A — Quick local mocks with Mock.js
+
+### 1) Generate paged “book” data
+
+```js
+// mock/books.ts (or .js)
+import Mock from 'mockjs';
+
+export function createBooksPage(page = 1, pageSize = 10) {
+  const items = Array.from({ length: pageSize }, (_, idx) =>
+    Mock.mock({
+      id: `bk_${page}_${idx}`,
+      title: '@ctitle(3, 8)',
+      author: '@cname',
+      cover: Mock.Random.image('200x300', Mock.Random.color(), Mock.Random.color(), 'png', 'Novel'),
+      category: '@pick(["Fantasy","Urban","History","Sci-Fi","Romance","Mystery","Tech","Essay"])',
+      blurb: '@cparagraph(1, 2)',
+      wordCount: '@integer(1_000, 80_000)',
+      status: '@pick(["Serializing","Completed"])',
+      rating: '@float(1, 5, 1, 1)',
+      reads: '@integer(1_000, 200_000)',
+      coverHeight: '@integer(300, 400)',
+    })
+  );
+
+  return {
+    page,
+    pageSize,
+    total: 500,
+    items,
+  };
+}
+```
+
+---
+
+### 2) Mock a search API endpoint
+
+```js
+// mock/search.ts
+import Mock from 'mockjs';
+
+export function searchBooksMock(keyword = '') {
+  const results = Array.from({ length: 5 }, () =>
+    Mock.mock({
+      id: '@increment',
+      title: () => {
+        const pre = Mock.Random.ctitle(2, 4);
+        const post = Mock.Random.ctitle(1, 3);
+        return `${pre}${keyword}${post}`;
+      },
+      author: '@cname',
+      price: '@float(20, 150, 2, 2)',
+      cover: Mock.Random.image('200x260', '#EEEEEE', '#333333', 'jpg', 'Book'),
+      category: '@pick(["Fiction","Biography","Science","Psychology","Business"])',
+      rating: '@float(1, 5, 1, 1)',
+    })
+  );
+
+  return { code: 0, data: results };
+}
+```
+
+---
+
+### 3) Wire endpoints into your dev server
+
+```js
+// mock/routes.ts
+import { createBooksPage } from './books';
+import { searchBooksMock } from './search';
+
+export default [
+  {
+    url: '/api/books',
+    method: 'get',
+    timeout: 800,
+    response: ({ query }) => {
+      const page = Number(query?.page ?? 1);
+      const pageSize = Number(query?.pageSize ?? 10);
+      return { code: 0, data: createBooksPage(page, pageSize) };
+    },
+  },
+  {
+    url: '/api/search',
+    method: 'get',
+    timeout: 600,
+    response: ({ query }) => {
+      const keyword = String(query?.keyword ?? '').trim();
+      return searchBooksMock(keyword);
+    },
+  },
+];
+```
+
+---
+
+## Option B — Network-level mocks with MSW
+
+```ts
+// src/mocks/handlers.ts
+import { http, HttpResponse } from 'msw';
+import { createBooksPage } from '../../mock/books';
+import { searchBooksMock } from '../../mock/search';
+
+export const handlers = [
+  http.get('/api/books', ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? 1);
+    const pageSize = Number(url.searchParams.get('pageSize') ?? 10);
+    return HttpResponse.json({ code: 0, data: createBooksPage(page, pageSize) }, { status: 200, headers: { 'x-mocked': 'true' } });
+  }),
+
+  http.get('/api/search', ({ request }) => {
+    const url = new URL(request.url);
+    const keyword = (url.searchParams.get('keyword') ?? '').trim();
+    return HttpResponse.json(searchBooksMock(keyword));
+  }),
+
+  http.get('/api/books/slow-500', async () => {
+    await new Promise(r => setTimeout(r, 1500));
+    return HttpResponse.json({ code: 500, message: 'Upstream error' }, { status: 500 });
+  }),
+];
+```
+
+---
+
+## Cheatsheet: Mock.js basics
+
+```js
+Mock.mock({
+  'id|+1': 1,
+  name: '@cname',
+  title: '@ctitle(5, 10)',
+  blurb: '@cparagraph(2, 4)',
+  email: '@email',
+  url: '@url',
+  date: '@date',
+  datetime: '@datetime',
+  image: '@image',
+  color: '@color',
+});
+```
+
+---
+
+## Takeaway
+
+With **Mock.js** (simple fixtures) or **MSW** (network-level interception), you can prototype, test, and ship faster—while keeping contracts precise and UX realistic.

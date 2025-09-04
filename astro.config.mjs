@@ -3,6 +3,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import netlify from '@astrojs/netlify';
 import { remarkReadingTime } from './src/shared/utils/remark-reading-time.mjs';
+import remarkMermaid from 'remark-mermaidjs';
 
 export default defineConfig({
   site: 'https://jsdev.space',
@@ -18,7 +19,7 @@ export default defineConfig({
   adapter: netlify(),
 
   markdown: {
-    remarkPlugins: [remarkReadingTime],
+    remarkPlugins: [remarkReadingTime, remarkMermaid],
     shikiConfig: {
       theme: 'github-dark',
       wrap: true
