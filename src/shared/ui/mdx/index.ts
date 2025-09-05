@@ -1,4 +1,4 @@
-import MdxImage from './MdxImage.astro';
+// import MdxImage from './MdxImage.astro';
 import Code from './code.astro';
 import Codepen from './codepen.astro';
 import MdxBlockquote from './mdx-blockquote.astro';
@@ -9,7 +9,7 @@ import MdxList from './mdx-list.astro';
 import Youtube from './youtube.astro';
 
 export const mdxComponents = {
-  img: MdxImage,
+  // img: MdxImage,
   a: MdxLink,
   pre: Code,
   Codepen,
