@@ -34,11 +34,11 @@ const { page } = Astro.props;
 const featuredPosts = page.data.slice(0, 3);
 const recentPosts = page.data.slice(3, page.data.length);
 
-const title =
-  page.currentPage === 1 ? siteConfig.title : siteConfig.title + ' ' + 'Page ' + page.currentPage;
+const title = page.currentPage === 1 ? siteConfig.title : siteConfig.title + ' ' + 'Page ' + page.currentPage;
+const description = page.currentPage === 1 ? siteConfig.description : siteConfig.description + ' - Page ' + page.currentPage;
 ---
 
-<BaseLayout title={title}>
+<BaseLayout title={title} description={description}>
   <main class='main'>
     {
       page.currentPage === 1 ?

@@ -35,6 +35,7 @@
   --font-sans: 'Roboto', system-ui, sans-serif;
   --font-serif: 'PT Serif', serif;
   --font-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  --spacing: 0.5rem;
 }
 
 .dark {
