@@ -38,6 +38,11 @@ const title =
     siteConfig.howtosPageTitle
   : siteConfig.howtosPageTitle + ' ' + 'Page ' + page.currentPage;
 
+const description =
+  page.currentPage === 1 ?
+    siteConfig.howtosPageDescription
+  : siteConfig.howtosPageDescription + ' - Page ' + page.currentPage;
+
 const breadcrumbItems = generateHowtoBreadcrumbs(
   undefined,
   undefined,
@@ -47,7 +52,7 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
 
 <BaseLayout
   title={title}
-  description={siteConfig.howtosPageDescription}>
+  description={description}>
   <main class='main'>
     {
       page.currentPage > 1 && (

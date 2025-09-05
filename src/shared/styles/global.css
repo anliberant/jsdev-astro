@@ -14,6 +14,7 @@
     font-size: 16px;
     background: #ffffff;
     color: #000000;
+    overflow-x: hidden;
   }
 
   .header {
@@ -104,6 +105,10 @@ a {
   color: hsl(var(--primary));
 }
 
+img {
+  max-width: 100% !important;
+}
+
 .container {
   margin-right: auto;
   margin-left: auto;
@@ -180,6 +185,14 @@ tbody tr:hover {
 
 tbody tr:last-child td {
   border-bottom: none;
+}
+
+hr {
+  background-color: hsl(var(--border));
+  height: 1px;
+  margin-block: calc(var(--spacing) * 4);
+  margin-left: 0;
+  width: 90%;
 }
 :global(.dark) thead {
   background-color: #1f2937;
@@ -560,8 +573,15 @@ blockquote {
 }
 
 .post-content :global(img) {
-  max-width: 100%;
+  max-width: 100% !important;
   height: auto;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.post-content img {
+  max-width: 100% !important;
+  height: auto !important;
   border-radius: 0.5rem;
   margin: 1.5rem 0;
 }

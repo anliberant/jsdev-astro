@@ -32,11 +32,16 @@ const title =
   page.currentPage === 1 ?
     siteConfig.fridaysPageTitle
   : siteConfig.fridaysPageTitle + ' ' + 'Page ' + page.currentPage;
+
+const description =
+  page.currentPage === 1 ?
+    siteConfig.fridaysPageDescription
+  : siteConfig.fridaysPageDescription + ' - Page ' + page.currentPage;
 ---
 
 <BaseLayout
   title={title}
-  description={siteConfig.fridaysPageDescription}>
+  description={description}>
   <main class='main'>
     {
       page.currentPage === 1 ?
