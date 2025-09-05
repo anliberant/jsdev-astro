@@ -61,15 +61,6 @@ GitOps benefits from Git’s built-in access controls and code reviews. Automate
 
 ## GitOps Workflow Diagram
 
-```mermaid
-flowchart LR
-    Dev[Developer] -->|Commit / PR| Git[(Git Repository)]
-    Git -->|Changes detected| ArgoCD[GitOps Operator]
-    ArgoCD -->|Apply manifests| K8s[(Kubernetes Cluster)]
-    K8s -->|Report state| ArgoCD
-    ArgoCD -->|Sync back| Git
-```
-
 *Diagram: Git is the source of truth → operator (ArgoCD/Flux) applies changes → Kubernetes cluster stays in sync.*
 
 ---
