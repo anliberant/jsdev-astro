@@ -24,6 +24,7 @@
     "@astrojs/rss": "^4.0.12",
     "@astrojs/sitemap": "^3.5.1",
     "@lucide/astro": "^0.511.0",
+    "@netlify/blobs": "^7.0.0",
     "@playwright/test": "^1.55.0",
     "@resvg/resvg-js": "^2.6.2",
     "astro": "^5.13.5",
