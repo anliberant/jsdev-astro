@@ -1,0 +1,109 @@
+---
+title: Howto Embed PDFs on Web Pages with HTML and JS Libraries
+slug: embed-pdf-web
+heading: 'Embedding PDFs in Web Pages: Best Methods Compared'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/embed-pdf-web
+date: 2025-09-07
+author: anton liberant
+category: javascript
+type: howto
+tags: ['pdf']
+desc: Learn how to embed PDF files on web pages using HTML, images, or JavaScript libraries like PDF.js. Compare methods, pros, cons, and best use cases.
+---
+
+## Introduction
+
+Displaying PDF files directly in a web page improves user experience by removing the need for downloads and external viewers. Depending on your needs, you can embed PDFs with native HTML tags, convert them to images or HTML, or use specialized JavaScript libraries for advanced features like annotations and editing.  
+
+---
+
+## 1. Embedding with Native HTML Elements  
+The simplest way to embed PDFs is with HTML’s built-in tags.  
+
+### Using `<iframe>` (recommended for compatibility)  
+```html
+<iframe src="sample.pdf" width="100%" height="600px"></iframe>
+```
+
+### Using `<embed>`  
+```html
+<embed src="sample.pdf" type="application/pdf" width="100%" height="600px" />
+```
+
+### Using `<object>` (supports fallback content)  
+```html
+<object data="sample.pdf" type="application/pdf" width="100%" height="600px">
+  <p>Your browser doesn’t support PDFs.
+    <a href="sample.pdf">Download the file</a>.
+  </p>
+</object>
+```
+
+**Comparison Table:**  
+
+| Tag      | Recommended? | Fallback Support | Notes |
+|----------|--------------|------------------|-------|
+| `<iframe>` | ✅ Best choice | ❌ | Adds border by default |
+| `<object>` | 👍 Semantic | ✅ | May fail on older/mobile browsers |
+| `<embed>`  | ❌ Not ideal | ❌ | Compatibility issues |
+
+**Browser behavior:**  
+- **Desktop:** All three methods use the built-in PDF viewer.  
+- **Mobile:** Varies — Android often downloads, iOS shows only the first page.  
+
+---
+
+## 2. Converting PDF to Image or HTML  
+Instead of embedding directly, you can pre-convert PDFs:  
+
+- **To Images** (e.g., via Apache PDFBox)  
+  - ✅ Works everywhere  
+  - ❌ Larger files, reduced quality, no search/copy  
+
+- **To HTML** (e.g., pdf2htmlEX)  
+  - ✅ Acts like a web page  
+  - ❌ No editing or annotations  
+
+This method is good for **archives or static display** where editing isn’t needed.  
+
+---
+
+## 3. Embedding with JavaScript Libraries  
+For full control and advanced features, use JS-based viewers.  
+
+### Popular Libraries:  
+- **[PDF.js](https://mozilla.github.io/pdf.js/)** – Open-source PDF rendering  
+- **PDFium.js** – Rendering engine for lightweight embedding  
+- **[Dynamsoft Document Viewer](https://www.dynamsoft.com/)** – Built on PDFium, provides UI, annotations, editing  
+
+**Advantages:**  
+- Consistent UI across browsers  
+- Full features (edit, annotate, search)  
+- Can block downloads for security  
+- Customizable interface  
+
+**Disadvantages:**  
+- Higher client requirements (JS + processing)  
+- Larger initial page load  
+- More complex setup  
+
+Best for **professional apps requiring advanced PDF workflows**.  
+
+---
+
+### Summary Table  
+
+| Method                | Technology                | Pros | Cons | Best For |
+|------------------------|---------------------------|------|------|----------|
+| **HTML Elements**      | `<iframe>`, `<object>`, `<embed>` | Simple, quick | Inconsistent UX, limited features | Quick integrations |
+| **Convert to Image/HTML** | PDFBox, pdf2htmlEX       | Unified viewing, web-native | No editing, large files | Static archives |
+| **JavaScript Libraries** | PDF.js, PDFium.js, Dynamsoft | Full features, UI control | Heavy setup, client power needed | Enterprise apps |
+
+---
+
+## Conclusion  
+If you need a **quick solution**, use `<iframe>`. For **archival or static data**, convert PDFs to HTML. For **enterprise apps or feature-rich workflows**, use libraries like PDF.js or Dynamsoft Document Viewer.  
+
+Embedding PDFs is about choosing the right balance between simplicity, performance, and functionality.  
