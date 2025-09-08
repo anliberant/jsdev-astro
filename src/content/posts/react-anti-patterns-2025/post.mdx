@@ -1,0 +1,483 @@
+---
+title: '15 React Anti-Patterns (and Fixes) You’ll Actually Use'
+slug: react-anti-patterns-2025
+heading: "Common React Mistakes and How to Correct Them"
+image: ./images/react-anti-patterns.png
+permalink: react-anti-patterns-2025
+date: 2025-09-08
+author: anton liberant
+category: react
+type: post
+tags: ['patterns']
+desc: A practical guide to 15 common React anti-patterns—why they hurt performance and predictability, and how to fix each with clear code examples.
+---
+
+> Quick, copy‑ready fixes for the React gotchas that silently slow apps and confuse teammates.
+
+React gives you predictable UIs—if you respect its model: one-way data flow, render as a pure function of props/state, and explicit side-effects. In real projects we often slip: we stash derived values in state, fire effects for synchronous work, re-create functions every render, hide bugs by remounting with `key`, or memoize too early. Results? Extra renders, flicker, stale data, and hard-to-trace defects.
+
+Below are **15 high-impact anti-patterns** distilled from day-to-day review. Each comes with a “why it’s broken” and a “do this instead,” with **improved, copy-paste-ready code**.
+
+---
+
+## 1) Storing derived, synchronous values in state
+
+**Smell:** `useState` + `useEffect` to compute what you already have during render.
+
+**Bad**
+```tsx
+function FullName({ firstName, lastName }: { firstName: string; lastName: string }) {
+  const [fullName, setFullName] = React.useState('');
+
+  React.useEffect(() => setFullName(`${firstName} ${lastName}`), [firstName, lastName]);
+  return <span>{fullName}</span>;
+}
+```
+
+**Why it’s bad**
+- Shows stale UI until the effect runs
+- Forces at least one extra render
+- Adds complexity for zero gain
+
+**Better (compute on render)**
+```tsx
+function FullName({ firstName, lastName }: { firstName: string; lastName: string }) {
+  const fullName = `${firstName} ${lastName}`;
+  return <span>{fullName}</span>;
+}
+```
+
+---
+
+## 2) Using plain variables for mutable state
+
+**Smell:** A new object each render breaks memoization and dependencies.
+
+**Bad**
+```tsx
+function Parent() {
+  const value = { flag: true }; // new reference every render
+  return <Child value={value} />;
+}
+```
+
+**Better (real state or true constant)**
+```tsx
+function Parent() {
+  const [value] = React.useState({ flag: true }); // stable ref
+  return <Child value={value} />;
+}
+
+// or, if truly never changes:
+const constantValue = { flag: true };
+function ParentConst() {
+  return <Child value={constantValue} />;
+}
+```
+
+---
+
+## 3) Defining CSS-in-JS styles inside the component
+
+**Smell:** Style objects/classes created on every render.
+
+**Bad**
+```tsx
+import { css } from '@emotion/css';
+
+function Box() {
+  return <div className={css({ background: 'tomato', width: '100%' })} />;
+}
+```
+
+**Better (define once, reuse)**
+```tsx
+import { css } from '@emotion/css';
+
+const box = css({ background: 'tomato', width: '100%' });
+
+function Box() {
+  return <div className={box} />;
+}
+```
+
+---
+
+## 4) Re-creating handlers every render (breaking memoized children)
+
+**Smell:** Inline handlers passed to memoized components.
+
+**Bad**
+```tsx
+function Toggle() {
+  const [on, setOn] = React.useState(false);
+  const handle = () => setOn(o => !o); // new ref each render
+  return <Button onClick={handle}>{on ? 'On' : 'Off'}</Button>;
+}
+```
+
+**Better (stable callback)**
+```tsx
+function Toggle() {
+  const [on, setOn] = React.useState(false);
+  const handle = React.useCallback(() => setOn(o => !o), []);
+  return <Button onClick={handle}>{on ? 'On' : 'Off'}</Button>;
+}
+```
+
+---
+
+## 5) Putting non-memoized functions into dependencies
+
+**Smell:** `useMemo`/`useEffect`/`React.memo` depending on a function that changes identity every render.
+
+**Bad**
+```tsx
+function Parent({ threshold }: { threshold: number }) {
+  const check = (n: number) => n > threshold; // new each render
+  const expensive = React.useMemo(() => compute(check), [check]); // recomputes always
+  return <Child shouldShow={check(42)} onCheck={check} />;
+}
+```
+
+**Better (memoize the function first)**
+```tsx
+function Parent({ threshold }: { threshold: number }) {
+  const check = React.useCallback((n: number) => n > threshold, [threshold]);
+  const expensive = React.useMemo(() => compute(check), [check]);
+  return <Child shouldShow={check(42)} onCheck={check} />;
+}
+```
+
+---
+
+## 6) Effects retriggering because a function dep keeps changing
+
+**Smell:** Effect depends on a handler that isn’t stable.
+
+**Bad**
+```tsx
+function Search({ term }: { term: string }) {
+  const onQuery = () => fetchData(term); // new each render
+
+  React.useEffect(() => { onQuery(); }, [onQuery]); // runs every render
+  return null;
+}
+```
+
+**Better**
+```tsx
+function Search({ term }: { term: string }) {
+  const onQuery = React.useCallback(() => fetchData(term), [term]);
+
+  React.useEffect(() => { onQuery(); }, [onQuery]);
+  return null;
+}
+```
+
+---
+
+## 7) Omitting required dependencies in hooks
+
+**Smell:** Using values inside `useEffect`/`useMemo`/`useCallback` but not listing them.
+
+**Bad**
+```tsx
+function Viewer({ id }: { id: string }) {
+  const [data, setData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    fetch(`/api/items/${id}`).then(r => r.json()).then(setData);
+  }, []); // ❌
+  return <pre>{JSON.stringify(data)}</pre>;
+}
+```
+
+**Better (list all deps; make logic idempotent)**
+```tsx
+function Viewer({ id }: { id: string }) {
+  const [data, setData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/items/${id}`)
+      .then(r => r.json())
+      .then(d => { if (!cancelled) setData(d); });
+    return () => { cancelled = true; };
+  }, [id]); // ✅
+  return <pre>{JSON.stringify(data)}</pre>;
+}
+```
+
+---
+
+## 8) Initializing unrelated external code in an effect
+
+**Smell:** `useEffect(() => initLibrary(), [])` when init doesn’t depend on the component.
+
+**Bad**
+```tsx
+function App() {
+  React.useEffect(() => { analytics.init(); }, []); // tied to React lifecycle
+  return <RouterProvider />;
+}
+```
+
+**Better (module-level init)**
+```tsx
+// analytics.ts
+analytics.init(); // runs once on module load
+
+// App.tsx
+function App() {
+  return <RouterProvider />;
+}
+```
+
+> Use an effect only if initialization really depends on props/state.
+
+---
+
+## 9) `useMemo` with an empty dependency list for constants
+
+**Smell:** Memoizing a constant or pure literal.
+
+**Bad**
+```tsx
+const value = React.useMemo(() => 3 + 5, []); // pointless
+```
+
+**Better**
+```tsx
+const value = 8;
+```
+
+If it doesn’t depend on props/state, compute it outside the component or inline.
+
+---
+
+## 10) Declaring components inside other components
+
+**Smell:** Nested component functions created on every parent render.
+
+**Bad**
+```tsx
+function List() {
+  const Item = ({ label }: { label: string }) => <li>{label}</li>;
+  return <ul><Item label="A"/><Item label="B"/></ul>;
+}
+```
+
+**Better (top-level or separate file)**
+```tsx
+function Item({ label }: { label: string }) {
+  return <li>{label}</li>;
+}
+function List() {
+  return <ul><Item label="A"/><Item label="B"/></ul>;
+}
+```
+
+---
+
+## 11) Calling hooks conditionally / after `return`
+
+**Smell:** Hooks inside `if`, loops, or below an early `return`.
+
+**Bad**
+```tsx
+function Panel({ ready }: { ready: boolean }) {
+  if (!ready) return null; // ❌ hooks below become conditional
+  const [open, setOpen] = React.useState(false);
+  return <button onClick={() => setOpen(o => !o)}>{String(open)}</button>;
+}
+```
+
+**Better**
+```tsx
+function Panel({ ready }: { ready: boolean }) {
+  const [open, setOpen] = React.useState(false);
+  if (!ready) return null;
+  return <button onClick={() => setOpen(o => !o)}>{String(open)}</button>;
+}
+```
+
+> Hooks must run in the same order on every render.
+
+---
+
+## 12) Exploding `useState` instead of using `useReducer`
+
+**Smell:** Many related `useState` values scattered around.
+
+**Bad**
+```tsx
+function Form() {
+  const [text, setText] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [touched, setTouched] = React.useState(false);
+  // ... tangled updates
+}
+```
+
+**Better (centralize transitions)**
+```tsx
+type FormState = { text: string; error: string; touched: boolean };
+type FormAction =
+  | { type: 'CHANGE'; value: string }
+  | { type: 'RESET' };
+
+const getInitial = (): FormState => ({ text: '', error: '', touched: false });
+
+function reducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'CHANGE': {
+      const text = action.value;
+      return { text, touched: true, error: text.length < 6 ? 'Too short' : '' };
+    }
+    case 'RESET':
+      return getInitial();
+    default:
+      return state;
+  }
+}
+
+function Form() {
+  const [state, dispatch] = React.useReducer(reducer, undefined, getInitial);
+  return (
+    <>
+      {!state.touched && <div>Write something…</div>}
+      <input
+        value={state.text}
+        onChange={e => dispatch({ type: 'CHANGE', value: e.target.value })}
+      />
+      <div>{state.error}</div>
+    </>
+  );
+}
+```
+
+---
+
+## 13) Using `useRef` for non-UI flags instead of `useState`
+
+**Smell:** Triggering rerenders for values not used in JSX.
+
+**Bad**
+```tsx
+function Once() {
+  const [ran, setRan] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!ran) { doSomething(); setRan(true); }
+  }, [ran]); // re-renders needlessly
+  return null;
+}
+```
+
+**Better (ref doesn’t rerender)**
+```tsx
+function Once() {
+  const ranRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!ranRef.current) {
+      ranRef.current = true;
+      doSomething();
+    }
+  }, []);
+  return null;
+}
+```
+
+---
+
+## 14) Seeding state from props/context and never syncing it
+
+**Smell:** `useState(props.initial)` then forgetting it must follow prop changes.
+
+**Bad**
+```tsx
+function Article({ article }: { article: { title: string; text: string } }) {
+  const [len] = React.useState(article.title.length + article.text.length); // stale
+  return <h3>Total: {len}</h3>;
+}
+```
+
+**Better (derive on render or sync explicitly)**
+```tsx
+// Derive when rendering (preferred)
+function Article({ article }: { article: { title: string; text: string } }) {
+  const len = article.title.length + article.text.length;
+  return <h3>Total: {len}</h3>;
+}
+
+// Or, if local state must mirror props:
+function ArticleSynced({ article }: { article: { title: string; text: string } }) {
+  const [len, setLen] = React.useState(0);
+
+  React.useEffect(() => {
+    setLen(article.title.length + article.text.length);
+  }, [article]);
+  return <h3>Total: {len}</h3>;
+}
+```
+
+---
+
+## 15) “Fixing” logic by remounting with `key`
+
+**Smell:** Forcing a child to remount on prop change to hide state sync issues.
+
+**Bad**
+```tsx
+function Viewer({ doc }: { doc: { id: string; body: string } }) {
+  return <Editor key={doc.id} body={doc.body} />; // loses local state each switch
+}
+```
+
+**Why it’s bad**
+- Flicker on every change
+- Local state and effects reset
+- Extra network calls/CPU
+
+**Better (keep mounted; recompute what changes)**
+```tsx
+function Editor({ body }: { body: string }) {
+  const [cursor, setCursor] = React.useState(0); // preserved across body changes
+  
+  React.useEffect(() => {
+    // react to body change if needed (e.g., re-parse)
+  }, [body]);
+  return <textarea value={body} onChange={() => { /* ... */ }} />;
+}
+
+function Viewer({ doc }: { doc: { id: string; body: string } }) {
+  return <Editor body={doc.body} />; // no forced remount
+}
+```
+
+> Remount only when you **want** to reset local state/effects (e.g., a “Start over” flow).
+
+---
+
+## Bonus: Practical linting & profiling checklist
+
+- Enable **`eslint-plugin-react-hooks`** (`exhaustive-deps`) and do what it says
+- Use **React Profiler** (DevTools) to spot wasted renders
+- Prefer deriving values in render; state is for **mutable “source of truth”** only
+- Memoize **because of measurement**, not by habit
+
+---
+
+## TL;DR principles
+
+- **Single source of truth:** Don’t mirror props in state without a sync plan
+- **Stable dependencies:** Memoize functions used as deps or props
+- **Pure render:** Compute derived values during render when possible
+- **Minimal effects:** Effects are for I/O and subscriptions, not sync math
+- **Don’t fight the model:** Avoid remount hacks; structure state correctly
+
+---
+
+> Got a suspicious re-render or a flaky effect? Run this checklist against the component and measure first. If you want, send me a snippet and I’ll propose a minimal, production-safe fix.
