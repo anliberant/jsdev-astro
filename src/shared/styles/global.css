@@ -323,6 +323,7 @@ hr {
   margin: 2rem 0;
   padding: 1rem 1.5rem;
   border-radius: 0.5rem;
+  width: 80%;
 }
 
 .post-content :global(.mdx-list) {
@@ -393,6 +394,7 @@ blockquote {
   font-size: 1.25rem;
   line-height: 1.5;
   border-radius: 0.5em;
+  max-width: 88%;
 }
 
 :root {
