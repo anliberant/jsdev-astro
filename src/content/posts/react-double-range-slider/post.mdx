@@ -1,0 +1,389 @@
+---
+title: 'Building a Double Range Slider in React with RadixUI and Tailwind'
+slug: react-double-range-slider
+heading: "[Radix UI] Double Range Slider for Next.js/React"
+image: ./images/react-double-range-slider.png
+permalink: react-double-range-slider
+date: 2025-09-16
+author: anton liberant
+category: react
+type: post
+tags: ['slider', 'react-slider', 'tailwind', 'radixui']
+desc: "Build a type-safe double range slider with Radix UI, Tailwind CSS, and TypeScript: controlled/uncontrolled modes, memoization, and server-ready state."
+---
+
+## From Zero to a Type-Safe Double Range Slider
+
+This is a step-by-step, practical tutorial. We’ll start from scratch, add TypeScript types, style with Tailwind, use Radix UI for accessibility, explain controlled/uncontrolled modes, optimize with `useMemo`/`useCallback`, and show how to send range values to a server.
+
+### What We’re Building and What You Need
+
+We use:
+
+- [Radix UI](https://www.radix-ui.com/) (`@radix-ui/react-slider`) — gives us accessibility primitives (keyboard, ARIA) out of the box.
+- [Tailwind CSS](https://tailwindcss.com/) — concise styling.
+- [TypeScript](https://www.typescriptlang.org/) — strong prop/state contracts.
+- [Next.js](https://nextjs.org/) (but plain React works too).
+
+Install dependencies:
+
+```bash 
+npm i @radix-ui/react-slider
+# Tailwind — install per the official Next.js/React guide
+```
+
+## Step 1. Minimal Radix Slider
+
+We start with the bare Radix Slider: track, range, and two thumbs.
+
+```tsx 
+'use client';
+
+import * as Slider from '@radix-ui/react-slider';
+import { useState } from 'react';
+
+export function Step1() {
+  const [value, setValue] = useState<number[]>([20, 80]);
+
+  return (
+    <Slider.Root
+      min={0}
+      max={100}
+      step={1}
+      value={value}
+      onValueChange={setValue}
+      className="relative mb-6 flex w-full select-none touch-none items-center"
+    >
+      <Slider.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-primary/20">
+        <Slider.Range className="absolute h-full bg-black" />
+      </Slider.Track>
+      <Slider.Thumb className="block h-4 w-4 rounded-full border border-black bg-white shadow" />
+      <Slider.Thumb className="block h-4 w-4 rounded-full border border-black bg-white shadow" />
+    </Slider.Root>
+  );
+}
+```
+
+## Step 2. Types: Contract First
+
+Why types matter:
+
+- prevent invalid props (like an array of three numbers),
+- document the API,
+- improve IDE autocomplete.
+
+```ts 
+type RangeTuple = [number, number];
+
+export type DoubleRangeSliderProps = {
+  className?: string;
+  min: number;
+  max: number;
+  step?: number;
+  value?: number[] | readonly number[];
+  defaultValue?: number[] | readonly number[];
+  onValueChange?: (values: RangeTuple) => void;
+  onValueCommit?: (values: RangeTuple) => void;
+  formatLabel?: (value: number) => string;
+  minThumbLabel?: string;
+  maxThumbLabel?: string;
+};
+```
+
+## Step 3. Normalization
+
+Ensure values always:
+
+- stay inside [`min`, `max`],
+- snap to `step`,
+- remain sorted [`a` ≤ `b`].
+
+```ts 
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+function normalizeRange(
+  input: readonly number[] | undefined,
+  min: number,
+  max: number,
+  step: number
+): RangeTuple {
+  const snap = (v: number) => {
+    const snapped = Math.round((v - min) / step) * step + min;
+    return clamp(snapped, min, max);
+  };
+  const a = snap(input?.[0] ?? min);
+  const b = snap(input?.[1] ?? max);
+  return a <= b ? [a, b] : [b, a];
+}
+```
+
+## Step 4. Local State & Controlled/Uncontrolled Modes
+
+We keep a `local` state as the single source of truth for visuals. When `value` is provided, we sync with it (controlled mode). If not, `defaultValue` kicks in (uncontrolled).
+
+```tsx 
+import { useEffect, useState } from 'react';
+
+function useLocalRange(
+  min: number,
+  max: number,
+  step: number,
+  value?: readonly number[],
+  defaultValue?: readonly number[]
+) {
+  const [local, setLocal] = useState<RangeTuple>(() =>
+    normalizeRange(value ?? defaultValue ?? [min, max], min, max, step)
+  );
+
+  useEffect(() => {
+    if (value) {
+      setLocal(normalizeRange(value, min, max, step));
+    }
+  }, [value, min, max, step]);
+
+  return [local, setLocal] as const;
+}
+```
+
+## Step 5. Labels and Tailwind Styling
+
+Show labels above each thumb (with optional formatting).
+
+```tsx 
+const [leftPct, rightPct] = [
+  ((local[0] - min) / (max - min)) * 100,
+  ((local[1] - min) / (max - min)) * 100
+];
+
+<div
+  className="pointer-events-none absolute top-2 -translate-x-1/2 text-center"
+  style={{ left: `${leftPct}%` }}
+>
+  <span className="text-sm">{formatLabel ? formatLabel(local[0]) : local[0]}</span>
+</div>
+<div
+  className="pointer-events-none absolute top-2 -translate-x-1/2 text-center"
+  style={{ left: `${rightPct}%` }}
+>
+  <span className="text-sm">{formatLabel ? formatLabel(local[1]) : local[1]}</span>
+</div>
+```
+
+## Step 6. Adding Memoization
+
+### Why `useMemo`?
+
+We calculate positions (`leftPct`, `rightPct`). Without memoization, these recompute on every render. `useMemo` ensures recalculation only when dependencies change.
+
+### Why `useCallback`?
+
+Event handlers (`handleChange`, `handleCommit`) are stable between renders. This avoids unnecessary re-renders of child components that depend on them.
+
+```tsx 
+import { useMemo, useCallback } from 'react';
+
+const [leftPct, rightPct] = useMemo(() => {
+  const span = Math.max(1, max - min);
+  return [((local[0] - min) / span) * 100, ((local[1] - min) / span) * 100];
+}, [local, min, max]);
+
+const handleChange = useCallback(
+  (vals: number[]) => {
+    const next = normalizeRange(vals, min, max, step);
+    setLocal(next);
+    onValueChange?.(next);
+  },
+  [min, max, step, onValueChange]
+);
+
+const handleCommit = useCallback(
+  (vals: number[]) => {
+    const next = normalizeRange(vals, min, max, step);
+    onValueCommit?.(next);
+  },
+  [min, max, step, onValueCommit]
+);
+```
+
+## Step 7. Commit Events
+
+Radix provides `onValueCommit` — great for firing requests only once the user releases the thumb.
+
+```tsx
+<Slider.Root
+  onValueChange={handleChange}
+  onValueCommit={handleCommit}
+>
+  {/* ... */}
+</Slider.Root>
+```
+
+## Step 8. Sending Data to a Server
+
+Our `local` state is the most recent range. You can send it directly to an API endpoint.
+
+```ts 
+async function applyFilter(range: RangeTuple) {
+  await fetch('/api/filter', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ min: range[0], max: range[1] }),
+  });
+}
+```
+
+Trigger `applyFilter(local)` in `onValueCommit` to apply filters only after the drag ends.
+
+## Step 9. Final DoubleRangeSlider
+
+Here’s the complete component with TypeScript, Radix UI, Tailwind, memoization, and controlled/uncontrolled support:
+
+```tsx 
+'use client';
+
+import * as SliderPrimitive from '@radix-ui/react-slider';
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { cn } from '@/shared/lib/utils';
+
+type RangeTuple = [number, number];
+
+export type DoubleRangeSliderProps = {
+  className?: string;
+  min: number;
+  max: number;
+  step?: number;
+  value?: number[] | readonly number[];
+  defaultValue?: number[] | readonly number[];
+  onValueChange?: (values: RangeTuple) => void;
+  onValueCommit?: (values: RangeTuple) => void;
+  formatLabel?: (value: number) => string;
+  minThumbLabel?: string;
+  maxThumbLabel?: string;
+};
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+function normalizeRange(
+  input: readonly number[] | undefined,
+  min: number,
+  max: number,
+  step: number
+): RangeTuple {
+  const snap = (v: number) => {
+    const snapped = Math.round((v - min) / step) * step + min;
+    return clamp(snapped, min, max);
+  };
+  const a = snap(input?.[0] ?? min);
+  const b = snap(input?.[1] ?? max);
+  return a <= b ? [a, b] : [b, a];
+}
+
+export const DoubleRangeSlider = forwardRef<HTMLSpanElement, DoubleRangeSliderProps>(
+  function DoubleRangeSlider(
+    {
+      className,
+      min,
+      max,
+      step = 1,
+      value,
+      defaultValue,
+      onValueChange,
+      onValueCommit,
+      formatLabel,
+      minThumbLabel = 'Minimum value',
+      maxThumbLabel = 'Maximum value',
+      ...props
+    },
+    ref
+  ) {
+    const [local, setLocal] = useState<RangeTuple>(() =>
+      normalizeRange(value ?? defaultValue ?? [min, max], min, max, step)
+    );
+
+    useEffect(() => {
+      if (value) {
+        setLocal(normalizeRange(value, min, max, step));
+      }
+    }, [value, min, max, step]);
+
+    const [leftPct, rightPct] = useMemo(() => {
+      const span = Math.max(1, max - min);
+      return [((local[0] - min) / span) * 100, ((local[1] - min) / span) * 100];
+    }, [local, min, max]);
+
+    const handleChange = useCallback(
+      (vals: number[]) => {
+        const next = normalizeRange(vals, min, max, step);
+        setLocal(next);
+        onValueChange?.(next);
+      },
+      [min, max, step, onValueChange]
+    );
+
+    const handleCommit = useCallback(
+      (vals: number[]) => {
+        const next = normalizeRange(vals, min, max, step);
+        onValueCommit?.(next);
+      },
+      [min, max, step, onValueCommit]
+    );
+
+    const leftOnTop = local[0] >= max - step;
+
+    return (
+      <SliderPrimitive.Root
+        ref={ref}
+        min={min}
+        max={max}
+        step={step}
+        value={local}
+        onValueChange={handleChange}
+        onValueCommit={handleCommit}
+        className={cn('relative mb-6 flex w-full select-none touch-none items-center', className)}
+        {...props}
+      >
+        <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-primary/20">
+          <SliderPrimitive.Range className="absolute h-full bg-main" />
+        </SliderPrimitive.Track>
+
+        <div
+          className="pointer-events-none absolute top-2 -translate-x-1/2 text-center"
+          style={{ left: `${leftPct}%` }}
+        >
+          <span className="text-sm">{formatLabel ? formatLabel(local[0]) : local[0]}</span>
+        </div>
+        <div
+          className="pointer-events-none absolute top-2 -translate-x-1/2 text-center"
+          style={{ left: `${rightPct}%` }}
+        >
+          <span className="text-sm">{formatLabel ? formatLabel(local[1]) : local[1]}</span>
+        </div>
+
+        <SliderPrimitive.Thumb
+          aria-label={minThumbLabel}
+          className={cn(
+            'block h-4 w-4 rounded-full border border-main bg-white shadow transition-colors',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+            'disabled:pointer-events-none disabled:opacity-50',
+            leftOnTop && 'z-10'
+          )}
+        />
+        <SliderPrimitive.Thumb
+          aria-label={maxThumbLabel}
+          className={cn(
+            'block h-4 w-4 rounded-full border border-main bg-white shadow transition-colors',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+            'disabled:pointer-events-none disabled:opacity-50'
+          )}
+        />
+      </SliderPrimitive.Root>
+    );
+  }
+);
+```
+
+## Conclusion
+
+We combined Radix UI accessibility, Tailwind styling, and TypeScript safety to build a robust Double Range Slider. Using React hooks (`useState`, `useEffect`, `useMemo`, `useCallback`) we optimized rendering and ensured predictable behavior.
+
+This slider is ready for production: great for price filters, dashboards, or any range selection UI.
