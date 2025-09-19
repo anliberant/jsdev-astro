@@ -1,0 +1,217 @@
+---
+title: 'Clean TypeScript Code: Practical Tips for Scalable Projects'
+slug: typescript-clean-code-guide
+heading: 'Practical Clean Code Guidelines in TypeScript'
+image: ./images/ts-clean-code.png
+permalink: typescript-clean-code-guide
+date: 2025-09-19
+author: anton liberant
+category: typescript
+type: post
+tags: []
+desc: Discover practical clean-code practices in TypeScript with new examples and use cases. Learn how to simplify naming, and write more maintainable code.
+---
+
+Clean code is more than just aesthetics — it’s about writing code that scales with your team, reduces bugs, and makes onboarding easier. TypeScript’s type system gives you powerful tools to enforce good practices. Let’s explore some principles, with **fresh examples** that go beyond the classics.
+
+---
+
+## 1. Keep Names Simple and Focused
+
+**Bad:**
+
+```ts
+type Book = {
+  bookTitle: string;
+  bookAuthor: string;
+  bookYear: number;
+};
+
+function logBookInfo(book: Book) {
+  console.log(`${book.bookTitle} by ${book.bookAuthor} (${book.bookYear})`);
+}
+```
+
+**Good:**
+
+```ts
+type Book = {
+  title: string;
+  author: string;
+  year: number;
+};
+
+function logBookInfo(book: Book) {
+  console.log(`${book.title} by ${book.author} (${book.year})`);
+}
+```
+
+---
+
+## 2. Use Enums Instead of Raw Strings
+
+**Bad:**
+
+```ts
+function getWeatherIcon(condition: string) {
+  if (condition === "rainy") return "🌧️";
+  if (condition === "sunny") return "☀️";
+  return "❓";
+}
+```
+
+**Good:**
+
+```ts
+enum Weather {
+  Sunny = "sunny",
+  Rainy = "rainy",
+  Cloudy = "cloudy",
+}
+
+function getWeatherIcon(condition: Weather) {
+  switch (condition) {
+    case Weather.Sunny:
+      return "☀️";
+    case Weather.Rainy:
+      return "🌧️";
+    case Weather.Cloudy:
+      return "☁️";
+  }
+}
+```
+
+---
+
+## 3. Functions Should Say What They Do
+
+**Bad:**
+
+```ts
+function update(data: number[]): number[] {
+  return data.map(x => x + 1);
+}
+```
+
+**Good:**
+
+```ts
+function incrementScores(scores: number[]): number[] {
+  return scores.map(score => score + 1);
+}
+```
+
+---
+
+## 4. Prefer Functional Style for Data Transformation
+
+**Bad:**
+
+```ts
+const orders = [{ price: 20 }, { price: 15 }, { price: 30 }];
+let total = 0;
+
+for (let i = 0; i < orders.length; i++) {
+  total += orders[i].price;
+}
+```
+
+**Good:**
+
+```ts
+const orders = [{ price: 20 }, { price: 15 }, { price: 30 }];
+
+const total = orders.reduce((sum, order) => sum + order.price, 0);
+```
+---
+
+## 5. Use Positive Conditions
+
+**Bad:**
+
+```ts
+function isPasswordNotValid(password: string): boolean {
+  return password.length < 8;
+}
+```
+
+**Good:**
+
+```ts
+function isPasswordValid(password: string): boolean {
+  return password.length >= 8;
+}
+```
+
+---
+
+## 6. Favor Immutability
+
+**Bad:**
+
+```ts
+interface Settings {
+  theme: string;
+  notifications: boolean;
+}
+
+const settings: Settings = { theme: "light", notifications: true };
+settings.theme = "dark"; // accidental change
+```
+
+**Good:**
+
+```ts
+interface Settings {
+  readonly theme: string;
+  readonly notifications: boolean;
+}
+
+const settings: Settings = { theme: "light", notifications: true };
+// settings.theme = "dark"; // compile-time error
+```
+
+---
+
+## 7. Type vs Interface: Pick Intentionally
+
+```ts
+type PaymentMethod = "credit" | "paypal" | "crypto";
+
+interface Storage {
+  save(data: string): void;
+}
+
+class LocalStorage implements Storage {
+  save(data: string) {
+    console.log("Saving:", data);
+  }
+}
+```
+
+---
+
+## 8. One Concept, One Test
+
+**Bad:**
+
+```ts
+it("handles user creation and login", () => {
+  // does too much at once
+});
+```
+
+**Good:**
+
+```ts
+it("should create a user", () => { /* ... */ });
+it("should login with correct password", () => { /* ... */ });
+it("should reject invalid login", () => { /* ... */ });
+```
+---
+
+## ✅ Conclusion
+
+Clean code in TypeScript is about clarity, predictability, and teamwork. By writing **self-explanatory names, using enums, preferring immutability, and splitting responsibilities**, you make your codebase easier to scale and maintain.
+
+TypeScript gives you strong typing as a safety net — but **discipline and consistency** are what make codebases truly professional.
