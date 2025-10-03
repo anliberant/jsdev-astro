@@ -1,0 +1,600 @@
+---
+title: "React 19 Async Transitions: silky forms, snappy UIs"
+slug: react19-async-transitions
+heading: 'React & TypeScript: Extending HTML Element Properties'
+image: ./images/react19-async-transitions.png
+permalink: react19-async-transitions
+date: 2025-10-03
+author: anton liberant
+category: react
+type: post
+tags: ['useTransition', 'async', 'transitions']
+desc: "Learn React 19’s async transitions with useTransition: build non-blocking forms, optimistic updates, and responsive search."
+---
+
+## Build fluid UIs with non-blocking state
+
+React 19 sharpens the idea of **asynchronous transitions**—updates that feel instant for users while heavier work proceeds in the background. In practice, this means form submits, remote fetches, and derived calculations no longer make your inputs feel sticky. This article rewrites and expands the original piece with cleaner code, renamed variables/functions, and production-grade patterns, so you can ship *buttery* UX without adding complexity.
+
+---
+
+## What is an async transition (quick mental model)
+
+Some state updates are urgent (keystrokes, caret movement). Others are “can wait a moment” (network requests, derived lists). **Transitions** let you mark the latter as **low-priority** so React renders urgent updates first.
+
+- **Urgent:** typing, click feedback, toggling a checkbox  
+- **Transition:** refetching results, recalculating a long list, navigating to a data-heavy view
+
+### The API (recap)
+
+```tsx
+const [pendingFlag, queueTransition] = useTransition();
+// pendingFlag: boolean — is a transition in progress
+// queueTransition(cb): runs cb as a low-priority update
+```
+
+Under the hood, React batches and schedules. You get a responsive feel even while async work is underway.
+
+---
+
+## Baseline form (blocking) → upgraded (non-blocking)
+
+Let’s start with a plain profile editor. It “works,” but the UI can feel sluggish during submit.
+
+### Baseline (blocking) version
+
+```tsx
+import { useState } from "react";
+
+export function AccountEditorBasic() {
+  const [draft, setDraft] = useState({ fullName: "", mail: "", about: "" });
+
+  async function onSave(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    // Fake API
+    await new Promise((done) => setTimeout(done, 2000));
+    console.log("Saved:", draft);
+  }
+
+  function onField(ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = ev.target;
+    setDraft((old) => ({ ...old, [name]: value }));
+  }
+
+  return (
+    <form onSubmit={onSave}>
+      <label>
+        Name
+        <input name="fullName" value={draft.fullName} onChange={onField} />
+      </label>
+      <label>
+        Email
+        <input name="mail" type="email" value={draft.mail} onChange={onField} />
+      </label>
+      <label>
+        Bio
+        <textarea name="about" value={draft.about} onChange={onField} />
+      </label>
+      <button type="submit">Save</button>
+    </form>
+  );
+}
+```
+
+The input remains usable, but during a heavy submit the whole app can feel less responsive—especially on low-end devices.
+
+### Non-blocking with `useTransition`
+
+```tsx
+import { useState, useTransition } from "react";
+
+export function AccountEditor() {
+  const [draft, setDraft] = useState({ fullName: "", mail: "", about: "" });
+  const [pendingFlag, queueTransition] = useTransition();
+  const [notice, setNotice] = useState<null | string>(null);
+
+  function onField(ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = ev.target;
+    setDraft((s) => ({ ...s, [name]: value })); // urgent update
+  }
+
+  function onSave(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    queueTransition(async () => {
+      try {
+        await new Promise((done) => setTimeout(done, 2000)); // fake call
+        setNotice("Profile updated successfully.");
+      } catch {
+        setNotice("Could not update your profile. Try again.");
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={onSave}>
+      <fieldset disabled={pendingFlag} aria-busy={pendingFlag}>
+        <label>
+          Name
+          <input name="fullName" value={draft.fullName} onChange={onField} />
+        </label>
+        <label>
+          Email
+          <input name="mail" type="email" value={draft.mail} onChange={onField} />
+        </label>
+        <label>
+          Bio
+          <textarea name="about" value={draft.about} onChange={onField} />
+        </label>
+        <button type="submit">{pendingFlag ? "Saving…" : "Save"}</button>
+      </fieldset>
+      {notice && <p role="status">{notice}</p>}
+    </form>
+  );
+}
+```
+
+**What changed**
+
+- We renamed the hook values to `pendingFlag` and `queueTransition` for clarity.
+- The input updates stay urgent; the network-ish work runs inside `queueTransition`.
+- We get instant feedback without blocking the UI thread.
+
+---
+
+## Optimistic UI: feel instant, reconcile later
+
+Optimistic UI shows the *expected* result immediately, then confirms or rolls back after the server replies.
+
+```tsx
+import { useState, useTransition } from "react";
+
+export function AccountEditorOptimistic() {
+  const [draft, setDraft] = useState({ fullName: "", mail: "", about: "" });
+  const [pendingFlag, queueTransition] = useTransition();
+  const [finalMsg, setFinalMsg] = useState<string | null>(null);
+  const [optimisticMsg, setOptimisticMsg] = useState<string | null>(null);
+
+  function onField(ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = ev.target;
+    setDraft((s) => ({ ...s, [name]: value }));
+  }
+
+  function onSave(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    setOptimisticMsg("Saved locally. Syncing…"); // show instantly
+
+    queueTransition(async () => {
+      try {
+        await new Promise((done) => setTimeout(done, 2000)); // fake API
+        setFinalMsg("Saved to the server.");
+      } catch {
+        setFinalMsg("Server error. Restored previous values.");
+        setOptimisticMsg(null); // rollback the optimistic banner
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={onSave}>
+      {/* inputs... */}
+      <button type="submit" disabled={pendingFlag}>
+        {pendingFlag ? "Saving…" : "Save"}
+      </button>
+
+      {!finalMsg && optimisticMsg && <p role="status">{optimisticMsg}</p>}
+      {finalMsg && <p role="status">{finalMsg}</p>}
+    </form>
+  );
+}
+```
+
+**Tips**
+- Keep optimistic state separate from the “confirmed” state.
+- On failure, roll back the optimistic indicator (and data if you changed it).
+
+---
+
+## Search-as-you-type with `useDeferredValue`
+
+For typeahead UIs, couple transitions with **deferred values** to avoid recomputing an expensive list on every keystroke.
+
+```tsx
+import { useMemo, useState, useDeferredValue } from "react";
+
+type Product = { id: string; title: string; tags: string[] };
+
+export function CatalogFilter({ items }: { items: Product[] }) {
+  const [queryText, setQueryText] = useState("");
+  const lazyQuery = useDeferredValue(queryText); // laggy on purpose for perf
+
+  const filtered = useMemo(() => {
+    // heavy matching (simulate with complex logic)
+    const q = lazyQuery.toLowerCase();
+    return items.filter((it) => {
+      const hay = (it.title + " " + it.tags.join(" ")).toLowerCase();
+      return hay.includes(q);
+    });
+  }, [items, lazyQuery]);
+
+  return (
+    <>
+      <input
+        placeholder="Search catalog"
+        value={queryText}
+        onChange={(e) => setQueryText(e.target.value)}
+      />
+      <p aria-live="polite">{filtered.length} results</p>
+      <ul>
+        {filtered.map((p) => (
+          <li key={p.id}>{p.title}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+```
+
+**When to use**
+- The list is large or the filter is expensive.
+- You want fast keystrokes but can tolerate slightly stale results.
+
+---
+
+## Data fetching + transition + cancellation (race-safe)
+
+Avoid showing stale responses if the user triggers multiple transitions quickly. Use an `AbortController` and ignore late responses.
+
+```tsx
+import { useEffect, useRef, useState, useTransition } from "react";
+
+async function fetchResults(term: string, signal: AbortSignal) {
+  const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal });
+  if (!res.ok) throw new Error("Search failed");
+  return (await res.json()) as Array<{ id: string; title: string }>;
+}
+
+export function SearchPane() {
+  const [q, setQ] = useState("");
+  const [list, setList] = useState<Array<{ id: string; title: string }>>([]);
+  const [pendingFlag, queueTransition] = useTransition();
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!q) {
+      setList([]);
+      return;
+    }
+
+    queueTransition(async () => {
+      abortRef.current?.abort();
+      const ac = new AbortController();
+      abortRef.current = ac;
+
+      try {
+        const data = await fetchResults(q, ac.signal);
+        if (!ac.signal.aborted) setList(data);
+      } catch (err) {
+        if (!ac.signal.aborted) console.warn(err);
+      }
+    });
+  }, [q]);
+
+  return (
+    <div>
+      <input
+        placeholder="Search…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        aria-busy={pendingFlag}
+      />
+      {pendingFlag && <p>Loading…</p>}
+      <ul>{list.map((r) => <li key={r.id}>{r.title}</li>)}</ul>
+    </div>
+  );
+}
+```
+
+**Why this works**
+- Every new keystroke queues a new transition.
+- We abort the previous fetch to prevent outdated flashes.
+
+---
+
+## Server Actions that play nicely with transitions (Next.js/RSC)
+
+Server Actions (in frameworks that support them) keep logic on the server while the client uses transitions for responsiveness.
+
+```tsx
+// app/actions/updateAccountAction.ts (server file)
+"use server";
+
+import { z } from "zod";
+
+const AccountSchema = z.object({
+  fullName: z.string().min(1),
+  mail: z.string().email(),
+  about: z.string().max(500),
+});
+
+export async function updateAccountAction(raw: unknown) {
+  const parsed = AccountSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, message: "Invalid input." };
+  }
+  // persist to DB, then:
+  return { ok: true };
+}
+```
+
+```tsx
+// Client component
+import { useState, useTransition } from "react";
+import { updateAccountAction } from "@/actions/updateAccountAction";
+
+export function AccountEditorWithAction() {
+  const [formState, setFormState] = useState({ fullName: "", mail: "", about: "" });
+  const [pendingFlag, queueTransition] = useTransition();
+  const [flash, setFlash] = useState<string | null>(null);
+
+  function onSubmit(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    queueTransition(async () => {
+      const res = await updateAccountAction(formState);
+      setFlash(res.ok ? "Saved!" : res.message ?? "Failed to save.");
+    });
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      {/* fields… */}
+      <button disabled={pendingFlag}>{pendingFlag ? "Saving…" : "Save"}</button>
+      {flash && <p role="status">{flash}</p>}
+    </form>
+  );
+}
+```
+
+**Notes**
+- Validation runs on the server (zod here, pick your tool).
+- The client stays responsive; the submit runs inside a transition.
+
+---
+
+## Suspense boundaries + transitions (avoid jank)
+
+For sections that fetch on demand, wrap in `Suspense` and trigger the navigation (or tab switch) inside a transition.
+
+```tsx
+import React, { Suspense, useState, useTransition } from "react";
+
+function ProductDetails({ id }: { id: string }) {
+  // Assume this component suspends (framework fetch helper)
+  return <div>…</div>;
+}
+
+export function DetailsSwitcher({ ids }: { ids: string[] }) {
+  const [activeId, setActiveId] = useState(ids[0]);
+  const [pendingFlag, queueTransition] = useTransition();
+
+  function switchTo(id: string) {
+    queueTransition(() => setActiveId(id));
+  }
+
+  return (
+    <div>
+      <nav>
+        {ids.map((id) => (
+          <button key={id} onClick={() => switchTo(id)} disabled={pendingFlag}>
+            {pendingFlag && activeId === id ? "Loading…" : id}
+          </button>
+        ))}
+      </nav>
+
+      <Suspense fallback={<p>Loading details…</p>}>
+        <ProductDetails id={activeId} />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+**Pattern**
+- Put the loading UI *inside* the Suspense fallback.
+- Use `pendingFlag` for subtle disabled states or spinners on the triggering control.
+
+---
+
+## Error boundaries with async transitions
+
+Even with transitions, async errors happen. Make them graceful.
+
+```tsx
+import React from "react";
+
+class PanelErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: null | Error }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) return <p>Something went wrong. Retry later.</p>;
+    return this.props.children;
+  }
+}
+```
+
+Wrap panels that suspend/fetch; transitions won’t block the rest of your UI.
+
+---
+
+## Accessibility & UX touches that matter
+
+- **Announce status:** use `role="status"` or `aria-live="polite"` for pending/success banners.  
+- **Disable carefully:** consider disabling only the triggered button, not the whole form.  
+- **Keep focus stable:** avoid moving focus on every pending state; only shift when navigation completes.
+
+---
+
+## Common pitfalls & how to avoid them
+
+1. **Transition everything**  
+   Don’t. Only wrap *non-urgent* updates (fetching, list recompute, navigation).
+
+2. **Stale flashes**  
+   Use `AbortController` or compare tokens to ignore late responses.
+
+3. **Spinner storms**  
+   Prefer subtle indicators (button text, small inline spinners) over full-page loaders.
+
+4. **Optimistic without rollback**  
+   Always define the failure branch.
+
+5. **Blocking validation**  
+   Run sync validation urgently (so users see errors instantly), do heavy server validation via transitions.
+
+---
+
+## Performance checklist
+
+- Use `useDeferredValue` for heavy, derived UI from inputs.  
+- Memoize expensive lists; transitions give you the time to compute them without input lag.  
+- Split large trees with `Suspense` and lazy components.  
+- Debounce typeahead *and* wrap the fetch in a transition—best of both worlds.
+
+---
+
+## Testing strategies
+
+- **Unit:** mock your async calls; assert that urgent state (inputs) updates immediately.  
+- **Integration:** simulate slow network; ensure pending cues and no input jank.  
+- **E2E:** type fast during fetches; ensure keystrokes remain smooth.
+
+---
+
+## Migration notes (React 18 → 19)
+
+- Existing `useTransition` code keeps working; rename your local variables to better describe intent (`pendingFlag`, `queueTransition`).  
+- Start moving heavy state updates behind transitions.  
+- Add `AbortController` on fetches triggered repeatedly (search, pagination).
+
+---
+
+## Full example: validated form with optimistic banner and server round-trip
+
+```tsx
+import { useState, useTransition } from "react";
+import { z } from "zod";
+
+// pretend we post to an API
+async function persistProfile(payload: { fullName: string; mail: string; about: string }) {
+  await new Promise((r) => setTimeout(r, 1200));
+  if (payload.fullName.toLowerCase().includes("fail")) throw new Error("Server said no");
+  return { ok: true as const };
+}
+
+const ProfileShape = z.object({
+  fullName: z.string().min(1, "Please enter your name."),
+  mail: z.string().email("Please enter a valid email."),
+  about: z.string().max(500, "Bio is too long."),
+});
+
+export function RichAccountEditor() {
+  const [fields, setFields] = useState({ fullName: "", mail: "", about: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [banner, setBanner] = useState<string | null>(null);
+  const [pendingFlag, queueTransition] = useTransition();
+
+  function onField(ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = ev.target;
+    setFields((s) => ({ ...s, [name]: value }));
+    setErrors((e) => ({ ...e, [name]: "" })); // clear field error eagerly
+  }
+
+  function onSubmit(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+
+    const parsed = ProfileShape.safeParse(fields);
+    if (!parsed.success) {
+      const map: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const pathKey = issue.path.join(".") || "form";
+        map[pathKey] = issue.message;
+      }
+      setErrors(map);
+      return;
+    }
+
+    // optimistic banner
+    const revertBanner = banner;
+    setBanner("Saving… This might take a moment.");
+
+    queueTransition(async () => {
+      try {
+        await persistProfile(parsed.data);
+        setBanner("Saved! ✅");
+      } catch {
+        setBanner(revertBanner ?? null);
+        setErrors((e) => ({ ...e, form: "Could not save your changes. Try again." }));
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={onSubmit} aria-busy={pendingFlag}>
+      <label>
+        Name
+        <input name="fullName" value={fields.fullName} onChange={onField} />
+        {errors.fullName && <span role="alert">{errors.fullName}</span>}
+      </label>
+
+      <label>
+        Email
+        <input name="mail" type="email" value={fields.mail} onChange={onField} />
+        {errors.mail && <span role="alert">{errors.mail}</span>}
+      </label>
+
+      <label>
+        Bio
+        <textarea name="about" value={fields.about} onChange={onField} />
+        {errors.about && <span role="alert">{errors.about}</span>}
+      </label>
+
+      {errors.form && <p role="alert">{errors.form}</p>}
+
+      <button type="submit" disabled={pendingFlag}>
+        {pendingFlag ? "Saving…" : "Save changes"}
+      </button>
+
+      {banner && <p role="status">{banner}</p>}
+    </form>
+  );
+}
+```
+
+**Highlights**
+- All variables and functions are renamed from the original.
+- Sync validation is urgent; server write runs inside a transition.
+- Optimistic banner + rollback on failure.
+
+---
+
+## Anti-patterns to avoid
+
+- Wrapping **input change handlers** in `queueTransition`. Input should feel instant.  
+- Using transitions to hide **slow components** you could split with `Suspense`.  
+- Treating `pendingFlag` as a *global* spinner switch—keep the cues local to the action.
+
+---
+
+## Wrap-up
+
+Async transitions in React 19 keep your app responsive by prioritizing what users feel first. With patterns like optimistic UI, deferred values, Suspense boundaries, and cancellation, you’ll deliver **fast-feeling** forms and search without hacks.
+
+- Prioritize urgent updates; transition the rest.  
+- Cancel stale work to avoid flicker.  
+- Keep feedback accessible and local.
+
+Ship it smooth.
