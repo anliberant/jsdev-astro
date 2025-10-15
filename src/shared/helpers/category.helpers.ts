@@ -22,6 +22,7 @@ export const categoriesWithDescription = [
   'threejs',
   'design',
   'docker',
+  'web3',
 ];
 
 export const isCategory = (path: string): boolean => {
@@ -68,6 +69,23 @@ export const getCategoryInfo = (
         'JavaScript is a high-level, dynamic programming language widely used for web development. It enables interactive and dynamic user experiences by allowing developers to manipulate the DOM, handle events, and create animations. JavaScript supports asynchronous programming through promises and async/await, making it essential for modern applications. With frameworks like React, Angular, and Vue.js, it powers single-page applications (SPAs) and progressive web apps (PWAs). Beyond the browser, JavaScript is used in backend development with Node.js, mobile apps with React Native, and even game development. Its versatility, vast ecosystem, and continuous evolution make JavaScript one of the most popular and essential programming languages for developers worldwide.';
       metaDescription =
         'Discover JavaScript tutorials, guides, and best practices. Learn ES6+, async programming, DOM manipulation, and more to master modern web development. 🚀';
+    }
+  }
+  if (categoryName === 'web3') {
+    if (type === 'howto') {
+      name = 'Mastering Web3: Building Secure, Scalable dApps';
+      heading = 'Mastering Web3: Building Secure, Scalable dApps';
+      description =
+        'Web3 development merges cryptography, distributed systems, and modern frontend patterns to create trust-minimized applications that run on public blockchains. This category guides you through the full stack: writing and testing smart contracts (Solidity/Foundry, Hardhat), composing frontend dApps with Wagmi/Viem, Ethers.js, and WalletConnect, and integrating wallets like MetaMask and Rainbow. You’ll learn best practices for gas optimization, contract upgradeability, security audits (reentrancy, access control, overflow), and safe deployments across EVM chains and L2s (Optimism, Arbitrum, Base). We also cover on-chain/off-chain data via oracles, storage with IPFS/Arweave, account abstraction (ERC-4337), and zero-knowledge basics for privacy and scalability. Whether you’re building DeFi protocols, NFT collections with royalties, or enterprise tokenized workflows, you’ll get step-by-step patterns, CI for contracts, and production checklists to ship resilient, maintainable dApps.';
+      metaDescription =
+        'Learn Web3 end-to-end: Solidity, Hardhat/Foundry, Wagmi/Viem, wallets, security, gas, L2s, IPFS/oracles, and ZK basics to ship production-ready dApps.';
+    } else if (type === 'post') {
+      name = 'Web3';
+      heading = 'Web3: Smart Contracts, Wallets, and Real-World dApps';
+      description =
+        'Web3 focuses on decentralized applications that leverage smart contracts and public blockchains for transparency and composability. Expect practical guides on Solidity patterns, contract testing with Foundry/Hardhat, and frontend integration using Wagmi/Viem or Ethers.js. We explore wallet UX (MetaMask, Rainbow, WalletConnect), account abstraction (ERC-4337), and L2 rollups for cheaper, faster transactions. You’ll also find patterns for NFTs, DeFi, governance, subgraphs/indexing, data oracles, and decentralized storage (IPFS/Arweave), plus security reviews and deployment playbooks for multi-chain environments (Ethereum, Polygon, Base, Arbitrum, Optimism).';
+      metaDescription =
+        'Dive into Web3: Solidity, Hardhat/Foundry, Wagmi/Viem, wallets, L2s, IPFS, NFTs, and DeFi. Patterns, security tips, and guides for real-world dApps. 🚀';
     }
   }
   if (categoryName === 'phaserjs') {
