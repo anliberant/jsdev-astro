@@ -112,10 +112,18 @@ img {
 .container {
   margin-right: auto;
   margin-left: auto;
-  padding-right: 2rem;
-  padding-left: 2rem;
+  padding-right: 0.2rem;
+  padding-left: 0.2rem;
 }
 
+@media (min-width: 860px) {
+  .container {
+    margin-right: auto;
+    margin-left: auto;
+    padding-right: 2rem;
+    padding-left: 2rem;
+  }
+}
 @media (min-width: 1400px) {
   .container {
     max-width: 1400px;

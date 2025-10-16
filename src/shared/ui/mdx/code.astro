@@ -209,11 +209,17 @@ const highlightedLines = parseHighlightRanges(highlights);
     background-color: #0f0f0f;
     color: #ffffff;
     border-radius: var(--radius);
-    margin: 2rem 0;
+    margin: 1rem 0;
     overflow: hidden;
-    max-width: 80%;
+    max-width: 100%;
     border: 1px solid #333;
     font-family: var(--font-mono);
+  }
+  @media (min-width: 1200px) {
+    .code-block {
+      margin: 2rem 0;
+      max-width: 80%;
+    }
   }
 
   .code-header {

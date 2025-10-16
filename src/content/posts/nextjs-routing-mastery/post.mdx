@@ -1,0 +1,352 @@
+---
+title: "Next.js App Router: Dynamic, Grouped, Parallel & Intercepted"
+slug: nextjs-routing-mastery
+heading: "Next.js App Router — Routing Mastery"
+image: ./images/nextjs-routing-mastery.png
+permalink: nextjs-routing-mastery
+date: 2025-10-16
+author: anton liberant
+category: nextjs
+type: post
+tags: ["routing"]
+desc: "A practical, bug-free guide to Next.js 15 routing: dynamic routes, route groups, parallel slots, and intercepting modals—with production‑ready code."
+---
+
+Routing is where most real-world Next.js apps get tricky: huge content sets, different layouts per area, mobile/desktop splits, permission-aware UI, and context-preserving modals.
+
+This guide combines the essentials from two routing articles and upgrades them with **clean patterns and safer code for Next.js 15 (App Router)**.
+
+> ✅ You'll learn: **Dynamic Routes**, **Route Groups**, **Parallel Routes**, and **Intercepting Routes** with copy-pasteable, production-ready examples.
+
+## 1) Dynamic Routes (`[param]`, `[...all]`, `[[...opt]]`)
+
+Dynamic routes let the file system capture URL params so you don't have to manually create files for every item.
+
+### 1.1 Basic Dynamic Segment — `[slug]`
+
+Files
+
+<div className='code-cmd'>app/blog/[slug]/page.tsx</div>
+
+```tsx 
+// app/blog/[slug]/page.tsx
+import { notFound } from "next/navigation";
+
+type PageProps = { params: { slug: string } };
+
+async function getPost(slug: string) {
+  // Replace with a real DB / headless CMS
+  const posts = { "my-first-post": { title: "Hello Next.js", body: "This is my first post content!" } };
+  return posts[slug] ?? null;
+}
+
+export async function generateStaticParams() {
+  // Pre-generate popular slugs for SSG (Static Site Generation)
+  return [{ slug: "my-first-post" }];
+}
+
+export async function generateMetadata({ params }: PageProps) {
+  const post = await getPost(params.slug);
+  return { title: post ? post.title : "Post not found" };
+}
+
+export default async function BlogPost({ params }: PageProps) {
+  const post = await getPost(params.slug);
+  if (!post) return notFound(); // Handle 404 gracefully
+  return (
+    <article className="prose mx-auto p-6">
+      <h1>{post.title}</h1>
+      <p>{post.body}</p>
+    </article>
+  );
+}
+```
+
+**Why This Is Better**
+
+- Uses `generateStaticParams` for SSG where possible, making pages lightning fast.
+- Handles 404s with `notFound()`.
+- Sets per-page SEO via `generateMetadata`.
+
+### 1.2 Catch-all — `[...segments]`
+
+This catches any path segments after the base path. Great for documentation!
+
+```tsx 
+// app/docs/[...segments]/page.tsx
+type PageProps = { params: { segments: string[] } };
+
+export default function DocPage({ params }: PageProps) {
+  const path = params.segments.join("/");
+  return (
+    <div className="mx-auto max-w-3xl p-6">
+      <h1 className="text-2xl font-semibold">Docs</h1>
+      <p className="text-sm text-gray-600">Path: <code>{path}</code></p>
+      {/* Render markdown by path, build breadcrumbs, etc. */}
+    </div>
+  );
+}
+```
+
+### 1.3 Optional Catch-all — `[[...segments]]`
+
+This is similar to a catch-all, but it also matches the route root (e.g., `/shop` or `/shop/categories/shirts`).
+
+```tsx 
+// app/shop/[[...segments]]/page.tsx
+type PageProps = { params: { segments?: string[] } };
+
+export default function Shop({ params }: PageProps) {
+  const path = params.segments?.join("/") ?? "(root)";
+  return (
+    <div className="mx-auto max-w-3xl p-6">
+      <h1 className="text-2xl font-semibold">Shop</h1>
+      <p className="text-gray-600">Segments: {path}</p>
+    </div>
+  );
+}
+```
+---
+
+## 2) Route Groups (`(group)`)
+
+Route Groups organize your code without affecting the URL path. Crucially, they enable multiple independent layouts at the same level.
+
+### 2.1 Logical Grouping Without URL Impact
+
+```dash
+app/
+├─ (marketing)/about/page.tsx    // URL: /about
+└─ (shop)/products/page.tsx      // URL: /products
+```
+
+### 2.2 Per-Group Layouts
+
+You can apply specific headers, footers, or wrapper components to a whole group.
+
+```dash
+app/
+├─ (shop)/
+│  ├─ layout.tsx
+│  └─ product/page.tsx            // Uses (shop)/layout.tsx
+├─ (marketing)/
+│  ├─ layout.tsx
+│  └─ about/page.tsx              // Uses (marketing)/layout.tsx
+└─ layout.tsx                      // Optional: your top-level global layout
+```
+
+```tsx 
+// app/(shop)/layout.tsx
+export default function ShopLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="p-6">
+      <header className="mb-4 border-b pb-2">🛒 Shop Header</header>
+      {children}
+    </section>
+  );
+}
+```
+
+### 2.3 Multiple Root Layouts
+
+When areas need to be fully isolated (like an authenticated admin panel versus a public site, each with a different HTML structure), you create separate roots.
+
+```dash
+app/
+├─ (frontend)/
+│  ├─ layout.tsx  // contains its own <html> and <body>
+│  └─ page.tsx
+└─ (admin)/
+   ├─ layout.tsx  // contains its own <html> and <body>
+   └─ dashboard/page.tsx
+```
+> ℹ️ Important: Navigating between root layouts triggers a **full document reload**.
+
+---
+
+## 3) Parallel Routes (`@slot`)
+
+Parallel routes allow you to render multiple regions within a layout independently. Each region (`@slot`) has its own navigation, loading states, and error boundaries, acting like a mini-application.
+
+**Structure**
+
+```dash
+app/
+├─ layout.tsx
+├─ page.tsx              // The default slot = {children}
+├─ @product/page.tsx     // A named parallel slot
+└─ @analytics/page.tsx   // Another named parallel slot
+```
+
+```tsx 
+// app/layout.tsx
+export default function RootLayout({
+  children,
+  product,
+  analytics,
+}: {
+  children: React.ReactNode;
+  product: React.ReactNode;
+  analytics: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className="p-6">
+        {children}
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <section>{product}</section>
+          <section>{analytics}</section>
+        </div>
+      </body>
+    </html>
+  );
+}
+```
+
+Each slot can have its own resilient `loading.tsx` and `error.tsx` to prevent the entire page from crashing.
+
+```tsx 
+// app/@analytics/loading.tsx
+export default function Loading() {
+  return <div className="animate-pulse">Loading analytics…</div>;
+}
+```
+> Pro Tip: Slots can have their own nested routes, behaving exactly like independent mini-apps.
+
+## 4) Intercepting Routes (Context-Preserving Modals)
+
+Intercepted routes let you render a different route inside the current layout (usually as a modal) instead of navigating away. This preserves the user's context, but the URL remains shareable.
+
+**Structure**
+
+```dash
+app/
+├─ layout.tsx
+├─ page.tsx                          // The main list page
+├─ photo/[id]/page.tsx               // The full page detail route
+└─ @modal/
+   ├─ default.tsx                    // Renders null when no modal is active
+   └─ (..)photo/[id]/page.tsx        // Intercepts /photo/[id] into the modal slot
+```
+
+```tsx 
+// app/@modal/(..)photo/[id]/page.tsx
+"use client";
+import { useRouter } from "next/navigation";
+
+const photos = [
+  { id: "1", src: "https://picsum.photos/seed/1/600/400" },
+  { id: "2", src: "https://picsum.photos/seed/2/600/400" },
+  { id: "3", src: "https://picsum.photos/seed/3/600/400" },
+];
+
+export default function PhotoModal({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const photo = photos.find(p => p.id === params.id);
+  if (!photo) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70">
+      <div className="relative rounded-md bg-white p-4 shadow-xl">
+        <button
+          onClick={() => router.back()}
+          className="absolute right-2 top-2 text-2xl leading-none text-gray-500 hover:text-gray-800"
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <img src={photo.src} alt={`Photo ${photo.id}`} className="max-h-[80vh] w-auto rounded" />
+      </div>
+    </div>
+  );
+}
+```
+
+**Behavior**
+
+Soft-navigate from `/` to `/photo/1` → shows a modal over the list.
+
+Hard-load `/photo/1` (browser refresh/direct link) → shows the full page at `app/photo/[id]/page.tsx`.
+
+```tsx 
+// app/@modal/default.tsx
+export default function Default() {
+  return null;
+}
+```
+
+## 5) Production Patterns & Pitfalls
+
+**✅ Best Practices**
+
+- **Data Fetching per Segment**: Prefer Server Components and stream UI updates with `loading.tsx`.
+- **SEO per Page**: Use `generateMetadata` in every route segment for precise control.
+- **SSG + ISR**: Combine `generateStaticParams` with revalidation for the perfect performance blend.
+
+**⚠️ Pitfalls to Avoid**
+
+- **Cross-Root Navigation triggers** a full page reload—design your UX around this limitation.
+- **Route Groups** do not change URLs—be careful about potential path conflicts.
+- **Intercepting** relies on URL hierarchy, not folder location (groups/slots are transparent to the URL path).
+
+## Appendix: Stronger Code Examples
+
+### A) Safer List/Detail with Prefetch-Friendly Links
+
+```tsx 
+// app/page.tsx
+import Link from "next/link";
+
+const items = [
+  { id: "1", title: "Alpha" },
+  { id: "2", title: "Beta" },
+];
+
+export default function Home() {
+  return (
+    <main className="mx-auto max-w-2xl p-6">
+      <h1 className="mb-4 text-2xl font-bold">Items</h1>
+      <ul className="space-y-2">
+        {items.map(i => (
+          <li key={i.id}>
+            <Link href={`/photo/${i.id}`} className="text-blue-600 hover:underline">
+              {i.title}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+### B) Error & Loading Boundaries per Slot
+
+```dash
+app/@product/loading.tsx
+app/@product/error.tsx
+```
+
+```tsx 
+// app/@product/error.tsx
+"use client";
+export default function ProductError({ error, reset }: { error: Error; reset: () => void }) {
+  return (
+    <div className="rounded border border-red-300 bg-red-50 p-3">
+      <p className="font-medium text-red-700">Product failed: {error.message}</p>
+      <button onClick={reset} className="mt-2 rounded bg-red-600 px-3 py-1 text-white">
+        Retry
+      </button>
+    </div>
+  );
+}
+```
+
+TL;DR (Summary)
+
+- **Dynamic routes**: `[slug]`, `[...all]`, `[[...opt]]` for flexible paths.
+- **Route groups**: (group) for organization + per-area layouts; supports multiple root layouts.
+- **Parallel routes**: `@slot` to render independent regions with their own loading/error and nested routes.
+- **Intercepting routes**: `(..)folder` to render another route in context (e.g., modal) while maintaining a shareable URL.
+
+Build complex layouts with confidence — clean, scalable, and production-ready.
