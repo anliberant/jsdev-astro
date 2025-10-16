@@ -1,0 +1,294 @@
+---
+title: 'From Web2 to Web3: Building Decentralized Frontends with wagmi'
+slug: wagmi-react
+heading: A Complete Beginner's Guide to Real-Time Communication with WebRTC
+image: ./images/wagmi-react-guide.png
+permalink: wagmi-react
+date: 2025-10-17
+author: anton liberant
+category: web3
+type: post
+tags: ['wagmi']
+desc: Learn how to build powerful Web3 frontends using React and wagmi. Connect wallets, read smart contracts, and interact with blockchain networks easily.
+---
+
+Web3 frontend development isn’t just about design or React components — it’s about connecting users directly to the blockchain. As a frontend developer, you become the bridge between decentralized logic and real users.
+
+In this article, you’ll learn:
+
+- What makes Web3 frontends different from traditional Web2 ones
+- The essential tools for building dApps
+- How to start from scratch
+- How to use [wagmi](https://wagmi.sh/), the React toolkit for Web3
+
+Let’s dive in.
+
+## 🧩 What Is a Web3 Frontend?
+
+A Web3 frontend is an interface for decentralized applications (dApps). Unlike Web2, it doesn’t talk to a backend server. Instead, it communicates directly with a blockchain and the user’s wallet.
+
+In traditional Web2:
+
+```bash 
+A[Frontend] --> B[Backend] --> C[Database]
+```
+
+In Web3:
+
+```bash
+A[Frontend] --> B[Blockchain] --> C[Smart Contract]
+```
+
+You interact with smart contracts using the wallet as a bridge (MetaMask, Coinbase Wallet, etc.).
+
+## 🛠 What You Need to Get Started
+
+Here’s a list of core Web3 libraries you’ll use:
+
+| Library                    | Purpose                                            |
+| -------------------------- | -------------------------------------------------- |
+| **wagmi**                  | React hooks for connecting wallets and contracts   |
+| **viem**                   | Lightweight RPC client for calling smart contracts |
+| **@rainbow-me/rainbowkit** | Wallet connection UI                               |
+| **ethers.js** (optional)   | Legacy but popular Ethereum library                |
+
+Install them:
+
+<div className="code-cmd">npm install wagmi viem @rainbow-me/rainbowkit</div>
+
+## 📚 Core Web3 Concepts (Short & Practical)
+
+You’ll constantly encounter these terms when working with dApps.
+
+### 1. address
+
+A unique identifier of a wallet or contract.
+
+```text 
+0x1234567890abcdef1234567890abcdef12345678
+```
+
+- EOA (Externally Owned Account) — a user wallet (e.g. MetaMask)
+-Contract Account — a deployed smart contract
+
+You can use ENS for human-readable names like `example-name.eth`.
+
+### 2. token
+
+Represents a digital asset.
+
+- ERC-20: fungible tokens (e.g., USDC, DAI)
+  - Functions: `balanceOf`, `transfer`, `approve`
+  - wagmi hook: `useBalance({ token })`
+- ERC-721: NFTs (unique assets)
+  - Functions: `ownerOf`, `tokenURI`
+  - Metadata fetched via `tokenURI`
+
+Use `parseUnits()` / `formatUnits()` from viem for decimals (ETH = 18, USDC = 6).
+
+### 3. chainId
+
+Every blockchain has its unique ID:
+
+| Network          | Chain ID |
+| ---------------- | -------- |
+| Ethereum Mainnet | 1        |
+| Polygon          | 137      |
+| Arbitrum         | 42161    |
+| Optimism         | 10       |
+
+
+You’ll use it for network checks and switching via `switchNetwork()`.
+
+### 4. provider
+
+A provider lets you read blockchain data (balances, events) but not sign transactions.
+In wagmi, you create it with:
+
+```ts 
+import { publicProvider } from 'wagmi/providers/public'
+```
+
+Or connect through **Infura**, **Alchemy**, etc.
+
+### 5. signer
+
+A signer can sign and send transactions (MetaMask, RainbowKit).
+
+Used internally by wagmi for:
+
+- `sendTransaction`
+- `signMessage`
+- `contract.write()`
+
+### 6. Smart Contracts & ABI
+
+A smart contract = backend logic on the blockchain.
+ABI = a JSON schema that describes the contract’s functions.
+
+Example:
+
+```json 
+[
+  {
+    "name": "mint",
+    "type": "function",
+    "stateMutability": "payable",
+    "inputs": [],
+    "outputs": []
+  }
+]
+```
+
+- read calls (e.g. `totalSupply`) are free
+- write calls (e.g. `mint`) require gas
+
+### 7. gas, fee, nonce
+
+- **gas** — computational cost
+- **gasPrice** — price per gas unit
+- **fee** = gas × gasPrice
+- **nonce** — transaction counter
+
+Even failed transactions burn gas.
+
+## 🚀 wagmi — Your Web3 Frontend Toolkit
+
+The wagmi library is the best starting point for building a dApp UI. It simplifies wallet connections, blockchain reads, and writes through React hooks.
+
+### 1. Setup wagmi and React Query
+
+```tsx 
+// main.tsx
+import { WagmiConfig, createConfig, configureChains } from 'wagmi'
+import { publicProvider } from 'wagmi/providers/public'
+import { mainnet, polygon, optimism } from 'wagmi/chains'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const { publicClient, webSocketPublicClient } = configureChains(
+  [mainnet, polygon, optimism],
+  [publicProvider()]
+)
+
+const config = createConfig({
+  autoConnect: true,
+  publicClient,
+  webSocketPublicClient,
+})
+
+const queryClient = new QueryClient()
+
+export function Web3Provider({ children }) {
+  return (
+    <WagmiConfig config={config}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </WagmiConfig>
+  )
+}
+```
+
+Wrap your entire app with `<Web3Provider />.`
+
+### 2. Connect a Wallet
+
+```tsx 
+// ConnectWallet.tsx
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { InjectedConnector } from 'wagmi/connectors/injected'
+
+export function ConnectWallet() {
+  const { connect } = useConnect({ connector: new InjectedConnector() })
+  const { disconnect } = useDisconnect()
+  const { isConnected, address } = useAccount()
+
+  return isConnected ? (
+    <div>
+      <p>Connected: {address}</p>
+      <button onClick={() => disconnect()}>Disconnect</button>
+    </div>
+  ) : (
+    <button onClick={() => connect()}>Connect MetaMask</button>
+  )
+}
+```
+
+This adds a simple “Connect Wallet” button.
+You can replace it with RainbowKit for a polished UI.
+
+### 3. Display a User’s Balance
+
+```tsx 
+// Balance.tsx
+import { useBalance, useAccount } from 'wagmi'
+
+export function Balance() {
+  const { address } = useAccount()
+  const { data, isLoading } = useBalance({ address })
+
+  if (isLoading) return <p>Loading balance...</p>
+  return <p>Balance: {data?.formatted} {data?.symbol}</p>
+}
+```
+
+### 4. Interact with a Smart Contract
+
+```tsx 
+// MintNFT.tsx
+import { usePrepareContractWrite, useContractWrite } from 'wagmi'
+import { parseEther } from 'viem'
+
+const contractAddress = '0xYourContract'
+const abi = [
+  {
+    name: 'mint',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [],
+    outputs: [],
+  },
+]
+
+export function MintNFT() {
+  const { config } = usePrepareContractWrite({
+    address: contractAddress,
+    abi,
+    functionName: 'mint',
+    value: parseEther('0.01'),
+  })
+
+  const { write, isLoading, isSuccess } = useContractWrite(config)
+
+  return (
+    <div>
+      <button disabled={!write || isLoading} onClick={() => write?.()}>
+        {isLoading ? 'Minting...' : 'Mint NFT'}
+      </button>
+      {isSuccess && <p>Mint successful!</p>}
+    </div>
+  )
+}
+```
+
+### 💡 Quick Reference Table
+
+| Term           | Description                           |
+| -------------- | ------------------------------------- |
+| **address**    | Wallet or contract identifier (0x...) |
+| **chainId**    | Blockchain network ID                 |
+| **provider**   | Read-only blockchain access           |
+| **signer**     | Signs and sends transactions          |
+| **contract**   | Smart program on blockchain           |
+| **ABI**        | Contract interface                    |
+| **gas**        | Execution cost                        |
+| **read/write** | Free vs paid contract call            |
+| **nonce**      | Transaction counter                   |
+| **SIWE**       | Sign-In With Ethereum                 |
+| **token**      | Digital asset (ERC-20/721)            |
+
+## 🏁 Conclusion
+
+Building a Web3 frontend isn’t about reinventing the backend — it’s about creating a secure, user-friendly interface that interacts directly with the blockchain.
+
+With **wagmi**, **viem**, and **RainbowKit**, you can connect wallets, call contracts, and display blockchain data in just a few lines of code.
