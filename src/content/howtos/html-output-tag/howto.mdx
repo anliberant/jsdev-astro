@@ -1,0 +1,147 @@
+---
+title: Howto Use the HTML <output> Tag for Smarter, Accessible UI
+slug: html-output-tag
+heading: The Overlooked Power of the HTML <output> Element
+icon: /icons/html.png
+image: ./images/output-tag.png
+permalink: howto/html-output-tag
+date: 2025-10-20
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn how to use the HTML <output> tag to display dynamic results with built-in accessibility and zero ARIA hacks. Includes modern React and HTML examples.
+---
+
+Everyone knows `<input>` — the workhorse of the web.  
+But few developers have ever touched `<output>`, even though it’s been in the HTML spec since 2008. That’s unfortunate, because `<output>` solves a long-standing problem: showing dynamic results **with built-in accessibility** — no extra JavaScript or ARIA attributes required.
+
+![HTML Output tag](./images/output-tag.png)
+
+---
+
+## What `<output>` Actually Does
+
+According to the HTML spec:  
+> The `<output>` element represents the result of a calculation or user action.
+
+It maps to `role="status"` in accessibility trees, which means screen readers automatically announce changes without interrupting users — exactly how polite UI updates should behave.
+
+Example:
+```html
+<output>Your dynamic value goes here</output>
+```
+
+That’s all it takes. The browser handles the rest.
+
+---
+
+## Linking Inputs to Output
+
+Like `<label>`, `<output>` supports the `for` attribute — you can link it to multiple input elements:
+```html
+<input id="a" type="number"> +
+<input id="b" type="number"> =
+<output for="a b"></output>
+```
+This connection helps assistive technologies understand that the result depends on those inputs.
+
+---
+
+## Real-World Examples
+
+### 🧮 Simple Calculator
+```html
+<form oninput="result.value = Number(a.value) + Number(b.value)">
+  <input id="a" type="number" value="2"> +
+  <input id="b" type="number" value="3"> =
+  <output name="result" for="a b"></output>
+</form>
+```
+
+Accessible, automatic, and minimal — everything just works.
+
+---
+
+### ⚙️ React Example: Range Slider
+```jsx
+export function MileageSlider() {
+  const [miles, setMiles] = useState(10000);
+  return (
+    <div role="group" aria-labelledby="mileage-label">
+      <label id="mileage-label" htmlFor="mileage">Annual mileage</label>
+      <input
+        id="mileage"
+        type="range"
+        value={miles}
+        onChange={(e) => setMiles(e.target.value)}
+      />
+      <output htmlFor="mileage">
+        {parseInt(miles).toLocaleString()} miles/year
+      </output>
+    </div>
+  );
+}
+```
+
+Screen readers announce the new mileage automatically.
+
+---
+
+### 🔒 Password Strength Indicator
+```html
+<label for="password">Password</label>
+<input type="password" id="password" 
+       oninput="strength.value = checkPassword(this.value)">
+<output id="strength" for="password">Strength: Weak</output>
+```
+
+Perfect for live validation feedback — and fully semantic.
+
+---
+
+### 🚚 API-Powered Example: Shipping Cost Calculator
+```jsx
+export function ShippingCalculator() {
+  const [weight, setWeight] = useState("");
+  const [price, setPrice] = useState("");
+
+  useEffect(() => {
+    if (weight) {
+      fetch(`/api/shipping?weight=${weight}`)
+        .then((res) => res.json())
+        .then((data) => setPrice(data.price));
+    }
+  }, [weight]);
+
+  return (
+    <form>
+      <label>
+        Package weight (kg):
+        <input type="number"
+               value={weight}
+               onChange={(e) => setWeight(e.target.value)} />
+      </label>
+      <output htmlFor="weight">
+        {price ? `Estimated shipping: $${price}` : "Calculating..."}
+      </output>
+    </form>
+  );
+}
+```
+
+---
+
+## Accessibility and Browser Support
+
+- Works in all modern browsers.  
+- For extra compatibility, add `role="status"` if some screen readers miss updates.  
+- Use it only for user-driven results (not global alerts).
+
+---
+
+## Final Thought
+
+The `<output>` tag is one of HTML’s best-kept secrets — a lightweight, semantic way to display dynamic results **without accessibility compromises**.
+
+Sometimes the most powerful tools are those hiding in plain sight.
