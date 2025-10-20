@@ -1,0 +1,170 @@
+---
+title: 'Howto Master URLs and URLSearchParams in JavaScript'
+slug: master-urlsearchparams
+heading: 'Deep Dive into URLs and URLSearchParams'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/master-urlsearchparams
+date: 2025-10-20
+author: anton liberant
+category: javascript
+type: howto
+tags: ['URLSearchParams']
+desc: Stop parsing URLs with regex! Learn how to use URL and URLSearchParams to handle query strings and URL parts safely, cleanly, and professionally.
+---
+
+One of the scariest sights in a code review? A handwritten regular expression trying to extract URL parameters.  
+Every time I see something like this, my blood pressure spikes:
+
+```js
+// Trying to extract 'id' from a URL
+function getIdFromUrl(url) {
+  const match = url.match(/[?&]id=([^&]*)/);
+  return match ? match[1] : null;
+}
+```
+
+Or even this:
+```js
+const url = 'https://example.com?a=1&b=2';
+const paramsStr = url.split('?')[1];
+// ...and then split again by '&' and '='...
+```
+
+At first glance, it works. But does it handle URL encoding, repeated parameters, or parameters after `#` fragments?  
+The answer: **no**.
+
+Luckily, browsers already provide **URL** and **URLSearchParams**, two robust APIs designed specifically for this.
+
+---
+
+## URL Object: A Structured Representation of a URL
+
+Instead of treating a URL like a string, use the `URL` constructor to parse it into a rich, structured object.
+
+```js
+const urlString = 'https://example.com/user/12345/posts?type=hot&page=2#comments';
+const myUrl = new URL(urlString);
+```
+
+Now every part is easy to access:
+
+```js
+console.log(myUrl.protocol); // "https:"
+console.log(myUrl.hostname); // "example.com"
+console.log(myUrl.pathname); // "/user/12345/posts"
+console.log(myUrl.search);   // "?type=hot&page=2"
+console.log(myUrl.hash);     // "#comments"
+```
+
+And modifying it is just as easy:
+
+```js
+myUrl.pathname = '/user/98765/articles';
+myUrl.hash = '#profile';
+myUrl.port = '8080';
+
+console.log(myUrl.href);
+// "https://example.com:8080/user/98765/articles?type=hot&page=2#profile"
+```
+
+No messy string concatenations, no missing `?` or `/` — just clean, readable code.
+
+---
+
+## URLSearchParams: Handling Query Strings the Right Way
+
+`URL.searchParams` is an instance of `URLSearchParams`, letting you read, write, and iterate query parameters easily.
+
+```js
+const paramsString = 'type=hot&category=frontend&tags=react&tags=vue';
+const searchParams = new URLSearchParams(paramsString);
+```
+
+### 1. Reading Parameters
+```js
+searchParams.get('type'); // "hot"
+searchParams.get('nonexistent'); // null
+```
+
+### 2. Checking if a Parameter Exists
+```js
+searchParams.has('category'); // true
+```
+
+### 3. Handling Repeated Parameters
+```js
+searchParams.getAll('tags'); // ["react", "vue"]
+```
+
+### 4. Modifying and Adding Parameters
+```js
+searchParams.set('type', 'new');
+searchParams.append('tags', 'css');
+```
+
+### 5. Deleting Parameters
+```js
+searchParams.delete('category');
+```
+
+### 6. Iterating Over Parameters
+```js
+for (const [key, value] of searchParams) {
+  console.log(`${key}: ${value}`);
+}
+```
+
+### 7. Converting Back to String
+```js
+searchParams.set('author', '张三');
+console.log(searchParams.toString());
+// "type=new&tags=react&tags=vue&tags=css&author=%E5%BC%A0%E4%B8%89"
+```
+
+Automatic encoding included — no need for `encodeURIComponent()`.
+
+---
+
+## Real-World Example: Updating Filters in a List Page
+
+A common task — you have filters on a list page, and changing them should update the URL and re-fetch data.
+
+```js
+function updateUrlAndFetchData() {
+  const currentUrl = new URL(window.location.href);
+
+  const category = document.getElementById('category-select').value;
+  currentUrl.searchParams.set('category', category);
+
+  const sortBy = document.getElementById('sort-select').value;
+  currentUrl.searchParams.set('sort', sortBy);
+
+  const newUrl = currentUrl.href;
+
+  history.pushState({}, '', newUrl);
+  fetchData(newUrl);
+
+  console.log('Updated URL:', newUrl);
+}
+```
+
+No string concatenation, no regex — just clear, maintainable logic.
+
+---
+
+## Why This Matters
+
+As a rule in code reviews: **choose clarity and robustness** over clever but brittle tricks.
+
+Writing regular expressions to parse URLs might look “smart,” but it’s fragile and unreadable.  
+Using `URL` and `URLSearchParams` is not just modern — it’s **professional**.
+
+So next time you deal with query parameters, forget `split()` and regex.  
+Use the tools the web platform gives you: `new URL()` and `new URLSearchParams()`.
+
+---
+
+✅ Clean.  
+✅ Safe.  
+✅ Built for humans and browsers alike.
