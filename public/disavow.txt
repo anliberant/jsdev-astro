@@ -1,0 +1,6 @@
+# Disavow toxic backlinks for jsdev.space
+domain:discovery.cooperpress.com
+domain:hn.luap.info
+domain:webhive-web.onrender.com
+domain:whitehat.alphabit.online
+domain:news.drihu.com

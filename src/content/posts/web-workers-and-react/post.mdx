@@ -1,0 +1,218 @@
+---
+title: 'Web Workers and React: Keeping Your UI Fast and Smooth'
+slug: web-workers-and-react
+heading: 'Web Workers and React: Offload the UI, Speed Up Your App'
+image: ./images/web-workers-and-react.png
+permalink: web-workers-and-react
+date: 2025-10-21
+author: anton liberant
+category: react
+type: post
+tags: ['web-workers']
+desc: Discover how to use Web Workers to move heavy computations off the main thread in React apps, prevent UI freezes, and create a smoother user experience.
+---
+
+If you’ve ever processed a large file, parsed hundreds of thousands of records, or ran expensive calculations inside a React component, you’ve probably seen your app *freeze*: buttons stop responding, animations hang, and your interface becomes sluggish.
+
+Why? Because **JavaScript in the browser runs on a single main thread**. React, being a JS library, shares that same thread. When a CPU-heavy task runs there, it blocks rendering and user interactions.
+
+To fix this, browsers give us a built-in escape hatch — **Web Workers**.
+
+---
+
+## What Are Web Workers?
+
+Web Workers let you run JavaScript code in a **separate thread**. While the worker does the heavy lifting, the browser can continue handling user input and rendering smoothly.
+
+Think of them as small background programs that communicate with your app through messages.
+
+---
+
+## How Web Workers Work
+
+When you create a worker, the browser loads a separate JS file and runs it in a different thread. Both threads talk via `postMessage()` and `onmessage` events:
+
+```js
+// main.js
+const worker = new Worker('worker.js');
+
+worker.postMessage({ task: 'compute', payload: [1, 2, 3, 4] });
+
+worker.onmessage = (event) => {
+  console.log('Worker result:', event.data);
+};
+```
+
+```js
+// worker.js
+self.onmessage = (event) => {
+  const { task, payload } = event.data;
+  if (task === 'compute') {
+    const result = payload.reduce((a, b) => a + b, 0);
+    self.postMessage(result);
+  }
+};
+```
+
+The main thread remains responsive — no more frozen UI.
+
+---
+
+## Shared Workers
+
+A **Shared Worker** is a special kind of worker accessible by multiple browser tabs or windows from the same origin. It’s useful for cross-tab synchronization, caching, or centralized data processing.
+
+However, Shared Workers have limited browser support (notably missing in Safari) and add complexity.
+
+---
+
+## Limitations of Web Workers
+
+1. **No DOM Access** — Workers can’t manipulate HTML directly. Send data back to the main thread and let React update the UI.  
+2. **Message-Based Communication** — You can only exchange messages using `postMessage()`.  
+3. **Data Serialization** — Large objects must be serialized. Use **Transferable Objects** like `ArrayBuffer` to pass large binary data efficiently.
+
+```js
+// Fast binary transfer
+worker.postMessage(buffer, [buffer]);
+```
+
+---
+
+## When to Use Web Workers
+
+- **Heavy Computations:** Sorting, image processing, pathfinding, or cryptography.  
+- **Large JSON Parsing:** Offload parsing big API responses to keep UI responsive.  
+- **File Handling:** Converting CSV to objects, image compression, or PDF generation.
+
+Avoid using workers for small tasks — serialization overhead can outweigh the benefits.
+
+---
+
+## Integrating Web Workers in React
+
+### Step 1 — Create a Worker File
+
+```js
+// worker.js
+self.onmessage = (e) => {
+  const result = e.data.number ** 2;
+  self.postMessage(result);
+};
+```
+
+### Step 2 — Use the Worker in a React Component
+
+```jsx
+import { useEffect, useState } from 'react';
+
+export default function WorkerDemo() {
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    const worker = new Worker(new URL('./worker.js', import.meta.url));
+
+    worker.onmessage = (e) => setResult(e.data);
+    worker.postMessage({ number: 12 });
+
+    return () => worker.terminate();
+  }, []);
+
+  return <div>Result: {result ?? 'Working...'}</div>;
+}
+```
+
+---
+
+## Managing Worker Lifecycle in React
+
+Never store the worker in React state — that triggers unnecessary re-renders.  
+Instead, use `useRef`:
+
+```jsx
+import { useEffect, useRef, useState } from 'react';
+
+export function HeavyComputation() {
+  const workerRef = useRef();
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    workerRef.current = new Worker(new URL('./worker.js', import.meta.url));
+
+    workerRef.current.onmessage = (e) => setResult(e.data);
+    workerRef.current.postMessage({ number: 50 });
+
+    return () => workerRef.current?.terminate();
+  }, []);
+
+  return <p>Result: {result ?? 'Calculating...'}</p>;
+}
+```
+
+---
+
+## Creating a Custom Hook: `useWorker`
+
+Encapsulate worker logic in a reusable hook for cleaner code:
+
+```jsx
+import { useEffect, useRef, useState, useCallback } from 'react';
+
+export function useWorker(workerFactory) {
+  const workerRef = useRef(null);
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    workerRef.current = workerFactory();
+    workerRef.current.onmessage = (e) => setData(e.data);
+    return () => workerRef.current?.terminate();
+  }, [workerFactory]);
+
+  const postMessage = useCallback((msg) => {
+    workerRef.current?.postMessage(msg);
+  }, []);
+
+  return [data, postMessage];
+}
+```
+
+Usage:
+
+```jsx
+const [result, send] = useWorker(() => new Worker(new URL('./worker.js', import.meta.url)));
+
+useEffect(() => {
+  send({ number: 42 });
+}, [send]);
+```
+
+---
+
+## Useful Libraries
+
+You don’t always need to reinvent the wheel. Libraries like:  
+- [**Comlink**](https://github.com/GoogleChromeLabs/comlink)  
+- [**Workerize**](https://github.com/developit/workerize)  
+- [**Threads.js**](https://github.com/andywer/threads.js)  
+
+These wrap workers into simple APIs that feel like async function calls.
+
+---
+
+## Best Practices
+
+- Create workers only when needed.  
+- Terminate them on component unmount.  
+- Minimize message size to reduce serialization cost.  
+- Use `Transferable` objects for large binary data.  
+- Memoize the `workerFactory` with `useCallback` to avoid recreating workers unnecessarily.
+
+---
+
+## Final Thoughts
+
+Web Workers aren’t magic — but they’re powerful. They help React apps remain smooth and responsive, even when processing massive datasets or complex computations.
+
+If you’ve ever watched your browser “turn into a pumpkin” after parsing a million-line CSV in `useEffect`, now you know the way out.
+
+Step off the main thread — and keep your UI running like butter. 🧈
