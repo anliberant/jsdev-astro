@@ -22,7 +22,8 @@ looking to build cloud-native applications with minimal overhead and maximum per
 ## Create a simple Backend
 
 We will use **Bun** - an another JavaScript runtime, and Node.js-compatible package manager. If you
-are not familiar with Bun, please read this [article](https://jsdev.space/howto/use-bun).
+are not familiar with Bun, please read this article - [Getting Started with Bun
+](https://jsdev.space/howto/use-bun/).
 
 ### 1. Install Hono
 
@@ -111,7 +112,7 @@ post.post('/', c => c.text('Create Book')); // POST /post
 export default post;
 ```
 
-Open [Postman](https://www.postman.com/) and navigate to http://localhost:4200/post/2 to test it
+Open [Postman](https://www.postman.com/) and navigate to `http://localhost:4200/post/2` to test it
 
 ![Hono backend Postman](./images/hono-backend-postman.png)
 
@@ -179,7 +180,7 @@ post.get('/:id', c => {
 });
 ```
 
-Open http://localhost:4200/post/2 in your browser to test it.
+Open `http://localhost:4200/post/2` in your browser to test it.
 
 This approach is similar to SSR in **Next.js** or **Remix.js**, but it's much lighter. Hono also
 supports other features like asynchronous components, **Suspense**, and more.

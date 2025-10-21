@@ -1,28 +1,7 @@
 ---
-// @ts-ignore
-import { escapeHTML } from 'astro/runtime/server/index.js';
+import { codeToHtml } from 'shiki';
 
-export interface Props {
-  code?: string;
-  language?: string;
-  file?: string;
-  highlights?: string;
-  class?: string;
-  'data-language'?: string;
-  children?: any;
-}
-
-const {
-  code: propCode,
-  language: propLanguage,
-  file,
-  highlights,
-  class: className,
-  'data-language': dataLanguage,
-  children,
-  ...props
-} = Astro.props;
-
+// Helper to decode HTML entities from the slot
 function simpleDecodeHtml(text: string): string {
   if (!text) return '';
   return text
@@ -33,52 +12,36 @@ function simpleDecodeHtml(text: string): string {
     .replace(/&amp;/g, '&');
 }
 
-function parseHighlightRanges(raw: string | undefined) {
-  if (!raw) return [];
-  return raw
-    .split(',')
-    .flatMap(range =>
-      range.includes('-') ?
-        Array.from(
-          { length: Number(range.split('-')[1]) - Number(range.split('-')[0]) + 1 },
-          (_, i) => Number(range.split('-')[0]) + i
-        )
-      : [Number(range)]
-    );
+export interface Props {
+  'data-language'?: string;
+  file?: string;
 }
 
-let finalCode = '';
-let language = propLanguage || dataLanguage || 'html';
+const { 'data-language': language = 'plaintext', file } = Astro.props;
 
-if (propCode) {
-  finalCode = propCode;
-} else if (children && typeof children === 'string') {
-  finalCode = children.trim();
-} else {
-  try {
-    const slotContent = await Astro.slots.render('default');
-    if (slotContent) {
-      finalCode = slotContent.replace(/<[^>]*>/g, '').trim();
-    }
-  } catch {
-    finalCode = '';
-  }
+// The raw code is the content passed to the default slot by MDX
+let rawCode = '';
+try {
+  const slotContent = await Astro.slots.render('default');
+  // We need to strip the outer <code>...</code> tags and decode HTML entities
+  rawCode = simpleDecodeHtml(slotContent.replace(/<[^>]*>/g, '')).trim();
+} catch {
+  rawCode = 'Error rendering code from slot.';
 }
 
-if (!finalCode || finalCode.trim() === '') {
-  finalCode = `function example() {
-  return "Hello World";
-}`;
-}
-
-finalCode = simpleDecodeHtml(finalCode);
-finalCode = finalCode.replace(/^\s*\n+/g, '');
-
-const codeLines = finalCode.split('\n');
-const highlightedLines = parseHighlightRanges(highlights);
+// Highlight the code to HTML using the correct language from `data-language`
+const highlightedHtml = await codeToHtml(rawCode, {
+  lang: language,
+  themes: {
+    light: 'github-light',
+    dark: 'vitesse-dark',
+  },
+});
 ---
 
-<div class='code-block'>
+<div
+  class='code-block'
+  data-raw-code={rawCode}>
   <div class='code-header'>
     <div class='language-badge'>{language}</div>
     {file && <div class='file-name'>{file}</div>}
@@ -88,133 +51,50 @@ const highlightedLines = parseHighlightRanges(highlights);
       <span class='copied-text'>Copied!</span>
     </button>
   </div>
-
-  <div class='code-content'>
-    <div class='line-numbers'>
-      {codeLines.map((_, index) => <span class='line-number'>{index + 1}</span>)}
-    </div>
-    <pre
-      class='code-pre'>
-      <code class="simple-code" data-lang={language} data-raw={finalCode}>{finalCode}</code>
-    </pre>
+  <div
+    class='code-content'
+    set:html={highlightedHtml}>
+    <!-- Shiki-highlighted HTML will be injected here -->
   </div>
 </div>
 
 <script>
-  function simpleHighlight(code, lang) {
-    if (!code) return 'No code';
-    let result = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-    if (['javascript', 'js', 'ts', 'typescript', 'jsx', 'tsx'].includes(lang)) {
-      const tokens = [];
-
-      let match;
-      const commentRegex = /\/\/.*$/gm;
-      while ((match = commentRegex.exec(result)) !== null) {
-        tokens.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          color: '#6a9955',
-          style: 'font-style: italic;',
-        });
-      }
-
-      const stringRegex = /"[^"]*"/g;
-      while ((match = stringRegex.exec(result)) !== null) {
-        tokens.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          color: '#ce9178',
-          style: '',
-        });
-      }
-
-      const stringRegex2 = /'[^']*'/g;
-      while ((match = stringRegex2.exec(result)) !== null) {
-        tokens.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          color: '#ce9178',
-          style: '',
-        });
-      }
-
-      const keywordRegex =
-        /\b(function|return|const|let|var|import|export|from|default|async|await|if|else|class|new|this|true|false|null|undefined)\b/g;
-
-      while ((match = keywordRegex.exec(result)) !== null) {
-        tokens.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          color: '#569cd6',
-          style: 'font-weight: 600;',
-        });
-      }
-
-      tokens.sort((a, b) => a.start - b.start);
-      const validTokens = [];
-      let lastEnd = 0;
-      tokens.forEach(token => {
-        if (token.start >= lastEnd) {
-          validTokens.push(token);
-          lastEnd = token.end;
-        }
-      });
-
-      validTokens.reverse().forEach(token => {
-        const before = result.substring(0, token.start);
-        const content = result.substring(token.start, token.end);
-        const after = result.substring(token.end);
-        result =
-          before + `<span style="color: ${token.color}; ${token.style}">${content}</span>` + after;
-      });
-    }
-
-    return result;
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
-    const codeElements = document.querySelectorAll('.simple-code');
+    const codeBlocks = document.querySelectorAll('.code-block');
 
-    codeElements.forEach(element => {
-      const rawCode = element.getAttribute('data-raw');
-      const lang = element.getAttribute('data-lang');
+    codeBlocks.forEach(codeBlock => {
+      const copyButton = codeBlock.querySelector('.copy-button');
 
-      if (rawCode && rawCode.trim()) {
-        const highlighted = simpleHighlight(rawCode, lang);
-        element.innerHTML = highlighted;
+      if (copyButton) {
+        copyButton.addEventListener('click', async () => {
+          const rawCode = (codeBlock as HTMLElement).dataset.rawCode;
+          if (rawCode) {
+            try {
+              await navigator.clipboard.writeText(rawCode);
+              copyButton.classList.add('copied');
+              setTimeout(() => {
+                copyButton.classList.remove('copied');
+              }, 2000);
+            } catch (err) {
+              console.error('Failed to copy text: ', err);
+            }
+          }
+        });
       }
-    });
-    const copyButtons = document.querySelectorAll('.copy-button');
-    copyButtons.forEach(button => {
-      button.addEventListener('click', async () => {
-        const codeBlock = button.closest('.code-block');
-        const codeElement = codeBlock.querySelector('.simple-code');
-        const rawCode = codeElement.getAttribute('data-raw');
-
-        try {
-          await navigator.clipboard.writeText(rawCode);
-          button.classList.add('copied');
-          setTimeout(() => button.classList.remove('copied'), 1000);
-        } catch (err) {
-          console.error('Copy failed:', err);
-        }
-      });
     });
   });
 </script>
 
 <style>
   .code-block {
-    background-color: #0f0f0f;
-    color: #ffffff;
     border-radius: var(--radius);
     margin: 1rem 0;
     overflow: hidden;
     max-width: 100%;
     border: 1px solid #333;
-    font-family: var(--font-mono);
+    position: relative;
   }
+
   @media (min-width: 1200px) {
     .code-block {
       margin: 2rem 0;
@@ -225,9 +105,9 @@ const highlightedLines = parseHighlightRanges(highlights);
   .code-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0.5rem 1rem;
-    background-color: #1a1a1a;
+    background-color: var(--shiki-bg);
+    color: var(--shiki-fg);
     border-bottom: 1px solid #333;
   }
 
@@ -245,6 +125,7 @@ const highlightedLines = parseHighlightRanges(highlights);
     color: #888;
     font-size: 0.875rem;
     font-style: italic;
+    margin-left: 1rem;
   }
 
   .spacer {
@@ -269,64 +150,46 @@ const highlightedLines = parseHighlightRanges(highlights);
     color: white;
   }
 
-  .copy-button .copied-text {
-    display: none;
-  }
+  /* --- Start: Copy Button Text Logic --- */
 
-  .copy-button.copied {
-    background-color: #10b981;
-  }
-
-  .copy-button.copied .copy-text {
-    display: none;
-  }
-
-  .copy-button.copied .copied-text {
+  /* By default, show the original text and hide the copied text */
+  :global(.copy-button .copy-text) {
     display: inline;
   }
+  :global(.copy-button .copied-text) {
+    display: none;
+  }
+
+  /* When .copied is added, hide the original text and show the copied text */
+  :global(.copy-button.copied .copy-text) {
+    display: none;
+  }
+  :global(.copy-button.copied .copied-text) {
+    display: inline;
+  }
+
+  /* --- End: Copy Button Text Logic --- */
 
   .code-content {
     overflow-x: auto;
     max-height: 600px;
     overflow-y: auto;
-    display: flex;
-    position: relative;
   }
 
-  .line-numbers {
-    display: flex;
-    flex-direction: column;
-    padding: 1.25rem 0.5rem 1rem 1rem;
-    background-color: transparent;
-    border-right: 1px solid #333;
-    user-select: none;
-  }
-
-  .line-number {
-    display: block;
-    width: 2.5rem;
-    text-align: right;
-    color: #666;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    font-family: inherit;
-  }
-
-  .code-pre {
+  .code-content :global(pre.shiki) {
     margin: 0;
-    padding: 0 1rem;
-    background-color: transparent;
+    padding: 1rem;
     font-size: 0.875rem;
     line-height: 1.5;
     flex: 1;
     overflow: visible;
   }
 
-  .simple-code {
-    background: none;
-    padding: 0;
-    font-family: inherit;
-    white-space: pre;
-    display: block;
+  /* This is the magic rule that swaps the colors in dark mode */
+  :global(.dark .shiki) {
+    background-color: var(--shiki-dark-bg) !important;
+  }
+  :global(.dark .shiki span) {
+    color: var(--shiki-dark) !important;
   }
 </style>

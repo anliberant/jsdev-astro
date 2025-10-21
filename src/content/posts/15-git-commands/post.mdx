@@ -20,7 +20,9 @@ Let’s dive in.
 
 Creates a new Git repository in the current folder.
 
-<div className='code-cmd'>git init</div>
+```bash
+git init
+```
 
 This sets up Git tracking for your project. It creates a `.git` directory containing metadata about your repo, including commit history, branches, and remote settings.
 
@@ -28,13 +30,15 @@ This sets up Git tracking for your project. It creates a `.git` directory contai
 
 Creates a local copy of a remote repository.
 
-<div className='code-cmd'>git clone #repository-url</div>
+```bash
+git clone #repository-url
+```
 
 Example:
 
-<div className='code-cmd'>
-  git clone https://github.com/test/hello-world.git
-</div>
+```bash
+git clone https://github.com/test/hello-world.git
+```
 
 This copies all the files, history, and branches from the remote repo.
 
@@ -42,7 +46,9 @@ This copies all the files, history, and branches from the remote repo.
 
 Shows the current state of your working directory and staging area.
 
-<div className='code-cmd'>git status</div>
+```bash
+git status
+```
 
 You’ll see:
 
@@ -56,9 +62,13 @@ This is one of the most frequently used Git commands.
 
 Adds files to the staging area so they’re ready to be committed.
 
-<div className='code-cmd'>git add #file</div>
+```bash
+git add #file
+```
 
-<div className='code-cmd'>git add .</div>
+```bash
+git add .
+```
 
 - `git add #file` adds a specific file.
 - `git add .` adds all changes in the current directory and subdirectories.
@@ -69,7 +79,9 @@ Tip: Use `git status` before running this to see which files you’re staging.
 
 Saves a snapshot of your staged changes with a message.
 
-<div className='code-cmd'>git commit -m "@feature auth added"</div>
+```bash
+git commit -m "@feature auth added"
+```
 
 Each commit should describe why the changes were made—not just what was changed.
 
@@ -79,9 +91,13 @@ Use clear, concise messages that help teammates (and your future self) understan
 
 Shows differences between your working directory and the staging area or between commits.
 
-<div className='code-cmd'>git diff # changes not yet staged</div>
+```bash
+git diff # changes not yet staged
+```
 
-<div className='code-cmd'>git diff --staged # staged but not yet committed</div>
+```bash
+git diff --staged # staged but not yet committed
+```
 
 This helps you preview what’s going to be committed or what changed between commits.
 
@@ -89,7 +105,9 @@ This helps you preview what’s going to be committed or what changed between co
 
 Displays the commit history.
 
-<div className='code-cmd'>git log</div>
+```bash
+git log
+```
 
 You’ll see:
 
@@ -100,7 +118,9 @@ You’ll see:
 
 To simplify the view:
 
-<div className='code-cmd'>git log --oneline --graph --decorate</div>
+```bash
+git log --oneline --graph --decorate
+```
 
 This gives a compact visual history with branches and tags.
 
@@ -110,15 +130,21 @@ Resets your staging area or moves HEAD to a different commit.
 
 Undo staged changes:
 
-<div className='code-cmd'>git reset #file</div>
+```bash
+git reset #file
+```
 
 Undo a commit (but keep your changes):
 
-<div className='code-cmd'>git reset --soft HEAD~1</div>
+```bash
+git reset --soft HEAD~1
+```
 
 Undo a commit and remove changes:
 
-<div className='code-cmd'>git reset --hard HEAD~1</div>
+```bash
+git reset --hard HEAD~1
+```
 
 ⚠️ Be careful with `--hard` — it deletes your changes.
 
@@ -128,17 +154,25 @@ Switches branches or restores files.
 
 Switch to a branch:
 
-<div className='code-cmd'>git checkout main</div>
+```bash
+git checkout main
+```
 
 Restore a file to the last committed version:
 
-<div className='code-cmd'>git checkout -- index.html</div>
+```bash
+git checkout -- index.html
+```
 
 Since Git 2.23, the safer alternative is to use:
 
-<div className='code-cmd'>git restore #file</div>
+```bash
+git restore #file
+```
 
-<div className='code-cmd'>git switch #branch</div>
+```bash
+git switch #branch
+```
 
 ## 10. `git branch`
 
@@ -146,23 +180,33 @@ Lists, creates, or deletes branches.
 
 List branches:
 
-<div className='code-cmd'>git branch</div>
+```bash
+git branch
+```
 
 Create a new branch:
 
-<div className='code-cmd'>git branch @feature/login-form</div>
+```bash
+git branch @feature/login-form
+```
 
 Delete a branch:
 
-<div className='code-cmd'>git branch -d old-feature</div>
+```bash
+git branch -d old-feature
+```
 
 ## 11. `git merge`
 
 Combines changes from one branch into another.
 
-<div className='code-cmd'>git checkout main</div>
+```
+git checkout main
+```
 
-<div className='code-cmd'>git merge @feature/login-form</div>
+```bash
+git merge @feature/login-form
+```
 
 This merges the feature branch into the `main` branch.
 
@@ -172,13 +216,19 @@ If there are conflicting changes in the same files, Git will prompt you to resol
 
 Downloads changes from a remote repository and merges them into your local branch.
 
-<div className='code-cmd'>git pull origin main</div>
+```bash
+git pull origin main
+```
 
 This is equivalent to:
 
-<div className='code-cmd'>git fetch</div>
+```bash
+git fetch
+```
 
-<div className='code-cmd'>git merge</div>
+```bash
+git merge
+```
 
 Use `git pull --rebase` to avoid unnecessary merge commits.
 
@@ -186,7 +236,9 @@ Use `git pull --rebase` to avoid unnecessary merge commits.
 
 Uploads your local commits to a remote repository.
 
-<div className='code-cmd'>git push origin main</div>
+```bash
+git push origin main
+```
 
 Use this to share your work with others.
 
@@ -194,17 +246,23 @@ Use this to share your work with others.
 
 Temporarily saves changes that you don’t want to commit yet.
 
-<div className='code-cmd'>git stash</div>
+```bash
+git stash
+```
 
 This clears your working directory so you can switch branches cleanly.
 
 Restore stashed changes:
 
-<div className='code-cmd'>git stash pop</div>
+```bash
+git stash pop
+```
 
 View all stashes:
 
-<div className='code-cmd'>git stash list</div>
+```bash
+git stash list
+```
 
 ## 15. `git remote`
 
@@ -212,17 +270,21 @@ Manages remote repositories.
 
 List remotes:
 
-<div className='code-cmd'>git remote -v</div>
+```bash
+git remote -v
+```
 
 Add a new remote:
 
-<div className='code-cmd'>
-  git remote add origin https://github.com/user/repo.git
-</div>
+```bash
+git remote add origin https://github.com/user/repo.git
+```
 
 Rename a remote:
 
-<div className='code-cmd'>git remote rename origin upstream</div>
+```bash
+git remote rename origin upstream
+```
 
 ## Final Tips
 

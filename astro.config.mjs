@@ -1,27 +1,30 @@
-import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
-import sitemap from '@astrojs/sitemap';
 import netlify from '@astrojs/netlify';
+import sitemap from '@astrojs/sitemap';
+import { defineConfig } from 'astro/config';
+
 import { remarkReadingTime } from './src/shared/utils/remark-reading-time.mjs';
 
 export default defineConfig({
   site: 'https://jsdev.space',
   alias: {
-    '@': './src'
+    '@': './src',
   },
 
-  integrations: [
-    mdx(),
-    sitemap(),
-  ],
+  integrations: [mdx(), sitemap()],
   adapter: netlify(),
 
   markdown: {
     remarkPlugins: [remarkReadingTime],
     shikiConfig: {
-      theme: 'github-dark',
-      wrap: true
-    }
+      theme: 'dracula',
+      themes: {
+        light: 'github-light',
+        dark: 'dracula',
+      },
+      wrap: true,
+      syntaxHighlight: 'shiki',
+    },
   },
 
   build: {
@@ -47,24 +50,28 @@ export default defineConfig({
             'src/features/tools/html/table/lib/table-generator-controller.ts',
             'src/features/tools/html/iframe/lib/iframe-controller.ts',
             'src/features/tools/html/boilerplate/lib/generator-controller.ts',
-          ]
-        }
-      }
-    }
+          ],
+        },
+      },
+    },
   },
 
   vite: {
     build: {
       cssMinify: true,
       rollupOptions: {
-        external: (id) => {
+        external: id => {
           if (id === 'netlify-blobs') {
             return true;
           }
-          return id.includes('/tools/') && id.includes('/lib/') && id.includes('-controller');
+          return (
+            id.includes('/tools/') &&
+            id.includes('/lib/') &&
+            id.includes('-controller')
+          );
         },
         output: {
-          manualChunks: (id) => {
+          manualChunks: id => {
             if (id.includes('node_modules')) {
               return 'vendor';
             }
@@ -78,8 +85,8 @@ export default defineConfig({
               return 'ui';
             }
           },
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 });

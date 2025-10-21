@@ -8,33 +8,33 @@ export const siteConfig = {
   navigation: [
     {
       name: 'Howtos',
-      path: '/howto',
+      path: '/howto/',
     },
     {
       name: 'Snippets',
-      path: '/snippets',
+      path: '/snippets/',
     },
     {
       name: 'Tools',
-      path: '/tools',
+      path: '/tools/',
     },
     {
       name: 'Friday',
-      path: '/friday',
+      path: '/friday/',
     },
   ],
   footerLinks: [
     {
       name: 'Categories',
-      path: '/categories',
+      path: '/categories/',
     },
     {
       name: 'Tags',
-      path: '/tags',
+      path: '/tags/',
     },
     {
       name: 'Contact',
-      path: '/contact',
+      path: '/contact/',
     },
   ],
   social: {

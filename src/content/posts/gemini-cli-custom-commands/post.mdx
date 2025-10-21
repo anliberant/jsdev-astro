@@ -16,11 +16,10 @@ desc: 'Learn how to install Gemini CLI, create global and project-specific custo
 
 Gemini CLI is a command-line interface from Google that lets developers interact directly with Gemini models.
 By default, each project supports only a single `gemini.md` system prompt. If you work across multiple scenarios,
-you end up rewriting that prompt again and again — slow and error‑prone.
+you end up rewriting that prompt again and again — slow and error-prone.
 
 💡 **Tip:** If you want Gemini CLI to better understand your project’s tech stack, goals, and coding style,  
 check out this snippet: [GEMINI.md Example for Project Context](https://jsdev.space/snippets/gemini-md-example/).
-
 
 Good news: Gemini CLI includes a powerful feature called **custom commands**.
 With custom commands you can save reusable shortcuts for your most common prompts, scope them globally or per project,
@@ -31,12 +30,12 @@ This tutorial covers:
 1. Installing Gemini CLI  
 2. Creating your first custom command  
 3. Global vs. project scopes and command naming  
-4. Shell‑powered prompts with `!{...}`  
+4. Shell-powered prompts with `!{...}`  
 5. Best practices and examples
 
 ---
 
-## 1) Install Gemini CLI
+## 1 Install Gemini CLI
 
 > You’ll need Node.js (LTS recommended).
 
@@ -71,9 +70,9 @@ Without logging in, most commands — including custom ones — will fail.
 
 ---
 
-## 2) What Are Custom Commands?
+## 2 What Are Custom Commands?
 
-Gemini CLI ships with built‑ins like:
+Gemini CLI ships with built-ins like:
 ```text
 /help
 /clear
@@ -84,14 +83,14 @@ Gemini CLI ships with built‑ins like:
 
 It also supports **custom commands** defined in `.toml` files. These commands:
 
-- Can be **global** (usable in every project) or **project‑specific**
+- Can be **global** (usable in every project) or **project-specific**
 - Allow **namespaces** like `/git:commit` using folder structure
-- Support placeholders like `{{args}}` for free‑form user input
+- Support placeholders like `{{args}}` for free-form user input
 - Can run **shell commands** and inject their output into your prompt
 
 ---
 
-## 3) File Locations & Naming Rules
+## 3 File Locations & Naming Rules
 
 | Scope   | Folder location                  | Example → Command |
 |---------|----------------------------------|-------------------|
@@ -107,14 +106,16 @@ It also supports **custom commands** defined in `.toml` files. These commands:
 
 ---
 
-## 4) Create Your First Command (3 Steps)
+## 4 Create Your First Command (3 Steps)
 
 **Step 1 — Create the directory (global):**
+
 ```bash
 mkdir -p ~/.gemini/commands
 ```
 
 **Step 2 — Add a TOML file (example):**
+
 `~/.gemini/commands/prdsplitter.toml`
 ```toml
 description = "Requirement breakdown assistant"
@@ -124,22 +125,24 @@ prompt = "Please break down this requirement: {{args}}"
 ![Gemini commands](./images/gemini-commands.png "Gemini commands")
 
 **Step 3 — Use your new command:**
-```text
+
+```bash
 /prdsplitter The system should allow login via Google and GitHub
 ```
 
 `{{args}}` expands to everything typed after the command name.
 
 ![Gemeni prdsplitter command](./images/gemini-prdsplitter.png "Gemini prdsplitter")
+
 ---
 
-## 5) Ultimate Move: Shell‑Powered Commands
+## 5 Ultimate Move: Shell-Powered Commands
 
 Make prompts **dynamic** by executing shell commands with `!{...}` and injecting their output.
 
 **Example — Generate a commit message from staged changes**  
 _File: `<project>/.gemini/commands/git/commit.toml` → Command: `/git:commit`_
-```toml
+````toml
 description = "Generates a Git commit message based on staged changes."
 
 prompt = """
@@ -149,7 +152,7 @@ Please generate a Conventional Commit message based on the following staged chan
 !{git diff --staged}
 ```
 """
-```
+````
 
 **How it works:**
 1. When you run `/git:commit`, the CLI executes `git diff --staged`.
@@ -165,7 +168,7 @@ Please generate a Conventional Commit message based on the following staged chan
 
 ---
 
-## 6) Best Practices
+## 6 Best Practices
 
 - Use **namespaces** for clarity: `/git:commit`, `/api:review`, `/docs:summarize`.
 - Keep **project commands** in version control so your team shares them.
@@ -175,9 +178,9 @@ Please generate a Conventional Commit message based on the following staged chan
 
 ---
 
-## 7) Handy Examples
+## 7 Handy Examples
 
-**Summarize the project README**
+**Summarize the project README**  
 _File: `docs/summarize.toml` → `/docs:summarize`_
 ```toml
 description = "Summarize documentation in plain English."
@@ -188,7 +191,7 @@ Summarize the following documentation in simple terms:
 """
 ```
 
-**API review prompt**
+**API review prompt**  
 _File: `api/check.toml` → `/api:check`_
 ```toml
 description = "Review API spec for completeness."
@@ -201,8 +204,8 @@ prompt = "Please review this API spec and list missing details: {{args}}"
 
 Custom commands in Gemini CLI let you:
 - Reuse your best prompts across projects
-- Inject real‑time shell output for context
+- Inject real-time shell output for context
 - Keep prompts organized with namespaces
-- Share project‑specific commands via version control
+- Share project-specific commands via version control
 
-Use them to speed up tasks like commit message generation, API reviews, and documentation summaries — without copy‑pasting prompts.
+Use them to speed up tasks like commit message generation, API reviews, and documentation summaries — without copy-pasting prompts.

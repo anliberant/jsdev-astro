@@ -130,13 +130,6 @@ img {
   }
 }
 
-code,
-pre {
-  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-  font-display: swap;
-  background-color: var(--code-hover);
-}
-
 td code,
 td pre {
   background-color: transparent;

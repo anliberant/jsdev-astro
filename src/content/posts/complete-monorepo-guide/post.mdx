@@ -12,85 +12,79 @@ tags: ['monorepo', 'pnpm']
 desc: Build scalable monorepos with pnpm workspace and changesets. This guide covers best practices, version control, and practical code examples for JavaScript projects.
 ---
 
-We've previously covered [creating monorepos](https://jsdev.space/mastering-monorepos/) with various package managers, but now we'll dive deeper and focus specifically on using pnpm for our implementation.
+We’ve previously covered [creating monorepos](https://jsdev.space/mastering-monorepos/) with various package managers. In this guide we go deeper with a pnpm‑first approach.
 
 ## Understanding Monorepos
 
-A monorepo (monolithic repository) is a software development strategy where multiple related projects are stored in a single repository. This approach offers significant advantages for teams managing multiple packages, applications, or services that share common dependencies or business logic.
+A **monorepo** stores multiple related projects in a single repository. This works well when apps share dependencies, utilities, or release cadence.
 
 ### Benefits of Monorepos
 
-- **Unified tooling and configuration** across all projects
-- **Simplified dependency management** and version synchronization
-- **Enhanced code sharing** and reusability
-- **Streamlined CI/CD processes** with atomic commits
-- **Better collaboration** with unified code standards
-- **Easier refactoring** across multiple packages
+- **Unified tooling** and configuration  
+- **Simplified dependencies** and version sync  
+- **Code sharing** and reuse  
+- **Streamlined CI/CD** with atomic commits  
+- **Better collaboration** with shared standards  
+- **Easier refactoring** across packages  
 
-### Common Monorepo Use Cases
+### Common Use Cases
 
-- Component libraries (Design systems)
-- Microservices architectures
-- Full-stack applications with shared utilities
-- Plugin ecosystems
-- Multi-platform applications
+- Component libraries (design systems)  
+- Microservices  
+- Full‑stack apps with shared utils  
+- Plugin ecosystems  
+- Multi‑platform apps  
 
 ## Why Choose pnpm Over Other Tools
 
 ### pnpm vs npm/yarn
 
-pnpm (performant npm) is a fast, disk space-efficient package manager that excels in monorepo scenarios:
+**Installation speed (illustrative):**
 
-```bash
-# Installation speed comparison
-npm install     # ~45s
-yarn install    # ~35s
-pnpm install    # ~22s
+| Tool | Install |
+|---|---|
+| npm | ~45s |
+| yarn | ~35s |
+| pnpm | ~22s |
 
-# Disk space usage
-npm: 130MB per project
-yarn: 125MB per project
-pnpm: 85MB total (shared across projects)
-```
+**Disk space usage (illustrative):**
+
+| Tool | Space |
+|---|---|
+| npm | ~130 MB per project |
+| yarn | ~125 MB per project |
+| pnpm | ~85 MB total (shared) |
 
 ### Key Advantages
 
-1. **Disk Space Efficiency**: Uses content-addressable storage
-2. **Built-in Workspace Support**: No additional tools required
-3. **Strict Node Modules**: Prevents phantom dependencies
-4. **Superior Performance**: Parallel installation and linking
-5. **Active Maintenance**: Regular updates and community support
+- **Disk Space Efficiency:** content‑addressable storage with symlinks.  
+- **Built‑in Workspaces:** no extra tool needed for monorepos.  
+- **Strict node_modules:** prevents phantom dependencies.  
+- **Performance:** parallel install/link improves speed.  
+- **Active Maintenance:** regular updates and strong community.  
 
 ### Why Not Lerna?
 
-- **Maintenance Status**: Lerna is no longer actively maintained
-- **Performance**: pnpm offers better installation speeds
-- **Native Support**: pnpm has built-in monorepo capabilities
-- **Modern Architecture**: Content-addressable storage system
+- Maintenance uncertainty  
+- Slower installs vs pnpm  
+- pnpm has native monorepo support  
+- Modern storage and linking model  
 
 ## Project Setup and Configuration
 
 ### Prerequisites
 
 ```bash
-# Check Node.js version (minimum v14.19.0 for pnpm v7+)
 node --version
-
-# Install pnpm globally
 npm install -g pnpm
-
-# Verify installation
 pnpm --version
 ```
 
-### Initial Project Structure
+### Initial Structure
 
 ```bash
-# Create project directory
 mkdir awesome-monorepo
 cd awesome-monorepo
-
-# Initialize root package.json
 pnpm init
 ```
 
@@ -156,11 +150,8 @@ awesome-monorepo/
 ### Package 1: UI Components Library
 
 ```bash
-# Create packages directory
 mkdir -p packages/ui-components
 cd packages/ui-components
-
-# Initialize package
 pnpm init
 ```
 
@@ -193,18 +184,9 @@ pnpm init
 }
 ```
 
-**packages/ui-components/src/index.ts:**
-
-```typescript
-export { Button } from './Button';
-export { Input } from './Input';
-export { Modal } from './Modal';
-export * from './types';
-```
-
 **packages/ui-components/src/Button/index.tsx:**
 
-```typescript
+```tsx
 import React from 'react';
 import { ButtonProps } from '../types';
 
@@ -216,21 +198,21 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   ...props
 }) => {
-  const baseClasses = 'px-4 py-2 rounded font-medium transition-colors';
-  const variantClasses = {
+  const base = 'px-4 py-2 rounded font-medium transition-colors';
+  const variants = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700',
     secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
     danger: 'bg-red-600 text-white hover:bg-red-700'
-  };
-  const sizeClasses = {
+  } as const;
+  const sizes = {
     small: 'px-2 py-1 text-sm',
     medium: 'px-4 py-2',
     large: 'px-6 py-3 text-lg'
-  };
+  } as const;
 
   return (
     <button
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]}`}
+      className={`${base} ${variants[variant]} ${sizes[size]}`}
       onClick={onClick}
       disabled={disabled}
       {...props}
@@ -243,151 +225,41 @@ export const Button: React.FC<ButtonProps> = ({
 
 ### Package 2: Utility Functions
 
-```bash
-mkdir -p packages/utils
-cd packages/utils
-pnpm init
-```
+```ts
+// String utils
+export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-**packages/utils/package.json:**
+export const slugify = (s: string) =>
+  s.toLowerCase()
+   .replace(/[^\w\s-]/g, '')
+   .replace(/[\s_-]+/g, '-')
+   .replace(/^-+|-+$/g, '');
 
-```json
-{
-  "name": "@awesome/utils",
-  "version": "1.0.0",
-  "description": "Common utility functions",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
-  "files": ["dist"],
-  "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "jest"
-  },
-  "devDependencies": {
-    "tsup": "^6.5.0",
-    "typescript": "^4.9.4"
-  }
-}
-```
-
-**packages/utils/src/index.ts:**
-
-```typescript
-// String utilities
-export const capitalize = (str: string): string =>
-  str.charAt(0).toUpperCase() + str.slice(1);
-
-export const slugify = (str: string): string =>
-  str
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-// Array utilities
-export const chunk = <T>(array: T[], size: number): T[][] => {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
-  }
-  return chunks;
+// Array utils
+export const chunk = <T,>(a: T[], size: number): T[][] => {
+  const out: T[][] = [];
+  for (let i = 0; i < a.length; i += size) out.push(a.slice(i, i + size));
+  return out;
 };
 
-export const unique = <T>(array: T[]): T[] => [...new Set(array)];
+export const unique = <T,>(a: T[]) => [...new Set(a)];
 
-// Object utilities
-export const pick = <T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
-  const result = {} as Pick<T, K>;
-  keys.forEach(key => {
-    if (key in obj) {
-      result[key] = obj[key];
-    }
-  });
-  return result;
-};
-
-// Date utilities
-export const formatDate = (
-  date: Date,
-  format: string = 'YYYY-MM-DD'
-): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return format
-    .replace('YYYY', String(year))
-    .replace('MM', month)
-    .replace('DD', day);
-};
-
-// Validation utilities
-export const isEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-export const isURL = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
+// Basic validators
+export const isEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+export const isURL = (u: string) => { try { new URL(u); return true; } catch { return false; } };
 ```
 
 ### Package 3: API Client
 
-```bash
-mkdir -p packages/api-client
-cd packages/api-client
-pnpm init
-```
-
-**packages/api-client/package.json:**
-
-```json
-{
-  "name": "@awesome/api-client",
-  "version": "1.0.0",
-  "description": "HTTP API client with interceptors",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
-  "files": ["dist"],
-  "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "jest"
-  },
-  "dependencies": {
-    "@awesome/utils": "workspace:*"
-  },
-  "devDependencies": {
-    "tsup": "^6.5.0",
-    "typescript": "^4.9.4"
-  }
-}
-```
-
-**packages/api-client/src/index.ts:**
-
-```typescript
-import { isURL } from '@awesome/utils';
-
-import { isURL } from '@awesome/utils';
-
+```ts
 export interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
   timeout?: number;
 }
 
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   data: T;
   status: number;
   statusText: string;
@@ -395,128 +267,52 @@ export interface APIResponse<T = any> {
 }
 
 export class APIClient {
-  private baseURL: string;
-  private defaultHeaders: Record<string, string>;
-  private interceptors: {
-    request: ((config: RequestConfig) => RequestConfig)[];
-    response: ((response: APIResponse) => APIResponse)[];
-  };
-
-  constructor(baseURL: string) {
-    if (!isURL(baseURL)) {
-      throw new Error('Invalid base URL provided');
-    }
-
+  constructor(private baseURL: string) {
+    if (!/^https?:\/\//.test(baseURL)) throw new Error('Invalid base URL');
     this.baseURL = baseURL.replace(/\/$/, '');
-    this.defaultHeaders = {
-      'Content-Type': 'application/json',
-    };
-    this.interceptors = {
-      request: [],
-      response: [],
-    };
   }
 
-  // Add request interceptor
-  addRequestInterceptor(interceptor: (config: RequestConfig) => RequestConfig) {
-    this.interceptors.request.push(interceptor);
-  }
+  private defaults: Record<string, string> = { 'Content-Type': 'application/json' };
+  private req: Array<(c: RequestConfig) => RequestConfig> = [];
+  private res: Array<(r: APIResponse) => APIResponse> = [];
 
-  // Add response interceptor
-  addResponseInterceptor(interceptor: (response: APIResponse) => APIResponse) {
-    this.interceptors.response.push(interceptor);
-  }
+  addRequestInterceptor(i: (c: RequestConfig) => RequestConfig) { this.req.push(i); }
+  addResponseInterceptor(i: (r: APIResponse) => APIResponse) { this.res.push(i); }
 
-  // Set default headers
-  setDefaultHeaders(headers: Record<string, string>) {
-    this.defaultHeaders = { ...this.defaultHeaders, ...headers };
-  }
-
-  // Generic request method
-  async request<T = any>(
-    endpoint: string,
-    config: RequestConfig = {}
-  ): Promise<APIResponse<T>> {
+  async request<T = unknown>(endpoint: string, cfg: RequestConfig = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    let final = this.req.reduce((c, fn) => fn(c), { ...cfg });
 
-    // Apply request interceptors
-    let finalConfig = { ...config };
-    this.interceptors.request.forEach(interceptor => {
-      finalConfig = interceptor(finalConfig);
-    });
-
-    const requestOptions: RequestInit = {
-      method: finalConfig.method || 'GET',
-      headers: {
-        ...this.defaultHeaders,
-        ...finalConfig.headers,
-      },
+    const init: RequestInit = {
+      method: final.method || 'GET',
+      headers: { ...this.defaults, ...final.headers }
     };
-
-    if (finalConfig.body && finalConfig.method !== 'GET') {
-      requestOptions.body = JSON.stringify(finalConfig.body);
-    }
+    if (final.body && final.method !== 'GET') init.body = JSON.stringify(final.body);
 
     const controller = new AbortController();
-    const timeout = finalConfig.timeout || 30000;
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const to = setTimeout(() => controller.abort(), final.timeout ?? 30000);
 
     try {
-      const response = await fetch(url, {
-        ...requestOptions,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      const responseData = await response.json();
-
-      let apiResponse: APIResponse<T> = {
-        data: responseData,
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
+      const rsp = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(to);
+      const data = await rsp.json().catch(() => null);
+      let out: APIResponse<T> = {
+        data,
+        status: rsp.status,
+        statusText: rsp.statusText,
+        headers: Object.fromEntries(rsp.headers.entries())
       };
-
-      // Apply response interceptors
-      this.interceptors.response.forEach(interceptor => {
-        apiResponse = interceptor(apiResponse);
-      });
-
-      return apiResponse;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
+      out = this.res.reduce((r, fn) => fn(r), out);
+      return out;
+    } finally {
+      clearTimeout(to);
     }
   }
 
-  // Convenience methods
-  get<T = any>(endpoint: string, config?: Omit<RequestConfig, 'method'>) {
-    return this.request<T>(endpoint, { ...config, method: 'GET' });
-  }
-
-  post<T = any>(
-    endpoint: string,
-    data?: any,
-    config?: Omit<RequestConfig, 'method' | 'body'>
-  ) {
-    return this.request<T>(endpoint, { ...config, method: 'POST', body: data });
-  }
-
-  put<T = any>(
-    endpoint: string,
-    data?: any,
-    config?: Omit<RequestConfig, 'method' | 'body'>
-  ) {
-    return this.request<T>(endpoint, { ...config, method: 'PUT', body: data });
-  }
-
-  delete<T = any>(endpoint: string, config?: Omit<RequestConfig, 'method'>) {
-    return this.request<T>(endpoint, { ...config, method: 'DELETE' });
-  }
+  get<T = unknown>(e: string, c?: Omit<RequestConfig, 'method'>) { return this.request<T>(e, { ...c, method: 'GET' }); }
+  post<T = unknown>(e: string, b?: unknown, c?: Omit<RequestConfig, 'method' | 'body'>) { return this.request<T>(e, { ...c, method: 'POST', body: b }); }
 }
 
-// Export a factory function
 export const createAPIClient = (baseURL: string) => new APIClient(baseURL);
 ```
 
@@ -524,62 +320,37 @@ export const createAPIClient = (baseURL: string) => new APIClient(baseURL);
 
 ### Global Dependencies
 
-Install development dependencies that are shared across all packages:
-
 ```bash
-# Development dependencies for the workspace root
 pnpm add -Dw typescript @types/node eslint prettier jest
-
-# Production dependencies for workspace root
 pnpm add -w lodash axios
 ```
 
 ### Package-Specific Dependencies
 
-Install dependencies for specific packages using the `--filter` flag:
-
 ```bash
-# Add React to UI components package
 pnpm add react react-dom --filter @awesome/ui-components
-
-# Add development dependencies to a specific package
 pnpm add -D @types/jest --filter @awesome/utils
-
-# Add multiple packages to multiple filters
 pnpm add lodash --filter @awesome/utils --filter @awesome/api-client
 ```
 
 ### Advanced Filtering
 
 ```bash
-# Install to all packages matching pattern
 pnpm add dayjs --filter "@awesome/*"
-
-# Install to packages in specific directory
 pnpm add --filter "./packages/**" some-package
-
-# Exclude specific packages
 pnpm add --filter "!@awesome/ui-components" some-package
-
-# Install based on changed files (useful in CI)
 pnpm add --filter "...[HEAD~1]" some-package
 ```
 
 ## Inter-package Dependencies
 
-### Setting Up Workspace Dependencies
-
-Reference other packages in your monorepo using the `workspace:` protocol:
+Use the `workspace:` protocol to link local packages.
 
 ```bash
-# Add @awesome/utils as dependency to @awesome/api-client
-pnpm add @awesome/utils --filter @awesome/api-client
-
-# Use wildcard version for latest workspace version
 pnpm add @awesome/utils@workspace:* --filter @awesome/api-client
 ```
 
-This creates the following in `packages/api-client/package.json`:
+**Result:**
 
 ```json
 {
@@ -589,121 +360,23 @@ This creates the following in `packages/api-client/package.json`:
 }
 ```
 
-### Example: Using Workspace Dependencies
-
-**packages/web-app/src/components/UserForm.tsx:**
-
-```typescript
-import React, { useState } from 'react';
-import { Button, Input } from '@awesome/ui-components';
-import { isEmail, capitalize } from '@awesome/utils';
-import { createAPIClient } from '@awesome/api-client';
-
-const apiClient = createAPIClient('https://api.example.com');
-
-export const UserForm: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!isEmail(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setLoading(true);
-    try {
-      const response = await apiClient.post('/users', {
-        name: capitalize(formData.name),
-        email: formData.email.toLowerCase(),
-      });
-
-      console.log('User created:', response.data);
-      // Handle success
-    } catch (error) {
-      console.error('Error creating user:', error);
-      // Handle error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Input
-          type="text"
-          placeholder="Enter your name"
-          value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          error={errors.name}
-        />
-      </div>
-
-      <div>
-        <Input
-          type="email"
-          placeholder="Enter your email"
-          value={formData.email}
-          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-          error={errors.email}
-        />
-      </div>
-
-      <Button
-        type="submit"
-        disabled={loading}
-        variant="primary"
-        size="large"
-      >
-        {loading ? 'Creating...' : 'Create User'}
-      </Button>
-    </form>
-  );
-};
-```
-
 ## Build Configuration
 
-### Shared TypeScript Configuration
+### Shared TypeScript
 
-**tsconfig.base.json:**
+**tsconfig.base.json**
 
 ```json
 {
   "compilerOptions": {
     "target": "ES2020",
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
-    "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": false,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -713,30 +386,9 @@ export const UserForm: React.FC = () => {
 }
 ```
 
-**packages/ui-components/tsconfig.json:**
+### Rollup (ui-components)
 
-```json
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"],
-  "references": [{ "path": "../utils" }]
-}
-```
-
-### Rollup Configuration
-
-**packages/ui-components/rollup.config.js:**
-
-```javascript
-import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
-import typescript from '@rollup/plugin-typescript';
-import peerDepsExternal from 'rollup-plugin-peer-deps-external';
-
+```js
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
@@ -745,55 +397,32 @@ import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 export default {
   input: 'src/index.ts',
   output: [
-    {
-      file: 'dist/index.js',
-      format: 'cjs',
-      sourcemap: true,
-    },
-    {
-      file: 'dist/index.esm.js',
-      format: 'esm',
-      sourcemap: true,
-    },
+    { file: 'dist/index.js', format: 'cjs', sourcemap: true },
+    { file: 'dist/index.esm.js', format: 'esm', sourcemap: true }
   ],
   plugins: [
     peerDepsExternal(),
     resolve(),
     commonjs(),
-    typescript({
-      tsconfig: './tsconfig.json',
-      exclude: ['**/*.test.*', '**/*.stories.*'],
-    }),
+    typescript({ tsconfig: './tsconfig.json', exclude: ['**/*.test.*', '**/*.stories.*'] })
   ],
-  external: ['react', 'react-dom'],
+  external: ['react', 'react-dom']
 };
 ```
 
 ## Version Management with Changesets
 
-### Installation and Configuration
-
 ```bash
-# Install changesets
 pnpm add -Dw @changesets/cli
-
-# Initialize changesets
 pnpm changeset init
 ```
 
-### Changesets Configuration
-
-**.changeset/config.json:**
+**.changeset/config.json**
 
 ```json
 {
   "$schema": "https://unpkg.com/@changesets/config@2.3.0/schema.json",
-  "changelog": [
-    "@changesets/changelog-github",
-    {
-      "repo": "your-org/awesome-monorepo"
-    }
-  ],
+  "changelog": ["@changesets/changelog-github", { "repo": "your-org/awesome-monorepo" }],
   "commit": false,
   "fixed": [],
   "linked": [["@awesome/*"]],
@@ -804,116 +433,16 @@ pnpm changeset init
   "snapshot": {
     "useCalculatedVersion": true,
     "prereleaseTemplate": "{tag}-{datetime}"
-  },
-  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
-    "onlyUpdatePeerDependentsWhenOutOfRange": true,
-    "updateInternalDependents": "always"
-  }
-}
-```
-
-### Creating Changesets
-
-```bash
-# Create a changeset
-pnpm changeset
-
-# Example interactive flow:
-# ? Which packages would you like to include?
-#   ✓ @awesome/ui-components
-#   ✓ @awesome/utils
-#
-# ? Which packages should have a major bump?
-#   (none selected)
-#
-# ? Which packages should have a minor bump?
-#   ✓ @awesome/ui-components
-#
-# ? Which packages should have a patch bump?
-#   ✓ @awesome/utils
-#
-# ? Please enter a summary for this change:
-#   Add new Button variants and fix utility functions
-```
-
-This creates a changeset file:
-
-**.changeset/funny-lions-dance.md:**
-
-```markdown
----
-'@awesome/ui-components': minor
-'@awesome/utils': patch
----
-
-Add new Button variants and fix utility functions
-
-- Added danger and success variants to Button component
-- Fixed edge case in slugify utility function
-- Updated TypeScript types for better inference
-```
-
-### Version Bumping and Publishing
-
-```bash
-# Update package versions based on changesets
-pnpm version-packages
-
-# Build all packages
-pnpm build
-
-# Publish to npm
-pnpm changeset publish
-
-# Or publish with custom registry
-pnpm changeset publish --registry https://npm.your-company.com
-```
-
-### Pre-release Workflow
-
-```bash
-# Enter pre-release mode
-pnpm changeset pre enter beta
-
-# Create changesets as normal
-pnpm changeset
-pnpm version-packages  # Results in 1.0.0-beta.1
-
-# Continue development
-pnpm changeset
-pnpm version-packages  # Results in 1.0.0-beta.2
-
-# Exit pre-release mode
-pnpm changeset pre exit
-pnpm changeset
-pnpm version-packages  # Results in 1.0.0 (stable)
-```
-
-### Automated Scripts
-
-Add these scripts to your root `package.json`:
-
-```json
-{
-  "scripts": {
-    "changeset": "changeset",
-    "changeset:version": "changeset version && pnpm install --lockfile-only",
-    "changeset:publish": "changeset publish",
-    "changeset:snapshot": "changeset version --snapshot && changeset publish --tag snapshot",
-    "release": "pnpm build && pnpm changeset:publish",
-    "release:snapshot": "pnpm build && pnpm changeset:snapshot"
   }
 }
 ```
 
 ## CI/CD Integration
 
-### GitHub Actions Workflow
-
-**.github/workflows/ci.yml:**
+**GitHub Actions (CI)**
 
 ```yaml
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
@@ -921,891 +450,59 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  NODE_VERSION: '18'
-  PNPM_VERSION: '8.15.0'
-
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint code
-        run: pnpm lint
-
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build packages
-        run: pnpm build
-
-      - name: Check for build artifacts
-        run: |
-          for package in packages/*/dist; do
-            if [ ! -d "$package" ]; then
-              echo "Build artifact missing: $package"
-              exit 1
-            fi
-          done
-
-  release:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm build
-
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: pnpm changeset:publish
-          title: 'chore: release packages'
-          commit: 'chore: release packages'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Send Slack notification
-        if: steps.changesets.outputs.published == 'true'
-        uses: 8398a7/action-slack@v3
-        with:
-          status: success
-          text: 'New packages published! 🎉'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-```
-
-### Conditional Testing
-
-**.github/workflows/test-affected.yml:**
-
-```yaml
-name: Test Affected Packages
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  affected:
-    runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js and pnpm
-        # ... setup steps ...
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Test affected packages
-        run: |
-          # Get changed files
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
-
-          # Test packages with changes
-          if echo "$CHANGED_FILES" | grep -q "packages/ui-components/"; then
-            pnpm --filter @awesome/ui-components test
-          fi
-
-          if echo "$CHANGED_FILES" | grep -q "packages/utils/"; then
-            pnpm --filter @awesome/utils test
-          fi
-
-          if echo "$CHANGED_FILES" | grep -q "packages/api-client/"; then
-            pnpm --filter @awesome/api-client test
-          fi
-
-      - name: Build affected packages
-        run: |
-          # Similar logic for building only affected packages
-          # This saves CI time for large monorepos
+      - uses: pnpm/action-setup@v2
+        with: { version: '8.15.0' }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
 ```
 
 ## Best Practices and Troubleshooting
 
-### Package Naming Conventions
+### Naming
 
-```json
-{
-  "name": "@company/package-name",
-  "version": "1.0.0"
-}
-```
+- `@company/ui-*` for components  
+- `@company/util-*` for utilities  
+- `@company/api-*` for API packages  
 
-Use consistent naming patterns:
+### Dependencies
 
-- `@company/ui-*` for UI components
-- `@company/util-*` for utilities
-- `@company/api-*` for API-related packages
-- `@company/config-*` for configuration packages
+1. Prefer `workspace:*` for internal links.  
+2. Hoist common devDependencies.  
+3. Pin critical versions.  
+4. Use peer dependencies for shared libs like React.  
 
-### Dependency Management Best Practices
+## Advanced Patterns
 
-1. **Use workspace protocol for internal dependencies:**
-
-   ```json
-   {
-     "dependencies": {
-       "@awesome/utils": "workspace:*"
-     }
-   }
-   ```
-
-2. **Hoist common dependencies to workspace root:**
-
-   ```bash
-   # Install shared dev dependencies at root
-   pnpm add -Dw typescript eslint prettier jest
-
-   # Install shared production dependencies at root
-   pnpm add -w lodash date-fns
-   ```
-
-3. **Pin exact versions for critical dependencies:**
-
-   ```json
-   {
-     "dependencies": {
-       "react": "18.2.0",
-       "typescript": "4.9.4"
-     }
-   }
-   ```
-
-4. **Use peer dependencies for shared libraries:**
-   ```json
-   {
-     "peerDependencies": {
-       "react": ">=16.8.0",
-       "react-dom": ">=16.8.0"
-     }
-   }
-   ```
-
-### Code Organization Patterns
-
-#### Barrel Exports
-
-**packages/ui-components/src/index.ts:**
-
-```typescript
-// Component exports
-export { Button } from './Button';
-export { Input } from './Input';
-export { Modal } from './Modal';
-export { Card } from './Card';
-export { Table } from './Table';
-
-// Hook exports
-export { useToggle } from './hooks/useToggle';
-export { useLocalStorage } from './hooks/useLocalStorage';
-
-// Type exports
-export type { ButtonProps, InputProps, ModalProps } from './types';
-
-// Utility exports
-export { theme } from './theme';
-export { cn } from './utils/classNames';
-```
-
-#### Shared Configuration
-
-**tools/eslint-config/index.js:**
-
-```javascript
-module.exports = {
-  extends: ['eslint:recommended', '@typescript-eslint/recommended', 'prettier'],
-  parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
-  rules: {
-    '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'warn',
-    'prefer-const': 'error',
-    'no-var': 'error',
-  },
-  env: {
-    node: true,
-    browser: true,
-    es2020: true,
-  },
-};
-```
-
-**tools/tsconfig/base.json:**
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["DOM", "DOM.Iterable", "ES2020"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": false,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
-  }
-}
-```
-
-### Testing Strategies
-
-#### Shared Test Configuration
-
-**jest.config.base.js:**
-
-```javascript
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
-  testMatch: [
-    '**/__tests__/**/*.(ts|tsx)',
-    '**/*.(test|spec).(ts|tsx)'
-  ],
-  collectCoverageFrom: [
-    'src/**/*.(ts|tsx)',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.*'
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    }
-  },
-  moduleNameMapping: {
-    '^@/(.*)
-   : '<rootDir>/src/$1'
-  }
-};
-```
-
-#### Package-Specific Test Configuration
-
-**packages/ui-components/jest.config.js:**
-
-```javascript
-const baseConfig = require('../../jest.config.base');
-
-module.exports = {
-  ...baseConfig,
-  displayName: '@awesome/ui-components',
-  setupFilesAfterEnv: [
-    ...baseConfig.setupFilesAfterEnv,
-    '<rootDir>/test/ui-setup.ts',
-  ],
-};
-```
-
-#### Integration Tests
-
-**tests/integration/api-client.test.ts:**
-
-```typescript
-import { createAPIClient } from '@awesome/api-client';
-import { isEmail } from '@awesome/utils';
-
-import { createAPIClient } from '@awesome/api-client';
-import { isEmail } from '@awesome/utils';
-
-describe('API Client Integration', () => {
-  const mockServer = 'https://jsonplaceholder.typicode.com';
-  const client = createAPIClient(mockServer);
-
-  beforeAll(() => {
-    // Add auth interceptor
-    client.addRequestInterceptor(config => ({
-      ...config,
-      headers: {
-        ...config.headers,
-        Authorization: 'Bearer test-token',
-      },
-    }));
-
-    // Add logging interceptor
-    client.addResponseInterceptor(response => {
-      console.log(`API Response: ${response.status}`);
-      return response;
-    });
-  });
-
-  test('should fetch users successfully', async () => {
-    const response = await client.get('/users');
-
-    expect(response.status).toBe(200);
-    expect(Array.isArray(response.data)).toBe(true);
-    expect(response.data.length).toBeGreaterThan(0);
-
-    // Test integration with utils package
-    const firstUser = response.data[0];
-    expect(isEmail(firstUser.email)).toBe(true);
-  });
-
-  test('should handle POST requests', async () => {
-    const newUser = {
-      name: 'John Doe',
-      email: 'john@example.com',
-    };
-
-    const response = await client.post('/users', newUser);
-
-    expect(response.status).toBe(201);
-    expect(response.data.name).toBe(newUser.name);
-  });
-
-  test('should handle errors gracefully', async () => {
-    await expect(client.get('/nonexistent')).rejects.toThrow();
-  });
-});
-```
-
-### Performance Optimization
-
-#### Build Optimization
-
-**tools/build-scripts/optimize-build.js:**
-
-```javascript
-const { execSync } = require('child_process');
-const path = require('path');
-const fs = require('fs');
-
-class BuildOptimizer {
-  constructor(workspaceRoot) {
-    this.workspaceRoot = workspaceRoot;
-    this.packagesDir = path.join(workspaceRoot, 'packages');
-  }
-
-  // Get list of changed packages since last commit
-  getChangedPackages() {
-    try {
-      const changedFiles = execSync('git diff --name-only HEAD~1', {
-        encoding: 'utf8',
-      }).split('\n');
-
-      const changedPackages = new Set();
-
-      changedFiles.forEach(file => {
-        const match = file.match(/^packages\/([^\/]+)\//);
-        if (match) {
-          changedPackages.add(match[1]);
-        }
-      });
-
-      return Array.from(changedPackages);
-    } catch (error) {
-      console.log('Unable to detect changes, building all packages');
-      return this.getAllPackages();
-    }
-  }
-
-  // Get all packages in the workspace
-  getAllPackages() {
-    return fs
-      .readdirSync(this.packagesDir, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name);
-  }
-
-  // Build only changed packages and their dependents
-  buildChanged() {
-    const changedPackages = this.getChangedPackages();
-
-    if (changedPackages.length === 0) {
-      console.log('No package changes detected');
-      return;
-    }
-
-    console.log('Building changed packages:', changedPackages.join(', '));
-
-    // Build changed packages
-    changedPackages.forEach(pkg => {
-      console.log(`Building @awesome/${pkg}...`);
-      execSync(`pnpm --filter @awesome/${pkg} run build`, {
-        stdio: 'inherit',
-      });
-    });
-
-    // Build packages that depend on changed packages
-    this.buildDependents(changedPackages);
-  }
-
-  // Build packages that depend on the changed packages
-  buildDependents(changedPackages) {
-    const allPackages = this.getAllPackages();
-    const dependents = new Set();
-
-    allPackages.forEach(pkg => {
-      const pkgJsonPath = path.join(this.packagesDir, pkg, 'package.json');
-
-      if (fs.existsSync(pkgJsonPath)) {
-        const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-        const deps = {
-          ...pkgJson.dependencies,
-          ...pkgJson.devDependencies,
-        };
-
-        changedPackages.forEach(changedPkg => {
-          if (deps[`@awesome/${changedPkg}`]) {
-            dependents.add(pkg);
-          }
-        });
-      }
-    });
-
-    if (dependents.size > 0) {
-      console.log(
-        'Building dependent packages:',
-        Array.from(dependents).join(', ')
-      );
-      dependents.forEach(pkg => {
-        execSync(`pnpm --filter @awesome/${pkg} run build`, {
-          stdio: 'inherit',
-        });
-      });
-    }
-  }
-}
-
-// Usage
-const optimizer = new BuildOptimizer(process.cwd());
-optimizer.buildChanged();
-```
-
-#### Bundle Analysis
-
-**tools/analyze-bundle.js:**
-
-```javascript
-const { exec } = require('child_process');
-const path = require('path');
-const fs = require('fs');
-
-class BundleAnalyzer {
-  constructor() {
-    this.packages = this.getPackages();
-  }
-
-  getPackages() {
-    const packagesDir = path.join(process.cwd(), 'packages');
-    return fs.readdirSync(packagesDir).filter(name => {
-      const pkgPath = path.join(packagesDir, name, 'package.json');
-      return fs.existsSync(pkgPath);
-    });
-  }
-
-  analyzeBundleSizes() {
-    console.log('📦 Bundle Size Analysis\n');
-
-    this.packages.forEach(pkg => {
-      const distPath = path.join(process.cwd(), 'packages', pkg, 'dist');
-
-      if (fs.existsSync(distPath)) {
-        const files = fs.readdirSync(distPath);
-        let totalSize = 0;
-
-        console.log(`\n📋 @awesome/${pkg}:`);
-
-        files.forEach(file => {
-          const filePath = path.join(distPath, file);
-          const stats = fs.statSync(filePath);
-          const sizeKB = (stats.size / 1024).toFixed(2);
-          totalSize += stats.size;
-
-          console.log(`  ${file}: ${sizeKB}KB`);
-        });
-
-        const totalKB = (totalSize / 1024).toFixed(2);
-        console.log(`  Total: ${totalKB}KB`);
-
-        // Warn if bundle is too large
-        if (totalSize > 100 * 1024) {
-          // 100KB
-          console.log(`  ⚠️  Large bundle detected!`);
-        }
-      }
-    });
-  }
-
-  checkTreeShaking() {
-    console.log('\n🌳 Tree Shaking Analysis\n');
-
-    this.packages.forEach(pkg => {
-      const pkgPath = path.join(process.cwd(), 'packages', pkg);
-      const distPath = path.join(pkgPath, 'dist');
-
-      if (fs.existsSync(distPath)) {
-        // Check if ES modules are available
-        const esmFile = path.join(distPath, 'index.esm.js');
-        const cjsFile = path.join(distPath, 'index.js');
-
-        console.log(`📦 @awesome/${pkg}:`);
-        console.log(`  ESM: ${fs.existsSync(esmFile) ? '✅' : '❌'}`);
-        console.log(`  CJS: ${fs.existsSync(cjsFile) ? '✅' : '❌'}`);
-
-        // Check for sideEffects field
-        const pkgJsonPath = path.join(pkgPath, 'package.json');
-        const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-
-        if (pkgJson.sideEffects === false) {
-          console.log(`  Side Effects: ✅ None`);
-        } else if (Array.isArray(pkgJson.sideEffects)) {
-          console.log(
-            `  Side Effects: ⚠️  ${pkgJson.sideEffects.length} files`
-          );
-        } else {
-          console.log(`  Side Effects: ❌ Not specified`);
-        }
-      }
-    });
-  }
-}
-
-const analyzer = new BundleAnalyzer();
-analyzer.analyzeBundleSizes();
-analyzer.checkTreeShaking();
-```
-
-### Troubleshooting Common Issues
-
-#### 1. Dependency Resolution Problems
-
-**Problem:** Package not found or incorrect version resolved
-
-**Solution:**
-
-```bash
-# Clear all node_modules and reinstall
-pnpm clean
-pnpm install
-
-# Check dependency tree
-pnpm list --depth=2
-
-# Force resolve specific version
-pnpm add package-name@exact-version --filter @awesome/package-name
-```
-
-#### 2. Build Failures
-
-**Problem:** TypeScript compilation errors across packages
-
-**Solution:**
-
-```bash
-# Build packages in dependency order
-pnpm --filter @awesome/utils run build
-pnpm --filter @awesome/api-client run build
-pnpm --filter @awesome/ui-components run build
-
-# Or use topological sorting
-pnpm --recursive run build
-```
-
-**Enhanced TypeScript Configuration:**
-
-```json
-{
-  "compilerOptions": {
-    "composite": true,
-    "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo"
-  },
-  "references": [{ "path": "../utils" }, { "path": "../api-client" }]
-}
-```
-
-#### 3. Circular Dependencies
-
-**Problem:** Packages referencing each other creating circular deps
-
-**Detection Script:**
-
-```javascript
-// tools/detect-circular-deps.js
-const madge = require('madge');
-const path = require('path');
-
-async function detectCircularDependencies() {
-  const packagesDir = path.join(process.cwd(), 'packages');
-
-  try {
-    const res = await madge(packagesDir, {
-      fileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-      tsConfig: 'tsconfig.json',
-    });
-
-    const circular = res.circular();
-
-    if (circular.length > 0) {
-      console.log('🔄 Circular dependencies detected:');
-      circular.forEach((cycle, index) => {
-        console.log(`${index + 1}. ${cycle.join(' → ')}`);
-      });
-      process.exit(1);
-    } else {
-      console.log('✅ No circular dependencies found');
-    }
-  } catch (error) {
-    console.error('Error analyzing dependencies:', error);
-    process.exit(1);
-  }
-}
-
-detectCircularDependencies();
-```
-
-#### 4. Publishing Issues
-
-**Problem:** Packages not publishing or wrong versions
-
-**Solution:**
-
-```bash
-# Check package contents before publishing
-pnpm pack --dry-run --filter @awesome/package-name
-
-# Verify changeset configuration
-pnpm changeset status
-
-# Manual version bump if needed
-pnpm changeset version --ignore @awesome/package-name
-```
-
-#### 5. Workspace Protocol Issues
-
-**Problem:** `workspace:*` not resolving correctly
-
-**Solution:**
-
-```json
-{
-  "pnpm": {
-    "overrides": {
-      "@awesome/utils": "workspace:*"
-    }
-  }
-}
-```
-
-### Advanced Patterns
-
-#### Dynamic Package Loading
-
-**packages/plugin-system/src/index.ts:**
-
-```typescript
-interface Plugin {
-  name: string;
-  version: string;
-  activate: () => void;
-  deactivate: () => void;
-}
-
-class PluginManager {
-  private plugins = new Map<string, Plugin>();
-  private activePlugins = new Set<string>();
-
-  async loadPlugin(packageName: string): Promise<void> {
-    try {
-      // Dynamic import for workspace packages
-      const pluginModule = await import(packageName);
-      const plugin: Plugin = pluginModule.default || pluginModule;
-
-      this.plugins.set(plugin.name, plugin);
-      console.log(`Plugin loaded: ${plugin.name}@${plugin.version}`);
-    } catch (error) {
-      console.error(`Failed to load plugin ${packageName}:`, error);
-    }
-  }
-
-  activatePlugin(name: string): void {
-    const plugin = this.plugins.get(name);
-    if (plugin && !this.activePlugins.has(name)) {
-      plugin.activate();
-      this.activePlugins.add(name);
-      console.log(`Plugin activated: ${name}`);
-    }
-  }
-
-  deactivatePlugin(name: string): void {
-    const plugin = this.plugins.get(name);
-    if (plugin && this.activePlugins.has(name)) {
-      plugin.deactivate();
-      this.activePlugins.delete(name);
-      console.log(`Plugin deactivated: ${name}`);
-    }
-  }
-
-  getActivePlugins(): string[] {
-    return Array.from(this.activePlugins);
-  }
-}
-
-export { PluginManager, type Plugin };
-```
-
-#### Micro-Frontend Architecture
-
-**packages/shell-app/src/ModuleFederation.ts:**
-
-```typescript
-interface RemoteModule {
-  name: string;
-  url: string;
-  scope: string;
-  module: string;
-}
-
-class ModuleFederationManager {
-  private remotes = new Map<string, RemoteModule>();
-  private loadedModules = new Map<string, any>();
-
-  registerRemote(remote: RemoteModule): void {
-    this.remotes.set(remote.name, remote);
-  }
-
-  async loadRemote(remoteName: string): Promise<any> {
-    if (this.loadedModules.has(remoteName)) {
-      return this.loadedModules.get(remoteName);
-    }
-
-    const remote = this.remotes.get(remoteName);
-    if (!remote) {
-      throw new Error(`Remote module not found: ${remoteName}`);
-    }
-
-    try {
-      // Load remote module script
-      await this.loadScript(remote.url);
-
-      // Get the remote container
-      const container = (window as any)[remote.scope];
-      await container.init(__webpack_share_scopes__.default);
-
-      // Get the module factory
-      const factory = await container.get(remote.module);
-      const module = factory();
-
-      this.loadedModules.set(remoteName, module);
-      return module;
-    } catch (error) {
-      console.error(`Failed to load remote module ${remoteName}:`, error);
-      throw error;
-    }
-  }
-
-  private loadScript(url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.async = true;
-      script.src = url;
-
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
-
-      document.head.appendChild(script);
-    });
-  }
-}
-
-export { ModuleFederationManager, type RemoteModule };
-```
+- Dynamic package loading  
+- Module Federation  
+- Bundle analysis and tree‑shaking checks  
 
 ## Summary
 
-This comprehensive guide covers building production-ready monorepos using pnpm, workspace, and changesets. Key takeaways:
+### Benefits Achieved
 
-### ✅ Benefits Achieved
+- Faster installs with pnpm  
+- Unified workflow across packages  
+- Automated versioning with Changesets  
+- Efficient CI with incremental builds  
 
-- **50%+ faster** dependency installation with pnpm
-- **Unified development** experience across packages
-- **Automated version management** with changesets
-- **Efficient CI/CD** with incremental builds
-- **Type-safe** inter-package dependencies
+### Next Steps
 
-### 🚀 Next Steps
+1. Start with 2–3 packages.  
+2. Add lint/test in CI.  
+3. Release with Changesets.  
+4. Measure bundle sizes.  
 
-1. Start with a simple 2-3 package setup
-2. Implement automated testing and linting
-3. Set up CI/CD pipeline with GitHub Actions
-4. Add bundle analysis and performance monitoring
-5. Scale gradually with more packages
+### Resources
 
-### 📚 Additional Resources
-
-- [pnpm Documentation](https://pnpm.io/)
-- [Changesets Documentation](https://github.com/changesets/changesets)
-- [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html)
-- [Monorepo Best Practices](https://monorepo.tools/)
-
-The monorepo approach with pnpm and changesets provides a solid foundation for scaling JavaScript/TypeScript projects while maintaining developer productivity and code quality.
+- https://pnpm.io/  
+- https://github.com/changesets/changesets  
+- https://www.typescriptlang.org/docs/handbook/project-references.html  
+- https://monorepo.tools/  
