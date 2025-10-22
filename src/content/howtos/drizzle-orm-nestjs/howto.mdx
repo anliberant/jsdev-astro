@@ -1,0 +1,276 @@
+---
+title: 'Howto Use Drizzle ORM in NestJS'
+slug: drizzle-orm-nestjs
+heading: 'Using Drizzle ORM in a NestJS Project'
+icon: /icons/nestjs.png
+image: /icon.png
+permalink: howto/drizzle-orm-nestjs
+date: 2025-10-22
+author: anton liberant
+category: nestjs
+type: howto
+tags: ['Drizzle', 'orm', 'postgresql']
+desc: Learn how to integrate Drizzle ORM with NestJS, configure PostgreSQL connections, define schemas, and run migrations using Drizzle Kit.
+---
+
+Drizzle ORM is a **lightweight and type-safe query builder** for TypeScript that integrates seamlessly with **NestJS**.  
+This guide walks through how to install, configure, and use [Drizzle ORM](https://orm.drizzle.team) with PostgreSQL inside a NestJS application.
+
+## 📦 Dependency Installation
+
+Install required dependencies:
+
+```bash
+pnpm add drizzle-orm pg dotenv
+pnpm add -D drizzle-kit tsx @types/pg
+```
+
+## 🧩 Prepare the Drizzle Module
+
+Create a directory `src/drizzle` for ORM-related files.
+
+### 1. drizzle.provider.ts
+
+```ts
+import { Provider } from '@nestjs/common';
+import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import { ConfigService } from '@/config/config.service';
+import { Schema, schema } from './schema';
+
+export const PG_CONNECTION = 'PG_CONNECTION';
+
+export const DrizzleProvider: Provider = {
+  provide: PG_CONNECTION,
+  inject: [ConfigService],
+  useFactory(configService: ConfigService) {
+    const pool = new Pool({ connectionString: configService.database.DATABASE_URL });
+    return drizzle(pool, { schema, logger: true }) as NodePgDatabase<Schema>;
+  },
+};
+```
+
+### 2. drizzle.service.ts
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { Schema } from './schema';
+import { PG_CONNECTION } from './drizzle.provider';
+
+@Injectable()
+export class DrizzleService {
+  constructor(@Inject(PG_CONNECTION) readonly db: NodePgDatabase<Schema>) {}
+}
+```
+
+### 3. drizzle.module.ts
+
+```ts
+import { Global, Module } from '@nestjs/common';
+import { DrizzleProvider } from './drizzle.provider';
+import { DrizzleService } from './drizzle.service';
+
+@Global()
+@Module({
+  providers: [DrizzleService, DrizzleProvider],
+  exports: [DrizzleService],
+})
+export class DrizzleModule {}
+```
+
+## 🧱 Define Database Schema
+
+### user.entity.ts
+
+```ts
+import { pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
+
+export const timestamps = {
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+};
+
+export const user = pgTable('user', {
+  id: serial().primaryKey(),
+  username: varchar().notNull().unique(),
+  password: varchar().notNull(),
+  ...timestamps,
+});
+
+export const selectUserSchema = createSelectSchema(user);
+export type SelectUser = z.infer<typeof selectUserSchema>;
+```
+
+### schema.ts
+
+```ts
+import { user } from './user.entity';
+
+export const schema = { user };
+export type Schema = typeof schema;
+export type SchemaName = keyof Schema;
+export type { SelectUser } from './user.entity';
+```
+
+## ⚙️ Configure Drizzle ORM
+
+Create a file at the project root named `drizzle.config.ts`:
+
+```ts
+import 'dotenv/config';
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  schema: './src/drizzle/schema/**.entity.ts',
+  out: './drizzle/migrations',
+  dialect: 'postgresql',
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});
+```
+
+## 📜 Add Scripts to package.json
+
+```json
+{
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  }
+}
+```
+
+Run migrations and sync the schema:
+
+```bash
+pnpm run db:generate
+pnpm run db:migrate
+pnpm run db:studio
+```
+
+## 🏗️ Import DrizzleModule in app.module.ts
+
+```ts
+@Module({
+  imports: [DrizzleModule],
+})
+export class AppModule {}
+```
+
+## 🔧 Use Drizzle in a Service
+
+Example — `UserService`:
+
+```ts
+@Injectable()
+export class UserService {
+  constructor(private readonly drizzle: DrizzleService) {}
+
+  async create(dto: CreateUserDto) {
+    return this.drizzle.db.insert(schema.user).values(dto).returning();
+  }
+
+  async findOne(id: number) {
+    const [user] = await this.drizzle.db
+      .select()
+      .from(schema.user)
+      .where(eq(schema.user.id, id));
+    return user;
+  }
+
+  async update(id: number, dto: UpdateUserDto) {
+    return this.drizzle.db
+      .update(schema.user)
+      .set(dto)
+      .where(eq(schema.user.id, id));
+  }
+
+  async remove(id: number) {
+    const [user] = await this.drizzle.db
+      .delete(schema.user)
+      .where(eq(schema.user.id, id))
+      .returning();
+    return user;
+  }
+}
+```
+
+## 🧠 Optional Enhancements
+
+### VS Code Plugin
+
+Install the [VSCode Drizzle ORM plugin](https://marketplace.visualstudio.com/items?itemName=lukeshay.vscode-drizzle-orm)  
+to visualize schema models and database relations directly from your code.
+
+## 🌱 Database Seeding
+
+In `src/drizzle/db.ts`:
+
+```ts
+import 'dotenv/config';
+import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import { Schema, schema } from './schema';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db: NodePgDatabase<Schema> = drizzle(pool, { schema, logger: true });
+```
+
+### seed.ts
+
+```ts
+import { Table } from 'drizzle-orm';
+import { db } from './db';
+import { schema } from './schema';
+import { seedUser } from './seeds/user.seed';
+
+async function clearTable() {
+  return Promise.all(Object.values(schema).map((table: Table) => db.delete(table).execute()));
+}
+
+async function seed() {
+  await clearTable();
+  await seedUser(db);
+}
+
+seed().catch((e) => {
+  console.error(e);
+  process.exit(0);
+});
+```
+
+### user.seed.ts
+
+```ts
+import { hashSync } from 'bcrypt';
+import { db } from '@/drizzle/db';
+import { schema } from '../schema';
+
+export async function seedUser(db) {
+  await db.insert(schema.user).values([
+    { username: 'admin', password: hashSync('123456', 10) },
+    { username: 'user', password: hashSync('123456', 10) },
+  ]);
+}
+```
+
+Add to `package.json`:
+
+```json
+"db:seed": "ts-node ./src/drizzle/seed.ts"
+```
+
+Run:
+
+```bash
+pnpm run db:seed
+```
+
+## ✅ Conclusion
+
+Drizzle ORM brings **type safety**, **minimalism**, and **developer ergonomics** to the NestJS ecosystem.  
+By combining **NestJS modules** with Drizzle’s schema-driven approach, developers can achieve efficient migrations, clear database logic, and fast iteration—all with strong typing and lightweight configuration.

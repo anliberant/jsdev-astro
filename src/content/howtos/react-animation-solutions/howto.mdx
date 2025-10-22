@@ -1,0 +1,380 @@
+---
+title: Howto Choose Between CSS, Framer Motion, and React Spring
+slug: react-animation-solutions
+heading: "Comparing React Animation Libraries: CSS, Framer Motion, and React Spring"
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/react-animation-solutions
+date: 2025-10-22
+author: anton liberant
+category: react
+type: howto
+tags: ['animation', 'framer-motion', 'react-spring']
+desc: Compare CSS animations, Framer Motion, and React Spring for smooth, performant React animations. Includes code examples, pros and cons, and performance insights.
+---
+
+Animations add life to user interfaces — they make transitions feel natural and interactions more intuitive.  
+In React, developers have three powerful options to handle motion: **native CSS animations**, **[Framer Motion](https://www.framer.com/motion/)**, and **[React Spring](https://react-spring.dev/)**.  
+This guide compares them in-depth, with code examples, performance metrics, and scenario-based recommendations.
+
+---
+
+## 🎨 CSS Animations
+
+CSS animations are browser-native, lightweight, and ideal for simple, performant transitions.
+
+### Example: Fade Toggle
+
+```tsx
+import React, { useState } from 'react';
+import './fade.css';
+
+export default function FadeInComponent() {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div>
+      <button onClick={() => setVisible(!visible)}>
+        {visible ? 'Hide' : 'Show'} Box
+      </button>
+      <div className={`fade-box ${visible ? 'visible' : ''}`}>
+        Smooth Fade Effect
+      </div>
+    </div>
+  );
+}
+
+/* fade.css */
+.fade-box {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.fade-box.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+```
+
+### Example: Slide-in Animation
+
+```css
+@keyframes slideIn {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
+```
+
+**Pros**
+- Zero dependencies, optimized by the browser  
+- Perfect for hover effects and micro-interactions  
+- Minimal bundle size impact  
+
+**Cons**
+- Limited control from JavaScript  
+- Hard to coordinate with React state logic  
+- No physical or dynamic motion support  
+
+---
+
+## ⚡ Framer Motion
+
+[Framer Motion](https://www.framer.com/motion/) provides a **declarative, physics-aware** animation system with extensive React integration.
+
+### Example: Fade In & Out
+
+```tsx
+import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+
+export default function MotionFade() {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setVisible(!visible)}>Toggle Visibility</button>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 10 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          width: 200,
+          height: 100,
+          background: '#4ade80',
+          borderRadius: 8,
+          marginTop: 16,
+        }}
+      />
+    </div>
+  );
+}
+```
+
+### Example: Draggable Box
+
+```tsx
+import { motion } from 'framer-motion';
+
+export function DraggableBox() {
+  return (
+    <motion.div
+      drag
+      dragConstraints={{ left: 0, right: 300, top: 0, bottom: 200 }}
+      whileTap={{ scale: 0.95 }}
+      style={{
+        width: 100,
+        height: 100,
+        background: '#3b82f6',
+        borderRadius: '12px',
+        cursor: 'grab',
+      }}
+    />
+  );
+}
+```
+
+### Example: Page Transition
+
+```tsx
+import { motion, AnimatePresence } from 'framer-motion';
+import { Routes, Route, useLocation } from 'react-router-dom';
+
+export function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+      >
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+```
+
+**Pros**
+- Intuitive component-based API  
+- Excellent for drag, scroll, and gesture-based animations  
+- Built-in layout and exit animations  
+
+**Cons**
+- Slightly heavier (~14 KB gzipped)  
+- Requires conceptual understanding of variants  
+- Overkill for static transitions  
+
+---
+
+## 🌿 React Spring
+
+[React Spring](https://react-spring.dev/) is a **physics-based animation library** focused on realism and fluid motion.
+
+### Example: Spring Button
+
+```tsx
+import { useSpring, animated } from 'react-spring';
+
+export default function SpringButton() {
+  const style = useSpring({
+    from: { transform: 'scale(0.9)', opacity: 0 },
+    to: { transform: 'scale(1)', opacity: 1 },
+    config: { tension: 180, friction: 18 },
+  });
+
+  return <animated.button style={style}>Springy Button</animated.button>;
+}
+```
+
+### Example: Trail Animation
+
+```tsx
+import { useTrail, animated } from 'react-spring';
+
+export function TrailList() {
+  const items = ['A', 'B', 'C', 'D', 'E'];
+  const trail = useTrail(items.length, {
+    from: { opacity: 0, transform: 'translateY(20px)' },
+    to: { opacity: 1, transform: 'translateY(0px)' },
+  });
+
+  return (
+    <div>
+      {trail.map((style, i) => (
+        <animated.div key={i} style={style}>
+          {items[i]}
+        </animated.div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Example: Scroll-based Motion
+
+```tsx
+import { useScroll, animated } from 'react-spring';
+
+export function ScrollFade() {
+  const { scrollYProgress } = useScroll();
+
+  return (
+    <animated.div
+      style={{
+        opacity: scrollYProgress,
+        transform: scrollYProgress.to(
+          (y) => `translateY(${y * 40}px)`
+        ),
+      }}
+    >
+      Scroll-triggered Motion
+    </animated.div>
+  );
+}
+```
+
+**Pros**
+- Natural physical animations (spring, damping, inertia)  
+- Lightweight (~8 KB gzipped)  
+- Works seamlessly with 3D (Three.js)  
+
+**Cons**
+- Requires understanding of physics configs  
+- Fewer high-level helpers  
+- Smaller ecosystem than Framer Motion  
+
+---
+
+## ⚖️ Performance & Use-Case Comparison
+
+| Library | Size (gzipped) | Simple Animations | Complex Interactions |
+|----------|----------------|------------------|----------------------|
+| CSS Animations | 0 KB | ✅✅✅ | ❌ |
+| Framer Motion | ~14 KB | ✅✅ | ✅✅✅ |
+| React Spring | ~8 KB | ✅✅ | ✅✅✅ |
+
+**Best Use Cases**
+
+- **CSS:** Lightweight effects, static transitions  
+- **Framer Motion:** Interactive UI, routing transitions  
+- **React Spring:** Realistic, continuous, physics-based motion  
+
+---
+
+## 🧩 Modal Animation Example
+
+### CSS Version
+
+```tsx
+function Modal({ open, onClose, children }) {
+  if (!open) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* CSS */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s forwards;
+}
+.modal-content {
+  background: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  animation: scaleIn 0.3s forwards;
+}
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes scaleIn { to { transform: scale(1); } }
+```
+
+### Framer Motion Version
+
+```tsx
+import { motion } from 'framer-motion';
+
+export function MotionModal({ open, onClose, children }) {
+  if (!open) return null;
+
+  return (
+    <motion.div
+      className="modal-overlay"
+      onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+        transition={{ duration: 0.3 }}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
+```
+
+### React Spring Version
+
+```tsx
+import { useSpring, animated } from 'react-spring';
+
+export function SpringModal({ open, onClose, children }) {
+  const style = useSpring({
+    opacity: open ? 1 : 0,
+    transform: open ? 'scale(1)' : 'scale(0.8)',
+    config: { duration: 300 },
+  });
+
+  if (!open) return null;
+
+  return (
+    <animated.div className="modal-overlay" onClick={onClose} style={style}>
+      <animated.div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </animated.div>
+    </animated.div>
+  );
+}
+```
+
+---
+
+## 🧠 Summary
+
+Animation enhances usability and adds emotional value to interfaces.  
+The right library depends on your **project size**, **interaction complexity**, and **performance goals**.
+
+- **CSS Animation:** Lightweight and fastest for basic effects.  
+- **Framer Motion:** Best all-rounder for rich, interactive experiences.  
+- **React Spring:** Ideal for smooth, physics-driven animations.  
+
+For most modern React apps, **Framer Motion** strikes the best balance between expressiveness and developer ergonomics.
