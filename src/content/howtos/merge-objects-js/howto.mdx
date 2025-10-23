@@ -1,0 +1,84 @@
+---
+title: 'Howto Merge Objects in JavaScript Like a Pro'
+slug: merge-objects-js
+heading: 'Combining Objects Effectively in JavaScript'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/merge-objects-js
+date: 2025-10-23
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn simple and safe ways to merge JavaScript objects using spread syntax, Object.assign(), and deep merge techniques with examples.
+---
+
+Merging objects is a common task in JavaScript—especially when handling configuration files, API responses, or UI state. The language provides multiple ways to combine properties, depending on whether you want a shallow or deep merge.
+
+Related Article: [Merging Two Sorted Arrays](https://jsdev.space/snippets/merge-sorted-arrays/)
+
+## 1. Using the Spread Operator (`...`)
+
+The spread syntax is the cleanest and most modern approach:
+
+```js 
+const user = { name: "Alex", age: 25 };
+const updates = { age: 26, city: "Berlin" };
+
+const merged = { ...user, ...updates };
+console.log(merged); 
+// { name: "Alex", age: 26, city: "Berlin" }
+```
+
+⚡ Tip: Later properties overwrite earlier ones.
+
+## 2. Using `Object.assign()`
+
+`Object.assign()` copies properties into a target object:
+
+```js 
+const a = { x: 1 };
+const b = { y: 2 };
+const result = Object.assign({}, a, b);
+
+console.log(result); 
+// { x: 1, y: 2 }
+```
+
+This method also performs a **shallow copy**, meaning nested objects aren’t cloned but referenced.
+
+## 3. Deep Merge (For Nested Objects)
+
+For nested structures, shallow merging isn’t enough:
+
+```js 
+const defaults = { settings: { theme: "light", font: "Arial" } };
+const userPrefs = { settings: { theme: "dark" } };
+
+const merged = {
+  ...defaults,
+  settings: { ...defaults.settings, ...userPrefs.settings }
+};
+
+console.log(merged);
+// { settings: { theme: "dark", font: "Arial" } }
+```
+
+Alternatively, you can use libraries like Lodash:
+
+```bash 
+npm install lodash
+```
+
+```js 
+import { merge } from "lodash";
+merge({}, defaults, userPrefs);
+```
+
+## Summary
+
+- Use **spread** or `Object.assign()` for shallow merges.
+- For nested data, perform a **deep merge** manually or with Lodash.
+- Avoid mutating the original objects unless intended.
+
+Merging objects efficiently helps keep your data consistent and your code clean.
