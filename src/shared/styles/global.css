@@ -135,7 +135,15 @@ td pre {
   background-color: transparent;
 }
 
-p code {
+p code,
+ul code,
+li code,
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code {
   background-color: var(--code-hover);
   border-radius: 0.25rem;
   font-size: 0.875em;
