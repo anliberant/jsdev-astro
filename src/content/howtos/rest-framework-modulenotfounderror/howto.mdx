@@ -1,0 +1,64 @@
+---
+title: "Howto Solve ModuleNotFoundError: No Module Named 'rest_framework'"
+slug: rest-framework-modulenotfounderror
+heading: Resolving the 'rest_framework' Module Not Found Error
+icon: /icons/python.png
+image: /icon.png
+permalink: howto/rest-framework-modulenotfounderror
+date: 2025-10-23
+author: anton liberant
+category: python
+type: howto
+tags: ['django', 'backend']
+desc: "Encountering ModuleNotFoundError: No module named 'rest_framework'? This guide helps you quickly resolve this common Django REST framework import error."
+---
+
+The `ModuleNotFoundError: No module named 'rest_framework'` is a common issue faced by developers working with Django REST Framework (DRF). This error typically indicates that your Python environment cannot locate the `rest_framework` package, which is essential for DRF to function correctly. Let's break down the most common causes and how to fix them.
+
+## Understanding the Error
+
+When you see `ModuleNotFoundError: No module named 'rest_framework'`, it means that when Python tried to execute an `import rest_framework` (or a similar import statement related to DRF), it couldn't find the necessary files in any of the directories it searches.
+
+## Common Causes and Solutions
+
+1. **Django REST Framework is Not Installed**: This is by far the most frequent reason. You might have forgotten to install DRF or are working in a new environment where it hasn't been set up yet.
+  - **Solution**: Open your terminal or command prompt and install Django REST Framework using pip:
+  ```bash
+  pip install djangorestframework
+  ```
+  If you're using a specific Python version, you might need to use `pip3`:
+  ```bash 
+  pip3 install djangorestframework
+  ```
+2. **Incorrect Virtual Environment**: If you're using a virtual environment (which is highly recommended for Django projects), you might have installed DRF in one virtual environment but are running your project in another, or in the global Python environment.
+  - **Solution**:
+    - **Activate your virtual environment:** Before installing or running your project, ensure your virtual environment is active.
+      - **On Linux/macOS**: `source myenv/bin/activate` (replace `myenv` with your virtual environment's name)
+      - **On Windows**: `myenv\Scripts\activate`
+    - **Install DRF within the active virtual environment**: Once activated, run `pip install djangorestframework`.
+    - **Verify installation**: You can use `pip freeze` to see all installed packages in your current environment. `djangorestframework` should be listed.
+3. **Project Not Added to `INSTALLED_APPS`**: While less likely to cause a `ModuleNotFoundError` during import, if you've installed DRF but forgotten to add it to your `INSTALLED_APPS` in your Django project's `settings.py`, you might encounter other errors later. It's a good practice to check this.
+  - **Solution**: In your `settings.py` file, ensure rest_framework is included in your `INSTALLED_APPS` list:
+  ```python 
+  INSTALLED_APPS = [
+    # ... other apps ...
+    'rest_framework',
+  ]
+  ```
+4. **Typo in Import Statement or Package Name**: Double-check your code for any typos. Ensure you're importing `rest_framework` and not `restframework` or `django_rest_framework`.
+  - **Solution**: Review your `import` statements. The correct top-level import for DRF is `rest_framework`.
+
+## Step-by-Step Troubleshooting Guide
+
+1. **Check your virtual environment**:
+  - Are you using a virtual environment? If not, consider setting one up for better dependency management.
+  - Is your virtual environment activated?
+2. **Verify DRF installation**:
+  - With your virtual environment activated, run `pip freeze`. Look for `djangorestframework` in the list.
+  - If it's not there, run pip install `djangorestframework`.
+3. **Check `settings.py`**:
+  - Ensure `rest_framework` is in your `INSTALLED_APPS`.
+4. **Restart your development server**:
+  - Sometimes, simply restarting your Django development server (`python manage.py runserver`) can resolve lingering issues after installing new packages.
+
+  By following these steps, you should be able to quickly diagnose and resolve the `ModuleNotFoundError: No module named 'rest_framework'` and get back to building your amazing APIs with Django REST Framework.
