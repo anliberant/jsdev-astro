@@ -43,7 +43,9 @@ const numberOfPages = Math.ceil(sortedSnippets.length / siteConfig.postsPerPage)
 
 <BaseLayout
   title={title}
-  description={siteConfig.snippetsPageDescription}>
+  description={page.currentPage === 1 ?
+    siteConfig.snippetsPageDescription
+  : siteConfig.snippetsPageDescription + ' ' + 'Page ' + page.currentPage}>
   <main class='main'>
     {
       page.currentPage > 1 && (
