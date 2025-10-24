@@ -135,20 +135,28 @@ td pre {
   background-color: transparent;
 }
 
-p code,
-ul code,
-li code,
-h1 code,
-h2 code,
-h3 code,
-h4 code,
-h5 code,
-h6 code {
+p code:not(pre code),
+ul code:not(pre code),
+li code:not(pre code),
+h1 code:not(pre code),
+h2 code:not(pre code),
+h3 code:not(pre code),
+h4 code:not(pre code),
+h5 code:not(pre code),
+h6 code:not(pre code) {
   background-color: var(--code-hover);
   border-radius: 0.25rem;
   font-size: 0.875em;
   font-weight: 500;
   padding: 0.15rem 0.3rem;
+}
+
+pre code {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  font-size: 1em;
+  font-weight: normal;
 }
 
 table {

@@ -1,0 +1,172 @@
+---
+title: The Hidden Power of return in JavaScript Constructors
+slug: js-constructor-return
+heading: When Returning from a Constructor Actually Makes Sense
+permalink: js-constructor-return
+image: ./images/js-constructor-return.png
+date: 2025-10-24
+author: anton liberant
+category: javascript
+type: post
+tags: []
+desc: Discover when returning a value from a JavaScript constructor actually makes sense — and how it can produce self-constructing functions and inheritance patterns
+---
+
+Most JavaScript developers learn that constructors shouldn’t explicitly return anything. After all, constructors are supposed to create and initialize instances — not hand back arbitrary objects. But there’s a curious exception that’s both legal and powerful: **a constructor can return its own function or class.**
+
+Let’s explore why this behavior exists, what it enables, and when it’s the only possible way to achieve a certain pattern in JavaScript.
+
+## The Basics: What Constructors Usually Return
+
+By default, when you call a function with `new`, JavaScript implicitly returns the newly created object bound to `this`.
+If the constructor returns **an object**, that object replaces the implicit one.
+If it returns **a primitive**, JavaScript ignores it and still returns `this`.
+
+```js
+function Example() {
+  this.value = 42;
+  return 7; // ignored
+}
+
+const instance = new Example();
+console.log(instance.value); // 42
+```
+
+Only object returns matter — and that opens a subtle door.
+
+## The Rare Case: Returning a Function or Class
+
+Functions and classes in JavaScript are objects, so they can be **returned** from constructors.
+That means a constructor can itself **produce a constructible function** — an instance that can later be called with `new` again.
+
+```js
+function FactoryConstructor() {
+  const Inner = function () {
+    console.log("Inner constructor called!");
+  };
+
+  // Inherit from the outer constructor
+  Object.setPrototypeOf(Inner, this);
+  return Inner;
+}
+
+const Custom = new FactoryConstructor();
+
+console.log(Custom instanceof FactoryConstructor); // true
+
+const innerInstance = new Custom(); // Works!
+```
+
+This creates a fascinating effect:
+➡️ The **instance of the constructor** is itself a **constructor**.
+
+You can now chain `new` twice — a concept rarely seen in real-world code but perfectly valid.
+
+## Why It Works
+
+`Object.setPrototypeOf(Inner, this)` connects the inner function’s prototype chain to the original constructor’s prototype.
+Without this line, `instanceof` checks would fail.
+
+You can think of it like this:
+- The first `new` creates a **function object** (constructor).
+- The second `new` creates an **instance of that returned function**.
+
+This makes the returned function an extension of the original constructor.
+
+## What If We Try Using Proxy Instead?
+
+Some developers might attempt to use `Proxy` to simulate this dual-constructor behavior. Unfortunately, it doesn’t work:
+
+```js
+"use strict";
+
+function Ctor() {
+  const proxy = new Proxy(this, {
+    construct(target, args) {
+      return new target(...args);
+    }
+  });
+  return proxy;
+}
+
+const inst = new Ctor();
+
+console.log(inst instanceof Ctor); // true
+
+try {
+  new inst();
+} catch (err) {
+  console.error(err.message);
+  // TypeError: inst is not a constructor
+}
+```
+
+Even with clever proxy traps, JavaScript doesn’t allow an ordinary instance to suddenly become constructible — unless it’s explicitly returned as a **function or class** object.
+
+## Real-World Application
+
+This pattern might seem academic, but it has a few niche uses:
+
+1. **Dynamic Class Generation:**
+   Creating specialized subclasses on demand that share a common prototype.
+
+   ```js
+   function ClassBuilder(name) {
+     return class {
+       constructor() {
+         this.name = name;
+       }
+     };
+   }
+
+   const UserClass = new ClassBuilder("User");
+   const user = new UserClass();
+   console.log(user.name); // "User"
+   ```
+
+2. **Self-constructing Factories:**
+   Functions that produce new constructors with pre-bound behavior.
+
+   ```js
+   function Service(type) {
+     const SubService = function (name) {
+       this.type = type;
+       this.name = name;
+     };
+     Object.setPrototypeOf(SubService, this);
+     return SubService;
+   }
+
+   const Logger = new Service("logger");
+   const fileLogger = new Logger("FileLogger");
+
+   console.log(fileLogger instanceof Logger); // true
+   console.log(fileLogger.type); // "logger"
+   ```
+
+## TypeScript Considerations
+
+TypeScript doesn’t natively expect constructors to return something other than their instance type.
+To make this pattern type-safe, you can define a generic return type:
+
+```ts
+function Builder<T extends object>(): new (...args: any[]) => T {
+  const Inner = function () {} as any;
+  return Inner;
+}
+```
+
+It’s unusual but possible to express, and may be useful in advanced metaprogramming scenarios.
+
+## Key Takeaways
+
+- Returning a **non-primitive** value from a constructor replaces the default `this`.
+- Returning a **function or class** turns your constructor into a **constructor factory**.
+- `Object.setPrototypeOf()` can preserve prototype inheritance and `instanceof` checks.
+- This is the **only** way to make an instance that’s also constructible.
+
+## Final Thoughts
+
+Most developers will never need this pattern — and that’s okay. But understanding it deepens your grasp of JavaScript’s object model and reveals just how flexible the language really is.
+
+Sometimes the best way to learn is to find that one “impossible” question — and realize JavaScript already has a quirky, elegant answer.
