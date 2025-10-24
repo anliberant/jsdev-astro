@@ -1,0 +1,162 @@
+---
+title: "Logical Assignment Operators in JavaScript: Cleaner, Smarter Code"
+slug: logical-assignment-operators-js
+heading: Simplifying JavaScript with Logical Assignment Operators
+permalink: logical-assignment-operators-js
+image: ./images/logical-assignment-operators.png
+date: 2025-10-24
+author: anton liberant
+category: javascript
+type: post
+tags: ['logical-assignment-operator']
+desc: Discover how JavaScript’s logical assignment operators (||=, &&=, ??=) simplify conditional logic, reduce boilerplate, and make your code easier to read.
+---
+
+When working with JavaScript, we often check whether a variable has a value before assigning something new. These repetitive checks — especially when dealing with props, configuration objects, or component state — can clutter your code.
+
+That’s where **logical assignment operators** come in. Introduced in **ES2021**, they allow you to perform conditional assignments in a concise and expressive way without changing the logic of your program.
+
+👉 If you want to learn more about safe assignment syntax in JavaScript, check out this related guide:  
+[Safe Assignment Operator in JavaScript →](https://jsdev.space/safe-assignment-operator/)
+
+## What Are Logical Assignment Operators?
+
+Logical assignment operators combine standard logical operators (||, &&, ??) with the assignment operator (=):
+
+- ||= — assign if the left-hand side is falsy
+- &&= — assign if the left-hand side is truthy
+- ??= — assign if the left-hand side is null or undefined
+
+They work similarly to normal logical expressions: the right-hand side is evaluated **only if needed**.
+
+> ⚠️ Note: The optional chaining operator (?.) cannot be used on the left side of logical assignment. Doing so will cause a SyntaxError.
+
+## 1. OR Assignment (||=)
+
+Assigns a value only if the variable is falsy (false, 0, "", null, undefined, or NaN):
+
+```js
+user.theme ||= 'light';
+```
+
+Equivalent to:
+```js
+if (!user.theme) {
+  user.theme = 'light';
+}
+```
+
+This is perfect for providing **default values**, but be cautious — values like 0, "", or false will be overwritten.
+
+## 2. AND Assignment (&&=)
+
+Assigns a value only if the variable is truthy:
+
+```js
+user.isLoggedIn &&= checkPermissions(user);
+```
+
+Equivalent to:
+```js
+if (user.isLoggedIn) {
+  user.isLoggedIn = checkPermissions(user);
+}
+```
+
+Be aware that the right-hand expression is **always assigned**, even if it evaluates to false:
+
+```js
+let isEnabled = true;
+isEnabled &&= false;
+console.log(isEnabled); // false
+```
+
+## 3. Nullish Assignment (??=)
+
+Assigns a value only if the variable is null or undefined:
+
+```js
+settings.timeout ??= 3000;
+```
+
+Equivalent to:
+```js
+if (settings.timeout === null || settings.timeout === undefined) {
+  settings.timeout = 3000;
+}
+```
+
+Unlike ||=, this preserves valid falsy values like 0, false, or "".
+
+## Using Logical Assignment with Component Props
+
+These operators shine in component-based frameworks like React or Vue, where props often need default values:
+
+```js
+props.title ||= 'Untitled';
+props.visible ??= true;
+props.theme &&= props.theme.toLowerCase();
+```
+
+Benefits:
+- Cleaner, shorter code
+- Fewer if or ternary expressions
+- More predictable handling of null, undefined, or falsy values
+
+Examples:
+```js
+props.showHelpText ??= true;     // Default value
+config.apiBase ||= '/api/v1';    // Only set if not defined
+formData.username &&= formData.username.trim(); // Update if exists
+```
+
+## Things to Watch Out For
+
+### 1. ||= Overwrites Falsy Values
+```js
+let count = 0;
+count ||= 10; // count becomes 10 — unexpected!
+```
+Use ??= if you want to preserve falsy but valid values.
+
+### 2. Lazy Evaluation Prevents Side Effects
+```js
+config.apiKey ||= fetchApiKey(); 
+// fetchApiKey() runs only if apiKey is falsy
+```
+
+## Example with Side Effects
+
+```js
+let calls = 0;
+let obj = { val: 0 };
+
+obj.val ||= ++calls;
+console.log(obj.val); // 1
+
+obj.val ||= ++calls;
+console.log(obj.val); // still 1
+```
+
+Explanation:
+- Initially, obj.val is 0 (falsy), so ++calls runs and assigns 1.
+- On the second line, obj.val is now truthy, so ++calls isn’t evaluated again.
+
+## Browser Support
+
+✅ Chrome 85+, Firefox 79+, Safari 14+, Edge 85+  
+✅ Node.js 15+  
+❌ Internet Explorer — not supported
+
+If you need compatibility with older environments, use a transpiler like Babel with @babel/preset-env targeting ES2021.
+
+## Final Thoughts
+
+Logical assignment operators may seem like small additions, but they **make your JavaScript cleaner, more expressive, and easier to maintain**.
+
+They’re especially useful when:
+- Setting **default props or state**
+- Working with **configuration objects**
+- Writing **form validation or cleanup logic**
+
+Once you start using ||=, &&=, and ??=, you’ll wonder how you ever wrote code without them.
