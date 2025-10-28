@@ -1,0 +1,337 @@
+---
+title: 'Using URLPattern as a Framework-Free Router in Node 24'
+slug: urlpattern-router-node24
+heading: 'Mastering URLPattern for Cross-Platform Routing'
+image: ./images/urlpattern-router.png
+permalink: urlpattern-router-node24
+date: 2025-10-28
+author: anton liberant
+category: nodejs
+type: post
+tags: ['URLPattern', 'router']
+desc: Learn how to use the native URLPattern API as a lightweight, framework-free router in both browsers and Node.js 24 for unified client-server routing.
+---
+
+JavaScript finally got a **native routing primitive** that works the same way in both the **browser** and **Node.js 24**. The `URLPattern` API can now act as a **framework-free router**, handling route matching with named groups, strict validation, and consistent semantics everywhere.
+
+In Node 24, `URLPattern` is available **globally** (no imports). You can define patterns once and reuse them in Service Workers or HTTP servers, all without external dependencies.
+
+---
+
+## 1. The Concept
+
+`URLPattern` matches URLs by parts — `protocol`, `hostname`, `port`, `pathname`, `search`, and `hash`.  
+It supports **named groups**, **case sensitivity**, and a **clean pattern syntax**.
+
+Examples:
+
+```js
+// Named parameter with validation
+new URLPattern({ pathname: '/users/:id([0-9]+)' });
+
+// Optional subdomain
+new URLPattern({ hostname: '{:sub.}?api.example.com' });
+
+// Relative path resolved against a base
+new URLPattern('../admin/*', 'https://example.com/app/');
+```
+
+Browser support is strong (Chrome, Firefox, Safari, Edge), and in Node 24 it’s built-in.
+
+---
+
+## 2. A Mini Router with URLPattern
+
+Let’s build a tiny, type-safe router that works in **Node** and **Service Workers** — no frameworks, no globals, no dependencies.
+
+```js
+// mini-router.js
+export class PathRule {
+  constructor({ method = 'GET', pattern, base, opts, handler, cast = {} }) {
+    if (!pattern) throw new TypeError('Missing URL pattern');
+    this.method = method.toUpperCase();
+    this.pattern =
+      typeof pattern === 'string'
+        ? new URLPattern(pattern, base, opts)
+        : new URLPattern(pattern, opts);
+    this.handler = handler;
+    this.cast = cast; // { key: fn(string) => any }
+  }
+
+  match(url, base) {
+    if (!this.pattern.test(url, base)) return null;
+    const result = this.pattern.exec(url, base);
+    const params = Object.assign(
+      {},
+      result.protocol?.groups,
+      result.hostname?.groups,
+      result.port?.groups,
+      result.pathname?.groups,
+      result.search?.groups,
+      result.hash?.groups
+    );
+    for (const [k, fn] of Object.entries(this.cast)) {
+      if (params[k] != null) {
+        const val = fn(params[k]);
+        if (val === undefined) return null;
+        params[k] = val;
+      }
+    }
+    return { params, result };
+  }
+}
+
+export class SmartRouter {
+  constructor({ base } = {}) {
+    this.routes = [];
+    this.base = base;
+  }
+
+  register(ruleDef) {
+    const rule = new PathRule(ruleDef);
+    this.routes.push(rule);
+    return this;
+  }
+
+  find({ url, method = 'GET' }) {
+    const href = typeof url === 'string' ? url : url.href;
+    const m = method.toUpperCase();
+    for (const route of this.routes) {
+      if (route.method !== m) continue;
+      const match = route.match(href);
+      if (match) return { route, ...match };
+    }
+    return null;
+  }
+}
+```
+
+---
+
+## 3. Declaring Routes
+
+Let’s define a small router with type-safe parameters.
+
+```js
+// routes.js
+import { SmartRouter } from './mini-router.js';
+
+export function initRouter() {
+  const r = new SmartRouter();
+
+  // GET /health
+  r.register({
+    method: 'GET',
+    pattern: { pathname: '/health' },
+    handler: async () => new Response('ok', { status: 200 }),
+  });
+
+  // GET /users/:id
+  r.register({
+    method: 'GET',
+    pattern: { pathname: '/users/:id([1-9][0-9]*)' },
+    cast: {
+      id: s => {
+        const n = Number(s);
+        return Number.isSafeInteger(n) ? n : undefined;
+      },
+    },
+    handler: async ({ params }) => toJSON({ id: params.id }),
+  });
+
+  // GET /search?q&limit
+  r.register({
+    method: 'GET',
+    pattern: { pathname: '/search', search: '?q=:q&limit=:limit([0-9]{1,2})' },
+    cast: {
+      limit: s => {
+        const n = Number(s);
+        return n >= 1 && n <= 50 ? n : 10;
+      },
+    },
+    handler: async ({ url, params }) => {
+      const q = params.q ?? url.searchParams.get('q') ?? '';
+      const limit = params.limit ?? 10;
+      return toJSON({ q, limit });
+    },
+  });
+
+  return r;
+}
+
+function toJSON(obj, init = {}) {
+  return new Response(JSON.stringify(obj), {
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+    ...init,
+  });
+}
+```
+
+---
+
+## 4. Using It in a Service Worker
+
+```js
+// worker.js
+import { initRouter } from './routes.js';
+const router = initRouter();
+
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  const found = router.find({ url, method: req.method });
+  if (!found) return;
+
+  e.respondWith(processRequest(found, req, url));
+});
+
+async function processRequest(found, req, url) {
+  try {
+    const ctx = { request: req, url, params: found.params, match: found.result };
+    const res = await found.route.handler(ctx);
+    return sanitizeHeaders(res);
+  } catch {
+    return new Response('internal error', { status: 500 });
+  }
+}
+
+function sanitizeHeaders(res) {
+  const h = new Headers(res.headers);
+  if (!h.has('cache-control')) h.set('cache-control', 'no-store');
+  return new Response(res.body, { status: res.status, headers: h });
+}
+```
+
+---
+
+## 5. Using It in Node.js 24
+
+```js
+// server.js
+import http from 'node:http';
+import { initRouter } from './routes.js';
+
+const router = initRouter();
+const BASE = process.env.BASE_ORIGIN || 'http://localhost';
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, BASE);
+  const found = router.find({ url, method: req.method });
+
+  if (!found) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('not found');
+    return;
+  }
+
+  try {
+    const ctx = { request: req, url, params: found.params, match: found.result };
+    const webRes = await found.route.handler(ctx);
+    await respondNode(res, webRes);
+  } catch {
+    res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('internal error');
+  }
+});
+
+server.listen(3000, () => console.log('Server on http://localhost:3000'));
+
+async function respondNode(res, webResponse) {
+  const buffer = Buffer.from(await webResponse.arrayBuffer());
+  const headers = Object.fromEntries(webResponse.headers.entries());
+  res.writeHead(webResponse.status, headers);
+  res.end(buffer);
+}
+```
+
+---
+
+## 6. Performance and Security Notes
+
+- **Precompile once**: reuse `URLPattern` instances instead of creating them per request.  
+- **Avoid unsafe regex input**: do not accept user-supplied groups.  
+- **Enable `ignoreCase`** only where appropriate.  
+- **In Node**, always build absolute URLs — relative paths are invalid without a base origin.  
+- **In Service Workers**, match only your own origin.
+
+`URLPattern` may not beat optimized routers like `find-my-way` in raw performance, but it’s ideal for **shared client-server logic** and **unified validation**.
+
+---
+
+## 7. Example: Matching Hosts and Protocols
+
+```js
+const proto = new URLPattern({ protocol: 'http{s}?' });
+const host = new URLPattern({ hostname: '{:sub.}?example.com' });
+const assets = new URLPattern({ pathname: '/static/*' });
+const user = new URLPattern({ pathname: '/users/:id([1-9][0-9]*)' });
+const search = new URLPattern({
+  pathname: '/search',
+  search: '?q=:q&limit=:limit([0-9]{1,2})',
+});
+```
+
+---
+
+## 8. Benchmark: URLPattern vs RegExp
+
+```js
+// bench.js
+const N = Number(process.env.N || 1_000_000);
+const samples = [
+  'http://localhost/users/1?active=1',
+  'http://localhost/users/9999?active=1',
+  'http://localhost/users/x?active=1',
+  'http://localhost/posts/1?active=1',
+];
+
+const pattern = new URLPattern({
+  pathname: '/users/:id([1-9][0-9]*)',
+  search: '?active=1',
+});
+const regex = /^\/users\/(?<id>[1-9][0-9]*)$/;
+
+const run = (name, fn) => {
+  const start = performance.now();
+  let ok = 0;
+  for (let i = 0; i < N; i++) {
+    const u = new URL(samples[i % samples.length]);
+    if (fn(u)) ok++;
+  }
+  console.log(`${name}: ${(performance.now() - start).toFixed(1)} ms, ok=${ok}`);
+};
+
+run('URLPattern', u => pattern.test(u));
+run('RegExp', u => u.search === '?active=1' && regex.test(u.pathname));
+```
+
+---
+
+## 9. Unified Handler Contract
+
+```js
+/*
+Context {
+  request: Request | http.IncomingMessage,
+  url: URL,
+  params: Record<string, string | number>,
+  match: URLPatternResult
+}
+
+Handler: (ctx) => Promise<Response> | Response
+*/
+```
+
+---
+
+## ✅ Summary
+
+- Works natively in **Node 24** and browsers  
+- Unified syntax for **client + server routing**  
+- **Named parameters**, **regex validation**, **case control**  
+- Great for lightweight APIs and service workers  
+- Performance: good enough for production, if not benchmark-perfect
+
+The `URLPattern` API finally bridges browser and server routing — a clean, dependency-free way to define paths, parameters, and validation once for your entire stack.
