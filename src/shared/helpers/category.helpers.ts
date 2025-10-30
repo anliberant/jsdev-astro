@@ -23,6 +23,7 @@ const categoriesWithDescriptionArr = [
   'design',
   'docker',
   'web3',
+    'security',
 ];
 
 const categoriesWithDescription = new Set(categoriesWithDescriptionArr);
@@ -44,6 +45,7 @@ const howtoCategoriesWithColors: Record<string, [string, string]> = {
   typescript: ['#0376C6', '#0f96e8'],
   css: ['#2862E9', '#1f4dd6'],
   react: ['#0096c0', '#03779b'],
+  security: ['#ff5555', '#cc1a1a'],
 };
 
 const DEFAULT_COLORS: [string, string] = ['#0f172a', '#334155'];
@@ -310,6 +312,20 @@ export const getCategoryInfo = (categoryName: string, type = 'post'): CategoryIn
       heading = 'Docker: Ship Anywhere, Quickly';
       description = 'Guides on images, networks, and security basics. Reliable deploys with less toil.';
       metaDescription = 'Docker tutorials on images, networks, and security. Ship reliable apps faster.';
+    }
+  }
+
+if (cat === 'security') {
+    if (type === 'howto') {
+      name = 'Web Security Guide';
+      heading = 'Security How-To: Protection, Hardening, and Audits';
+      description = 'Practical steps to secure servers, APIs, and clients. Covering auth, encryption, and modern web attacks.';
+      metaDescription = 'Web security how-to: protect APIs and servers with encryption, auth, and vulnerability checks.';
+    } else {
+      name = 'Security';
+      heading = 'Web Security: Threats, Defenses, and Best Practices';
+      description = 'Guides on preventing data leaks, handling bots, securing APIs, and improving privacy. Build safe, trusted systems.';
+      metaDescription = 'Web security tutorials on preventing leaks, stopping bots, and securing APIs. Keep apps safe and trusted.';
     }
   }
 
