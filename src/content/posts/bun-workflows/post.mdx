@@ -1,0 +1,206 @@
+---
+title: 7 Bun Workflows to Supercharge Your Full-Stack Development
+slug: bun-workflows
+heading: Mastering Bun for Maximum Developer Productivity
+permalink: bun-workflows
+image: ./images/bun-workflows.png
+date: 2025-10-31
+author: anton liberant
+category: nodejs
+type: post
+tags: ['bun']
+desc: Discover seven Bun workflows to speed up your full-stack development — from workspaces and testing to fast builds and environment setup.
+---
+
+When someone types `npm install`, laptop fans roar like a jet engine.
+Bun changes that story. It combines a **runtime**, **package manager**,
+**bundler**, and **test runner** into one lightning-fast binary. But
+using Bun effectively takes more than just installation --- it requires
+the right workflows.
+
+Here are **seven practical Bun workflows** to help you write, test, and
+deploy apps faster and cleaner.
+
+## 1. Run One-Off Commands with `bunx`
+
+Forget globally installed CLI tools. They clutter your environment and
+version management. Instead, `bunx` lets you run any package command
+without installing it globally.
+
+``` bash
+# Create a new Vite + React project without global installs
+bunx create-vite@latest my-react-app --template react-ts
+
+# Run ESLint and auto-fix issues
+bunx eslint . --fix
+```
+
+Everyone --- from your local machine to CI pipelines --- uses the exact
+same tool versions. No more "works on my machine" moments.
+
+## 2. Use Reliable Lockfiles with `bun install`
+
+`bun install` isn't just fast; it ensures reproducible builds by
+generating compact and consistent dependencies.
+
+``` bash
+# Prevent accidental lockfile changes
+bun install --frozen-lockfile
+
+# Production install without devDependencies
+bun install --production
+```
+
+Commit the **`bun.lockb`** binary lockfile to your repo and enable
+`--frozen-lockfile` in CI to keep your dependency tree consistent across
+all environments.
+
+## 3. Simplify Monorepos with Bun Workspaces
+
+Bun makes managing monorepos effortless --- no need for Nx or Lerna.
+Just define your workspace structure in the root `package.json`:
+
+``` json
+{
+  "name": "super-app",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "bun run --filter \"./apps/*\" dev",
+    "build": "bun run --filter \"./packages/*\" build"
+  }
+}
+```
+
+Shared libraries under `packages/` are instantly available to all apps
+under `apps/`, streamlining multi-app development and versioning.
+
+## 4. Combine Front-End and API in a Single Bun Server
+
+Bun's built-in HTTP server is small and fast. Using frameworks like
+**Hono** or **Elysia**, you can serve both your API and static front-end
+from the same process.
+
+``` ts
+// server.ts
+import { Hono } from "hono";
+import { serveStatic } from "hono/bun";
+
+const server = new Hono();
+
+server.get("/api/users/:id", (ctx) => {
+  const { id } = ctx.req.param();
+  return ctx.json({ id, name: `User ${id}` });
+});
+
+server.use("/*", serveStatic({ root: "./public" }));
+
+export default {
+  port: 8080,
+  fetch: server.fetch,
+};
+```
+
+Start it with:
+
+``` bash
+bun --watch run server.ts
+```
+
+Your API and client reload automatically as you code --- the dream setup
+for full-stack development.
+
+## 5. Build Ultra-Fast Bundles with `bun build`
+
+Bun's bundler is extremely efficient for both client and server targets.
+
+``` bash
+# Bundle client code for browsers
+bun build ./src/main.ts --outdir ./dist/client --sourcemap --minify
+
+# Bundle backend code for Bun or Node.js
+bun build ./src/server.ts --target=bun --outdir ./dist/server
+```
+
+Perfect for microservices, cloud functions, or optimizing CI/CD build
+steps.
+
+## 6. Test Instantly with `bun test`
+
+Forget Jest configuration chaos. Bun's built-in test runner works out of
+the box with TypeScript, parallel execution, and coverage.
+
+``` ts
+// text-utils.test.ts
+import { expect, test, describe } from "bun:test";
+
+const toTitleCase = (text: string) =>
+  text ? text[0].toUpperCase() + text.slice(1) : "";
+
+describe("toTitleCase()", () => {
+  test("capitalizes the first letter", () => {
+    expect(toTitleCase("world")).toBe("World");
+  });
+
+  test("returns empty string for empty input", () => {
+    expect(toTitleCase("")).toBe("");
+  });
+});
+```
+
+Run tests with:
+
+``` bash
+bun test
+```
+
+Enjoy blazing speed with built-in watch mode and coverage reports ---
+testing feels frictionless again.
+
+## 7. Manage Environment Variables Without `dotenv`
+
+Bun automatically loads `.env` files from the project root, no
+dependencies required.
+
+``` env
+DATABASE_URL="postgresql://user:pass@localhost:5432/db"
+JWT_SECRET="super-secret-key"
+```
+
+Then simply access them in your code:
+
+``` ts
+// config.ts
+function requireEnv(key: string): string {
+  const val = Bun.env[key];
+  if (!val) throw new Error(`Missing environment variable: ${key}`);
+  return val;
+}
+
+export const env = {
+  db: requireEnv("DATABASE_URL"),
+  secret: requireEnv("JWT_SECRET"),
+};
+```
+
+This lightweight approach eliminates extra dependencies while enforcing
+safer configuration management.
+
+## ⚠️ Pitfalls to Watch For
+
+-   **Node.js module compatibility:** Not all Node APIs or native C++
+    modules are supported.\
+-   **CJS imports:** Some legacy packages require
+    `import pkg from 'old-lib'` and then using `pkg.default`.\
+-   **Binary lockfiles:** `bun.lockb` merges can't be resolved manually;
+    rerun `bun install` after conflicts.
+
+## 🧠 Takeaway
+
+Bun is about **integration** --- bundler, test runner, package manager,
+and runtime unified into one tool.\
+It replaces five separate utilities, cuts build times, and simplifies
+project setup dramatically.
+
+Start with [**ServBay**](https://www.servbay.com/) to manage your Node and Bun versions easily, then
+dive into these workflows to experience true full-stack acceleration.
