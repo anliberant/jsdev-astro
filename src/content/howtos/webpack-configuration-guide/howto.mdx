@@ -1,0 +1,319 @@
+---
+title: "Howto Configure Webpack: From Basics to Expert Level"
+slug: webpack-configuration-guide
+heading: "Mastering Webpack Configuration Step-by-Step"
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/webpack-configuration-guide
+date: 2025-11-02
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['webpack']
+desc: Learn how to configure Webpack step-by-step --- from simple
+  entry/output setups to advanced plugins, loaders, optimizations, and
+  environment-specific builds.
+---
+
+Hi developers! 👋 This guide will demystify **Webpack configuration**
+from beginner to expert. If the `webpack.config.js` file once looked
+like a foreign language, by the end of this article you'll understand
+every piece of it --- and how to customize it for real-world projects.
+
+## 🎯 1. Your First Webpack Config (Hello World)
+
+Let's start with the simplest example to understand the structure.
+
+``` js
+// my first webpack configuration
+const path = require("path");
+
+module.exports = {
+  // Entry: where bundling begins
+  entry: "./src/index.js",
+
+  // Output: where bundled files go
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
+  },
+
+  // Mode: development or production
+  mode: "development",
+};
+```
+
+Even this tiny config can bundle your app. Think of it as the "Hello
+World" of Webpack.
+
+## ⚙️ 2. Core Concepts: Entry, Output, Loaders, and Plugins
+
+### Entry --- The Starting Point
+
+``` js
+// Single entry (SPA)
+entry: "./src/index.js";
+
+// Multiple entries (multi-page)
+entry: {
+  home: "./src/home.js",
+  about: "./src/about.js",
+  contact: "./src/contact.js",
+};
+```
+
+### Output --- The Final Destination
+
+``` js
+output: {
+  path: path.resolve(__dirname, "dist"),
+  filename: "[name].[contenthash].js",
+  clean: true,
+  publicPath: "https://cdn.example.com/",
+};
+```
+
+### Loaders --- The File Translators
+
+Loaders tell Webpack how to handle different file types.
+
+``` js
+module: {
+  rules: [
+    { test: /\.css$/, use: ["style-loader", "css-loader"] },
+    { test: /\.scss$/, use: ["style-loader", "css-loader", "sass-loader"] },
+    {
+      test: /\.(png|jpg|jpeg|gif|svg)$/i,
+      type: "asset/resource",
+      generator: { filename: "images/[name].[hash][ext]" },
+    },
+    {
+      test: /\.(woff|woff2|eot|ttf|otf)$/i,
+      type: "asset/resource",
+      generator: { filename: "fonts/[name].[hash][ext]" },
+    },
+    {
+      test: /\.js$/,
+      exclude: /node_modules/,
+      use: { loader: "babel-loader", options: { presets: ["@babel/preset-env"] } },
+    },
+  ],
+}
+```
+
+### Plugins --- The Feature Boosters
+
+``` js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+
+plugins: [
+  new HtmlWebpackPlugin({
+    template: "./src/index.html",
+    title: "My App",
+    minify: true,
+  }),
+
+  new MiniCssExtractPlugin({
+    filename: "[name].[contenthash].css",
+  }),
+
+  new CleanWebpackPlugin(),
+
+  new webpack.DefinePlugin({
+    "process.env.NODE_ENV": JSON.stringify("production"),
+  }),
+];
+```
+
+## 🧱 3. Real-World Setup Example
+
+Here's a practical config used in real projects --- complete and
+environment-aware.
+
+``` js
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+module.exports = (env, argv) => {
+  const isProd = argv.mode === "production";
+
+  return {
+    entry: {
+      main: "./src/index.js",
+      vendor: "./src/vendor.js",
+    },
+
+    output: {
+      path: path.resolve(__dirname, "dist"),
+      filename: isProd ? "[name].[contenthash].js" : "[name].js",
+      publicPath: "/",
+    },
+
+    module: {
+      rules: [
+        { test: /\.js$/, exclude: /node_modules/, use: "babel-loader" },
+        {
+          test: /\.css$/,
+          use: [
+            isProd ? MiniCssExtractPlugin.loader : "style-loader",
+            "css-loader",
+            "postcss-loader",
+          ],
+        },
+        { test: /\.(png|jpg|gif)$/i, type: "asset/resource" },
+      ],
+    },
+
+    plugins: [
+      new HtmlWebpackPlugin({ template: "./src/index.html", inject: true }),
+      ...(isProd
+        ? [new MiniCssExtractPlugin({ filename: "[name].[contenthash].css" })]
+        : []),
+    ],
+
+    optimization: {
+      splitChunks: {
+        chunks: "all",
+        cacheGroups: {
+          vendor: {
+            test: /[\/]node_modules[\/]/,
+            name: "vendors",
+            priority: 10,
+          },
+        },
+      },
+    },
+
+    devServer: {
+      static: "./dist",
+      hot: true,
+      open: true,
+      port: 3000,
+    },
+
+    devtool: isProd ? "source-map" : "eval-cheap-module-source-map",
+  };
+};
+```
+
+## 🧩 4. Environment Configs: Dev vs. Production
+
+### Development
+
+``` js
+// webpack.dev.js
+module.exports = {
+  mode: "development",
+  devtool: "eval-source-map",
+  devServer: {
+    static: "./dist",
+    hot: true,
+    open: true,
+    historyApiFallback: true,
+  },
+  module: {
+    rules: [{ test: /\.css$/, use: ["style-loader", "css-loader"] }],
+  },
+};
+```
+
+### Production
+
+``` js
+// webpack.prod.js
+const TerserPlugin = require("terser-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+module.exports = {
+  mode: "production",
+  devtool: "source-map",
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
+    splitChunks: { chunks: "all" },
+  },
+  module: {
+    rules: [{ test: /\.css$/, use: [MiniCssExtractPlugin.loader, "css-loader"] }],
+  },
+  plugins: [new MiniCssExtractPlugin()],
+};
+```
+
+## 🧠 5. Advanced Webpack Tricks
+
+### Dynamic Configs
+
+``` js
+module.exports = (env, argv) => {
+  const isAnalyze = env && env.analyze;
+  const config = { /* base config */ };
+
+  if (isAnalyze) {
+    const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+    config.plugins.push(new BundleAnalyzerPlugin());
+  }
+
+  return config;
+};
+```
+
+### Multi-Target Builds
+
+``` js
+module.exports = [
+  {
+    name: "client",
+    target: "web",
+    entry: "./src/client.js",
+    output: { filename: "client.bundle.js" },
+  },
+  {
+    name: "server",
+    target: "node",
+    entry: "./src/server.js",
+    output: { filename: "server.bundle.js" },
+  },
+];
+```
+
+## ⚡ 6. Optimization Essentials
+
+``` js
+optimization: {
+  splitChunks: {
+    chunks: "all",
+    cacheGroups: {
+      vendor: {
+        test: /[\/]node_modules[\/]/,
+        name: "vendors",
+        priority: 20,
+      },
+      common: {
+        name: "common",
+        minChunks: 2,
+        priority: 10,
+        reuseExistingChunk: true,
+      },
+    },
+  },
+  runtimeChunk: { name: "runtime" },
+};
+```
+
+## 🏁 Summary
+
+Configuring Webpack is like **building with LEGO** --- start small and
+keep improving.
+
+✅ Understand the pillars: **Entry**, **Output**, **Loader**,
+**Plugin**\
+✅ Separate development and production configs\
+✅ Use code-splitting and caching wisely\
+✅ Optimize only where it matters
+
+Keep experimenting --- Webpack mastery comes from **practice**, not
+memorization.
