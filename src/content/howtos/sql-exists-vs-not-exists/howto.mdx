@@ -1,0 +1,126 @@
+---
+title: Howto Use EXISTS and NOT EXISTS in SQL
+slug: sql-exists-vs-not-exists
+heading: Understanding EXISTS and NOT EXISTS in SQL
+icon: /icons/sql.png
+image: /icon.png
+permalink: howto/sql-exists-vs-not-exists
+date: 2025-11-06
+author: anton liberant
+category: sql
+type: howto
+tags: [exists, not-exists, subqueries]
+desc: Learn the key differences between EXISTS and NOT EXISTS in SQL, how they work internally, and when to use each for efficient subquery filtering.
+---
+
+In SQL, filtering results based on the presence or absence of related data often involves the keywords **EXISTS** and **NOT EXISTS**. While they may look similar, their behavior and performance characteristics can vary depending on the database engine and query structure.
+
+This article breaks down how each works, when to use them, and how to avoid common mistakes.
+
+## ✅ What Is EXISTS?
+
+The `EXISTS` operator checks whether a **subquery returns at least one row**.
+If the subquery finds any result, `EXISTS` returns `TRUE`; otherwise, it returns `FALSE`.
+
+### Example
+
+```sql
+SELECT c.customer_id, c.name
+FROM customers c
+WHERE EXISTS (
+  SELECT 1
+  FROM orders o
+  WHERE o.customer_id = c.customer_id
+);
+```
+
+**Explanation:** This query returns all customers **who have at least one order**.
+The subquery runs per row of the main query, stopping immediately when a match is found — making it efficient for large datasets with indexes.
+
+## 🚫 What Is NOT EXISTS?
+
+`NOT EXISTS` is the logical opposite — it checks that a subquery **returns no rows**.
+If the subquery finds even one row, the condition becomes `FALSE`.
+
+### Example
+
+```sql
+SELECT c.customer_id, c.name
+FROM customers c
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM orders o
+  WHERE o.customer_id = c.customer_id
+);
+```
+
+**Explanation:** This query returns customers **who have never placed an order**.
+It’s useful for identifying missing relationships, such as users without activity or products not yet sold.
+
+## ⚙️ Internal Behavior and Performance
+
+- **EXISTS**: stops as soon as it finds the first matching row (short-circuit evaluation).
+- **NOT EXISTS**: must confirm that **no** matching rows exist, which can be slower on large tables.
+
+Many modern databases (PostgreSQL, MySQL 8+, SQL Server) optimize these checks effectively, especially when proper indexes are in place.
+
+## 💡 Practical Example
+
+Suppose you have two tables:
+
+```sql
+-- schemas
+users(id, name)
+purchases(id, user_id, amount)
+```
+
+### Find users with purchases
+
+```sql
+SELECT name
+FROM users u
+WHERE EXISTS (
+  SELECT 1
+  FROM purchases p
+  WHERE p.user_id = u.id
+);
+```
+
+### Find users without purchases
+
+```sql
+SELECT name
+FROM users u
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM purchases p
+  WHERE p.user_id = u.id
+);
+```
+
+The difference lies in **what you're testing for** — the existence or nonexistence of related data.
+
+## ⚖️ EXISTS vs IN vs JOIN
+
+| Operator                | Use Case                       | Behavior                                 |
+|-------------------------|--------------------------------|------------------------------------------|
+| `EXISTS`                | Check if subquery has any rows | Stops at the first match                 |
+| `NOT EXISTS`            | Check for missing relationships| Confirms no matches exist                |
+| `IN`                    | Compare values directly        | Can be slower with large subquery sets   |
+| `LEFT JOIN ... IS NULL` | Alternative to `NOT EXISTS`    | Watch for duplicates if joins fan out    |
+
+## 🧠 Best Practices
+
+1. **Prefer `EXISTS` for correlated subqueries** — it’s often clearer and faster than `IN`.
+2. **Index** the columns used in the subquery’s join condition.
+3. **Beware NULLs** with `NOT EXISTS`: ensure subquery filters exclude unwanted NULL semantics.
+4. **Measure** on your database — optimizers differ by engine and version.
+
+## 🏁 Conclusion
+
+`EXISTS` and `NOT EXISTS` are powerful tools for expressing relationships between datasets.
+
+- Use **EXISTS** to find records **with** matching entries.
+- Use **NOT EXISTS** to find records **without** matches.
+
+With sound indexing and careful structure, they make queries cleaner, faster, and more expressive.
