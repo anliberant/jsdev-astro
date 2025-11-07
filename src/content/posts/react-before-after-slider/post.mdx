@@ -1,0 +1,325 @@
+---
+title: Building an Accessible Before/After Slider in React
+slug: react-before-after-slider
+heading: Create a Modern, Accessible Before/After Slider with React
+icon: /icons/react.png
+image: ./images/before-after-slider.png
+permalink: react-before-after-slider
+date: 2025-11-07
+author: anton liberant
+category: react
+type: howto
+tags: ['slider', 'react-slider', 'tailwind',]
+desc: Upgrade a before/after image comparison slider in React with Pointer Events, full keyboard support, A11Y (role="slider"), and resize-safe math.
+---
+
+If you’ve ever wanted to show a visual transformation — like a **photo edit**, a **UI redesign**, or a **before-and-after effect** — you’ve probably seen those interactive sliders where you can drag a handle to reveal changes.  
+
+In this tutorial, we’ll build one of those sliders entirely in **React**, from scratch — no dependencies, no CSS hacks, and full **keyboard and accessibility support**.  
+By the end, you’ll have a reusable `<Slider />` component you can drop into any project.
+
+---
+
+## Why This Matters
+
+Before/after sliders are perfect for:
+- Product comparisons (old vs new)
+- Image editing showcases
+- Design before/after reveals
+- Visual storytelling
+
+The problem?  
+Most examples online use outdated event handlers, don’t handle touch events, or completely ignore accessibility.
+
+Let’s fix that. We’ll use:
+- **Pointer Events** — for unified mouse & touch input
+- **ARIA roles** — so it’s usable with a keyboard or screen reader
+- **React hooks** — for clear, modern logic
+- **TailwindCSS** — for concise, scalable styling
+
+---
+
+## Step 1 — Setup the Component
+
+Create a new file called `Slider.tsx` (or `.jsx` if you prefer).  
+We’ll start with a minimal structure and a 50/50 default split between “before” and “after” images.
+
+```tsx
+'use client';
+
+import React from 'react';
+
+const Slider: React.FC = () => {
+  const [slider, setSlider] = React.useState(50);
+  const [dragging, setDragging] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const pointerIdRef = React.useRef<number | null>(null);
+
+  const beforeImage = 'https://iili.io/KtZ58mJ.md.png';
+  const afterImage  = 'https://iili.io/KtZ5gXR.png';
+```
+
+This gives us state for:
+- `slider`: the current divider position (in percent)
+- `dragging`: whether we’re currently dragging the handle
+- `containerRef`: the image container reference
+- `pointerIdRef`: the pointer that owns the drag session
+
+---
+
+## Step 2 — Handling Drag and Resize
+
+Now let’s convert the pointer’s X position to a percentage inside the container.  
+This makes the slider responsive to any container width.
+
+```tsx
+const clamp = (n: number) => Math.max(0, Math.min(100, n));
+
+const clientToPercent = React.useCallback((clientX: number) => {
+  const el = containerRef.current;
+  if (!el) return slider;
+  const rect = el.getBoundingClientRect();
+  const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+  return clamp((x / rect.width) * 100);
+}, [slider]);
+```
+
+Then we’ll use **Pointer Events** to track dragging:
+
+```tsx
+const onPointerDown = (e: React.PointerEvent) => {
+  pointerIdRef.current = e.pointerId;
+  (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  setDragging(true);
+  setSlider(clientToPercent(e.clientX));
+};
+
+React.useEffect(() => {
+  if (!dragging) return;
+  const onMove = (e: PointerEvent) => setSlider(clientToPercent(e.clientX));
+  const onUp = () => setDragging(false);
+
+  window.addEventListener('pointermove', onMove, { passive: true });
+  window.addEventListener('pointerup', onUp, { passive: true });
+  return () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+  };
+}, [dragging, clientToPercent]);
+```
+
+This way, dragging works **even if your cursor leaves the component** — and supports both mouse and touch automatically.
+
+---
+
+## Step 3 — Keyboard Accessibility
+
+A11Y matters.  
+Let’s add full keyboard support — with arrows, PageUp/PageDown, Home, and End.
+
+```tsx
+const onKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+  const step = e.shiftKey ? 5 : 2;
+  const big = 10;
+
+  switch (e.key) {
+    case 'ArrowLeft': e.preventDefault(); setSlider(s => clamp(s - step)); break;
+    case 'ArrowRight': e.preventDefault(); setSlider(s => clamp(s + step)); break;
+    case 'PageDown': e.preventDefault(); setSlider(s => clamp(s - big)); break;
+    case 'PageUp': e.preventDefault(); setSlider(s => clamp(s + big)); break;
+    case 'Home': e.preventDefault(); setSlider(0); break;
+    case 'End': e.preventDefault(); setSlider(100); break;
+  }
+};
+```
+
+---
+
+## Step 4 — Rendering the Markup
+
+We’ll overlay the “after” image above the “before” one and reveal it using a CSS `clip-path`.
+
+```tsx
+return (
+  <div className="relative w-full max-w-lg mx-auto">
+    <div
+      ref={containerRef}
+      className="relative w-full rounded-2xl overflow-hidden select-none"
+      style={{ aspectRatio: '4 / 3', touchAction: 'none' }}
+      role="group"
+      aria-label="Before and after image comparison"
+    >
+      <img src={beforeImage} alt="Before" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - slider}% 0 0)` }}>
+        <img src={afterImage} alt="After" className="w-full h-full object-cover" />
+      </div>
+      <div className="absolute top-0 bottom-0 w-px bg-white/90" style={{ left: `${slider}%` }} />
+```
+
+Then we’ll add the draggable handle with ARIA attributes and a smooth hover effect:
+
+```tsx
+      <button
+        type="button"
+        className="absolute top-1/2 -translate-y-1/2 group"
+        style={{ left: `${slider}%`, transform: 'translate(-50%, -50%)' }}
+        onPointerDown={onPointerDown}
+        onKeyDown={onKeyDown}
+        role="slider"
+        aria-label="Move comparison slider"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(slider)}
+      >
+        <span className="grid place-items-center w-8 h-8 rounded-full bg-white shadow-lg ring-1 ring-black/10">
+          <span className="grid place-items-center w-6 h-6 rounded-full bg-black/5">
+            <span className="w-1 h-4 rounded-full bg-black/60" />
+          </span>
+        </span>
+      </button>
+    </div>
+  </div>
+);
+```
+
+---
+
+## Step 5 — Add Optional Labels and Styles
+
+Want “BEFORE” and “AFTER” text overlays? Just drop these inside the container:
+
+```tsx
+<div className="absolute bottom-4 left-4 text-xs font-medium text-white/80">AFTER</div>
+<div className="absolute bottom-4 right-4 text-xs font-medium text-white">BEFORE</div>
+```
+
+---
+
+## Step 6 — Test and Reuse
+
+Now test it on desktop, mobile, and with a keyboard — everything should work smoothly.
+
+You can tweak:
+- The **default percentage**
+- The **transition** (add CSS `transition` for smoother motion)
+- The **aspect ratio** (change `aspectRatio` or Tailwind class)
+
+---
+
+## ✅ Full Component Code
+
+```tsx
+'use client';
+
+import React from 'react';
+
+const Slider: React.FC = () => {
+  const [slider, setSlider] = React.useState(50);
+  const [dragging, setDragging] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const pointerIdRef = React.useRef<number | null>(null);
+
+  const beforeImage = 'https://iili.io/KtZ58mJ.md.png';
+  const afterImage = 'https://iili.io/KtZ5gXR.png';
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+
+  const clientToPercent = React.useCallback((clientX: number) => {
+    const el = containerRef.current;
+    if (!el) return slider;
+    const rect = el.getBoundingClientRect();
+    const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+    return clamp((x / rect.width) * 100);
+  }, [slider]);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    pointerIdRef.current = e.pointerId;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    setDragging(true);
+    setSlider(clientToPercent(e.clientX));
+  };
+
+  React.useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: PointerEvent) => setSlider(clientToPercent(e.clientX));
+    const onUp = () => setDragging(false);
+
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerup', onUp, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [dragging, clientToPercent]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    const step = e.shiftKey ? 5 : 2;
+    const big = 10;
+    switch (e.key) {
+      case 'ArrowLeft': e.preventDefault(); setSlider(s => clamp(s - step)); break;
+      case 'ArrowRight': e.preventDefault(); setSlider(s => clamp(s + step)); break;
+      case 'PageDown': e.preventDefault(); setSlider(s => clamp(s - big)); break;
+      case 'PageUp': e.preventDefault(); setSlider(s => clamp(s + big)); break;
+      case 'Home': e.preventDefault(); setSlider(0); break;
+      case 'End': e.preventDefault(); setSlider(100); break;
+    }
+  };
+
+  return (
+    <div className="relative w-full max-w-lg mx-auto">
+      <div
+        ref={containerRef}
+        className="relative w-full rounded-2xl overflow-hidden select-none"
+        style={{ aspectRatio: '4 / 3', touchAction: 'none' }}
+        role="group"
+        aria-label="Before and after image comparison"
+      >
+        <img src={beforeImage} alt="Before" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - slider}% 0 0)` }}>
+          <img src={afterImage} alt="After" className="w-full h-full object-cover" />
+        </div>
+        <div className="absolute top-0 bottom-0 w-px bg-white/90" style={{ left: `${slider}%` }} />
+        <button
+          type="button"
+          className="absolute top-1/2 -translate-y-1/2 group"
+          style={{ left: `${slider}%`, transform: 'translate(-50%, -50%)' }}
+          onPointerDown={onPointerDown}
+          onKeyDown={onKeyDown}
+          role="slider"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(slider)}
+        >
+          <span className="grid place-items-center w-8 h-8 rounded-full bg-white shadow-lg ring-1 ring-black/10">
+            <span className="grid place-items-center w-6 h-6 rounded-full bg-black/5">
+              <span className="w-1 h-4 rounded-full bg-black/60" />
+            </span>
+          </span>
+        </button>
+        <div className="absolute bottom-4 left-4 text-xs font-medium text-white/80">AFTER</div>
+        <div className="absolute bottom-4 right-4 text-xs font-medium text-white">BEFORE</div>
+      </div>
+
+      <p className="text-center mt-4 text-sm text-black/60">
+        Drag the slider or use ← →, Home/End, PageUp/PageDown ✨
+      </p>
+    </div>
+  );
+};
+
+export default Slider;
+```
+
+---
+
+## 🎯 Wrapping Up
+
+Now you have a fully functional, accessible before/after slider component — built purely with React and modern browser APIs.
+
+It’s lightweight, responsive, and ready to adapt:
+- Add transitions for smooth motion  
+- Support vertical sliding (use `clientY`)  
+- Add captions or custom UI  
+- Or even sync multiple sliders for fun effects  
+
+Your users will love it — and your accessibility auditor will too.
