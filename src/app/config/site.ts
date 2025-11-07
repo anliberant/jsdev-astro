@@ -40,7 +40,7 @@ export const siteConfig = {
   social: {
     github: 'https://github.com/jsdevspace',
     facebook: 'https://www.facebook.com/jsdevspace',
-    twitter: 'https://twitter.com/jsdevspace',
+    twitter: 'https://x.com/jsdevspace',
     mastodon: 'https://mastodon.social/@jsdevspace',
     telegram: 'https://t.me/jsdevspace',
     substack: 'https://jsdevspace.substack.com',

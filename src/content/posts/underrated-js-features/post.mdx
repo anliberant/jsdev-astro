@@ -1,0 +1,284 @@
+---
+title: '10 Criminally Underrated JS Features That Slash Boilerplate'
+slug: underrated-js-features
+heading: 'Mastering URLPattern for Cross-Platform Routing'
+image: ./images/underrated-js-features.png
+permalink: underrated-js-features
+date: 2025-11-07
+author: anton liberant
+category: javascript
+type: post
+tags: []
+desc: Discover 10 overlooked JavaScript features—Sets, Intl, URL APIs, pipeline-ready patterns, allSettled, top-level await, and more—to cut boilerplate fast.
+---
+
+While browsing a developer thread recently, I came across a discussion about the most **underrated JavaScript features** — features that quietly save hundreds of lines of code and make your apps leaner. Here's a curated list with fresh examples and rewritten code for 2025.
+
+---
+
+## 1. Set — Instant Deduplication + O(1) Lookups
+
+**Use cases:** Remove duplicates, prevent event re-binding.
+
+```js
+const idPool = [101, 102, 102, 103, 103, 103];
+const dedupedIds = [...new Set(idPool)];
+console.log(dedupedIds); // [101, 102, 103]
+```
+
+Prevent duplicate event bindings:
+
+```js
+const wiredEvents = new Set();
+
+function bindOnce(evtName, handler) {
+  if (wiredEvents.has(evtName)) return;
+  window.addEventListener(evtName, handler);
+  wiredEvents.add(evtName);
+}
+
+bindOnce('scroll', () => console.log('scrolling'));
+bindOnce('scroll', () => console.log('scrolling'));
+```
+
+---
+
+## 2. Object.entries() + Object.fromEntries() — Object Transformer Power Duo
+
+Filter null or empty values from objects:
+
+```js
+const rawProfile = {
+  fullName: 'Zhang San',
+  age: 28,
+  avatar: '',
+  phone: '13800138000',
+};
+
+const compactProfile = Object.fromEntries(
+  Object.entries(rawProfile).filter(([k, v]) => v !== '')
+);
+
+console.log(compactProfile);
+// { fullName: 'Zhang San', age: 28, phone: '13800138000' }
+```
+
+Parse URL queries without regex:
+
+```js
+const queryString = window.location.search.slice(1);
+const queryMap = Object.fromEntries(new URLSearchParams(queryString));
+console.log(queryMap);
+```
+
+---
+
+## 3. ?? and ??= — Safer Defaults than ||
+
+Unlike `||`, nullish coalescing doesn’t override valid falsy values like `0` or `''`.
+
+```js
+const qtyInput = 0;
+const wrongQty = qtyInput || 10;
+const safeQty = qtyInput ?? 10;
+console.log(wrongQty, safeQty); // 10, 0
+```
+
+Add default fields safely:
+
+```js
+const reqOpts = { timeout: 5000 };
+reqOpts.retries ??= 3;
+console.log(reqOpts);
+```
+
+---
+
+## 4. Intl — Native i18n for Currency, Numbers, Dates
+
+Format prices easily:
+
+```js
+const priceValue = 1234.56;
+const priceCNY = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(priceValue);
+const priceUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(priceValue);
+console.log(priceCNY, priceUSD);
+```
+
+Localized dates:
+
+```js
+const clock = new Date();
+const zhDate = new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }).format(clock);
+const enDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(clock);
+console.log(zhDate, enDate);
+```
+
+---
+
+## 5. IntersectionObserver — Lazy Images + Infinite Lists
+
+Lazy-load images:
+
+```html
+<img data-src="https://site.com/photo.jpg" src="placeholder.jpg" class="js-lazy" />
+```
+
+```js
+const imageWatcher = new IntersectionObserver((batch) => {
+  for (const entry of batch) {
+    if (!entry.isIntersecting) continue;
+    const pic = entry.target;
+    pic.src = pic.dataset.src;
+    imageWatcher.unobserve(pic);
+  }
+});
+document.querySelectorAll('.js-lazy').forEach((img) => imageWatcher.observe(img));
+```
+
+Infinite scrolling:
+
+```js
+const sentinel = document.getElementById('load-flag');
+const listWatcher = new IntersectionObserver(async ([entry]) => {
+  if (!entry.isIntersecting) return;
+  const newItems = await fetchNextPage();
+  renderList(newItems);
+});
+listWatcher.observe(sentinel);
+```
+
+---
+
+## 6. Promise.allSettled() — Batch Requests Without Failing Fast
+
+Unlike `Promise.all`, `allSettled()` waits for every result.
+
+```js
+const batchTasks = [
+  fetch('/api/user/101'),
+  fetch('/api/orders/101'),
+  fetch('/api/messages/101'),
+];
+
+const outcomes = await Promise.allSettled(batchTasks);
+const okPayloads = await Promise.all(outcomes.filter(r => r.status === 'fulfilled').map(r => r.value.json()));
+const badEndpoints = outcomes.filter(r => r.status === 'rejected').map(r => r.reason?.url ?? '(unknown)');
+console.log('OK:', okPayloads);
+console.log('Failed:', badEndpoints);
+```
+
+---
+
+## 7. Element.closest() — Reliable DOM Traversal
+
+Highlight container when clicking a child:
+
+```html
+<ul class="people-list">
+  <li class="people-item">Alice</li>
+  <li class="people-item">Bob</li>
+</ul>
+```
+
+```js
+document.querySelectorAll('.people-item').forEach((node) => {
+  node.addEventListener('click', (ev) => {
+    const wrapper = ev.target.closest('.people-list');
+    wrapper?.classList.toggle('is-active');
+  });
+});
+```
+
+---
+
+## 8. URL + URLSearchParams — No More Regex URL Manipulation
+
+```js
+const current = new URL(window.location.href);
+console.log(current.hostname);
+console.log(current.pathname);
+console.log(current.searchParams.get('name'));
+```
+
+Modify query parameters:
+
+```js
+const link = new URL('https://example.com/page');
+link.searchParams.append('page', '3');
+link.searchParams.append('limit', '10');
+link.searchParams.set('page', '4');
+link.searchParams.delete('limit');
+console.log(link.href);
+```
+
+---
+
+## 9. for...of — Iterable-Friendly and Breakable
+
+Stop mid-loop when found:
+
+```js
+const catalog = [
+  { id: 1, label: 'Phone', price: 5999 },
+  { id: 2, label: 'Laptop', price: 9999 },
+  { id: 3, label: 'Tablet', price: 3999 },
+];
+
+for (const item of catalog) {
+  if (item.price > 8000) {
+    console.log('High-value item:', item);
+    break;
+  }
+}
+```
+
+Iterate a Set with indexes:
+
+```js
+const tagBag = new Set(['Frontend', 'JS', 'CSS']);
+for (const [idx, token] of [...tagBag].entries()) {
+  console.log(`Index ${idx}: ${token}`);
+}
+```
+
+---
+
+## 10. Top-Level Await — Async Modules Without Wrappers
+
+**config.mjs**
+
+```js
+const resp = await fetch('/api/config');
+export const runtimeConfig = await resp.json();
+```
+
+**api.mjs**
+
+```js
+import { runtimeConfig } from './config.mjs';
+
+export const httpClient = {
+  base: runtimeConfig.baseUrl,
+  get(path) {
+    return fetch(`${this.base}${path}`);
+  },
+};
+```
+
+Dynamic import on user action:
+
+```js
+document.getElementById('btn-charts').addEventListener('click', async () => {
+  const { mountChart } = await import('./charts.mjs');
+  mountChart('#chart-area');
+});
+```
+
+---
+
+## ✅ Wrap-Up
+
+A lot of what we used to need libraries for—`uniq`, `moment`, lazy loading—now has native APIs.  
+Modern JavaScript has matured: it’s fast, expressive, and powerful right out of the box.  
+Embrace these hidden gems, and you’ll spend more time solving real problems, not rewriting helpers.
