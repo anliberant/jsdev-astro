@@ -1,0 +1,815 @@
+---
+title: Howto Use Blob Objects for Efficient File Handling
+slug: blob-file-handling-guide
+heading: A Practical Guide to Blobs, File APIs, and Memory Optimization
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/blob-file-handling-guide
+date: 2025-11-14
+author: anton liberant
+category: javascript
+type: howto
+tags: ['blob']
+desc: Learn how to use Blob objects to handle files, stream large uploads, compress images, export data, and avoid memory leaks in modern front-end apps.
+---
+
+In modern front-end apps, file handling is everywhere: image uploads, CSV exports, previews, and rich editors. But once files get big or numerous, things start to break: the UI freezes, memory usage spikes, and the browser occasionally dies.
+
+This guide walks through **six practical Blob techniques** that help handle files efficiently and safely:
+
+- Creating Blobs correctly
+- Chunking large files
+- Compressing and converting images
+- Implementing robust file previews
+- Exporting data as downloadable files
+- Managing memory to avoid Blob URL leaks
+
+The goal: **make file handling fast, stable, and production-ready.**
+
+---
+
+## 1. Creating Blob Objects Safely and Efficiently
+
+### Common pain
+
+Many developers start by manipulating giant strings or base64 data URLs, which:
+
+- Duplicate data in memory
+- Blow up heap usage
+- Slow down the UI
+
+```js
+// ❌ Bad: huge string + data URL = double memory usage
+const hugeText = 'Very long text...'.repeat(100_000);
+const dataUrl =
+  'data:text/plain;charset=utf-8,' + encodeURIComponent(hugeText);
+```
+
+### Use Blobs instead
+
+A Blob is a lightweight wrapper around binary data. The browser can stream it, slice it, and build URLs from it without copying the entire payload.
+
+```js
+/**
+ * Safely create a Blob from data chunks.
+ */
+const createBlob = (
+  parts: BlobPart[],
+  options: BlobPropertyBag = {}
+): Blob => {
+  return new Blob(parts, {
+    type: options.type ?? 'text/plain',
+    endings: options.endings ?? 'transparent',
+  });
+};
+
+// Text Blob
+const messageBlob = createBlob(['Hello, Blob!'], {
+  type: 'text/plain',
+});
+
+// JSON Blob
+const userProfile = { name: 'Alex', age: 29 };
+const profileBlob = createBlob([JSON.stringify(userProfile)], {
+  type: 'application/json',
+});
+
+// HTML Blob
+const htmlSnippet = '<h1>Dynamically Generated HTML</h1>';
+const htmlBlob = createBlob([htmlSnippet], { type: 'text/html' });
+```
+
+### Real-world use: “download config as file”
+
+```js
+const downloadConfig = (config: unknown) => {
+  const serialized = JSON.stringify(config, null, 2);
+  const blob = new Blob([serialized], {
+    type: 'application/json',
+  });
+
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+
+  anchor.href = url;
+  anchor.download = 'config.json';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+
+  URL.revokeObjectURL(url);
+};
+```
+
+**Key ideas**
+
+- Blobs **wrap data without copying it**.
+- Always set a **correct MIME type** (e.g., `application/json`, `image/jpeg`).
+- Use `URL.createObjectURL(blob)` to get a fast, stream-friendly URL.
+
+---
+
+## 2. Chunking Large Files to Avoid Memory Explosions
+
+### Common pain
+
+Reading a 2 GB log file with `FileReader.readAsText()` in one go is a great way to:
+
+- Freeze the tab
+- Hit memory limits
+- Crash the browser
+
+```js
+// ❌ Bad: read entire file into memory
+const processLargeFile = (file: File) => {
+  const reader = new FileReader();
+
+  reader.onload = (event) => {
+    const text = event.target?.result as string;
+    // Massive string in memory
+    handleWholeFile(text);
+  };
+
+  reader.readAsText(file);
+};
+```
+
+### Better: process in chunks with `slice()`
+
+```js
+/**
+ * Process a file in fixed-size chunks to avoid memory pressure.
+ */
+const processFileInChunks = async (
+  file: File,
+  chunkSize = 1024 * 1024,
+  onProgress?: (info: {
+    current: number;
+    total: number;
+    percentage: number;
+  }) => void
+) => {
+  const totalChunks = Math.ceil(file.size / chunkSize);
+  const results: unknown[] = [];
+
+  for (let index = 0; index < totalChunks; index++) {
+    const start = index * chunkSize;
+    const end = Math.min(start + chunkSize, file.size);
+    const chunk = file.slice(start, end);
+
+    const result = await readChunk(chunk, index);
+    results.push(result);
+
+    onProgress?.({
+      current: index + 1,
+      total: totalChunks,
+      percentage: Math.round(((index + 1) / totalChunks) * 100),
+    });
+  }
+
+  return results;
+};
+
+const readChunk = (
+  chunk: Blob,
+  index: number
+): Promise<{ index: number; size: number; sample: string }> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      resolve({
+        index,
+        size: chunk.size,
+        sample: text.slice(0, 100),
+      });
+    };
+
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(chunk);
+  });
+};
+```
+
+### Real-world use: chunked upload class
+
+```js
+class ChunkedUploader {
+  private file: File;
+  private chunkSize: number;
+  private uploadUrl: string;
+  private onProgress?: (info: {
+    uploaded: number;
+    total: number;
+    percentage: number;
+  }) => void;
+
+  constructor(file: File, options: {
+    chunkSize?: number;
+    uploadUrl: string;
+    onProgress?: (info: { uploaded: number; total: number; percentage: number }) => void;
+  }) {
+    this.file = file;
+    this.chunkSize = options.chunkSize ?? 2 * 1024 * 1024; // 2MB
+    this.uploadUrl = options.uploadUrl;
+    this.onProgress = options.onProgress;
+  }
+
+  async upload() {
+    const totalChunks = Math.ceil(this.file.size / this.chunkSize);
+    const uploadId = this.createUploadId();
+
+    for (let index = 0; index < totalChunks; index++) {
+      const start = index * this.chunkSize;
+      const end = Math.min(start + this.chunkSize, this.file.size);
+      const chunk = this.file.slice(start, end);
+
+      await this.uploadChunk(chunk, index, uploadId);
+
+      this.onProgress?.({
+        uploaded: index + 1,
+        total: totalChunks,
+        percentage: Math.round(((index + 1) / totalChunks) * 100),
+      });
+    }
+
+    return this.mergeChunks(uploadId, totalChunks);
+  }
+
+  private async uploadChunk(chunk: Blob, index: number, uploadId: string) {
+    const body = new FormData();
+    body.append('chunk', chunk);
+    body.append('index', String(index));
+    body.append('uploadId', uploadId);
+
+    const response = await fetch(this.uploadUrl, { method: 'POST', body });
+
+    if (!response.ok) {
+      throw new Error(`Chunk ${index} upload failed`);
+    }
+  }
+
+  private async mergeChunks(uploadId: string, totalChunks: number) {
+    const response = await fetch('/api/merge-chunks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uploadId, totalChunks }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to merge chunks');
+    }
+
+    return response.json();
+  }
+
+  private createUploadId() {
+    return `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  }
+}
+```
+
+---
+
+## 3. Image Compression and Format Conversion on the Front End
+
+### Common pain
+
+Uploading raw 8 MB photos directly from phones or cameras:
+
+- Wastes bandwidth
+- Slows uploads
+- Hurts perceived performance
+
+```js
+// ❌ No compression: heavy uploads, slow UX
+const uploadOriginalImage = (file: File) => {
+  const body = new FormData();
+  body.append('image', file);
+  return fetch('/upload', { method: 'POST', body });
+};
+```
+
+### Better: compress with `<canvas>` and Blob
+
+```js
+interface CompressionOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+  outputType?: string;
+}
+
+const compressImage = (
+  file: File,
+  options: CompressionOptions = {}
+): Promise<Blob> => {
+  const {
+    maxWidth = 1920,
+    maxHeight = 1080,
+    quality = 0.8,
+    outputType = 'image/jpeg',
+  } = options;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      reject(new Error('Canvas 2D context not available'));
+      return;
+    }
+
+    img.onload = () => {
+      const { width, height } = fitIntoBox(
+        img.width,
+        img.height,
+        maxWidth,
+        maxHeight
+      );
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to compress image'));
+        },
+        outputType,
+        quality
+      );
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+const fitIntoBox = (
+  originalWidth: number,
+  originalHeight: number,
+  maxWidth: number,
+  maxHeight: number
+) => {
+  let width = originalWidth;
+  let height = originalHeight;
+
+  if (width > maxWidth) {
+    height = (height * maxWidth) / width;
+    width = maxWidth;
+  }
+  if (height > maxHeight) {
+    width = (width * maxHeight) / height;
+    height = maxHeight;
+  }
+
+  return { width: Math.round(width), height: Math.round(height) };
+};
+```
+
+### Real-world use: avatar uploader
+
+```js
+class AvatarService {
+  private maxSize: number;
+  private quality: number;
+
+  constructor(options?: { maxSize?: number; quality?: number }) {
+    this.maxSize = options?.maxSize ?? 200;
+    this.quality = options?.quality ?? 0.9;
+  }
+
+  async prepareAvatar(file: File) {
+    if (!this.isSupportedType(file)) {
+      throw new Error('Please choose a valid image file');
+    }
+
+    const compressed = await compressImage(file, {
+      maxWidth: this.maxSize,
+      maxHeight: this.maxSize,
+      quality: this.quality,
+      outputType: 'image/jpeg',
+    });
+
+    const previewUrl = URL.createObjectURL(compressed);
+
+    return {
+      blob: compressed,
+      previewUrl,
+      originalSize: file.size,
+      compressedSize: compressed.size,
+      compressionRatio: Math.round(
+        (1 - compressed.size / file.size) * 100
+      ),
+    };
+  }
+
+  async uploadAvatar(blob: Blob) {
+    const body = new FormData();
+    body.append('avatar', blob, 'avatar.jpg');
+
+    const response = await fetch('/api/upload-avatar', {
+      method: 'POST',
+      body,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload avatar');
+    }
+
+    return response.json();
+  }
+
+  private isSupportedType(file: File) {
+    return ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(
+      file.type
+    );
+  }
+}
+```
+
+---
+
+## 4. A Unified File Preview Component
+
+You might need to preview:
+
+- Images
+- Text / JSON
+- Audio / Video
+- PDFs or “unknown” files
+
+Doing this ad hoc for each type leads to repeated, messy code.
+
+### Better: a reusable preview class
+
+```ts
+class FilePreviewer {
+  private container: HTMLElement;
+  private textEncoding: string;
+
+  constructor(container: HTMLElement, options?: { textEncoding?: string }) {
+    this.container = container;
+    this.textEncoding = options?.textEncoding ?? 'utf-8';
+  }
+
+  async preview(file: File | Blob) {
+    this.container.innerHTML = '';
+
+    const type = this.detectType(file);
+
+    switch (type) {
+      case 'image':
+        return this.renderImage(file);
+      case 'text':
+        return this.renderText(file);
+      case 'audio':
+        return this.renderAudio(file);
+      case 'video':
+        return this.renderVideo(file);
+      case 'pdf':
+        return this.renderPdfPlaceholder(file);
+      default:
+        return this.renderUnknown(file);
+    }
+  }
+
+  private detectType(file: File | Blob) {
+    const mime = (file as File).type?.toLowerCase();
+
+    if (mime.startsWith('image/')) return 'image';
+    if (mime.startsWith('text/') || mime === 'application/json') return 'text';
+    if (mime.startsWith('audio/')) return 'audio';
+    if (mime.startsWith('video/')) return 'video';
+    if (mime === 'application/pdf') return 'pdf';
+
+    return 'unknown';
+  }
+
+  private async renderImage(file: File | Blob) {
+    const url = URL.createObjectURL(file);
+    const img = document.createElement('img');
+
+    img.src = url;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '480px';
+    img.style.objectFit = 'contain';
+
+    img.onload = () => URL.revokeObjectURL(url);
+
+    this.container.appendChild(img);
+  }
+
+  private async renderText(file: File | Blob) {
+    const content = await this.readAsText(file);
+    const pre = document.createElement('pre');
+
+    pre.textContent =
+      content.length > 10_000
+        ? content.slice(0, 10_000) +
+          '
+
+... (truncated to 10,000 characters)'
+        : content;
+
+    pre.style.whiteSpace = 'pre-wrap';
+    pre.style.maxHeight = '400px';
+    pre.style.overflow = 'auto';
+    pre.style.padding = '10px';
+    pre.style.background = '#f5f5f5';
+
+    this.container.appendChild(pre);
+  }
+
+  private async renderAudio(file: File | Blob) {
+    const url = URL.createObjectURL(file);
+    const audio = document.createElement('audio');
+
+    audio.controls = true;
+    audio.src = url;
+    audio.onloadedmetadata = () => URL.revokeObjectURL(url);
+
+    this.container.appendChild(audio);
+  }
+
+  private async renderVideo(file: File | Blob) {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+
+    video.controls = true;
+    video.style.maxWidth = '100%';
+    video.style.maxHeight = '400px';
+    video.src = url;
+    video.onloadedmetadata = () => URL.revokeObjectURL(url);
+
+    this.container.appendChild(video);
+  }
+
+  private renderPdfPlaceholder(file: File | Blob) {
+    const box = document.createElement('div');
+    box.style.padding = '32px';
+    box.style.textAlign = 'center';
+
+    box.innerHTML = `
+      <p>PDF preview placeholder</p>
+      <p>Type: ${(file as File).type || 'application/pdf'}</p>
+    `;
+
+    this.container.appendChild(box);
+  }
+
+  private renderUnknown(file: File | Blob) {
+    const box = document.createElement('div');
+    box.style.padding = '32px';
+    box.style.textAlign = 'center';
+
+    box.innerHTML = `
+      <p>Preview is not available for this file type.</p>
+      <p>Name: ${(file as File).name ?? 'unknown'}</p>
+    `;
+
+    this.container.appendChild(box);
+  }
+
+  private readAsText(file: File | Blob) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (event) =>
+        resolve((event.target?.result as string) ?? '');
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file, this.textEncoding);
+    });
+  }
+}
+```
+
+---
+
+## 5. Data Export and Download with Blobs (JSON, CSV, “Excel”)
+
+### Common pain
+
+Using data URLs for large exports:
+
+- Duplicates content in memory
+- Hits URL length limits
+- Breaks on large datasets
+
+### Better: centralized Blob-based downloader
+
+```ts
+class DownloadService {
+  downloadJson(data: unknown, fileName = 'data.json', pretty = true) {
+    const serialized = pretty
+      ? JSON.stringify(data, null, 2)
+      : JSON.stringify(data);
+
+    const blob = new Blob([serialized], {
+      type: 'application/json',
+    });
+
+    this.triggerDownload(blob, fileName);
+  }
+
+  downloadCsv(
+    rows: Record<string, unknown>[],
+    fileName = 'data.csv',
+    headers?: string[]
+  ) {
+    if (!rows.length) return;
+
+    const headerRow = headers ?? Object.keys(rows[0]);
+    const lines: string[] = [];
+
+    lines.push(headerRow.join(','));
+
+    for (const row of rows) {
+      const values = headerRow.map((key) => {
+        const raw = row[key];
+        const text =
+          raw === null || raw === undefined ? '' : String(raw);
+
+        // escape commas/quotes
+        if (/[",]/.test(text)) {
+          return `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      });
+
+      lines.push(values.join(','));
+    }
+
+    // add BOM for UTF-8 + Excel friendliness
+    const BOM = '﻿';
+    const blob = new Blob([BOM + lines.join('
+')], {
+      type: 'text/csv;charset=utf-8',
+    });
+
+    this.triggerDownload(blob, fileName);
+  }
+
+  downloadText(
+    text: string,
+    fileName = 'data.txt',
+    mimeType = 'text/plain'
+  ) {
+    const blob = new Blob([text], { type: mimeType });
+    this.triggerDownload(blob, fileName);
+  }
+
+  private triggerDownload(blob: Blob, fileName: string) {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.style.display = 'none';
+
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+}
+```
+
+---
+
+## 6. Blob URL Memory Management and Leak Prevention
+
+### Common pain
+
+Every `URL.createObjectURL(blob)` allocates resources. If you never call `URL.revokeObjectURL(url)`:
+
+- Memory usage climbs
+- Long-running apps slowly degrade
+- Image editors / file managers leak like crazy
+
+### Centralized memory manager
+
+```ts
+class BlobUrlManager {
+  private urls = new Map<string, { blob: Blob; createdAt: number }>();
+  private maxAgeMs = 5 * 60 * 1000; // 5 minutes
+
+  constructor() {
+    setInterval(() => this.cleanupExpired(), 60_000);
+    window.addEventListener('beforeunload', () => this.cleanupAll());
+  }
+
+  createUrl(blob: Blob): string {
+    const url = URL.createObjectURL(blob);
+
+    this.urls.set(url, {
+      blob,
+      createdAt: Date.now(),
+    });
+
+    return url;
+  }
+
+  revokeUrl(url: string) {
+    if (this.urls.has(url)) {
+      URL.revokeObjectURL(url);
+      this.urls.delete(url);
+    }
+  }
+
+  createAutoUrl(blob: Blob, timeoutMs = 30_000) {
+    const url = this.createUrl(blob);
+    setTimeout(() => this.revokeUrl(url), timeoutMs);
+    return url;
+  }
+
+  cleanupExpired() {
+    const now = Date.now();
+
+    for (const [url, entry] of this.urls.entries()) {
+      if (now - entry.createdAt > this.maxAgeMs) {
+        this.revokeUrl(url);
+      }
+    }
+  }
+
+  cleanupAll() {
+    for (const url of this.urls.keys()) {
+      URL.revokeObjectURL(url);
+    }
+    this.urls.clear();
+  }
+}
+
+const blobUrlManager = new BlobUrlManager();
+```
+
+### Example: safe image preview
+
+```ts
+class ManagedImagePreview {
+  private container: HTMLElement;
+  private activeUrls = new Set<string>();
+
+  constructor(container: HTMLElement) {
+    this.container = container;
+  }
+
+  show(file: File | Blob) {
+    this.clear();
+
+    const url = blobUrlManager.createUrl(file);
+    this.activeUrls.add(url);
+
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '400px';
+
+    img.onerror = () => {
+      blobUrlManager.revokeUrl(url);
+      this.activeUrls.delete(url);
+    };
+
+    this.container.innerHTML = '';
+    this.container.appendChild(img);
+  }
+
+  clear() {
+    for (const url of this.activeUrls) {
+      blobUrlManager.revokeUrl(url);
+    }
+    this.activeUrls.clear();
+    this.container.innerHTML = '';
+  }
+}
+```
+
+---
+
+## Summary: When and How to Use Blobs
+
+**Use Blobs when you:**
+
+- Need to **create files on the front end** (JSON, CSV, images, exports)
+- Want to **stream or chunk large files** without loading them fully into memory
+- Implement **image compression or format conversion**
+- Provide a **unified file preview** experience
+- Need safe **download/export** flows for big datasets
+- Care about **long-running apps and memory leaks**
+
+Blobs, used together with File APIs and `URL.createObjectURL`, are the backbone of robust front-end file handling. Once you get comfortable with them, large uploads, previews, and exports stop being scary and start feeling like just another part of your toolkit.
+
+---
+
+## Related Resources
+
+- Blob API – MDN Documentation
+- File API – W3C Specification
+- URL.createObjectURL() – MDN Documentation
+- Canvas API – MDN Documentation
