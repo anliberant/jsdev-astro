@@ -1,0 +1,231 @@
+---
+title: 'Friday Links #32: The Latest JavaScript Trends & Tools'
+slug: friday-32
+heading: "This Week in JavaScript: New Tools, Fresh Ideas, and Community Highlights"
+image: ./images/friday-32.png
+permalink: friday/friday-32
+date: 2025-11-14
+author: anton liberant
+type: friday
+desc: A curated roundup of the latest JavaScript trends, tools, releases, and insights from the community. Fresh updates to stay ahead in modern web development.
+---
+
+Every week, the JavaScript ecosystem produces more innovation than one person can reasonably track—new tools, library updates, surprising experiments, and community conversations. Friday Links #32 brings all of it together in one place. This edition highlights standout releases, useful utilities, performance-focused tools, and forward-thinking ideas shaping the next wave of frontend development. Whether you're building production apps or exploring new workflows, this roundup will keep you in the loop.
+
+![Friday Links #32](./images/friday-32.png)
+
+## GPT-5.1 Emerges as a Top Performer in Coding Benchmarks
+
+GPT-5.1 arrived in the API just a day after its ChatGPT release and is now integrated into the Codex coding agent along with new development tools. Built on the GPT-5 architecture, it inherits strong long-context reasoning, enabling deep repository analysis and high-quality patch generation.
+
+On benchmarks, GPT-5.1 shows consistent gains over GPT-5. In SWE-bench Verified—where models fix real bugs—it achieved 76.3%, up from 72.8%, placing it among the best coding models available. Other tests (MMMU, GPQA, Tau²-bench) also show targeted improvements, putting GPT-5.1 alongside the latest Claude Sonnet and Doubao-Seed-Code models.
+
+OpenAI also upgraded Codex with gpt-5.1-codex and gpt-5.1-codex-mini, tuned for long code analysis and agent workflows. Two major tools were added to the API:
+
+- `apply_patch` for clean diff-based patch generation
+- `shell` for safe, sandboxed command-line access
+
+These updates are already being integrated into IDEs and agent systems that rely on multi-step edits and test-driven feedback loops.
+
+API pricing for GPT-5.1 Thinking remains the same as GPT-5:
+
+- $1.25 per 1M input tokens
+- $10 per 1M output tokens
+- $0.125 per 1M cached tokens
+
+Prompt caching now lasts 24 hours, reducing costs for long sessions and large-project coding workflows.
+
+## 📜 Articles & Tutorials
+
+Google researchers released a 50-page guide on building practical, useful AI agents. It covers agent architecture, how an LLM operates inside an agent, tool integration and configuration, multi-agent coordination, and methods for evaluating performance. Original guide is available [here](https://www.kaggle.com/whitepaper-introduction-to-agents).
+
+[Why is Zig so Cool?](https://nilostolte.github.io/tech/articles/ZigCool.html)
+
+[Should You Stop Using Prisma? Why Database ORMs Might Be the Worst Thing That Happened to Backend Development](https://medium.com/@sohail_saifi/should-you-stop-using-prisma-421aba045846)
+
+[TypeScript’s rise in the AI era: Insights from Lead Architect, Anders Hejlsberg](https://github.blog/developer-skills/programming-languages-and-frameworks/typescripts-rise-in-the-ai-era-insights-from-lead-architect-anders-hejlsberg/)
+
+[Programming principles for self taught front-end developers](https://piccalil.li/blog/programming-principles-for-self-taught-front-end-developers/)
+
+[Perfectly Pointed Tooltips: To The Corners](https://frontendmasters.com/blog/perfectly-pointed-tooltips-to-the-corners/)
+
+[From VS Code to Helix](https://ergaster.org/posts/2025/10/29-vscode-to-helix/)
+
+[Create Sick Web Animations in Three.js with GSAP](https://spin.atomicobject.com/animations-threejs-gsap/)
+
+[Frontend Aesthetics: A Prompting Guide](https://github.com/anthropics/claude-cookbooks/blob/293cde3d3fe1e29ce90b535ccfd311c289302d0c/coding/prompting_for_frontend_aesthetics.ipynb)
+
+[StyleX: A Styling Library for CSS at Scale](https://engineering.fb.com/2025/11/11/web/stylex-a-styling-library-for-css-at-scale/)
+
+[From GraphQL to Zod: Simplifying Arte's API Architecture](https://marmelab.com/blog/2025/10/29/from-graphql-to-zod.html)
+
+[3 MCP servers you should be using (safely)](https://developers.redhat.com/articles/2025/11/04/3-mcp-servers-you-should-be-using)
+
+[Why we migrated from Python to Node.js](https://blog.yakkomajuri.com/blog/python-to-node)
+
+[A One File PWA to Tell You When Time Is Lying](https://physical-ai.ghost.io/a-one-file-pwa-to-tell-you-when-time-is-lying/)
+
+[Nano Banana can be prompt engineered for extremely nuanced AI image generation](https://minimaxir.com/2025/11/nano-banana-prompts/)
+
+[Pose Animator - An open source tool to bring SVG characters to life in the browser via motion capture](https://blog.tensorflow.org/2020/05/pose-animator-open-source-tool-to-bring-svg-characters-to-life.html)
+
+## ⚒️ Tools
+
+[FileMock: A Free Tool for Generating Test Files in Any Format](https://filemock.com/)
+
+[vibesdk](https://github.com/cloudflare/vibesdk) - An open-source vibe coding platform that helps you build your own vibe-coding platform, built entirely on Cloudflare stack
+
+[Mediabunny](https://github.com/Vanilagy/mediabunny): Read and Convert Media Files Directly in the Browser
+
+[bash-screensavers](https://github.com/attogram/bash-screensavers) – Turn your idle shell into a visual playground.
+
+[Google osv-scanner](https://github.com/google/osv-scanner)
+
+[Placeholder Image Generator](https://placeholderimage.io/)
+
+### Tiny Docker Healthcheck Tools That Cut Image Size by Megabytes
+
+A developer released [microcheck](https://github.com/tarampampam/microcheck), a set of ultra-small, statically compiled utilities designed specifically for Docker healthchecks. Instead of installing curl or wget—adding 10MB or more to an image—you can drop in a single 70–500 KB binary that works even in scratch and distroless environments.
+
+The toolkit includes:
+
+- `httpcheck` — HTTP endpoint checks (~75 KB)
+- `httpscheck` — same, with TLS and protocol autodetection (~500 KB)
+- `portcheck` — TCP/UDP port checks (~70 KB)
+
+Each tool returns standard Docker exit codes (0 = healthy, 1 = unhealthy), making them ideal for bare Docker setups or runtimes without built-in healthchecks.
+
+Example:
+
+```bash 
+# Before (+10MB)
+RUN apt update && apt install -y curl
+HEALTHCHECK CMD curl -f http://localhost:8080/ || exit 1
+
+# After (+75KB)
+COPY --from=ghcr.io/tarampampam/microcheck /bin/httpcheck /bin/httpcheck
+HEALTHCHECK CMD ["httpcheck", "http://localhost:8080/"]
+```
+
+They support major architectures (x86_64, ARM, ppc64le, s390x) and provide ready-to-use images.
+
+Source code, examples, and binaries:
+[https://github.com/tarampampam/microcheck](microcheck)
+
+[Nixopus](https://github.com/raghavyuva/nixopus) - Open Source alternative to vercel, heroku, netlify with Terminal integration, and Self Hosting capabilities.
+
+[podman-desktop](https://github.com/podman-desktop/podman-desktop) - Podman Desktop is the best free and open source tool to work with Containers and Kubernetes for developers. Get an intuitive and user-friendly interface to effortlessly build, manage, and deploy containers and Kubernetes — all from your desktop.
+
+[React Syntax Highlighter Demo](https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/)
+
+[Gerbil](https://github.com/lone-cloud/gerbil) - A desktop app to easily run Large Language Models locally.
+
+[OneUptime](https://github.com/OneUptime/oneuptime): The Complete Open-Source Observability Platform
+
+## 📚 Libs
+
+[waveterm](https://github.com/wavetermdev/waveterm) - An open-source, cross-platform terminal for seamless workflows
+
+[image-dimensions](https://github.com/sindresorhus/image-dimensions) - Get the dimensions of an image
+
+[VibeThinker](https://github.com/WeiboAI/VibeThinker) -  Tiny Model, Big Logic: Diversity-Driven Optimization Elicits Large-Model Reasoning Ability in VibeThinker-1.5B 
+
+## ⌚ Releases
+
+[Node.js v25.2.0 (Current)](https://nodejs.org/en/blog/release/v25.2.0)
+
+[Sitemap.js 9.0](https://github.com/ekalinin/sitemap.js/releases/tag/9.0.0): A Faster Way to Generate XML Sitemaps
+
+[Debounce 3.0](https://github.com/sindresorhus/debounce): A Modern ESM Utility for Delaying Function Calls
+
+[bcrypt.js 3.0.3](https://github.com/dcodeIO/bcrypt.js): Faster Pure-JS Password Hashing
+
+[Fortune Sheet 1.0.4](https://github.com/ruilisi/fortune-sheet) – Google Sheets/Excel-style spreadsheet control.
+
+[MongoDB Node.js Driver 7.0 Released](https://github.com/mongodb/node-mongodb-native/releases/tag/v7.0.0)
+
+[react-chrono 3.2.1](https://github.com/prabhuignoto/react-chrono) - Modern Timeline Component for React
+
+[pg-promise v12.3](https://github.com/vitaly-t/pg-promise): A More Powerful Postgres Client for Node.js
+
+[Marked 17.0](https://github.com/markedjs/marked) – Markdown parser and compiler. 
+
+[Fastify 5.6.2 released](https://github.com/fastify/fastify/releases/tag/v5.6.2)
+
+[React Email 5.0 Released](https://resend.com/blog/react-email-5)
+
+[Prisma 6.19](https://github.com/prisma/prisma/releases/tag/6.19.0), [Storybook 10](https://storybook.js.org/blog/storybook-10/), [htmx 4.0 Alpha 1](https://htmx.org/essays/the-fetchening/), 
+
+[React Date Picker 8.9](https://github.com/Hacker0x01/react-datepicker), [react-jsonschema-form 6.1](https://github.com/rjsf-team/react-jsonschema-form), [React Native Apple Authentication 2.5](https://github.com/invertase/react-native-apple-authentication),
+
+[Bun v1.3.2](https://bun.com/blog/bun-v1.3.2), [Helm v4.0.0](https://github.com/helm/helm/releases/tag/v4.0.0)
+
+## 📺 Videos
+
+[Why Ripple.js Is The Most Interesting Framework of 2025](https://www.youtube.com/watch?v=AnkhdbrrTlo)
+
+[MERN Stack Project: Video Calling Interview Platform with React & Node.js](https://www.youtube.com/watch?v=PJ0ARnSKfgw)
+
+[This React Document Editor (DOCX) Is All Your App Needs](https://www.youtube.com/watch?v=LsQpSGQ-sq4)
+
+[Extremely Underrated Programming Skills](https://www.youtube.com/watch?v=5cAjuIxIvHg)
+
+[The magic of auto-fit and auto-fill (and the difference between them)](https://www.youtube.com/watch?v=OZ6qKoq7RJU)
+
+[account suspended from github](https://www.youtube.com/watch?v=7gCCXCSs734)
+
+[AWS Explained: The Most Important AWS Services To Know](https://www.youtube.com/watch?v=OGYEXGy8ca4)
+
+[$100 to train an LLM](https://www.youtube.com/watch?v=6ctoS84iFCw)
+
+[AI Fatigue is real](https://www.youtube.com/watch?v=2TryYQIuUqI)
+
+[From QA to DevOps - How I Learned DevOps to future-proof my career](https://www.youtube.com/watch?v=4J53WvB1-4E)
+
+## 🎤 Talks & Podcasts
+
+No content this week 😢
+
+## 🗞️ News & Updates
+
+### OpenAI May Spend Over $5B a Year Running Sora, Analysts Say
+
+![Sora](./images/sora.png)
+
+Analysts estimate that OpenAI spends around $15 million per day to operate its video generator Sora—over $5 billion annually. The calculation is based on an estimated $1.3 cost per 10-second clip and a daily volume of roughly 11 million videos.
+
+Despite these huge expenses, OpenAI is prioritizing market dominance: grow the user base now, collect training data, and monetize later. Free access to Sora helps expand adoption while generating massive datasets to improve model quality.
+
+Sam Altman has already confirmed that free video generation will be reduced over time. According to him, no ad model can cover the current cost of producing short videos, so scaling and training remain the priority over immediate profit.
+
+The towering costs highlight how resource-intensive large-scale AI video generation is—and reinforce OpenAI’s strategy to lead the generative video market.
+
+Anthropic [announced](https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure) a major $50B investment program to expand AI infrastructure in the US. The company plans to build its own data centers in partnership with Fluidstack, a UK provider of GPU cloud services and custom AI-optimized clusters. According to Anthropic, the initiative is essential to meet rising demand for Claude models and to secure the compute needed for advancing frontier AI research.
+
+### Cloudflare Adds Python Support to Workflows for AI and Data Pipelines
+
+Cloudflare [has expanded](https://blog.cloudflare.com/python-workflows/) its Workflows service by adding full Python support, previously limited to TypeScript. Workflows is used to orchestrate multi-step processes on the Workers platform, making it useful for automation, data processing, and AI agent pipelines.
+
+Python support opens the door for developers working in AI/ML and large-scale data workflows. Use cases include data pipeline orchestration, ML model training, and complex agent systems—benefiting from built-in error handling and state persistence.
+
+The feature is powered by Pyodide, a WebAssembly port of CPython, allowing Python code to run directly in the browser or on Cloudflare’s servers without installing a local interpreter. This makes Workflows a more flexible and accessible tool for enterprise and research applications.
+
+Python integration also simplifies bringing existing Python libraries into Workflows, accelerating development and deployment of cloud-based solutions.
+
+### Report: 65% of Top AI Companies Leaked Secrets on GitHub
+
+A new report from cloud security firm [Wiz](https://www.wiz.io/) found that 65% of companies listed in the Forbes AI 50 leaked API keys, tokens, or other credentials on GitHub. Experts warn that such leaks could expose private models, training data, or internal infrastructure, creating serious security risks.
+
+Most exposed secrets were found in Jupyter Notebooks and Python scripts, including tokens for Hugging Face, Azure, and W&B. In one case, a compromised Hugging Face token could have granted access to roughly a thousand private models, highlighting the severity of the issue.
+
+Wiz publicly named only two companies—ElevenLabs and LangChain—that responded quickly and addressed their leaks. Nearly half of the other organizations did not reply to disclosure notifications, leaving their data and models potentially vulnerable.
+
+Researchers emphasize that GitHub leaks remain one of the most common security failures in the AI ecosystem. They recommend strict secret-management practices, encryption, and automated pre-commit checks to prevent accidental exposure of sensitive credentials.
+
+[Disrupting the first reported AI-orchestrated cyber espionage campaign](https://www.anthropic.com/news/disrupting-AI-espionage])
+
+[Pakistani newspaper mistakenly prints AI prompt with the article](https://x.com/omar_quraishi/status/1988518627859951986)
+
+---
+
+That wraps up this week’s JavaScript Trends and Tools. Stay curious, keep experimenting, and don’t forget to star your favorite open-source repos. See you next Friday with another round of discoveries that keep the JavaScript ecosystem buzzing.
