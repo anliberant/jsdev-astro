@@ -15,10 +15,6 @@ export const siteConfig = {
       path: '/snippets/',
     },
     {
-      name: 'Tools',
-      path: '/tools/',
-    },
-    {
       name: 'Friday',
       path: '/friday/',
     },

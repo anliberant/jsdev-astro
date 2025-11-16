@@ -1,7 +1,7 @@
 ---
-title: How to get Category Posts Count in Gatsby by Graphql Query
+title: "How to Get Category Post Count in Gatsby Using GraphQL"
 slug: gatsby-category-count
-heading: Fetch Category Post Count Using GraphQL in Gatsby
+heading: "Fetch Category Post Count Using GraphQL in Gatsby"
 icon: /icons/gatsby.png
 image: /icon.png
 permalink: howto/gatsby-category-count
@@ -10,84 +10,131 @@ author: anton liberant
 category: gatsby
 type: howto
 tags: ['graphql']
-desc: Learn how to get the category posts count in Gatsby with GraphQL. Step-by-step instructions to efficiently count and display posts by category on your site.
+desc: Learn how to count posts by category in Gatsby using GraphQL. Step-by-step guide with improved examples and practical tips.
 ---
 
-In this tutorial, we'll walk you through the process of obtaining the post count for each category
-using **GraphQL** in your **Gatsby** project.
+Displaying how many posts belong to each category is a common need in Gatsby blogs. With Gatsby’s built‑in GraphQL layer, you can query your content and compute category counts efficiently—without extra plugins or manual processing.
 
-## Prerequisites:
+This short guide shows you how to structure your data, write the query, and display the results.
 
-Before you begin, ensure you have the following:
+---
 
-1. A **Gatsby** project set up with content categories (for instance, through Markdown files or a
-   CMS like Contentful).
-2. Basic knowledge of **Gatsby**, **GraphQL**, and how to create **GraphQL Queries**.
+## Prerequisites
 
-## Step 1: Understand Your Data Structure
+Before starting, ensure your Gatsby project:
 
-First, make sure your content is organized with categories. Each post should have a field that
-associates it with a category. This could be a "category" field in your Markdown frontmatter or a
-similar structure in your CMS.
+- Uses **MDX**, **Markdown**, or a CMS (Contentful, Sanity, Ghost, Strapi, etc.).
+- Includes a `category` field in each post’s frontmatter or CMS model.
+- Has basic familiarity with GraphQL queries in Gatsby components or pages.
 
-## Step 2: Create a GraphQL Query
+---
 
-Now, let's create a **GraphQL query** to fetch the category names and their respective post counts.
-Open your Gatsby project, and in your component file (where you want to display the data), add a
-GraphQL query. Here's an example query:
+## Step 1: Verify Your Data Structure
+
+Each post should include a category field:
+
+```md
+---
+title: "My Guide"
+category: "JavaScript"
+date: "2025-01-01"
+---
+```
+
+If you're using Contentful or another CMS, make sure your model exposes a category field.
+
+---
+
+## Step 2: Write a GraphQL Query to Group Posts by Category
+
+Gatsby’s GraphQL API supports grouping nodes by any field using `group`.
+
+Here’s an improved and modern example using `allMdx`:
 
 ```js
-import React from 'react';
-
-import { graphql } from 'gatsby';
-
-import { graphql } from 'gatsby';
+import { graphql } from "gatsby";
 
 export const query = graphql`
-  query {
+  query CategoryCountQuery {
     allMdx {
-      group(field: { frontmatter: { category: SELECT } }) {
-        fieldValue
-        field
+      group(field: frontmatter___category) {
+        category: fieldValue
         totalCount
       }
-      totalCategoriesCount: totalCount
+      totalPostCount: totalCount
     }
   }
 `;
+```
 
-const CategoryList = ({
-  data: {
-    allMdx: { group: categories },
-    totalCategoriesCount,
-  },
-}) => {
+### What this query returns
+
+- `group` — array of unique categories  
+- `category` — category name  
+- `totalCount` — number of posts in that category  
+- `totalPostCount` — total number of MDX posts
+
+---
+
+## Step 3: Render Category Counts in a Component
+
+```jsx
+import React from "react";
+
+const CategoryList = ({ data }) => {
+  const categories = data.allMdx.group;
+
   return (
-    <div>
-      <h2>Categories and Post Counts</h2>
+    <section>
+      <h2>Categories</h2>
       <ul>
-        {categories.map(category => (
-          <li key={category.fieldValue}>
-            {category.fieldValue} ({category.totalCount} posts)
+        {categories.map(cat => (
+          <li key={cat.category}>
+            {cat.category} — {cat.totalCount} posts
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 };
 
 export default CategoryList;
 ```
 
-## Step 3: Display the Data
+Now, Gatsby injects the `data` prop into this component, letting you render the grouped results.
 
-**The GraphQL query** retrieves data in the **data** prop of your component. We then map through the
-**categories** array and display each category's name along with its post count.
+---
 
-### Conclusion:
+## Bonus: Sorting Categories Alphabetically
 
-With **GraphQL** and **Gatsby**, obtaining category post counts for your website becomes a
-straightforward process. By creating a **GraphQL query** that groups posts by category and includes
-the count, you can provide valuable information to your site visitors and enhance their user
-experience. This feature adds a level of interactivity and engagement to your Gatsby-powered blog or
-website, making it a more informative and user-friendly platform.
+Modify the render logic:
+
+```js
+const sorted = [...categories].sort((a, b) =>
+  a.category.localeCompare(b.category)
+);
+```
+
+Then render `sorted` instead of `categories`.
+
+---
+
+## Bonus: Querying Category Count for a Single Category
+
+Useful for category pages such as `/category/javascript/`.
+
+```graphql
+query CategoryPage($category: String!) {
+  allMdx(filter: { frontmatter: { category: { eq: $category } } }) {
+    totalCount
+  }
+}
+```
+
+---
+
+## Conclusion
+
+Using Gatsby’s built‑in GraphQL APIs, you can easily group posts by category and compute total counts. This pattern works for MDX, Markdown, and all major headless CMS integrations. It improves navigation, helps users explore your content, and makes your blog more structured and engaging.
+
+Gatsby handles all aggregation at build time—making the result fast, scalable, and SEO‑friendly.

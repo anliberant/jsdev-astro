@@ -9,36 +9,40 @@ date: 2024-09-19
 author: anton liberant
 category: html
 type: howto
-tags: ['html5', 'frontend']
+tags: ['html5','frontend']
 desc: Learn to create custom HTML elements with the Web Components API. Define, register, and use reusable elements with encapsulated styles for modular web development.
 ---
 
-[Custom Elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
-is a feature of the Web Components API in HTML5, allowing developers to create reusable and
-encapsulated HTML tags with custom behavior. It enables you to extend the functionality of standard
-HTML elements or create entirely new ones.
+Custom Elements are part of the Web Components standard and allow you to create reusable, encapsulated HTML tags with your own behavior and styling. They help you build modular UI components without relying on heavy frameworks.
 
-## Step-by-Step Guide to Creating Custom Elements
+## What Are Custom Elements?
 
-Creating custom elements in HTML5 allows you to define your own HTML tags with specific behavior and
-appearance. This is part of the Web Components standard, and it provides powerful ways to build
-modular, reusable components for web applications.
+Custom elements let you define new HTML tags backed by JavaScript classes. They support:
 
-### 1. Define the Custom Element Class
+- Encapsulated styles via Shadow DOM  
+- Custom attributes  
+- Lifecycle callbacks  
+- Reusable component logic  
 
-To create a custom element, you need to define a class that extends the **HTMLElement** class. This
-class will encapsulate the behavior and structure of your custom element.
+Custom elements belong to two types:
 
-**Example:**
+1. **Autonomous elements** (e.g., `<user-card>`)
+2. **Customized built‑in elements** extending built‑in tags (e.g., `<button is="fancy-button">`)
+
+---
+
+# 1. Creating a Basic Custom Element
+
+## Step 1: Define a Class
 
 ```js
 class MyCustomElement extends HTMLElement {
   constructor() {
-    super(); // Always call super() first in the constructor
-    this.attachShadow({ mode: 'open' }); // Attach shadow DOM
-    this.shadowRoot.innerHTML = `
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
       <style>
-        p { color: blue; }
+        p { color: blue; font-weight: bold; }
       </style>
       <p>Hello, I am a custom element!</p>
     `;
@@ -46,157 +50,260 @@ class MyCustomElement extends HTMLElement {
 }
 ```
 
-### 2. Register the Custom Element
-
-Next, use the **customElements.define()** method to register the new custom element with the
-browser. This allows you to use it in your HTML code.
+## Step 2: Register the Element
 
 ```js
-customElements.define('my-custom-element', MyCustomElement);
+customElements.define("my-custom-element", MyCustomElement);
 ```
 
-In this case, **'my-custom-element'** is the tag name you’ll use in your HTML.
-
-### 3. Use the Custom Element in HTML
-
-Once the element is registered, you can use it like any other HTML tag in your document.
+## Step 3: Use It in HTML
 
 ```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Custom Elements Demo</title>
-  </head>
-  <body>
-    <my-custom-element></my-custom-element>
-
-    <script src="custom-element.js"></script>
-    <!-- Link to your script file -->
-  </body>
-</html>
+<my-custom-element></my-custom-element>
 ```
 
-This will render a blue paragraph with the text: "Hello, I am a custom element!"
+---
 
-**Working with Shadow DOM**
-
-To encapsulate styles and prevent them from affecting the rest of the page, custom elements can use
-the **Shadow DOM**. This creates an isolated part of the DOM where you can define your element's
-structure and styles.
-
-```js
-this.attachShadow({ mode: 'open' });
-```
-
-When the shadow DOM is attached to the element, all styles and scripts within that shadow DOM remain
-isolated from the rest of the page.
-
-**Example of a Custom Element with Shadow DOM**
-
-```js
-class FancyBox extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.innerHTML = `
-      <style>
-        div {
-          padding: 20px;
-          border: 2px solid green;
-          background-color: lightyellow;
-        }
-      </style>
-      <div>
-        <p>This is a fancy box!</p>
-      </div>
-    `;
-  }
-}
-
-customElements.define('fancy-box', FancyBox);
-```
-
-In this example:
-
-- The FancyBox element is created.
-- It contains a div with some custom styles that are encapsulated within the shadow DOM, so they
-  don’t interfere with the page’s global styles.
-
-To use this custom element, you would write:
-
-```html
-<fancy-box></fancy-box>
-```
-
-**Handling Attributes**
-
-Custom elements can respond to attributes just like standard HTML elements. To do this, you can
-override the **attributeChangedCallback()** method to detect changes to specific attributes.
-
-Example:
+# 2. Handling Attributes with attributeChangedCallback
 
 ```js
 class AlertBox extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.innerHTML = `<div><p>Default alert message</p></div>`;
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = `<p>Default alert</p>`;
   }
 
   static get observedAttributes() {
-    return ['message']; // List of attributes to observe
+    return ["message"];
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'message') {
-      this.shadowRoot.querySelector('p').textContent = newValue;
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name === "message") {
+      this.shadowRoot.querySelector("p").textContent = newVal;
     }
   }
 }
 
-customElements.define('alert-box', AlertBox);
+customElements.define("alert-box", AlertBox);
 ```
 
-Now, if you use the custom element with a message attribute:
+Usage:
 
 ```html
 <alert-box message="This is a custom alert!"></alert-box>
 ```
 
-The text inside the element will update based on the attribute’s value.
+---
 
-**Customized Built-In Elements**
+# 3. Shadow DOM Encapsulation Example
 
-In addition to creating autonomous custom elements, you can extend existing HTML elements. These are
-called **Customized Built-In Elements**.
+```js
+class FancyBox extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = `
+      <style>
+        div { padding: 16px; border: 2px solid green; }
+      </style>
+      <div><slot></slot></div>
+    `;
+  }
+}
 
-Example:
+customElements.define("fancy-box", FancyBox);
+```
+
+```html
+<fancy-box>Inside Fancy Box</fancy-box>
+```
+
+---
+
+# 4. Customized Built‑In Elements
 
 ```js
 class HighlightedButton extends HTMLButtonElement {
   constructor() {
     super();
-    this.style.backgroundColor = 'yellow';
-    this.style.fontWeight = 'bold';
+    this.style.backgroundColor = "yellow";
+    this.style.fontWeight = "bold";
   }
 }
 
-customElements.define('highlighted-button', HighlightedButton, {
-  extends: 'button',
-});
+customElements.define("highlighted-button", HighlightedButton, { extends: "button" });
 ```
 
-To use this customized button, write:
+Usage:
 
 ```html
-<button is="highlighted-button">Click Me!</button>
+<button is="highlighted-button">Click Me</button>
 ```
 
-## Conclusion
+---
 
-Creating custom elements in HTML5 allows you to build reusable components with encapsulated behavior
-and styles. By leveraging the power of the Web Components API, you can extend HTML and make your web
-applications more modular and maintainable. Whether you need a simple custom tag or a more complex
-element with shadow DOM, custom elements offer a flexible solution.
+# 5. Advanced Example 1 — Toggle Switch
+
+```js
+class ToggleSwitch extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        .switch {
+          width: 50px;
+          height: 25px;
+          border-radius: 20px;
+          background: #ccc;
+          position: relative;
+          cursor: pointer;
+        }
+        .knob {
+          width: 22px;
+          height: 22px;
+          background: white;
+          border-radius: 50%;
+          position: absolute;
+          top: 1.5px;
+          left: 1.5px;
+          transition: transform .2s;
+        }
+        .on { background: #4caf50; }
+        .on .knob { transform: translateX(25px); }
+      </style>
+      <div class="switch"><div class="knob"></div></div>
+    `;
+
+    this.switch = this.shadowRoot.querySelector(".switch");
+    this.switch.addEventListener("click", () => this.toggle());
+  }
+
+  toggle() {
+    this.switch.classList.toggle("on");
+    this.dispatchEvent(new CustomEvent("change", { detail: this.isOn() }));
+  }
+
+  isOn() {
+    return this.switch.classList.contains("on");
+  }
+}
+
+customElements.define("toggle-switch", ToggleSwitch);
+```
+
+Usage:
+
+```html
+<toggle-switch></toggle-switch>
+```
+
+---
+
+# 6. Advanced Example 2 — User Card
+
+```js
+class UserCard extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    const name = this.getAttribute("name") || "Unknown";
+    const avatar = this.getAttribute("avatar") || "https://placehold.co/80";
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        .card {
+          border: 1px solid #ddd;
+          padding: 12px;
+          border-radius: 8px;
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+        img { border-radius: 50%; width: 60px; height: 60px; }
+      </style>
+      <div class="card">
+        <img src="${avatar}" />
+        <div>
+          <h3>${name}</h3>
+          <slot></slot>
+        </div>
+      </div>
+    `;
+  }
+}
+
+customElements.define("user-card", UserCard);
+```
+
+Usage:
+
+```html
+<user-card name="Anton" avatar="/me.png">
+  <p>Frontend Developer</p>
+</user-card>
+```
+
+---
+
+# 7. Advanced Example 3 — Modal Window
+
+```js
+class CustomModal extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        .overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.5);
+          display: none;
+          justify-content: center;
+          align-items: center;
+        }
+        .modal {
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+        }
+        .open { display: flex; }
+      </style>
+      <div class="overlay">
+        <div class="modal">
+          <slot></slot>
+          <button id="close">Close</button>
+        </div>
+      </div>
+    `;
+
+    this.overlay = this.shadowRoot.querySelector(".overlay");
+    this.shadowRoot.querySelector("#close").onclick = () => this.hide();
+  }
+
+  show() { this.overlay.classList.add("open"); }
+  hide() { this.overlay.classList.remove("open"); }
+}
+
+customElements.define("custom-modal", CustomModal);
+```
+
+Usage:
+
+```html
+<custom-modal id="modal">Hello from modal!</custom-modal>
+
+<script>
+  document.getElementById("modal").show();
+</script>
+```
+
+---
+
+# Conclusion
+
+Custom elements let you extend HTML with your own reusable components. With Shadow DOM, lifecycle callbacks, and custom attributes, Web Components allow you to build modern, framework‑agnostic UI components that work anywhere.

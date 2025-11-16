@@ -9,138 +9,170 @@ date: 2024-09-20
 author: anton liberant
 category: nodejs
 type: howto
-tags: ['nvm', 'node', 'version', 'nvm install', 'nvm ls']
+tags: ['nvm']
 desc: Learn how to install, list, and switch Node.js versions with NVM. Includes commands like 'nvm install latest', 'nvm ls remote', and 'nvm alias default'.
 ---
 
-Node Version Manager (**NVM**) is a command-line tool that allows you to install, list, and switch between different **versions of Node.js** on your operating system. It’s perfect for developers who maintain multiple projects requiring different Node versions.
+Node Version Manager (**NVM**) is one of the most useful tools for any JavaScript or backend developer. It allows you to **install**, **switch**, and **manage multiple Node.js versions** on the same machine without conflicts. If you’ve ever run into “works on my machine” issues or maintained several projects requiring different Node versions, NVM solves that problem cleanly.
 
-If you’ve ever seen the message **“NVM installed”**, this guide will show you how to use NVM effectively — including commands like `nvm install latest`, `nvm ls remote`, and `nvm alias default`.
+Below is an improved and expanded guide with clearer explanations, updated tips, and practical examples.
 
 ---
 
 ## 1. Check Installed Node Versions
 
-To see which Node.js versions are installed on your system, use the command:
+To check which Node.js versions are currently installed on your system:
 
-<div className='code-cmd'>nvm list</div>
+```bash
+nvm list
+```
 
-This will display a list of Node.js versions, marking the default and currently active one.
+To check which versions are available remotely:
 
-You can also view all remote versions available for installation:
+```bash
+nvm ls-remote
+```
 
-<div className='code-cmd'>nvm ls-remote</div>
-
-This command retrieves all versions directly from the Node.js servers.
+Useful for finding long-term support (LTS) releases or older versions required by legacy apps.
 
 ---
 
 ## 2. Install a New Node.js Version
 
-To install a specific Node.js version, use the command:
+Install a specific version:
 
-<div className='code-cmd'>nvm install "version"</div>
+```bash
+nvm install 18.20.4
+```
 
-For example, to install Node.js **v18.20.4**:
+Install the latest LTS version:
 
-<div className='code-cmd'>nvm install 18.20.4</div>
+```bash
+nvm install --lts
+```
 
-To install the latest LTS version automatically, simply run:
+Install the latest version overall:
 
-<div className='code-cmd'>nvm install --lts</div>
+```bash
+nvm install latest
+```
 
-Or to get the latest available version overall:
+### Pro tip  
+You can also install from a specific release line, for example:
 
-<div className='code-cmd'>nvm install latest</div>
+```bash
+nvm install 20
+```
 
-These commands download and set up the specified version globally within NVM’s environment.
+This installs the most recent 20.x.x release.
 
 ---
 
 ## 3. Switch Between Node Versions
 
-Once multiple versions are installed, switch between them easily:
+Make a version active in the current terminal session:
 
-<div className='code-cmd'>nvm use "version"</div>
+```bash
+nvm use 20.17.0
+```
 
-Example:
+Confirm the version currently in use:
 
-<div className='code-cmd'>nvm use 20.17.0</div>
+```bash
+node -v
+```
 
-This activates Node.js version 20.17.0 for your current terminal session.
-
-If you want to confirm which version is active, run:
-
-<div className='code-cmd'>node -v</div>
+If your shell opens a new tab or window, you must run `nvm use` again or set a default.
 
 ---
 
 ## 4. Set a Default Node.js Version
 
-To make a specific Node.js version the default every time you open a new terminal, use:
+To automatically load a specific Node.js version every time your terminal opens:
 
-<div className='code-cmd'>nvm alias default "version"</div>
+```bash
+nvm alias default 18.20.4
+```
 
-Example:
+To see all aliases:
 
-<div className='code-cmd'>nvm alias default 18.20.4</div>
-
-Now, each new session will automatically use that version unless overridden.
-
----
-
-## 5. Uninstall a Node Version
-
-If you want to remove an older version, you can do so easily:
-
-<div className='code-cmd'>nvm uninstall "version"</div>
-
-Example:
-
-<div className='code-cmd'>nvm uninstall 12.22.1</div>
-
-This will delete the specified version from your system while leaving other installations intact.
+```bash
+nvm alias
+```
 
 ---
 
-## 6. Common NVM Commands Overview
+## 5. Uninstall Node.js Versions You No Longer Need
+
+Remove an installed version:
+
+```bash
+nvm uninstall 12.22.1
+```
+
+This cleans up space and keeps your NVM environment tidy.
+
+---
+
+## 6. Overview of Useful NVM Commands
 
 | Command | Description |
-|----------|-------------|
-| `nvm install latest` | Installs the most recent Node.js version |
-| `nvm install --lts` | Installs the latest LTS release |
-| `nvm ls` | Lists all Node.js versions installed locally |
-| `nvm ls-remote` | Lists all Node.js versions available remotely |
-| `nvm alias default` | Sets a default Node version for all sessions |
-| `nvm uninstall` | Uninstalls a specific version of Node.js |
-| `nvm current` | Displays the currently active version |
+|--------|-------------|
+| `nvm install latest` | Install newest Node.js version |
+| `nvm install --lts` | Install newest LTS release |
+| `nvm ls` | List installed versions |
+| `nvm ls-remote` | List all available versions |
+| `nvm alias default` | Set a default version |
+| `nvm uninstall` | Uninstall a version |
+| `nvm current` | Show currently active version |
 
 ---
 
-## 7. Troubleshooting and Tips
+## 7. Troubleshooting NVM
 
-- Always run NVM commands from your **command line or terminal**, not from scripts that bypass shell configuration.
-- If NVM seems not to work after installation, ensure your shell profile (like `.bashrc` or `.zshrc`) includes the NVM initialization line.
-- You can verify NVM installation with:
+### NVM command not found  
+Make sure your shell config contains NVM initialization lines.
 
-<div className='code-cmd'>command -v nvm</div>
+For **zsh** (`.zshrc`):
 
-If it returns `nvm`, the tool is correctly installed.
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+```
+
+### Node still showing older version  
+Your shell might be caching paths. Run:
+
+```bash
+hash -r
+```
+
+or simply restart the terminal.
+
+### Running NVM in scripts  
+NVM only loads inside interactive shells unless explicitly sourced:
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use 18
+```
 
 ---
 
-## 8. Why Use NVM?
+## 8. Why Developers Love NVM
 
-Using NVM helps you:
+- Test apps across multiple Node versions  
+- Avoid breaking global dependencies  
+- Keep legacy and modern projects working side-by-side  
+- Easily switch between environments  
+- Lightweight and works on macOS, Linux, and WSL
 
-- Test your apps on multiple Node.js versions.
-- Prevent dependency conflicts across projects.
-- Simplify team collaboration when using different Node environments.
-
-It works on macOS, Linux, and Windows (via **WSL**), giving you a unified way to manage Node.js version numbers across your operating systems.
+NVM is especially useful when upgrading frameworks like **Next.js**, **NestJS**, **Express**, or tools like **Vite**, which often require specific Node versions.
 
 ---
 
-<footer>
-<p>✅ Updated for NVM v0.39+ — compatible with Node.js 22 and later</p>
-</footer>
+### Final Notes
+
+This guide is updated for **NVM v0.39+** and supports installation of Node.js versions **up to 22+**.
+
+Happy coding!
