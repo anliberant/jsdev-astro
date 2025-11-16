@@ -1,4 +1,4 @@
----
+--- 
 title: How to solve Cannot find module ajv/dist/compile/codegen
 slug: cannot-find-ajv-dist-compile-codegen
 heading: Fix 'Cannot find module ajv/dist/compile/codegen' Error
@@ -9,137 +9,164 @@ date: 2024-09-09
 author: anton liberant
 category: nodejs
 type: howto
-tags: ['ajv']
+tags: []
 desc: Fix the "Cannot find module 'ajv/dist/compile/codegen'" error by checking AJV version compatibility, adjusting dependencies, and applying package resolutions.
 ---
 
-The error **"Cannot find module 'ajv/dist/compile/codegen'"** typically occurs due to a mismatch in versions or incomplete installation of dependencies, especially when working with packages that depend on the AJV library (Another JSON Validator).
+When you see this error:
 
-If you’ve encountered the error:
-
-```bash
+```
 Cannot find module 'ajv/dist/compile/codegen'
 ```
 
-you’re likely dealing with a version mismatch between **AJV (Another JSON Schema Validator)** and a library that depends on it. This error is especially common in projects that use tools like `webpack`, `eslint`, `json-schema-faker`, or other packages relying on `ajv`.
+it usually means you're dealing with an **AJV version mismatch**. AJV v8 removed several internal modules, but some tools still try to import them. This often occurs with packages like older versions of **webpack**, **eslint**, **json-schema-faker**, and others that expect AJV v6 or v7.
 
-In this article, we’ll explain why this error occurs and how to fix it with a few proven solutions.
+Below is an updated and simplified guide to help you fix the issue quickly.
 
-## ✅ Why This Error Happens
+---
 
-The error usually stems from this:
+## Why This Error Happens
 
-- **AJV v8** removed some internal modules, including `ajv/dist/compile/codegen`.
-- Some libraries (or your own code) try to `require` this path directly—an unsupported practice in newer AJV versions.
+The problem occurs because:
 
-If you (or a dependency) expect AJV v6 or v7 but have v8 installed, this error will occur.
+- **AJV v8 no longer includes `ajv/dist/compile/codegen`**
+- Some packages still expect older AJV versions and try to import internal files directly
+- Your project may be mixing multiple AJV versions (common after big updates)
 
-## 🔍 Step 1: Identify What’s Using AJV
+---
 
-To see which package is pulling in AJV, run:
+## 1. Check Which Package Is Using AJV
+
+Run:
 
 ```bash
 npm ls ajv
 ```
 
-This will show the dependency tree and help you find the culprit. For example:
+Example output:
 
-```bash
+```
 my-app@1.0.0
 └─┬ json-schema-faker@0.5.0
   └── ajv@8.12.0
 ```
 
-In this case, `json-schema-faker` expects an older AJV version, but v8 is installed.
+This shows which library is incompatible.
 
-## 🛠 Step 2: Downgrade AJV to a Compatible Version
+---
 
-If the dependency requires AJV v6 or v7, you can manually install a compatible version:
+## 2. Install a Compatible AJV Version (Most Reliable Fix)
 
-```bash
-npm install ajv@^6.12.0
-```
-
-Or with Yarn:
+If a dependency expects AJV v6 or v7, install that version:
 
 ```bash
-yarn add ajv@^6.12.0
+npm install ajv@6.12.0
 ```
 
-Then re-run your project and check if the error is resolved.
+or for Yarn:
 
-## 📦 Step 3: Force a Specific Version (Using Resolutions)
+```bash
+yarn add ajv@6.12.0
+```
 
-If the conflicting AJV version is being pulled in by nested dependencies, use npm-force-resolutions to override it.
+Then restart your dev server.
 
-### 1. Add to `package.json`:
+---
+
+## 3. Force a Specific AJV Version (Resolutions)
+
+If nested dependencies pull the wrong version, apply a forced resolution.
+
+### Add to `package.json`
 
 ```json
 "resolutions": {
-  "ajv": "^6.12.0"
+  "ajv": "6.12.0"
 }
 ```
 
-### 2. Install npm-force-resolutions and run it:
+### Apply it:
 
 ```bash
 npx npm-force-resolutions
 npm install
 ```
 
-This will rewrite the `package-lock.json` to use AJV v6 where needed.
+Useful when you can’t modify the parent dependency.
 
-> Note: This only works in projects using `npm` and `package-lock.json` or Yarn v1.
+---
 
-## 🧩 Step 4: Check for Package Updates
+## 4. Update Your Dependencies
 
-Many libraries have released updates to support AJV v8. Search [npmjs.com](https://www.npmjs.com/) or check the GitHub repo of the affected package to see if a newer version is available:
+Some packages have already fixed their AJV imports.
+
+Check for updates:
 
 ```bash
 npm outdated
 ```
 
-Update the dependency if possible:
+Then upgrade:
 
 ```bash
-npm install some-library@latest
+npm install your-library@latest
 ```
 
-This may resolve the version mismatch without any hacks.
+Often this resolves the error without force-downgrading AJV.
 
-## 💡 Optional: Patch the Package (Not Recommended)
+---
 
-As a last resort, you can manually patch the broken import in the package using [patch-package](https://www.npmjs.com/package/patch-package). This approach is not ideal but can unblock you temporarily.
+## 5. Verify Import Paths (Your Own Code)
 
-## 🧪 Example: Resolving Error in json-schema-faker
+Make sure you are NOT importing internal AJV files:
+
+❌ Wrong:
+
+```js
+import codegen from 'ajv/dist/compile/codegen';
+```
+
+✔ Correct:
+
+```js
+import Ajv from 'ajv';
+```
+
+---
+
+## 6. Example Fix for json-schema-faker
+
+Older versions require AJV v6:
 
 ```bash
-npm install ajv@^6.12.0 json-schema-faker@0.5.0
+npm install json-schema-faker@0.5.0 ajv@6.12.0
 ```
 
-Or if using resolutions:
+Or use resolutions for an entire monorepo.
 
-```json
-"resolutions": {
-  "ajv": "^6.12.0"
-}
-```
+---
 
-Then:
+## 7. Last Resort: Patch the Package
+
+Only if nothing else works:
 
 ```bash
-npx npm-force-resolutions
-npm install
+npm install patch-package
 ```
 
-This fixes the issue when `json-schema-faker` internally requires the now-removed file.
+Then modify the dependency and create a patch file.
 
-## ✅ Conclusion
+This should be temporary until an upstream fix is released.
 
-The `"Cannot find module 'ajv/dist/compile/codegen'"` error is caused by mismatched AJV versions and improper access to internal modules. You can fix it by:
+---
 
-- Downgrading to AJV v6
-- Forcing resolutions
-- Updating dependent packages
+## Conclusion
 
-Avoid importing internal AJV paths directly in your own code, and keep an eye on dependency compatibility during upgrades.
+You can fix the `"Cannot find module 'ajv/dist/compile/codegen'"` error by:
+
+- Installing AJV v6 (most reliable)
+- Forcing resolutions for nested dependencies
+- Updating outdated libraries
+- Avoiding imports of AJV internal modules
+
+This issue is almost always caused by version mismatches—fix the version, and the error disappears.

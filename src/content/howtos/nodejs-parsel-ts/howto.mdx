@@ -15,56 +15,51 @@ desc: Set up a Node.js project using Parcel bundler and TypeScript. This guide c
 
 ![How to Set Up a Node.js Project with Parcel and TypeScript](./images/nodejs-parsel-ts.png)
 
-If you're looking to streamline your Node.js development process, [Parcel](https://parceljs.org/)
-and [TypeScript](https://www.typescriptlang.org/) are a great combination to ensure fast bundling
-and strong type-checking. This guide will walk you through setting up a Node.js project using Parcel
-as the bundler and TypeScript for type safety.
+If you're looking to streamline your Node.js development workflow, combining **Parcel** with **TypeScript** gives you fast bundling, zero-config builds, and powerful type safety. This guide walks you through creating a clean project setup that’s ready for efficient development.
 
 ## Step 1: Initialize Your Node.js Project
 
-Start by creating a new directory for your project.
+Create a new directory:
 
-<div className='code-cmd'>mkdir parsel-ts && cd parsel-ts</div>
+```
+mkdir parsel-ts && cd parsel-ts
+```
 
-### Initialize npm:
+Initialize npm:
 
-Run the following command to initialize a new Node.js project:
+```
+npm init -y
+```
 
-<div className='code-cmd'>npm init -y</div>
-
-This will create a **package.json** file in your project directory.
+A fresh `package.json` is now created.
 
 ## Step 2: Install Parcel Bundler
 
-**Parcel** is an easy-to-use bundler that requires minimal configuration.
+Parcel is a zero-config bundler, ideal for rapid development.
 
-**Install Parcel:**
+Install Parcel:
 
-To install Parcel as a development dependency, run:
-
-<div className='code-cmd'>npm install -D parcel parcel-bundler</div>
+```
+npm install -D parcel parcel-bundler
+```
 
 ## Step 3: Set Up TypeScript
 
-TypeScript adds static types to JavaScript, helping you catch errors early in development.
+Install TypeScript and Node.js types:
 
-### 1. Install TypeScript and Node.js Type Definitions:
+```
+npm install -D typescript @types/node
+```
 
-Run the following command to install TypeScript along with the Node.js type definitions:
+Initialize a TypeScript configuration:
 
-<div className='code-cmd'>npm install typescript @types/node --save-dev</div>
+```
+npx tsc --init
+```
 
-### 2. Initialize TypeScript Configuration:
+Update **tsconfig.json**:
 
-Create a **tsconfig.json** file by running:
-
-<div className='code-cmd'>npx tsc --init</div>
-
-### 3. Configure tsconfig.json:
-
-Modify your **tsconfig.json** to include the following settings:
-
-```js
+```json
 {
   "compilerOptions": {
     "target": "es6",
@@ -76,52 +71,51 @@ Modify your **tsconfig.json** to include the following settings:
 }
 ```
 
-### Step 4: Create the Source Files
+## Step 4: Create Source Files
 
-#### 1. Create a src Directory:
+Create a `src` directory:
 
-Inside your project root, create a **src** folder where your TypeScript files will reside:
+```
+mkdir src
+```
 
-<div className='code-cmd'>mkdir src</div>
+Add `src/index.ts`:
 
-#### 2. Add Your First TypeScript File:
+```ts
+console.log("Parcel + TypeScript project is running!");
+```
 
-Inside the **src** directory, create an **index.ts** file with some starter code:
+## Step 5: Configure Parcel Entry Point
 
-### Step 5: Configure Parcel for TypeScript
+Parcel works automatically with TypeScript.
 
-Parcel works out-of-the-box with TypeScript, but you need to define an entry point in your
-**package.json**.
+Add scripts to **package.json**:
 
-#### 1. Add Scripts to package.json:
-
-Update the **package.json** file to include the following script:
-
-```js
+```json
 "scripts": {
-  "dev": "parcel src/index.html",
-  "build": "parcel build src/index.html"
+  "dev": "parcel src/index.ts",
+  "build": "parcel build src/index.ts"
 }
 ```
 
-If you're not using an HTML file, use parcel src/index.ts as the entry point.
+If using HTML entry points, swap in `src/index.html`.
 
-### Step 6: Run the Development Server
+## Step 6: Run the Development Server
 
-**Start the Development Server:**
+Start dev mode:
 
-Run Parcel’s development server with hot-reloading enabled:
+```
+npm run dev
+```
 
-<div className='code-cmd'>npm run dev</div>
+Parcel will watch changes and rebuild instantly.
 
-**Build for Production:**
+Build for production:
 
-When you’re ready to bundle your code for production, run:
-
-<div className='code-cmd'>npm run build</div>
+```
+npm run build
+```
 
 ## Conclusion
 
-With Parcel and TypeScript set up, your Node.js project is ready for development. Parcel’s minimal
-configuration and TypeScript's type safety will make your development process faster and more
-efficient.
+You now have a clean, modern Node.js workflow powered by Parcel and TypeScript. Parcel handles fast bundling with zero config, while TypeScript provides type safety and maintainability. This setup is perfect for modern backend tools, scripts, or small full-stack apps.

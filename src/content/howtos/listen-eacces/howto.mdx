@@ -13,109 +13,178 @@ tags: ['windows']
 desc: Learn how to fix the 'listen EACCES - permission denied 0.0.0.0:3000' error with practical solutions to resolve permission issues when running your server.
 ---
 
-## How to Solve "Error: listen EACCES: Permission Denied 0.0.0.0:3000" in Windows and Node.js
+When running a Node.js app on Windows, you may run into an error saying:
 
-If you're a **Node.js developer**, you've likely encountered the **"Error: listen EACCES: permission
-denied 0.0.0.0:3000"** error message at some point while trying to run your application. This error
-occurs when Node.js is unable to bind to the specified port due to insufficient permissions.
-Fortunately, solving this issue is relatively straightforward, and this article will guide you
-through the steps to resolve it.
+```
+Error: listen EACCES: permission denied 0.0.0.0:3000
+```
 
-### Understanding the Error:
+This means your system blocked Node.js from using that port. The good news: it's usually easy to fix. Below are the most common and reliable solutions.
 
-The error message you encounter may look like this:
+---
 
-<span className='code-cmd'>
-  Error: listen EACCES: permission denied 0.0.0.0:3000
-</span>
+## Why This Error Happens
 
-## Solutions:
+Node.js throws `EACCES` when:
 
-### 1. Change the Port:
+- The port requires elevated permissions  
+- Another process already uses the port  
+- Windows NAT / networking services are stuck  
+- System TCP ranges are misconfigured  
 
-The simplest solution is to change the port your application is trying to listen on. Ports below
-**1024** require elevated permissions, so you can choose a higher port number, such as **8080** or
-**3001**, which usually don't require special privileges.
+Ports **below 1024** often require admin rights. Even higher ports (like 3000) can fail if Windows services misbehave or other apps occupy the port.
 
-**Express.js**
+---
+
+## Solution 1: Change the Port (Fastest Fix)
+
+Ports below **1024** may require elevated permissions, and port **3000** is often used by other tools (Next.js, React dev server, Vite, etc.). Switching to another port works in 99% of cases.
+
+### Plain Node.js HTTP Server
 
 ```js
-const PORT = 8080;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+import http from 'http';
+
+const PORT = process.env.PORT || 4000;
+
+const server = http.createServer((req, res) => {
+  res.end('Hello from Node');
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(\`Server running at http://localhost:\${PORT}\`);
 });
 ```
 
-**NestJs**
-
-Modify the main.ts file:
+### Express.js
 
 ```js
-import { AppModule } from './app.module';
-import { NestFactory } from '@nestjs/core';
+import express from 'express';
 
-import { AppModule } from './app.module';
-import { NestFactory } from '@nestjs/core';
+const app = express();
+const PORT = process.env.PORT || 4000;
 
+app.get('/', (req, res) => res.send('Hello from Express'));
+
+app.listen(PORT, () => {
+  console.log(\`Express server at http://localhost:\${PORT}\`);
+});
+```
+
+### NestJS — edit `main.ts`
+
+```ts
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3001);
+  const PORT = process.env.PORT || 4000;
+  await app.listen(PORT, '0.0.0.0');
 }
 bootstrap();
 ```
 
-**NextJs**
-
-You can set port number using your package.json file, "scripts" section.
+### Next.js — update `package.json`
 
 ```json
- "scripts": {
-       "dev": "next dev -p 8080",
-       "start": "next start -p 8080",
-},
+{
+  "scripts": {
+    "dev": "next dev -p 4000",
+    "start": "next start -p 4000"
+  }
+}
 ```
 
-### 2. Restart the Windows NAT Driver service:
+### Vite / React / TanStack Router
 
-Open Command Prompt or PowerShell as Administrator and run
+```json
+{
+  "scripts": {
+    "dev": "vite --port 5174",
+    "preview": "vite preview --port 4174"
+  }
+}
+```
 
-<span className='code-cmd'>net stop winnat</span>
+### Hono (Node.js or Bun)
 
-then
+```ts
+import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
 
-<span className='code-cmd'>
-  netsh int ipv4 set dynamic tcp start=49152 num=16384
-</span>
+const app = new Hono();
+const PORT = Number(process.env.PORT) || 4000;
 
-then
+serve({ fetch: app.fetch, port: PORT });
+```
 
-<span className='code-cmd'>
-  netsh int ipv4 set dynamic tcp start=49152 num=16384
-</span>
+### Angular
 
-then
+```
+ng serve --port 4300
+```
 
-<span className='code-cmd'>
-  netsh int ipv6 set dynamic tcp start=49152 num=16384
-</span>
+---
+## Solution 2: Restart Windows NAT (Fixes Most Port/Bind Issues)
 
-and
+Run PowerShell **as Administrator**:
 
-<span className='code-cmd'>net start winnat</span>
+```
+net stop winnat
+```
 
-#### Conclusion:
+Then reset TCP dynamic ports:
 
-The **"Error: listen EACCES: permission denied"** error in **NodeJs** is a common issue that can be
-resolved by changing the port your application listens on, using sudo (though not recommended for
-production), specifying a different user or group, changing port permissions with setcap, or
-utilizing a reverse proxy in production environments. Choose the solution that best fits your use
-case and security requirements to get your Node.js application up and running without encountering
-this error.
+```
+netsh int ipv4 set dynamic tcp start=49152 num=16384
+netsh int ipv6 set dynamic tcp start=49152 num=16384
+```
 
-<div className='single-post__img-wrapper'>
-  ![Error: listen EACCES: permission denied
-  0.0.0.0:3000](./images/listen-eacces.png)
-  <span className='single-post__img-alt'>
-    Error: listen EACCES: Permission Denied 0.0.0.0:3000
-  </span>
-</div>
+Restart the service:
+
+```
+net start winnat
+```
+
+This often fixes hidden Windows networking bugs that block Node.js ports.
+
+---
+
+## Solution 3: Free the Port (If Another App Uses It)
+
+Check what process is using port 3000:
+
+```
+netstat -ano | findstr :3000
+```
+
+Kill it:
+
+```
+taskkill /PID <id> /F
+```
+
+---
+
+## Solution 4: Run Terminal as Administrator
+
+Sometimes the issue is simply lack of permissions.
+
+Right‑click → **Run as Administrator** → start your project again.
+
+---
+
+## Solution 5: Use a Reverse Proxy (Production)
+
+In production, apps rarely bind directly to port 80/443.  
+Use:
+
+- **Nginx**
+- **Caddy**
+- **Apache**
+
+Your Node.js app listens on 3000/8080 internally while Nginx handles public traffic.
+
+---
+
+## Conclusion
+
+The `listen EACCES` error is common, especially on Windows. Most of the time, switching the port or restarting NAT fixes it instantly. If not, check which process is using the port or run your terminal with admin permissions. After applying these steps, your Node.js server should run normally without permission errors.

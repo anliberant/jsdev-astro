@@ -1,6 +1,6 @@
 @import './variables.css';
 @import './base.css';
-@import './components.css';
+
 @layer critical {
   html {
     font-family: 'Roboto', system-ui, sans-serif;

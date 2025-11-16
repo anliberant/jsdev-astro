@@ -1,4 +1,3 @@
-export * from './sample-html';
 export * from './classes';
 export * from './format-url';
 export * from './time';

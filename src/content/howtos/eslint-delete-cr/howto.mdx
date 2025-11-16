@@ -1,7 +1,7 @@
 ---
-title: How to solve [eslint] Delete `CR` [prettier/prettier] error
+title: How to Fix the Delete CR [prettier/prettier] Error
 slug: eslint-delete-cr
-heading: ix [eslint] Delete CR [prettier/prettier] Error
+heading: Fixing Delete CR Prettier Error
 permalink: howto/eslint-delete-cr
 icon: /icons/prettier.png
 image: ./images/eslint-delete-cr.png
@@ -10,90 +10,138 @@ author: anton liberant
 category: nodejs
 type: howto
 tags: ['eslint', 'prettier']
-desc: Fix the '[eslint] Delete CR [prettier/prettier]' error by resolving ESLint and Prettier line ending conflicts. Learn simple fixes to ensure consistent formatting.
+desc: esolve the 'Delete CR [prettier/prettier]' ESLint error by fixing line ending issues across Windows, macOS, Linux, and Git.
 ---
 
-## Solve [eslint] Delete 'cr' [prettier/prettier]
+The “Delete CR” error appears when your files use Windows-style line endings (CRLF) while Prettier expects Unix-style line endings (LF). This commonly happens in cross‑platform projects or when using tools like WSL, Docker, or remote editors.
 
-The **[eslint] Delete CR** error typically occurs when there are carriage return (CR) characters at
-the end of lines in your code. It is often encountered when you're working in a cross-platform
-development environment, and line endings in your code files are not consistent. To resolve this
-error, you can follow these steps:
+## Why the Error Happens
 
-### 1. Set Prettier Configuration:
+- Windows uses **CRLF**
+- macOS/Linux use **LF**
+- Prettier prefers **LF**
+- If a file contains CRLF, ESLint shows: `Delete 'CR' [prettier/prettier]`
 
-**Prettier:**
+This mismatch leads to formatting conflicts that break CI, linting, or pre‑commit checks.
 
+---
+
+## 1. Fix ESLint + Prettier Config (Recommended)
+
+### `.prettierrc`
 ```json
-// .prettierrc
 {
   "endOfLine": "auto"
 }
 ```
 
-**Eslint:**
-
-```json
-// .eslintrc.js
+### `.eslintrc.js`
+```js
 module.exports = {
   rules: {
-    'prettier/prettier': [
-      'error',
-      {
-        endOfLine: 'auto',
-      },
-    ],
-  },
+    "prettier/prettier": ["error", { endOfLine: "auto" }]
+  }
 };
 ```
 
-This configuration will make Prettier use the specified line ending format when formatting your
-code.
+This allows Prettier to accept LF/CRLF dynamically.
 
-### 2. Configure Your Editor to Use Consistent Line Endings:
+---
 
-To prevent this error from occurring in the first place, configure your code editor or IDE to use
-consistent line endings. You typically have two options:
+## 2. Convert Line Endings Using VS Code
 
-1. **Unix Line Endings (LF)**: Common on Linux and macOS.
-2. **Windows Line Endings (CRLF)**: Common on Windows.
+1. Open a file  
+2. Bottom‑right corner → click **CRLF**  
+3. Switch to **LF**  
+4. Press **Ctrl+Shift+P → Change All End of Line Sequence**
 
-Choose one format and configure your editor accordingly. In Visual Studio Code, for example, you can
-select the line ending type at the bottom right of the editor window.
+---
 
-### 3. Convert Line Endings:
+## 3. Fix Line Endings Through Git
 
-If you are working on a codebase that has inconsistent line endings, you can use tools to
-automatically convert line endings to the preferred format.
+Add:
 
-1. **dos2unix (Linux/macOS)**: You can use the `dos2unix` command to convert Windows line endings
-   to Unix line endings.
+### `.gitattributes`
+```
+* text=auto eol=lf
+```
 
-<span className='code-cmd'>dos2unix file.js</span>
+Re‑normalize repository:
 
-2. **unix2dos (Linux/macOS)**: To convert Unix line endings to Windows line endings, you can use the `unix2dos` command.
+```sh
+git rm --cached -r .
+git reset --hard
+```
 
-<span className='code-cmd'>unix2dos file.js</span>
+---
 
-3. **Editor Extensions**: Some code editors, like Visual Studio Code, have extensions that can help
-   you convert line endings in your files. For example, the "End of Line" extension can be used for
-   this purpose.
+## 4. Convert Files in Terminal
 
-### 4. Editor and Version Control Configuration:
+### Convert CRLF → LF
+```sh
+dos2unix file.js
+```
 
-Ensure that your code editor and version control system (e.g., Git) are configured to use the same
-line ending format for all files. This is important for maintaining consistency within your project.
-You can specify line endings in your `.gitattributes` file for Git, which helps enforce consistent
-line endings for all contributors.
+### Convert LF → CRLF
+```sh
+unix2dos file.js
+```
 
-Example `.gitattributes`:
+Install via:
 
-Set all files to use LF (Unix) line endings
+```sh
+sudo apt install dos2unix
+```
 
-<span className='code-cmd'>* text=auto eol=lf</span>
+---
 
-By following these steps, you should be able to resolve the "[eslint] Delete CR [prettier/prettier]"
-error and ensure that your code maintains consistent line endings, making it more readable and
-easier to collaborate on in cross-platform development environments.
+## 5. Prettier 3.x Modern Config
 
-![Error: Delete `CR` [prettier/prettier]](./images/eslint-delete-cr.png)
+For new Prettier versions:
+
+### `prettier.config.js`
+```js
+export default {
+  endOfLine: "auto"
+};
+```
+
+---
+
+## 6. WSL, Docker, and Remote Environments
+
+### VS Code (WSL)
+```json
+"files.eol": "\n"
+```
+
+### Git inside Docker
+```sh
+git config core.autocrlf false
+```
+
+---
+
+## 7. Use Pre‑commit Hooks to Enforce LF
+
+Install:
+
+```sh
+npm i -D husky lint-staged
+```
+
+Add:
+
+```json
+"lint-staged": {
+  "*": ["prettier --write"]
+}
+```
+
+This ensures consistent formatting before each commit.
+
+---
+
+## Conclusion
+
+This ESLint/Prettier error is simply a line‑ending mismatch. By configuring Prettier, ESLint, Git, your editor, and using pre‑commit hooks, you can eliminate the issue permanently and avoid cross‑platform inconsistencies.

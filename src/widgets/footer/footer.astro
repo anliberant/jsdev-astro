@@ -16,7 +16,7 @@ const currentPath = Astro.url.pathname;
         siteConfig.footerLinks.map(navLink => {
           return (
             <a
-              href={`${navLink.path}/`}
+              href={`${navLink.path}`}
               class={`nav-link ${isActiveLink(navLink.path, currentPath) ? 'nav-link--active' : ''}`}>
               {navLink.name}
             </a>

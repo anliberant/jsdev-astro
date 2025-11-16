@@ -15,27 +15,22 @@ desc: Learn JavaScript Proxy and Reflect with step-by-step examples. Discover ho
 
 ![Proxy and Reflect](./images/proxy-and-reflect.png)
 
-In JavaScript, both Proxy and Reflect are powerful features that work together to provide enhanced
-control over object behavior. Here’s a detailed overview of how they work and how you can use them
-effectively.
+In modern JavaScript, **Proxy** and **Reflect** work together to give you fine‑grained control over how objects behave. These tools allow you to intercept operations, add validation, log changes, and even create reactive systems. This guide explains how both features work and provides clear, practical examples.
 
-## 1. Working with Proxy
+## 1. What Is a Proxy?
 
-A **Proxy** is a wrapper around an object that allows you to intercept and redefine operations like
-property access, assignment, and function invocation.
+A **Proxy** wraps an object and intercepts operations performed on it. You decide how the object reacts when something is read, written, deleted, or called.
 
-**Basic Syntax**
+### Basic syntax
 
 ```js
 const proxy = new Proxy(target, handler);
 ```
 
-- **target**: The original object you want to wrap.
-- **handler**: An object defining which operations will be intercepted.
+- **target** – the original object  
+- **handler** – defines which operations (“traps”) you want to intercept
 
-**Example**
-
-Here’s how you can use a proxy to log whenever a property is accessed or modified:
+### Example: Logging property access
 
 ```js
 const target = { message: 'Hello, World!' };
@@ -49,61 +44,57 @@ const handler = {
     console.log(`Setting ${prop} to ${value}`);
     target[prop] = value;
     return true;
-  },
+  }
 };
 
 const proxy = new Proxy(target, handler);
 
-// Access and modify the proxy
-console.log(proxy.message); // Logs: Getting message
-proxy.message = 'Hello, Proxy!'; // Logs: Setting message to Hello, Proxy!
+console.log(proxy.message);  // Getting message
+proxy.message = 'Hello, Proxy!';  // Setting message to Hello, Proxy!
 ```
 
-**Common Proxy Traps**
+### Common Proxy traps
 
-- **get(target, prop)**: Traps property access.
-- **set(target, prop, value)**: Traps property assignment.
-- **has(target, prop)**: Traps the in operator.
-- **deleteProperty(target, prop)**: Traps property deletion.
-- **apply(target, thisArg, args)**: Traps function calls.
-- **construct(target, args)**: Traps object instantiation.
+- `get` — intercepts property access  
+- `set` — intercepts assignments  
+- `has` — catches the `in` operator  
+- `deleteProperty` — intercepts `delete obj.prop`  
+- `apply` — intercepts function calls  
+- `construct` — intercepts `new`  
 
-## 2. Working with Reflect
+## 2. What Is Reflect?
 
-The **Reflect** object provides methods for basic operations on objects. It's often used inside
-proxy traps to handle the default behavior.
+**Reflect** provides built‑in, standardized methods for object operations—similar to what Proxy intercepts. It’s often used inside Proxy traps to perform the original behavior.
 
-**Example:**
-
-Here’s how to use **Reflect** to maintain the default behavior within proxy handlers:
+### Example: Using Reflect inside a Proxy
 
 ```js
 const handler = {
   get(target, prop) {
-    console.log(`Getting ${prop}`);
-    return Reflect.get(target, prop); // Perform default behavior
+    console.log(`Reading ${prop}`);
+    return Reflect.get(target, prop);
   },
   set(target, prop, value) {
-    console.log(`Setting ${prop} to ${value}`);
-    return Reflect.set(target, prop, value); // Perform default behavior
-  },
+    console.log(`Writing ${prop} = ${value}`);
+    return Reflect.set(target, prop, value);
+  }
 };
 ```
 
-**Common Reflect Methods**
+### Common Reflect methods
 
-- **Reflect.get(target, prop)**: Retrieves a property from the object.
-- **Reflect.set(target, prop, value)**: Sets a property on the object.
-- **Reflect.has(target, prop)**: Checks if the property exists (like the in operator).
-- **Reflect.deleteProperty(target, prop)**: Deletes a property from the object.
-- **Reflect.apply(target, thisArg, args)**: Calls a function with a specific this context and
-  arguments.
-- **Reflect.construct(target, args)**: Creates a new instance of an object (like new).
+- `Reflect.get(target, prop)`  
+- `Reflect.set(target, prop, value)`  
+- `Reflect.has(target, prop)`  
+- `Reflect.deleteProperty(target, prop)`  
+- `Reflect.apply(func, thisArg, args)`  
+- `Reflect.construct(target, args)`  
 
-## 3. Practical Example: Validation with Proxy and Reflect
+Using Reflect ensures your Proxy behaves predictably, especially in complex scenarios.
 
-You can combine **Proxy** and **Reflect** to create objects that enforce certain rules, such as type
-checking or input validation.
+## 3. Real‑World Example: Object Validation
+
+You can create objects that validate data automatically.
 
 ```js
 const validator = {
@@ -111,22 +102,55 @@ const validator = {
     if (typeof value !== 'string') {
       throw new Error(`Property ${prop} must be a string`);
     }
-    return Reflect.set(target, prop, value); // Perform default set operation
-  },
+    return Reflect.set(target, prop, value);
+  }
 };
 
 const user = new Proxy({}, validator);
 
-// Valid input
-user.name = 'Margaret';
-
-// Invalid input
-user.age = 45; // Error: Property age must be a string
+user.name = 'Margaret';   // OK
+user.age = 45;            // Error: Property age must be a string
 ```
+
+## 4. Another Example: Read‑Only Objects
+
+```js
+const readonly = {
+  set() {
+    console.log('Cannot modify a read‑only object');
+    return false;
+  }
+};
+
+const settings = new Proxy({ theme: 'dark' }, readonly);
+
+settings.theme = 'light'; // Cannot modify a read‑only object
+```
+
+## 5. Using Proxies for Reactive Programming (like Vue.js)
+
+```js
+const watchers = [];
+
+function reactive(obj) {
+  return new Proxy(obj, {
+    set(target, prop, value) {
+      const updated = Reflect.set(target, prop, value);
+      watchers.forEach(fn => fn());
+      return updated;
+    }
+  });
+}
+
+const state = reactive({ count: 0 });
+
+watchers.push(() => console.log(`Count changed to: ${state.count}`));
+
+state.count++;  // Count changed to: 1
+```
+
+This is a simplified version of how reactive frameworks track changes.
 
 ## Conclusion
 
-**Proxy** and **Reflect** provide a flexible way to customize object behavior in JavaScript.
-**Proxy** allows you to intercept fundamental operations, while **Reflect** ensures you can still
-maintain default behavior when needed. Together, they enable advanced use cases like data
-validation, logging, and more!
+**Proxy** gives you the power to intercept and customize object behavior, while **Reflect** provides safe, predictable defaults. Together, they enable powerful patterns such as logging, validation, immutability, and even reactivity. By mastering these tools, you gain deeper control over your JavaScript applications and unlock new ways to architect clean, maintainable code.

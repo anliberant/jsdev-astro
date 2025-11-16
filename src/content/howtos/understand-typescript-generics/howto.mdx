@@ -13,101 +13,97 @@ tags: ['generics']
 desc: Generics in TypeScript enable flexible, reusable components that work with multiple data types while ensuring strong type safety and better code maintainability.
 ---
 
-TypeScript generics allow developers to create reusable components, making your code more flexible
-and maintainable. By using generics, you can create functions, classes, or interfaces that work with
-a variety of data types, instead of being limited to a single one.
+TypeScript's **generics** are one of the most powerful features in the language. They let you write components — functions, classes, and interfaces — that work with **any data type** while still preserving **strict type safety**.
+
+Instead of writing the same function multiple times for different types, you write it **once**, and TypeScript infers the correct type during usage.
+
+Generics eliminate duplication, prevent type errors, and help you write expressive, scalable code.
 
 ## 1. What Are Generics?
 
-Generics are essentially placeholders for types that are provided when you call a function, create
-an object, or define a class. Instead of hardcoding a specific type, generics let you define
-functions that work with any data type.
+A **generic** is a placeholder type — like a variable for types. It appears in angle brackets `<T>` and can represent any type the user provides.
 
-**Example:**
+### Basic example
 
-```js
-function identity<T>(arg: T): T {
-  return arg;
+```ts
+function identity<T>(value: T): T {
+  return value;
 }
-```
 
-Here, **T** is the generic type that can be replaced with any type when calling the function. You
-could use this function with a number, string, or other types.
+identity(5);
+identity("Hello");
+identity({ a: 1 });
+```
 
 ## 2. Why Use Generics?
 
-Generics improve code reusability and maintain type safety. Instead of duplicating code for
-different types, you can define it once and ensure type checks happen automatically.
+Generics improve:
 
-### Benefits of Using Generics
-
-Generics allow you to:
-
-- **Write reusable code** that can handle multiple data types.
-- **_Maintain type safety_**, ensuring that your types are consistent.
-- **Avoid code duplication** by eliminating the need for separate implementations for each type.
+- Type Safety  
+- Reusability  
+- Autocomplete quality  
 
 ## 3. Generic Functions
 
-You can define a generic function by adding the type parameter within angle brackets (**\<>**) after
-the function name. This makes the function work with various types dynamically.
-
-```js
+```ts
 function getArray<T>(items: T[]): T[] {
-  return new Array().concat(items);
+  return [...items];
 }
-
-let numArray = getArray < number > [1, 2, 3];
-let strArray = getArray < string > ['A', 'B', 'C'];
 ```
 
 ## 4. Generic Classes
 
-Generics can also be applied to classes, allowing you to create structures that can work with
-different types.
-
-```js
+```ts
 class Box<T> {
-  contents: T;
-  constructor(value: T) {
-    this.contents = value;
-  }
+  constructor(public value: T) {}
 }
-
-let numberBox = new Box() < number > 10;
-let stringBox = new Box() < string > 'hello';
 ```
 
 ## 5. Generic Constraints
 
-Sometimes you might want to limit the types that can be used with generics. You can do this using
-constraints.
-
-```js
-function loggingIdentity<T extends { length: number }>(arg: T): T {
-    console.log(arg.length);
-    return arg;
+```ts
+function logLength<T extends { length: number }>(value: T): T {
+  console.log(value.length);
+  return value;
 }
 ```
 
-Here, the generic type **T** is constrained to types that have a **length** property, like arrays or
-strings.
-
 ## 6. Generic Interfaces
 
-Interfaces can use generics to create flexible structures for different data types.
-
-```js
+```ts
 interface Pair<T, U> {
   first: T;
   second: U;
 }
+```
 
-let pair: Pair<number, string> = { first: 1, second: 'one' };
+## 7. Default Generic Types
+
+```ts
+interface RequestConfig<T = string> {
+  payload: T;
+}
+```
+
+## 8. Built‑in Utility Types
+
+TypeScript includes generic utilities such as:
+
+- `Partial<T>`
+- `Readonly<T>`
+- `Record<K, T>`
+- `Pick<T, K>`
+
+## 9. Advanced Example: Generic Repository Pattern
+
+```ts
+class Repository<T> {
+  private items: T[] = [];
+  add(item: T) { this.items.push(item); }
+  getAll(): T[] { return this.items; }
+}
 ```
 
 ## Conclusion
 
-Generics are a powerful feature in TypeScript that provide flexibility and reusability, while still
-maintaining type safety. By using generics effectively, you can write cleaner and more maintainable
-code.
+Generics are essential for writing flexible, reusable, type‑safe TypeScript code.

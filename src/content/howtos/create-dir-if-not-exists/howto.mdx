@@ -1,0 +1,107 @@
+---
+title: How to Create a Directory if It Does Not Exist in Node.js
+slug: create-dir-if-not-exists
+heading: Create a Directory in Node.js if It Doesn't Exist
+icon: /icons/nodejs.png
+image: ./images/create-dir-if-not-exists.png
+permalink: howto/create-dir-if-not-exists
+date: 2024-03-22
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['fs']
+desc: Learn how to create a directory if it doesn’t exist in Node.js with clear steps and modern best practices.
+---
+
+Creating a directory programmatically is a common requirement in backend and CLI applications. Node.js provides simple and reliable ways to check for a folder and create it only when needed. Here are the most practical approaches using the modern **fs** API.
+
+---
+
+## 1. Create a Directory with `fs.mkdir` (Callback Version)
+
+The classic way is to check if a directory exists, and if not — create it.  
+`fs.access` helps detect existence, while `fs.mkdir` creates the folder.
+
+```js
+const fs = require('fs');
+const directory = 'path/to/directory';
+
+fs.access(directory, fs.constants.F_OK, err => {
+  if (err) {
+    fs.mkdir(directory, { recursive: true }, err => {
+      if (err) {
+        console.error('Error creating directory:', err);
+      } else {
+        console.log('Directory created successfully');
+      }
+    });
+  } else {
+    console.log('Directory already exists');
+  }
+});
+```
+
+### Why `recursive: true`?
+It ensures Node.js creates any missing parent folders — useful when building nested paths.
+
+---
+
+## 2. Using `fs.promises.mkdir` (Cleaner, Modern Syntax)
+
+If you're using Node.js **v10+**, the `fs.promises` API is the recommended choice.  
+It avoids callback nesting and makes your code easier to read.
+
+```js
+const fs = require('fs').promises;
+
+async function ensureDir(path) {
+  try {
+    await fs.mkdir(path, { recursive: true });
+    console.log('Directory created successfully');
+  } catch (err) {
+    console.error('Error creating directory:', err);
+  }
+}
+
+ensureDir('path/to/directory');
+```
+
+---
+
+## 3. Use `fs.existsSync` for Simple Synchronous Scripts
+
+For CLI tools or scripts where performance is less critical, the sync version works well.
+
+```js
+const fs = require('fs');
+
+const dir = 'logs';
+
+if (!fs.existsSync(dir)) {
+  fs.mkdirSync(dir, { recursive: true });
+  console.log('Directory created.');
+} else {
+  console.log('Directory already exists.');
+}
+```
+
+Useful in build scripts, migration tools, or Node-based automation.
+
+---
+
+## Best Practices
+
+- Prefer **async** methods for web servers or high-load apps.
+- Always use `{ recursive: true }` unless you want strict parent validation.
+- Avoid `fs.exists()` — it’s deprecated.
+- Wrap directory creation in a helper function if used frequently.
+
+---
+
+## Conclusion
+
+Node.js makes directory creation simple and safe. Whether you prefer callbacks, promises, or synchronous scripts, `fs.mkdir` with `{ recursive: true }` is the most reliable way to ensure a folder exists before writing files.
+
+This pattern is essential for file uploads, log storage, temporary working directories, and build pipelines.
+
+Happy coding!
