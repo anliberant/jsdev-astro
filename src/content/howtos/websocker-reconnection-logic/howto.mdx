@@ -25,14 +25,12 @@ By encapsulating WebSocket logic, you:
 
 ## Key Features of the WebSocket Encapsulation
 
-1. **Automatic Reconnection**: Retry connecting after disconnections with configurable parameters.
-2. **Event Listeners**: Add and manage WebSocket events like `open`, `close`, and `error`.
-3. **Customizable Parameters**: Control maximum reconnection attempts, intervals, and timeout limits.
-4. **Error Handling**: Gracefully handle errors and provide feedback.
+1. **Automatic Reconnection**
+2. **Event Listeners**
+3. **Customizable Parameters**
+4. **Error Handling**
 
 ## Implementation: WebSocketReconnect Class
-
-Below is the complete implementation of a **WebSocketReconnect** class:
 
 ```js
 class WebSocketReconnect {
@@ -142,44 +140,17 @@ class WebSocketReconnect {
 }
 ```
 
-### Example Usage
-
-Here’s how you can use the WebSocketReconnect class:
+## Example Usage
 
 ```js
 import WebSocketReconnect from './WebSocketReconnect';
 
-import WebSocketReconnect from './WebSocketReconnect';
-
 const ws = new WebSocketReconnect('ws://your-websocket-url');
 
-ws.addEventListener('open', () => {
-  console.log('WebSocket opened');
-});
+ws.addEventListener('open', () => console.log('WebSocket opened'));
+ws.addEventListener('close', () => console.log('WebSocket closed'));
+ws.addEventListener('error', () => console.log('Error occurred'));
 
-ws.addEventListener('close', () => {
-  console.log('WebSocket closed');
-});
-
-ws.addEventListener('error', () => {
-  console.log('WebSocket encountered an error');
-});
-
-// Close the WebSocket connection when no longer needed
 ws.close();
 ```
 
-### Key Methods Explained
-
-1. **connect**: Establishes the WebSocket connection and sets event listeners.
-2. **handleReconnect**: Implements reconnection logic with retry limits.
-3. **addEventListener**: Registers event listeners for WebSocket events.
-4. **close**: Closes the WebSocket connection and clears reconnection timers.
-
-### Benefits of Using This Encapsulation
-
-- **Reduced Boilerplate**: Write less repetitive code for WebSocket management.
-- **Improved Reliability**: Automatically recover from connection disruptions.
-- **Flexibility**: Customize parameters like retry limits and intervals.
-
-By following this guide, you can implement a reliable WebSocket encapsulation that simplifies handling real-time connections in your applications.

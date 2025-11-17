@@ -3,170 +3,159 @@ title: How to Cache List Data in React with react-query and localforage
 slug: react-query-localforage
 heading: Caching List Data in React with react-query and localforage
 icon: /icons/react.png
-image: /icon.png
+image: ./images/react-query-localforage.png
 permalink: howto/react-query-localforage
 date: 2024-11-01
 author: anton liberant
 category: react
 type: howto
-tags: ['localforage', 'react-query']
-desc: Learn how to efficiently cache list data in React using react-query and localforage to improve loading speeds, reduce server requests, and enhance user experience.
+tags: ['localforage', 'react-query', 'cache']
+desc: Cache list data in React using react-query and localforage to speed up loading, reduce API calls, and provide fast, persistent data retrieval across sessions.
 ---
 
-Efficient data caching is essential for any React app handling large datasets or dealing with slow backend responses. In this guide, we’ll walk you through caching list data in React using react-query and localforage. These tools will help ensure quick access to data without repetitive API calls, even after page reloads.
+Efficient data caching is crucial in React applications, especially when handling large datasets, slow APIs, or repeated list rendering. Combining **react-query** with **localforage** gives you both fast in-memory caching and long-term persistence using IndexedDB, WebSQL, or LocalStorage.
 
-## Why Cache List Data?
+This approach displays cached list data instantly and silently fetches fresh data in the background, drastically improving perceived performance.
 
-In backend management systems, handling large or frequently-accessed data can slow down the user experience, especially when each reload requires multiple API requests. While React's `useCallback` and `useMemo` hooks can optimize performance by reducing re-renders, they lack data persistence across sessions.
+## Why Cache with react-query + localforage
 
-A combination of `react-query` and `localforage` can be the answer. `react-query` manages server-side requests, caching, and synchronization, while `localforage` uses IndexedDB, WebSQL, and LocalStorage to store data locally. This approach ensures data persistence beyond the current session, reducing load times and improving UX.
+React hooks like `useMemo` and `useCallback` optimize rendering, but they do not persist data between sessions. Meanwhile:
 
-## Design Approach
+- **react-query** handles server synchronization, caching, stale-time logic, and retries.
+- **localforage** stores cached data persistently, even after page reloads.
 
-Our caching strategy follows a simple plan:
+Using both gives you a “local-first” model: show cached data immediately, then refresh in the background.
 
-- On the initial load, data is fetched from the server and stored in `localforage`.
-- On subsequent loads, data is first accessed from local cache, reducing the number of server requests.
-- While the cached data is displayed immediately, an API call is triggered in the background to ensure that the data remains up-to-date.
+---
 
-This "local-first" approach significantly improves load times while ensuring data freshness.
-
-## Step-by-Step Implementation
-
-### Step 1: Configure `localforage`
-
-Set up a `localforage` instance to store data by name. This enables data categorization and management across your app.
+# Step 1: Configure localforage
 
 ```js
-import localforage from 'localforage';
-
 import localforage from 'localforage';
 
 export const localStore = localforage.createInstance({
-  user: 'john-doe',
+  name: 'app-cache',
 });
 ```
 
-### Step 2: Create `useLocalforage` Hook
+This instance will store cached lists by key.
 
-`useLocalforage` is a custom hook to get and set data in localforage. This hook checks if data exists locally before making server requests.
+---
+
+# Step 2: Build a useLocalforage Hook
 
 ```js
 import { useCallback, useEffect, useState } from 'react';
-import { useQueryClient } from 'react-query';
 
-const useLocalforage = localKey => {
+export const useLocalforage = key => {
   const [localData, setLocalData] = useState();
-  const [localLoading, setLocalLoading] = useState(false);
-  const queryClient = useQueryClient();
+  const [localLoading, setLocalLoading] = useState(true);
 
   const get = useCallback(async () => {
     try {
-      return await localStore.getItem(localKey);
-    } catch (error) {
-      console.error('Error fetching from localforage:', error);
+      return await localStore.getItem(key);
+    } catch {
       return null;
     }
-  }, [localKey]);
+  }, [key]);
 
-  const set = useCallback(
-    async data => {
-      try {
-        return await localStore.setItem(localKey, data);
-      } catch (error) {
-        console.error('Error setting data in localforage:', error);
-        return null;
-      }
-    },
-    [localKey]
-  );
+  const set = useCallback(async value => {
+    try {
+      await localStore.setItem(key, value);
+    } catch {}
+  }, [key]);
 
   useEffect(() => {
     (async () => {
-      setLocalLoading(true);
-      const data = await get();
-      if (data) setLocalData(data);
+      const stored = await get();
+      if (stored) setLocalData(stored);
       setLocalLoading(false);
     })();
-  }, [localKey]);
+  }, [get]);
 
-  return { localData, localLoading, get, set };
+  return { localData, localLoading, set };
 };
 ```
 
-### Step 3: Implement `useLocalQuery` Hook
+This hook retrieves cached data on mount and exposes methods to persist new data.
 
-The `useLocalQuery` hook combines react-query with `localforage` to manage caching and persistence. Data is retrieved from cache on subsequent loads, with updates triggered in the background for real-time accuracy.
+---
+
+# Step 3: Create the useLocalQuery Hook
 
 ```js
-import { useQuery } from 'react-query';
-
+import { useQuery, useQueryClient } from 'react-query';
 import { useLocalforage } from './useLocalforage';
 
-import { useLocalforage } from './useLocalforage';
+export const useLocalQuery = ({ queryKey, queryFn, onSuccess }) => {
+  const { localData, localLoading, set } = useLocalforage(queryKey);
 
-const useLocalQuery = ({ queryKey, queryFn, onSuccess, onError }) => {
-  const { localData, localLoading, get, set } = useLocalforage(queryKey);
-  const queryClient = useQueryClient();
-
-  const {
-    data: queryData,
-    isLoading,
-    refetch,
-  } = useQuery({
+  const { data: serverData, isLoading } = useQuery({
     queryKey,
     queryFn,
-    onSuccess: data => {
-      set(data); // Update localforage
-      onSuccess && onSuccess(data);
+    onSuccess: newData => {
+      set(newData);
+      if (onSuccess) onSuccess(newData);
     },
-    onError,
   });
 
-  const data = localData || queryData;
+  const data = localData || serverData;
 
-  return { data, isLoading: localLoading || isLoading, refetch };
+  return {
+    data,
+    isLoading: localLoading || isLoading,
+  };
 };
 ```
 
-### Example Component Usage
+### Why this works
+- Cached data loads instantly.
+- react-query fetches fresh data silently.
+- New data is persisted to localforage automatically.
 
-Here’s an example of how to use `useLocalQuery` within a component to fetch a list of items and display them from cache.
+---
+
+# Example Component
 
 ```js
-import useLocalQuery from './useLocalQuery';
 import axios from 'axios';
+import { useLocalQuery } from './useLocalQuery';
 
-import useLocalQuery from './useLocalQuery';
-import axios from 'axios';
-
-const fetchListData = async () => {
-  const { data } = await axios.get('/api/our-data');
-  return data;
+const fetchList = async () => {
+  const res = await axios.get('/api/list');
+  return res.data;
 };
 
-const ListComponent = () => {
-  const { data, isLoading, refetch } = useLocalQuery({
-    queryKey: 'list-data',
-    queryFn: fetchListData,
-    onSuccess: data => console.log('Data fetched successfully:', data),
+export const ListComponent = () => {
+  const { data, isLoading } = useLocalQuery({
+    queryKey: 'items',
+    queryFn: fetchList,
   });
 
   if (isLoading) return <p>Loading...</p>;
 
   return (
-    <div>
-      <ul>
-        {data.map(item => (
-          <li key={item.id}>{item.name}</li>
-        ))}
-      </ul>
-      <button onClick={refetch}>Refresh Data</button>
-    </div>
+    <ul>
+      {data.map(item => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
   );
 };
 ```
 
-## Conclusion
+---
 
-By implementing `react-query` and `localforage` in your React app, you can cache list data efficiently, making your app faster and more responsive. This setup minimizes repetitive requests, and improves UX by ensuring the data is available even on page reloads. Try it in your projects, and start building smarter, faster applications!
+# Key Advantages
+
+- Instant load from local storage  
+- Updated automatically via react-query  
+- Works offline  
+- Reduces backend load  
+- Smooth experience for large datasets  
+
+---
+
+# Conclusion
+
+Using react-query together with localforage creates a powerful caching layer that persists list data across reloads and sessions. The UI loads instantly using local storage while staying fresh through background API requests. This hybrid model provides both performance and reliability, making it ideal for dashboards, admin panels, and mobile-friendly apps.

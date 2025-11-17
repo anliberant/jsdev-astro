@@ -1,0 +1,230 @@
+---
+title: "How to Develop Accessible Interfaces with WAI-ARIA"
+slug: wai-aria-accessible-ui
+heading: "Building Accessible UI with WAI-ARIA Patterns"
+icon: /icons/html.png
+image: /icon.png
+permalink: howto/wai-aria-accessible-ui
+date: 2025-11-17
+author: anton liberant
+category: html
+type: howto
+tags: []
+desc: A deep, practical guide to building accessible interfaces using WAI-ARIA roles, states, patterns, and proper keyboard support for modern web applications.
+---
+
+Modern web applications have evolved into rich, desktop‑like interactive environments. Components such as modals, dropdown menus, accordions, tabs, and dynamically updated content are now standard. However, accessibility is often overlooked, leaving millions of users unable to interact with applications effectively. WAI‑ARIA provides a way to enrich custom UI components with semantic meaning and behavior for assistive technologies.
+
+## What WAI‑ARIA Is
+
+WAI‑ARIA (Web Accessibility Initiative — Accessible Rich Internet Applications) is a specification created by the W3C to describe interactive interfaces to screen readers, keyboard users, and assistive devices. While HTML includes semantic elements like `<button>` and `<nav>`, developers frequently build UI using `<div>` or `<span>`, resulting in missing information for accessibility tools. ARIA fills in those gaps.
+
+ARIA includes three core building blocks:
+
+- **Roles** — define the purpose of an element  
+- **States & Properties** (`aria-*`) — describe its current condition  
+- **Live Regions** — announce dynamic updates  
+
+## ARIA Roles
+
+Roles communicate what an element represents.
+
+Examples include:
+
+- `button`
+- `navigation`
+- `dialog`
+- `tab`, `tablist`, `tabpanel`
+- `menu`, `menuitem`
+- `checkbox`, `switch`
+
+Use native HTML elements whenever possible; use ARIA only when necessary.
+
+## ARIA Properties & States
+
+These attributes explain how a UI element behaves and what its current status is.
+
+**Properties**
+- `aria-label`
+- `aria-labelledby`
+- `aria-describedby`
+
+**States**
+- `aria-expanded`
+- `aria-selected`
+- `aria-checked`
+- `aria-disabled`
+
+## Live Regions
+
+Live regions notify users of dynamic content updates:
+- `aria-live="polite"`
+- `aria-live="assertive"`
+- `aria-atomic="true"`
+- `aria-relevant="additions text"`
+
+These are essential for notifications, error messages, chat updates, and async content.
+
+## ARIA in SPA/React Environments
+
+Frameworks like React sometimes re-render without changing DOM nodes, which can prevent screen readers from detecting updates. Use:
+- Live regions  
+- Forced DOM updates  
+- Proper `role` and `aria-*` attributes  
+- Real testing with assistive tools  
+
+## Keyboard Accessibility
+
+Keyboard navigation is a core WCAG requirement.
+
+Essential keys:
+- **Tab / Shift+Tab** — move focus  
+- **Enter / Space** — activate  
+- **Arrow keys** — navigate inside composite widgets  
+- **Escape** — close dialogs  
+- **Home / End** — jump to start/end  
+
+Use:
+- `tabindex="0"`
+- `tabindex="-1"`
+- `aria-activedescendant` for virtual focus
+
+## Testing Accessibility
+
+### Browser Tools
+- Axe DevTools  
+- Lighthouse  
+- WAVE  
+
+### Screen Readers
+- NVDA  
+- JAWS  
+- VoiceOver  
+
+### Linters
+- `eslint-plugin-jsx-a11y`  
+
+### CI
+- Axe CI  
+- Pa11y CI  
+- Lighthouse CI  
+
+## Example: Accessible Accordion Component
+
+Here is **a completely different example**, not related to the previous code and without any internal comments directed at you. It demonstrates a well‑structured, accessible accordion widget using WAI‑ARIA best practices.
+
+### HTML Structure
+
+```html
+<div class="accordion">
+  <h2 id="faq-title">FAQ</h2>
+
+  <div class="accordion__item">
+    <button
+      class="accordion__trigger"
+      aria-expanded="false"
+      aria-controls="sect-1"
+      id="accordion-btn-1"
+    >
+      What is accessibility?
+    </button>
+    <div
+      class="accordion__panel"
+      id="sect-1"
+      role="region"
+      aria-labelledby="accordion-btn-1"
+      hidden
+    >
+      <p>
+        Accessibility ensures that interfaces can be used by people with
+        disabilities or assistive technologies.
+      </p>
+    </div>
+  </div>
+
+  <div class="accordion__item">
+    <button
+      class="accordion__trigger"
+      aria-expanded="false"
+      aria-controls="sect-2"
+      id="accordion-btn-2"
+    >
+      What is WAI‑ARIA?
+    </button>
+    <div
+      class="accordion__panel"
+      id="sect-2"
+      role="region"
+      aria-labelledby="accordion-btn-2"
+      hidden
+    >
+      <p>
+        WAI‑ARIA provides roles and attributes that describe UI behavior to
+        assistive technologies.
+      </p>
+    </div>
+  </div>
+</div>
+```
+
+### JavaScript Logic (Brand‑New Example)
+
+```js
+class AriaAccordion {
+  constructor(containerEl) {
+    this.containerEl = containerEl;
+    this.triggers = Array.from(
+      containerEl.querySelectorAll(".accordion__trigger")
+    );
+
+    this.triggers.forEach(btn => {
+      btn.addEventListener("click", () => this.toggle(btn));
+      btn.addEventListener("keydown", e => this.onKey(e, btn));
+    });
+  }
+
+  toggle(buttonEl) {
+    const isOpen = buttonEl.getAttribute("aria-expanded") === "true";
+    const newState = !isOpen;
+
+    buttonEl.setAttribute("aria-expanded", newState);
+
+    const panelId = buttonEl.getAttribute("aria-controls");
+    const panel = document.getElementById(panelId);
+    panel.hidden = !newState;
+  }
+
+  onKey(event, buttonEl) {
+    const { code } = event;
+    const index = this.triggers.indexOf(buttonEl);
+
+    if (code === "ArrowDown") {
+      event.preventDefault();
+      const next = this.triggers[index + 1] || this.triggers[0];
+      next.focus();
+    }
+
+    if (code === "ArrowUp") {
+      event.preventDefault();
+      const prev =
+        this.triggers[index - 1] || this.triggers[this.triggers.length - 1];
+      prev.focus();
+    }
+  }
+}
+
+document
+  .querySelectorAll(".accordion")
+  .forEach(acc => new AriaAccordion(acc));
+```
+
+## Conclusion
+
+ARIA is powerful, but with that power comes responsibility. Developers should:
+- use semantic HTML whenever possible,  
+- apply ARIA roles and states only when appropriate,  
+- provide keyboard interaction patterns,  
+- test with real assistive technologies,  
+- and follow W3C ARIA Authoring Practices.
+
+By embracing these principles, you ensure your interface works seamlessly for every user—regardless of device, ability, or assistive technology.

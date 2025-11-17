@@ -1,7 +1,7 @@
 ---
-title: 'How to Use TanStack Router: A Modern, Type-Safe Router for React'
+title: "How to Use TanStack Router: A Modern, Type-Safe Router for React"
 slug: tanstack-router
-heading: How to Integrate TanStack Router in React
+heading: "How to Integrate TanStack Router in React"
 icon: /icons/react.png
 image: ./images/tanstack-router.png
 permalink: howto/tanstack-router
@@ -10,69 +10,75 @@ author: anton liberant
 category: react
 type: howto
 tags: ['tanstack-router']
-desc: Explore TanStack Router, a lightweight, type-safe alternative to React Router. Learn about its features, benefits, and integration with TypeScript.
+desc: "A comprehensive guide to TanStack Router: modern routing, type safety, loaders, search params, SSR, optimizations, and integrations for React applications."
 ---
 
-![How to Use TanStack Router](./images/tanstack-router.png)
+TanStack Router is a modern, type-safe, and performance‑oriented routing solution for React applications. It is built on the same design philosophy as other TanStack libraries: predictable APIs, first‑class TypeScript support, and powerful tooling for data‑driven user interfaces. This article provides a full technical overview of TanStack Router, covering setup, routing models, search‑parameter validation, loaders, SSR, devtools, and advanced features such as structural sharing and route masking.
 
-## TanStack Router: A Modern, Type-Safe Router for React
+## Why TanStack Router Exists
 
-For React developers, routing is a critical aspect of building applications. While React Router and Next.js Router dominate the ecosystem, a new contender [TanStack Router](https://tanstack.com/router/latest) offers a fresh approach. Designed for modern, scalable, and type-safe navigation, it incorporates best practices from solutions like Remix and Next.js.
+Traditional routers such as React Router offer flexibility but lack strict type validation and built‑in data mechanisms. Framework routers such as Next.js limit flexibility because routing is tightly coupled to the framework. TanStack Router takes the middle ground: a completely framework‑agnostic, type‑first router for React.
 
-## Key Features of TanStack Router
+Key goals:
 
-### 1. Complete Type-Safety
+- Provide strong type guarantees at compile time  
+- Integrate routing with data loading and caching  
+- Enable declarative search‑parameter management  
+- Support code splitting, SSR, file‑based routing  
+- Give developers fine‑grained control without requiring a full framework  
 
-Built with TypeScript in mind, TanStack Router ensures full type coverage, minimizing runtime errors. IDE support highlights issues like incorrect parameter names or missing query parameters.
+## Core Features
 
-### 2. Built-in Data Loaders and Caching
+### Type‑Safe Routing
 
-With API data fetching integrated directly into the router:
+Every route, its path, loader, parameters, and search schema are fully typed. When navigating, incorrect keys, invalid parameters, or missing search fields are caught at compile time.
 
-- Supports parallel data loading across routes.
-- Stale-while-revalidate caching out of the box, or integration with TanStack Query.
-- Prefetches data on hover for faster navigation.
+### Built‑In Data Loaders
 
-### 3. Advanced Query Parameter Management
+Routes can define `loader()` functions that:
 
-TanStack Router offers:
+- fetch data before rendering  
+- cache results  
+- revalidate automatically  
+- integrate with TanStack Query for complex workflows  
 
-- JSON serialization for complex objects.
-- Automatic validation of query parameters.
-- Middleware for centralized management of query updates.
-- Declarative and programmatic tools like `useSearch` and `<Link>`.
+### Search Parameter Validation
 
-### 4. SSR Compatibility and Framework Integration
+Unlike manually parsing `URLSearchParams`, TanStack Router allows:
 
-While primarily a client-side router, TanStack Router supports SSR and streaming. Upcoming integrations with frameworks like TanStack Start aim to rival Next.js.
+- runtime validation  
+- default values  
+- type‑safe updates  
+- JSON‑compatible search objects  
 
-### 5. Code Splitting and Lazy Loading
+### SSR and Streaming
 
-- Critical and non-critical parts of routes can be separated.
-- Supports file-based routing for automatic tree generation.
+TanStack Router supports:
 
-### 6. Developer Tools
+- non‑streaming SSR: load data → render → hydrate  
+- streaming SSR: progressively deliver HTML while loaders resolve  
 
-Includes official devtools to visualize route structures, cache states, and data loaders.
+Both patterns integrate naturally with existing React SSR methods.
 
-## Comparison with Other Solutions
+### Code Splitting and File‑Based Routing
 
-### TanStack Router vs. React Router
+- routes can be defined in code or generated from files  
+- lazy imports work seamlessly  
+- subtree routing supports extremely flexible directory structures  
 
-- **Type Safety**: TanStack Router offers full type safety, unlike React Router.
-- **Caching**: Built-in caching and data loaders outperform React Router’s capabilities.
-- **Query Parameters**: Comprehensive tools for query management.
+### Devtools
 
-### TanStack Router vs. Next.js
+A dedicated panel visualizes:
 
-- **Lightweight**: Ideal for client-side routing without the overhead of a full framework.
-- **Flexibility**: Easier integration into existing SPAs compared to the monolithic Next.js approach.
+- route tree  
+- loader states  
+- cache snapshots  
+- search parameters  
+- navigation events  
 
-A detailed comparison can be found [here](https://tanstack.com/router/latest/docs/framework/react/comparison).
+## Getting Started
 
-## Basic Setup
-
-**Code-Based Routing**
+### Code‑Based Routing
 
 ```ts
 import {
@@ -82,26 +88,23 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 
-// Define routes
 const rootRoute = createRootRoute();
-const aboutRoute = createRoute({ getParentRoute: () => rootRoute, path: '/about' });
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/about',
+});
 
-// Create router instance
-const router = createRouter({ routeTree: rootRoute.addChildren([aboutRoute]) });
+const router = createRouter({
+  routeTree: rootRoute.addChildren([aboutRoute]),
+});
 
-// Use the router
+// Application
 <RouterProvider router={router} />;
 ```
 
-**File-Based Routing**
-
-Structure your routes in a `/routes` directory, and use a plugin to auto-generate the route tree.
-
-**Let's add some routes**
+### Full Example with Layout, Links, and Devtools
 
 ```ts
-import { StrictMode } from 'react';
-import ReactDOM from 'react-dom/client';
 import {
   createRouter,
   createRootRoute,
@@ -110,10 +113,10 @@ import {
   Outlet,
   Link,
 } from '@tanstack/react-router';
-
+import { StrictMode } from 'react';
+import ReactDOM from 'react-dom/client';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 
-// Define the root route with a shared layout
 const rootRoute = createRootRoute({
   component: () => (
     <>
@@ -127,7 +130,6 @@ const rootRoute = createRootRoute({
   ),
 });
 
-// Define child routes
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
@@ -140,99 +142,82 @@ const aboutRoute = createRoute({
   component: () => <div>About Us</div>,
 });
 
-// Build the route tree
 const routeTree = rootRoute.addChildren([indexRoute, aboutRoute]);
-
-// Create the router instance
 const router = createRouter({ routeTree });
 
-// Register types for TypeScript compatibility
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }
 }
 
-// Entry point for the application
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={router} />
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 
-This setup creates a simple router with two routes ("`/`" and "`/about`").
-Each route renders its corresponding component when accessed.
+## File‑Based Routing
 
-**File-Based Routing**
-
-For a more magical approach, consider using file-based routing. The folder structure within `/src/routes/...` defines the hierarchy, and a plugin auto-generates the route tree.
-
-**Example structure:**
+When using file‑based routing, `/src/routes` becomes the source of truth:
 
 ```
 src/
  ┣ routes/
- ┃  ┣ __root.tsx   # Root route
- ┃  ┣ index.tsx    # /
- ┃  ┗ about.tsx    # /about
+ ┃  ┣ __root.tsx
+ ┃  ┣ index.tsx
+ ┃  ┗ about.tsx
  ┣ main.tsx
- ┗ routeTree.gen.ts (auto-generated)
+ ┗ routeTree.gen.ts
 ```
 
-In `__root.tsx`, you can define a common layout, headers, footers, Devtools, and other global components.
+`__root.tsx` typically contains global layout, headers, and devtools.
 
-## Fetching Data with Loaders
+## Data Loaders
 
-TanStack Router provides built-in support for loaders, which fetch and cache data before rendering components.
+Loaders fetch data before rendering and cache the results.
 
 ```ts
-// src/routes/posts.tsx
 import { createFileRoute } from '@tanstack/react-router';
 import { fetchPosts } from '@/api';
 
-// Define a route with a loader to fetch posts
 export const Route = createFileRoute('/posts')({
   loader: async () => fetchPosts(),
   component: Posts,
 });
 
 function Posts() {
-  // Access loader data
   const posts = Route.useLoaderData();
-
   return (
     <ul>
-      {posts?.map((post) => (
-        <li key={post.id}>{post.title}</li>
+      {posts?.map((p) => (
+        <li key={p.id}>{p.title}</li>
       ))}
     </ul>
   );
 }
 ```
 
-With this setup, navigating to `/posts` triggers data loading and caching before rendering. If revisited during the cache's validity period, no additional fetch requests are needed.
-
-## Search Parameter Handling and Validation
-
-Using `?searchQuery=...` is an effective way to manage UI state like filters or pagination. With TanStack Router, you can validate query parameters and manipulate them without directly working with `URLSearchParams`.
-
-Here's an example of a route with validation and a component that updates parameters using `useNavigate`:
+## Search Parameters and Validation
 
 ```ts
-// Define a route with search parameter validation
 const ProductsRoute = createFileRoute('/products')({
-  validateSearch: (search) => ({ ...search, filter: search.filter ?? '' }),
+  validateSearch: (search) => ({
+    ...search,
+    filter: search.filter ?? '',
+  }),
   component: Products,
 });
 
-// Component to read and update query parameters
 function Products() {
   const { filter } = ProductsRoute.useSearch();
   const navigate = useNavigate({ from: ProductsRoute.fullPath });
 
   function setActiveFilter() {
-    navigate({ search: (old) => ({ ...old, filter: 'active' }) });
+    navigate({
+      search: (old) => ({ ...old, filter: 'active' }),
+    });
   }
 
   return (
@@ -244,32 +229,17 @@ function Products() {
 }
 ```
 
-With this approach, the `filter` state is stored in the URL, simplifying sharing, reloading, and collaboration.
+## Render Optimizations
 
-## Render Optimizations in TanStack Router
+### Structural Sharing
 
-TanStack Router incorporates advanced optimization techniques to minimize unnecessary re-renders. Key mechanisms include:
-
-### 1. Structural Sharing
-
-When search parameters update, TanStack Router preserves references to unchanged parts. For instance, if `foo` and `bar` exist in the search parameters and only `bar` changes, the reference to `foo` remains the same, reducing re-renders.
-
-### 2. Fine-Grained Selectors
-
-You can subscribe to specific parts of the state using the `select` option in hooks. This minimizes re-renders to only when the selected field changes.
+If only part of the search object changes, TanStack Router preserves references.
 
 ```ts
-// Component re-renders only if `foo` changes
 const foo = Route.useSearch({ select: ({ foo }) => foo });
 ```
 
-If `bar` changes while `foo` remains unchanged, the component will not re-render.
-
-### 3. Structural Sharing with Select
-
-When using `select`, returning a new object each time can cause unnecessary re-renders. Enable structural sharing to let TanStack Router reuse unchanged objects.
-
-Enable globally when creating the router:
+Enable globally:
 
 ```ts
 const router = createRouter({
@@ -278,23 +248,62 @@ const router = createRouter({
 });
 ```
 
-Or enable it locally:
+### Fine‑Grained Selectors
 
 ```ts
 const result = Route.useSearch({
-  select: search => ({
+  select: (search) => ({
     foo: search.foo,
-    greeting: `Hello, ${search.foo}`,
+    greeting: `Hi ${search.foo}`,
   }),
   structuralSharing: true,
 });
 ```
 
-**Note**: Data must be JSON-compatible (e.g., primitives, plain objects, arrays). Non-JSON-compatible data like `new Date()` will not support structural sharing, and the compiler will warn you.
+## Advanced Features
 
-## Devtools
+### Virtual File Routes
 
-To understand how the router selects routes, loads data, or handles caching and errors, you can use [TanStack Router Devtools](https://tanstack.com/router/v1/docs/framework/react/devtools). These tools display the current route tree, cache state, asynchronous data loads, and errors. Here's an example of how to set them up:
+Programmatically define or merge route directories.
+
+### SSR and Streaming
+
+- Non‑streaming renders full HTML before hydration  
+- Streaming sends HTML chunks progressively  
+
+### Route Masking
+
+Present one URL while routing internally to a different path.
+
+### Auth Routes
+
+Use `beforeLoad` to guard routes.
+
+### Data Mutations
+
+Integrate with TanStack Query, SWR, RTK Query, or Relay. After mutation:
+
+```ts
+router.invalidate();
+```
+
+### Scroll Restoration
+
+Automatically preserve scroll position between navigations.
+
+### Error Handling
+
+Supports:
+
+- `errorComponent`
+- `notFoundComponent`
+- throwing `notFound()` inside loaders
+
+### External Data Integrations
+
+Loaders work seamlessly with external clients. Pass them through context for prefetching.
+
+## Devtools Integration
 
 ```ts
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
@@ -309,108 +318,10 @@ function App() {
 }
 ```
 
-The Devtools panel can be toggled open or closed, and its state (open/closed) is stored in `localStorage` for persistence.
-
-### Additional Features
-
-Here’s a summary of advanced capabilities that might be useful for specific scenarios (detailed explanations are available in the official TanStack Router documentation):
-
-**1. Virtual File Routes**
-
-If regular file-based routing doesn't meet your needs, you can programmatically create route trees. This allows you to combine real files and directories under specific paths.
-
-- Use cases: Combine virtual and file-based routes or mount standard route folders to custom URLs.
-
-**2. Server-Side Rendering (SSR) and Streaming**
-
-TanStack Router supports both non-streaming and streaming SSR:
-
-- **Non-streaming SSR**: Load data, generate HTML, and hydrate the fully-rendered page on the client.
-- **Streaming SSR**: Deliver critical content first for faster rendering while loading heavy data in parallel, improving perceived speed.
-
-**3. Route Masking**
-
-Route masking lets you display one URL to users while routing internally to a different path. Useful for hiding certain details in the URL, such as modal parameters or service-specific queries.
-
-**4. Authenticated Routes**
-
-Use the `beforeLoad` function to check user authentication. Redirect unauthorized users to a login page or other content. TanStack Router integrates well with React contexts or state management solutions for handling authentication.
-
-**5. Data Mutations**
-
-For managing mutations, consider using external tools like TanStack Query or SWR, combined with the router’s cache. After a mutation, call `router.invalidate()` to refetch updated data seamlessly.
-
-**6. Scroll Restoration**
-
-TanStack Router simplifies scroll restoration for both entire pages and specific scroll containers. It eliminates the need for custom solutions to manage scroll positions during navigation.
-
-Devtools
-To understand how the router selects routes, loads data, or handles caching and errors, you can use TanStack Router Devtools. These tools display the current route tree, cache state, asynchronous data loads, and errors. Here's an example of how to set them up:
-
-```ts
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
-
-function App() {
-  return (
-    <>
-      <RouterProvider router={router} />
-      <TanStackRouterDevtools router={router} />
-    </>
-  );
-}
-```
-
-The Devtools panel can be toggled open or closed, and its state (open/closed) is stored in localStorage for persistence.
-
-**Additional Features**
-
-Here’s a summary of advanced capabilities that might be useful for specific scenarios (detailed explanations are available in the [official TanStack Router documentation](https://tanstack.com/router/latest/docs/framework/react/overview)):
-
-**1. Virtual File Routes**
-
-If regular file-based routing doesn't meet your needs, you can programmatically create route trees. This allows you to combine real files and directories under specific paths.
-
-- Use cases: Combine virtual and file-based routes or mount standard route folders to custom URLs.
-
-**2. Server-Side Rendering (SSR) and Streaming**
-
-TanStack Router supports both non-streaming and streaming SSR:
-
-- **Non-streaming SSR**: Load data, generate HTML, and hydrate the fully-rendered page on the client.
-- **Streaming SSR**: Deliver critical content first for faster rendering while loading heavy data in parallel, improving perceived speed.
-
-**3. Route Masking**
-
-Route masking lets you display one URL to users while routing internally to a different path. Useful for hiding certain details in the URL, such as modal parameters or service-specific queries.
-
-**4. Authenticated Routes**
-
-Use the beforeLoad function to check user authentication. Redirect unauthorized users to a login page or other content. TanStack Router integrates well with React contexts or state management solutions for handling authentication.
-
-**5. Data Mutations**
-
-For managing mutations, consider using external tools like TanStack Query or SWR, combined with the router’s cache. After a mutation, call `router.invalidate()` to refetch updated data seamlessly.
-
-**6. Scroll Restoration**
-
-TanStack Router simplifies scroll restoration for both entire pages and specific scroll containers. It eliminates the need for custom solutions to manage scroll positions during navigation.
-
-**7. Flexible Error Handling**
-
-In addition to classic boundary components (`errorComponent`, `notFoundComponent`), you can throw `notFound()` from loaders or components. TanStack Router will delegate to the nearest “Not Found” handler automatically.
-
-**8. External Data Loading**
-
-For advanced caching or data fetching, TanStack Router integrates smoothly with [TanStack Query](https://tanstack.com/query/latest), [RTK Query](https://redux-toolkit.js.org/rtk-query/overview), [SWR](https://swr.vercel.app/), or [Relay](https://relay.dev/). You can pass these clients through the router context and use loaders to prefetch data before rendering.
-
-These features make TanStack Router a versatile and powerful tool for handling even the most complex routing scenarios in modern web applications.
-
-## Why Choose TanStack Router?
-
-Ideal for projects emphasizing type safety, optimized data fetching, and query management, TanStack Router complements tools like TanStack Query for a seamless development experience.
-
-By embracing modern practices and offering unmatched flexibility, **TanStack Router** is a game-changer in React routing.
+State persists via `localStorage`.
 
 ## Conclusion
 
-TanStack Router offers a modern, type-safe approach to building robust routing systems in React applications. With features like data loaders, search parameter validation, SSR support, and built-in optimization mechanisms, it simplifies the development of dynamic, scalable applications. Its seamless integration with tools like React Query, flexible error handling, and scroll restoration ensures a smooth developer experience. Whether you're building simple SPAs or complex enterprise-level applications, TanStack Router provides the tools and flexibility needed to manage routes efficiently. Start exploring its capabilities today to unlock the full potential of your React projects.
+TanStack Router delivers a modern, type‑safe routing model that scales with real‑world React applications. Its integration with loaders, fine‑grained state selection, JSON‑safe search parameters, SSR, streaming, and file‑based routing make it one of the most flexible routing tools available. For teams that value type safety, predictable data flows, and compatibility with strong caching tools like TanStack Query, it offers a compelling alternative to traditional routers and framework‑locked solutions.
+
+Explore the official docs to take advantage of its full capabilities.

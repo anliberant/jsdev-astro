@@ -1,7 +1,7 @@
 ---
-title: 'How to Draw a Text String Using the HTML Canvas Element'
+title: "How to Draw Text on an HTML Canvas"
 slug: filltext-canvas
-heading: Draw Text on HTML Canvas
+heading: Drawing and Styling Text on the HTML Canvas
 icon: /icons/javascript.png
 image: /icon.png
 permalink: howto/filltext-canvas
@@ -10,92 +10,236 @@ author: anton liberant
 category: javascript
 type: howto
 tags: ['canvas']
-desc: Learn how to draw and style text on the HTML canvas using JavaScript. Explore fillText(), strokeText(), and styling options with clear, practical examples.
+desc: Learn how to draw styled text on the HTML Canvas using fillText, strokeText, fonts, alignment, baselines, and real rendering techniques.
 ---
 
-The HTML `<canvas>` element is a powerful tool for rendering 2D graphics, including text strings, directly within a web browser. By using JavaScript and the `CanvasRenderingContext2D` API, you can customize and draw text with precision.
 
-## Steps to Draw Text on a Canvas
+The HTML **canvas** element provides a low‑level, immediate‑mode drawing environment for building visual interfaces, animations, and games. Among its features is the ability to draw text directly onto the pixel buffer using the `CanvasRenderingContext2D` API. Unlike standard HTML text, canvas text is not part of the document flow, cannot be selected, and must be redrawn whenever the scene changes.
 
-1. Add a `<canvas>` Element Include a `<canvas>` tag in your HTML with specified dimensions.
-2. Access the 2D Rendering Context Use the `getContext('2d')` method to interact with the canvas.
-3. Draw the Text Utilize methods like `fillText()` or `strokeText()` to render text on the canvas.
+This article explains how canvas text rendering works, how to structure a basic drawing setup, and how to control alignment, baselines, color, and font settings. The goal is to show not just the syntax but the reasoning behind each property and how to achieve predictable results across browsers.
 
-**Example Code**
+---
+
+## 1. Setting Up a Canvas for Text Rendering
+
+A canvas requires two things:
+
+1. a visible `<canvas>` element in the DOM  
+2. a rendering context retrieved via JavaScript  
+
+Here is a minimal setup:
 
 ```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Canvas Text Example</title>
-  </head>
-  <body>
-    <canvas
-      id="textCanvas"
-      width="400"
-      height="200"
-      style="border:1px solid black;"
-    ></canvas>
-
-    <script>
-      const canvas = document.getElementById('textCanvas');
-      const ctx = canvas.getContext('2d');
-
-      // Set font properties
-      ctx.font = '24px Arial';
-      ctx.fillStyle = 'blue';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      // Draw filled text
-      ctx.fillText('Hello, Canvas!', canvas.width / 2, canvas.height / 2);
-
-      // Optional: Draw outlined text
-      ctx.strokeStyle = 'red';
-      ctx.strokeText(
-        'Outline Example',
-        canvas.width / 2,
-        canvas.height / 2 + 30
-      );
-    </script>
-  </body>
-</html>
+<canvas id="textCanvas" width="400" height="200"></canvas>
 ```
 
-## Key Methods for Drawing Text
+Always set width and height **as attributes**, not CSS styles. CSS scaling changes appearance and pixel density, while attributes define the actual drawing resolution.
 
-1. `fillText(text, x, y [, maxWidth])`
+Access the drawing context:
 
-- Draws filled text at the specified coordinates.
-- Example: `ctx.fillText('Hello', 50, 50)`;
+```js
+const canvas = document.getElementById("textCanvas");
+const ctx = canvas.getContext("2d");
+```
 
-2. `strokeText(text, x, y [, maxWidth])`
+Now the canvas is ready for drawing commands.
 
-- Draws outlined text at the specified coordinates.
-- Example: `ctx.strokeText('Outline', 50, 100)`;
+---
 
-### Additional Customizations
+## 2. Rendering Basic Text with fillText and strokeText
 
-**1. Font Settings**
+Canvas provides two primary text functions:
 
-- Customize the font using the font property:
+- **fillText(text, x, y)** — draws filled text
+- **strokeText(text, x, y)** — draws outlined text
 
-Example: `ctx.font = 'italic bold 20px Verdana'`;
+Here is the full working example combining both:
 
-**2. Text Alignment**
+```html
+<canvas id="textCanvas" width="400" height="200" style="border:1px solid #333;"></canvas>
 
-- Adjust alignment with `textAlign(start, end, center, left, right)`.
+<script>
+  const canvas = document.getElementById("textCanvas");
+  const ctx = canvas.getContext("2d");
 
-**3. Text Baseline**
+  ctx.font = "24px Arial";
+  ctx.fillStyle = "blue";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
-- Set the baseline using `textBaseline(top, middle, alphabetic, etc.)`.
+  ctx.fillText("Hello, Canvas!", canvas.width / 2, canvas.height / 2);
 
-**4. Colors and Styles**
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 1.5;
+  ctx.strokeText("Outline Example", canvas.width / 2, canvas.height / 2 + 30);
+</script>
+```
 
-- Use `fillStyle` and `strokeStyle` for colors.
+This example demonstrates the two fundamental text rendering methods canvas provides.
+
+---
+
+## 3. Understanding Text Positioning: Alignment and Baselines
+
+Canvas text positioning differs from HTML. Canvas always draws text relative to a single coordinate point.
+
+### textAlign
+
+Controls horizontal alignment relative to `(x, y)`:
+
+- `"left"`
+- `"right"`
+- `"center"`
+- `"start"`
+- `"end"`
+
+Example:
+
+```js
+ctx.textAlign = "center";
+```
+
+### textBaseline
+
+Controls vertical alignment relative to `(x, y)`:
+
+- `"top"`
+- `"hanging"`
+- `"middle"`
+- `"alphabetic"` (default)
+- `"ideographic"`
+- `"bottom"`
+
+Example:
+
+```js
+ctx.textBaseline = "middle";
+```
+
+Choosing the right combination provides predictable alignment, especially when centering elements or building UI widgets.
+
+---
+
+## 4. Customizing Fonts and Rendering Behavior
+
+Canvas text rendering uses a CSS‑style font string:
+
+```js
+ctx.font = "italic bold 20px Verdana";
+```
+
+This string must contain at least a font size and family. The browser handles font loading, so if a custom web font is used, ensure it loads before drawing.
+
+### Fill and stroke styles
+
+```js
+ctx.fillStyle = "#0055ff";
+ctx.strokeStyle = "#333";
+ctx.lineWidth = 2;
+```
+
+### Shadows
+
+Canvas can draw soft shadows behind text:
+
+```js
+ctx.shadowColor = "rgba(0,0,0,0.4)";
+ctx.shadowBlur = 4;
+ctx.shadowOffsetX = 2;
+ctx.shadowOffsetY = 2;
+```
+
+Shadows impact performance, but they can be valuable when rendering UI elements, labels, or title screens.
+
+---
+
+## 5. Multi‑Line Text Strategies
+
+Canvas does not support multi‑line text natively. You must break lines manually:
+
+```js
+function drawMultiline(ctx, text, x, y, lineHeight) {
+  const lines = text.split("\n");
+  lines.forEach((line, i) => {
+    ctx.fillText(line, x, y + i * lineHeight);
+  });
+}
+```
+
+This technique is essential when rendering paragraphs, tooltips, or wrapped labels.
+
+---
+
+## 6. Measuring Text Before Drawing
+
+Canvas provides `measureText()` to calculate text widths before rendering:
+
+```js
+const metrics = ctx.measureText("Hello");
+console.log(metrics.width);
+```
+
+This is useful for:
+
+- centering text manually  
+- calculating wrapping  
+- positioning text relative to rectangles or buttons  
+
+---
+
+## 7. Redrawing Text in Animated or Interactive Scenes
+
+Because canvas is bitmap‑based, text must be redrawn whenever:
+
+- the scene changes  
+- the canvas is resized  
+- animations run  
+- dynamic UI updates occur  
+
+Typical redraw cycle:
+
+```js
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillText("Frame " + performance.now(), 200, 100);
+  requestAnimationFrame(render);
+}
+
+render();
+```
+
+This differs from HTML layout, where text persists without manual management.
+
+---
+
+## 8. Complete Example with Multiple Text Styles
+
+```html
+<canvas id="demo" width="500" height="250"></canvas>
+
+<script>
+  const c = document.getElementById("demo");
+  const ctx = c.getContext("2d");
+
+  ctx.fillStyle = "#222";
+  ctx.font = "28px Georgia";
+  ctx.fillText("Canvas Text Basics", 20, 40);
+
+  ctx.strokeStyle = "#cc0000";
+  ctx.font = "24px Arial";
+  ctx.strokeText("Outlined Example", 20, 100);
+
+  ctx.font = "20px Verdana";
+  ctx.shadowBlur = 5;
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.fillText("Shadowed text for UI widgets", 20, 160);
+</script>
+```
+
+This demonstrates filled, stroked, and shadowed text in a single composition.
+
+---
 
 ## Conclusion
 
-The HTML `<canvas>` element and its `fillText()` and `strokeText()` methods provide an effective way to render and style text strings. With customizable options like fonts, colors, and alignment, you can create stunning visuals tailored to your application's needs.
+Drawing text on an HTML canvas is more than calling `fillText()`. Once you understand alignment, baselines, font rules, measurement, and redraw behavior, canvas becomes a flexible environment for UI elements, visualizations, and game interfaces. Because text becomes part of a pixel buffer, you gain more control over styling and rendering but must manage layout manually. With these techniques, you can build reliable, visually consistent text rendering for any canvas‑based project.

@@ -1,0 +1,205 @@
+---
+title: Howto Style and Format Console Output in JavaScript
+slug: console-javascript
+heading: Style Console Output in JavaScript
+icon: /icons/mongodb.png
+image: ./images/console-javascript.png
+permalink: howto/console-javascript
+date: 2024-10-01
+author: anton liberant
+category: javascript
+type: howto
+tags: ['console', 'logs', 'debugging']
+desc: Learn how to style JavaScript console output using CSS, placeholders, images, and advanced logging patterns to improve debugging clarity.
+---
+
+The browser console is more than a place for plain text logs — with a little creativity, it becomes a powerful visual debugging tool. You can style logs, format messages, highlight warnings, show images, and even build custom loggers that make debugging more intuitive and enjoyable.
+
+Below is a practical guide to transforming your console output using CSS, placeholders, and custom techniques.
+
+---
+
+## What the Console Actually Is
+
+The console is part of the browser's DevTools and acts as your real‑time communication channel with JavaScript. It helps you:
+
+- inspect variables  
+- track execution  
+- show warnings and errors  
+- visualize performance  
+- debug complex data structures  
+
+Knowing how to format your logs dramatically improves visibility and reduces debugging time.
+
+---
+
+## Core Console Methods
+
+### `console.log()`
+```js
+console.log('Hello, World!');
+```
+
+### `console.error()`
+Shown in red — useful for failures.
+```js
+console.error('This is an error message.');
+```
+
+### `console.warn()`
+Displayed in a yellowish style.
+```js
+console.warn('This is a warning message.');
+```
+
+### `console.info()`
+```js
+console.info('Informational message');
+```
+
+### `console.table()`
+```js
+console.table([
+  { name: 'Alex', age: 30 },
+  { name: 'Bob', age: 25 }
+]);
+```
+
+### Grouping Logs
+```js
+console.group('User Info');
+console.log('Name: Alex');
+console.log('Age: 45');
+console.groupEnd();
+```
+
+### Timing Code
+```js
+console.time('Timer');
+for (let i = 0; i < 1000000; i++) {}
+console.timeEnd('Timer');
+```
+
+### Assertions
+```js
+const age = 15;
+console.assert(age >= 18, 'User is not an adult');
+```
+
+---
+
+## Formatting Output with Placeholders
+
+Console logs support format specifiers similar to `printf`:
+
+- **%s** — string  
+- **%d / %i** — number  
+- **%o** — object  
+
+```js
+const user = { name: 'Alex', age: 45 };
+console.log('User: %s, Age: %d, Data: %o', user.name, user.age, user);
+```
+
+---
+
+## Adding CSS Styles to Console Logs
+
+Using the `%c` placeholder, you can style text:
+
+```js
+console.log(
+  '%cHello World!',
+  'color: blue; font-size: 24px; font-weight: bold;'
+);
+
+console.log(
+  '%cWarning!',
+  'background: yellow; color: black; padding: 4px;'
+);
+
+console.log(
+  '%cError!',
+  'color: red; text-decoration: underline; font-size: 18px;'
+);
+```
+
+This is incredibly useful when scanning large volumes of logs.
+
+---
+
+## Displaying an Image in the Console
+
+Yes — you can show images directly in the console.
+
+```js
+const url = 'https://via.placeholder.com/150';
+
+console.log(
+  '%c ',
+  `background-image: url(${url});
+   background-size: cover;
+   padding: 80px;`
+);
+```
+
+---
+
+## Building a Custom Image Logger
+
+A more advanced version that renders images with scaling:
+
+```js
+function CustomLog(message, imageUrl, scale = 1) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.drawImage(img, 0, 0);
+
+    const dataURL = canvas.toDataURL('image/png');
+
+    console.log(
+      '%c ',
+      `
+        padding: ${img.height * scale}px ${img.width * scale}px;
+        background-image: url(${dataURL});
+        background-size: ${img.width * scale}px ${img.height * scale}px;
+        background-repeat: no-repeat;
+      `,
+      message
+    );
+  };
+
+  img.src = imageUrl;
+}
+```
+
+### Usage:
+```js
+CustomLog('Check out this image!', './console-javascript.png');
+```
+
+This is great for debugging graphics-heavy applications, canvas projects, or simply adding personality to your logs.
+
+---
+
+## Conclusion
+
+The JavaScript console is far more powerful than most developers realize. By styling logs with CSS, organizing them with groups, including images, and writing custom loggers, you can simplify debugging and make your workflow significantly more efficient.
+
+If you’d like, I can also generate a:
+
+- **dark‑mode styled logger**
+- **timestamped logging wrapper**
+- **full logging utility library**
+- **version of this article optimized for Substack or MDX animations**
+
+Just tell me!

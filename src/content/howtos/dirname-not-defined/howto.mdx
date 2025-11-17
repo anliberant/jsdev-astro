@@ -1,7 +1,7 @@
 ---
-title: How to Fix "__dirname is Not Defined" in Node.js
+title: Howto Fix “__dirname Is Not Defined” in Node.js
 slug: dirname-not-defined
-heading: "Resolve '__dirname is Not Defined' Error in Node.js"
+heading: Resolve “__dirname Is Not Defined” in Node.js
 icon: /icons/javascript.png
 image: ./images/dirname-not-defined.png
 permalink: howto/dirname-not-defined
@@ -9,63 +9,98 @@ date: 2024-10-20
 author: anton liberant
 category: nodejs
 type: howto
-tags: ['__dirname', 'path', 'es module', 'filename', 'ReferenceError']
-desc: "Learn how to fix the ReferenceError: __dirname is not defined in ES module scope. Understand why it happens and how to restore dirname and filename variables"
+tags: ['__dirname', 'path', 'esmodule', 'filename', 'ReferenceError']
+desc: Fix the '__dirname is not defined' error in ES modules. Learn why it happens, how to restore dirname and filename, and modern ESM-safe alternatives.
 ---
 
-When using **ES modules** (`"type": "module"`) in Node.js, you may encounter the following error:
+If you've switched your Node.js project to **ES modules** (`"type": "module"`), you may be surprised to see this error:
 
-![__dirname is Not Defined](./images/dirname-not-defined.png)
-
-```bash
+```
 ReferenceError: __dirname is not defined in ES module scope
 ```
 
-This error happens because ES modules don’t include the CommonJS global variables like `__dirname` and `__filename`. Let’s go over how to recreate them and understand what’s happening under the hood.
+This happens because unlike CommonJS, ES modules don’t include globals like `__dirname` and `__filename`.  
+This guide explains **why** this occurs, how to **recreate** these globals safely, and modern **best practices** for working with file paths in Node.js.
 
 ---
 
-## Understanding the "__dirname" Variable
+## Why `__dirname` Doesn’t Exist in ES Modules
 
-In CommonJS, Node.js automatically defines two global variables:
+CommonJS provides:
 
-- `__filename` — represents the absolute path of the current file.
-- `__dirname` — represents the directory name of the current file.
+- `__filename` → full file path  
+- `__dirname` → directory of the current module  
 
-However, in **ES module scope**, these variables are not defined because ES modules use **`import`/`export`** syntax and the **URL-based module system**, not file-based globals.
+But ES modules use **URL-based resolution** instead of file globals.  
+This design keeps Node.js consistent with browser modules.
 
-To fix this, you can extract the current file path using the `import.meta.url` property and the `path` module.
+Thus, in ESM, you must derive the path manually using:
+
+- `import.meta.url`
+- `fileURLToPath()`
+- `path.dirname()`
 
 ---
 
-## 1. Define `__dirname` Manually in ES Modules
+## Fix 1 — Recreate `__dirname` and `__filename` Manually (ESM-Safe)
 
-You can recreate `__dirname` and `__filename` manually using `import.meta.url` and `path.dirname()`.
+This is the **official Node.js recommendation**.
 
 ```js
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-// Create __filename and __dirname from URL
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('Filename:', __filename);
-console.log('Directory:', __dirname);
+console.log(__filename);
+console.log(__dirname);
 ```
 
-**Explanation:**  
-- `import.meta.url` gives the module’s URL.  
-- `fileURLToPath()` converts it into a file path.  
-- `dirname()` extracts the directory path.  
+**Why this works:**
 
-Now, `__dirname` behaves the same as it does in CommonJS.
+- `import.meta.url` → full URL of current ES module  
+- `fileURLToPath()` → converts URL → filesystem path  
+- `dirname()` → extracts directory  
+
+This behaves identically to the CommonJS globals.
 
 ---
 
-## 2. Remove `"type": "module"` to Use CommonJS
+## Fix 2 — Create a Reusable Utility (Recommended)
 
-If you don’t need ES modules, the simplest fix is to remove `"type": "module"` from your `package.json` file.
+Instead of repeating the boilerplate in every file, create a helper:
+
+**utils/path.js**
+```js
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+export function getDirname(meta) {
+  return dirname(fileURLToPath(meta.url));
+}
+
+export function getFilename(meta) {
+  return fileURLToPath(meta.url);
+}
+```
+
+Usage:
+
+```js
+import { getDirname } from './utils/path.js';
+
+const __dirname = getDirname(import.meta);
+console.log(__dirname);
+```
+
+This keeps your code clean and portable.
+
+---
+
+## Fix 3 — Switch Back to CommonJS
+
+If you don't *need* ES modules, remove `"type": "module"`:
 
 ```json
 {
@@ -73,15 +108,51 @@ If you don’t need ES modules, the simplest fix is to remove `"type": "module"`
 }
 ```
 
-This switches your project back to CommonJS mode, where `__dirname` and `__filename` are automatically available as global variables.
+Now Node.js automatically restores `__dirname` and `__filename`.
 
 ---
 
-## 3. Fixing `__dirname` in Webpack or Rollup
+## Fix 4 — Using `import.meta.resolve()` (Node 20+ New API)
 
-If your project is bundled for the browser, Node.js globals like `__dirname` don’t exist. To handle that safely, use bundler options.
+Node 20 introduced an improved module resolution API.
 
-### Webpack Example
+Example:
+
+```js
+import { resolve } from 'import-meta-resolve';
+import { dirname } from 'path';
+
+const resolved = await resolve('./file.txt', import.meta.url);
+const __dirname = dirname(resolved);
+```
+
+This is powerful for working with relative imports inside ESM.
+
+---
+
+## Fix 5 — Use `process.cwd()` When Appropriate
+
+When dealing with *project-level paths*, you may not need `__dirname` at all:
+
+```js
+const root = process.cwd();
+console.log(root);
+```
+
+Use when:
+
+- working with config files  
+- reading files relative to the project root  
+- building CLIs  
+
+Avoid using it as a replacement for module-specific paths.
+
+---
+
+## Fix 6 — Working With Webpack, Rollup, Vite, and Bundlers
+
+### Webpack  
+Disable Webpack from mocking Node globals:
 
 ```js
 node: {
@@ -90,11 +161,15 @@ node: {
 }
 ```
 
-This prevents Webpack from replacing those variables incorrectly.
+### Vite  
+Use the built-in `import.meta.url`:
 
-### Rollup Example
+```js
+new URL('./file.txt', import.meta.url).pathname;
+```
 
-In Rollup, you can add a plugin to define globals manually:
+### Rollup  
+Define globals manually:
 
 ```js
 import replace from '@rollup/plugin-replace';
@@ -104,83 +179,84 @@ export default {
     replace({
       preventAssignment: true,
       __dirname: JSON.stringify('/src'),
-      __filename: JSON.stringify('/src/index.js')
-    })
+      __filename: JSON.stringify('/src/index.js'),
+    }),
   ]
-}
+};
 ```
 
 ---
 
-## 4. Why `__dirname` is Undefined in ES Module Scope
+## Fix 7 — Modern ESM Path Techniques (Cleaner Alternatives)
 
-Unlike CommonJS, ES modules in Node.js use URLs, not file paths. This design improves interoperability with browsers but removes file-based globals like `__dirname`.
+### 1. URL-style resolution (portable across Node + browsers)
 
-**Key technical points:**
+```js
+const filePath = new URL('./config.json', import.meta.url);
+```
 
-- ES modules use the `import.meta` object instead of CommonJS globals.  
-- The module loader derives paths from URLs rather than the filesystem.  
-- Node.js intentionally does not provide `__dirname` to avoid ambiguity across environments.
+### 2. Read file from ESM with `fs/promises`
 
-If you need compatibility with file operations, always reconstruct `__dirname` manually.
+```js
+import { readFile } from 'fs/promises';
+
+const config = JSON.parse(
+  await readFile(new URL('./config.json', import.meta.url), 'utf8')
+);
+```
+
+### 3. Absolute path building
+
+```js
+import path from 'path';
+
+const assets = path.join(__dirname, 'assets');
+```
 
 ---
 
-## 5. Common Mistakes and Debug Tips
+## Common Mistakes to Avoid
 
-**❌ Using `__dirname` directly in ESM code**
+### 1. Using `__dirname` directly in ESM  
 ```js
-console.log(__dirname);
-// ReferenceError: __dirname is not defined
+console.log(__dirname); // Error!
 ```
 
-**✅ Correct version**
-```js
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-const __dirname = dirname(fileURLToPath(import.meta.url));
-console.log(__dirname);
-```
+### 2. Using `path.resolve('./')` expecting module directory  
+It resolves **relative to cwd**, not the file.
 
-**Pro Tip:** When debugging path-related issues, log both the file URL and resolved path:
-
-```js
-console.log(import.meta.url);
-console.log(fileURLToPath(import.meta.url));
-```
-
-This helps confirm that the `URL` is being converted properly.
+### 3. Mixing CommonJS `require()` with ESM  
+This causes resolution inconsistencies.
 
 ---
 
-## 6. Related Concepts and Best Practices
+## Quick Reference Table
 
-Here’s a quick summary of related Node.js path utilities:
-
-| Concept | Description |
-|----------|-------------|
-| `path.dirname()` | Extracts the directory from a file path |
-| `path.basename()` | Returns the last portion of a path |
-| `path.resolve()` | Resolves relative paths into absolute ones |
-| `fileURLToPath()` | Converts a file URL to a local path |
-| `import.meta.url` | Returns the module’s file URL in ES modules |
-
-By combining these, you can manage file paths safely across ESM and CommonJS.
+| API | Works in ESM? | Purpose |
+|-----|---------------|---------|
+| `__dirname` | ❌ | CommonJS-only module dir |
+| `__filename` | ❌ | CommonJS-only module file |
+| `import.meta.url` | ✅ | URL path of module |
+| `fileURLToPath()` | ✅ | Convert URL → file path |
+| `process.cwd()` | ✅ | Current working directory |
+| `new URL()` | ✅ | Browser-compatible file resolution |
 
 ---
 
 ## Summary
 
-If you see **“ReferenceError: __dirname is not defined in ES module scope”**, here’s what to do:
+To fix **“ReferenceError: __dirname is not defined in ES module scope”**:
 
-1. **Manually define `__dirname`** using `import.meta.url` and `path.dirname()`  
-2. **Remove `"type": "module"`** to return to CommonJS  
-3. **Configure your bundler** (Webpack or Rollup) to handle file paths properly  
+1. Recreate it manually using `import.meta.url` & `fileURLToPath()`.  
+2. Use a utility wrapper for cleaner code.  
+3. Remove `"type": "module"` if you prefer CommonJS.  
+4. Use bundler-specific solutions for browser builds.  
+5. Leverage modern ESM APIs like `new URL()` and `import.meta.resolve()`.
 
-By applying these methods, you can restore the familiar `__dirname` and `__filename` behavior — ensuring your Node.js projects run consistently in both CommonJS and ES module environments.
+With these tools, you can confidently manage file paths in modern Node.js and avoid breaking changes across module systems.
 
 ---
 
 <footer>
-<p>✅ Updated for Node.js 22+ and ESM compatibility</p>
+<p>🟢 Updated for Node.js 22+, Webpack 5, Vite 5, and modern ESM workflows.</p>
 </footer>

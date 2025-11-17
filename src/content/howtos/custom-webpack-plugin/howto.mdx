@@ -1,5 +1,5 @@
 ---
-title: How to Create a Custom Webpack Plugin
+title: Howto Create a Custom Webpack Plugin
 slug: custom-webpack-plugin
 heading: Building a Custom Webpack Plugin
 icon: /icons/javascript.png
@@ -10,18 +10,18 @@ author: anton liberant
 category: javascript
 type: howto
 tags: ['webpack']
-desc: Learn to create a custom Webpack plugin with this step-by-step guide. Hook into Webpack’s lifecycle to modify assets and add custom functionality easily.
+desc: Learn how to build a custom Webpack plugin by hooking into compiler lifecycle events, modifying assets, and extending Webpack’s behavior.
 ---
 
-Creating a plugin for Webpack allows you to customize and extend Webpack's functionality to suit your needs. Webpack plugins can perform a variety of tasks, from file transformations and optimizations to code analysis and generation. Here's a step-by-step guide to creating a simple Webpack plugin.
+Webpack is incredibly flexible — not because of its configuration file, but because **everything inside Webpack is powered by plugins**. Creating your own plugin lets you hook into Webpack’s lifecycle, inspect files, modify assets, generate content, or automate tasks during builds.
 
-![Create a Custom Webpack Plugin](./images/custom-webpack-plugin.png)
+This guide walks you through creating a simple but fully functional Webpack plugin, with human-friendly explanations and modern examples.
 
-## Steps to Create a Webpack Plugin
+---
 
-### 1. Setup Your Project
+## 1. Project Setup
 
-First, you'll need to set up a basic Node.js project if you haven't already.
+If you don’t have a project yet:
 
 ```bash
 mkdir custom-webpack-plugin
@@ -30,53 +30,59 @@ npm init -y
 npm install webpack --save-dev
 ```
 
-### 2. Create the Plugin File
+---
 
-Create a folder **plugins** for your plugin, where you’ll write the logic for it. For example, let's create a **CustomPlugin.js** file.
+## 2. Create a Plugin File
+
+Create a `plugins` directory:
 
 ```bash
 mkdir plugins
 touch plugins/CustomPlugin.js
 ```
 
-### 3. Write the Plugin Code
+---
 
-In the CustomPlugin.js file, you'll define your plugin. A Webpack plugin is essentially a JavaScript class with an apply method that hooks into the Webpack lifecycle.
+## 3. Writing Your First Webpack Plugin
+
+A Webpack plugin is just a **class with an `apply()` method**. Webpack calls `apply()` automatically and passes the `compiler` object, which exposes the entire build lifecycle.
 
 ```js
 class CustomPlugin {
   constructor(options) {
-    // You can pass options when initializing the plugin
     this.options = options;
   }
 
-  // The apply method is called by Webpack when the plugin is registered
   apply(compiler) {
-    // Hook into the Webpack compilation process
     compiler.hooks.done.tap('CustomPlugin', stats => {
-      console.log('Build process is done!');
-      // You can add more functionality here, like writing files, modifying assets, etc.
+      console.log('Build is complete!');
+      console.log('Message:', this.options.message);
     });
 
-    // You can hook into other Webpack lifecycle events
-    compiler.hooks.emit.tapAsync('CustomPlugin', (compilation, callback) => {
-      // Modify the compilation assets or metadata
-      console.log('Assets are being emitted...');
-
-      // Call the callback to proceed with the build
-      callback();
-    });
+    compiler.hooks.emit.tapAsync(
+      'CustomPlugin',
+      (compilation, callback) => {
+        console.log('Assets are being emitted...');
+        callback();
+      }
+    );
   }
 }
 
 module.exports = CustomPlugin;
 ```
 
-### 4. Register the Plugin in Webpack
+---
 
-Create Webpack configuration file (**webpack.config.js**), and then register your plugin.
+## 4. Register the Plugin in Webpack
 
-<div className='code-cmd'>touch webpack.config.js</div>
+Create `webpack.config.js`:
+
+```bash
+touch webpack.config.js
+```
+
+Configure Webpack:
 
 ```js
 const CustomPlugin = require('./plugins/CustomPlugin');
@@ -90,48 +96,64 @@ module.exports = {
   },
   plugins: [
     new CustomPlugin({
-      message: 'Hello Webpack!', // Pass options to the plugin if needed
+      message: 'Hello from your custom plugin!'
     }),
   ],
 };
 ```
 
-### 5. Test Your Plugin
+---
 
-**How does it work?**
+## 5. Test Your Plugin
 
-Webpack will take the file src/index.js, which we specified in the config, convert it into bundle.js, and then insert our plugin.
+Create an entry file:
 
-Let's create src/index.js to prevent Webpack from throwing an error.
+```bash
+mkdir src
+touch src/index.js
+```
 
-<div className='code-cmd'>touch src/index.js</div>
-
-then fill it
+Add some JS:
 
 ```js
 console.log('Hello from index.js');
 ```
 
-Now, when you run Webpack, your plugin will execute and print the logs or modify the output as needed.
+Run Webpack:
 
-<div className='code-cmd'>npx webpack</div>
+```bash
+npx webpack
+```
 
-![Webpack result](./images/webpack-result.png)
+You should see:
 
-## Webpack Plugin Lifecycle
+```
+Assets are being emitted...
+Build is complete!
+```
 
-Webpack provides several hooks you can tap into for different stages of the build process:
+---
 
-- **emit**: When Webpack is about to emit assets to the output directory.
-- **compilation**: When Webpack starts compiling the modules.
-- **afterEmit**: After the assets have been emitted.
-- **done**: After the build process is finished.
+## Webpack Plugin Lifecycle Hooks
 
-You can access these hooks using `tap`, `tapAsync`, or `tapPromise` depending on whether the hook is synchronous or asynchronous.
+Webpack exposes dozens of hooks via `compiler` and `compilation`. Common ones:
+
+| Hook | When it Runs |
+|------|--------------|
+| `emit` | Before assets are written to `dist/` |
+| `compilation` | During module compilation |
+| `afterEmit` | After writing assets |
+| `done` | Build has fully completed |
+
+Hooks come in 3 types:
+
+- `.tap()` — synchronous  
+- `.tapAsync()` — async with callback  
+- `.tapPromise()` — async with Promise  
+
+---
 
 ## Example: Adding a Custom File to the Output
-
-Here’s a quick example of how you can use a plugin to add a custom file to the Webpack output:
 
 ```js
 class AddCustomFilePlugin {
@@ -139,13 +161,13 @@ class AddCustomFilePlugin {
     compiler.hooks.emit.tapAsync(
       'AddCustomFilePlugin',
       (compilation, callback) => {
-        // Add a new asset to the compilation
-        const content =
-          'This is a custom file created by the AddCustomFilePlugin!';
+        const content = 'This file was created by a Webpack plugin!';
+
         compilation.assets['custom-file.txt'] = {
           source: () => content,
-          size: () => content.length,
+          size: () => content.length
         };
+
         callback();
       }
     );
@@ -155,7 +177,7 @@ class AddCustomFilePlugin {
 module.exports = AddCustomFilePlugin;
 ```
 
-In `webpack.config.js`:
+Register it:
 
 ```js
 const AddCustomFilePlugin = require('./plugins/AddCustomFilePlugin');
@@ -166,14 +188,27 @@ module.exports = {
 };
 ```
 
-When you run Webpack, a file called `custom-file.txt` will be added to the `dist/` folder.
+Running Webpack now generates:
+
+```
+dist/custom-file.txt
+```
+
+---
 
 ## Conclusion
 
-Creating a Webpack plugin involves:
+To create a Webpack plugin, you:
 
-- Defining a class with an apply method.
-- Hooking into Webpack's lifecycle with various hooks.
-- Optionally, modifying the Webpack compilation or assets.
+1. Write a class with an `apply` method  
+2. Hook into Webpack’s lifecycle using compiler hooks  
+3. Modify assets, metadata, or build behavior  
+4. Register your plugin in `webpack.config.js`  
 
-Once you understand the plugin lifecycle, you can extend Webpack in powerful ways to automate tasks and improve your build process!
+Once you understand how hooks work, Webpack becomes a fully programmable build engine — capable of automating anything you need.
+
+If you'd like, I can also generate:
+- a **more advanced plugin**, like asset minification  
+- a **TypeScript version**  
+- a **Webpack 5 plugin template generator**  
+- or a **plugin that analyzes bundle size**  

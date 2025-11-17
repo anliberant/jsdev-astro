@@ -1,5 +1,5 @@
 ---
-title: How to Use the Never Type Like a Pro in TypeScript
+title: Howto Use the Never Type Like a Pro in TypeScript
 heading: Mastering the Never Type in TypeScript
 icon: /icons/typescript.png
 image: /icon.png
@@ -9,22 +9,26 @@ date: 2024-10-14
 author: anton liberant
 category: typescript
 type: howto
-tags: ['never']
-desc: Unlock TypeScript’s power with the never type! Learn to improve code safety, handle unreachable code, and build advanced utility types like a pro.
+tags: ['never', 'utility-types']
+desc: Unlock TypeScript’s power with the never type! Improve type safety, validate exhaustiveness, build advanced utility types, and prevent unreachable logic.
 ---
 
-TypeScript, as a superset of JavaScript, enhances the development experience by adding static types. Among its powerful features is the `never` type, which is often misunderstood or underutilized. This article will explore what the `never` type is, when to use it, and some best practices to help you leverage it like a pro.
+TypeScript’s `never` type is one of the language’s most misunderstood but most powerful tools. It helps you enforce exhaustive checks, catch impossible states, eliminate unreachable logic, and build advanced type utilities.
 
-## What is the Never Type?
+This guide explains what `never` is, when to use it, and how to combine it with TypeScript’s type system to write safer, more predictable code.
 
-The `never` type in TypeScript represents values that never occur. This can happen in two primary situations:
+---
 
-- **Function that Throws an Error**: A function that always throws an error or never returns a value.
-- **Function that Never Finishes**: A function that runs indefinitely, such as an infinite loop.
+## What Is the `never` Type?
 
-## Example of the Never Type
+The `never` type represents values that **never occur**. You’ll see it in:
 
-Here’s a simple example to illustrate the `never` type:
+- functions that **throw errors**  
+- functions that **never return**  
+- unreachable code  
+- advanced type expressions  
+
+Example:
 
 ```ts
 function throwError(message: string): never {
@@ -32,21 +36,19 @@ function throwError(message: string): never {
 }
 
 function infiniteLoop(): never {
-  while (true) {
-    // This loop never ends
-  }
+  while (true) {}
 }
 ```
 
-In the above examples, `throwError` always throws an error, and `infiniteLoop` runs indefinitely, so they both return `never`.
+Both functions never produce a value, so their return type is `never`.
 
-## When to Use the Never Type
+---
 
-Understanding when to use the `never` type is crucial for writing robust TypeScript code. Here are some common scenarios:
+## When Should You Use `never`?
 
-### 1. Exhaustiveness Checking in Switch Statements
+### 1. Exhaustive Checking
 
-When you have a union type, you can use the `never` type to ensure that all cases are handled. If a switch statement does not handle all possible cases, TypeScript will throw an error.
+Prevent missing cases in `switch` statements.
 
 ```ts
 type Shape = 'circle' | 'square';
@@ -54,241 +56,136 @@ type Shape = 'circle' | 'square';
 function area(shape: Shape): number {
   switch (shape) {
     case 'circle':
-      return Math.PI * 10 * 10; // example for a circle
+      return Math.PI * 10 * 10;
     case 'square':
-      return 10 * 10; // example for a square
+      return 10 * 10;
     default:
-      // This will cause a compile error if new shapes are added to Shape
       const _exhaustiveCheck: never = shape;
       return _exhaustiveCheck;
   }
 }
 ```
 
-In this example, if you add a new shape to the `Shape` type but forget to update the `area` function, TypeScript will alert you with a compile-time error.
+If a new union member is added, TypeScript warns you.
+
+---
 
 ### 2. Handling Unreachable Code
 
-You can use the `never` type in functions that are meant to handle unexpected values. This is particularly useful in scenarios involving type guards.
+Ensure all type cases are handled.
 
 ```ts
 function handleInput(input: string | number) {
   if (typeof input === 'string') {
-    console.log(`String: ${input}`);
+    console.log('string:', input);
   } else if (typeof input === 'number') {
-    console.log(`Number: ${input}`);
+    console.log('number:', input);
   } else {
-    // TypeScript will ensure that this code is unreachable
-    const _: never = input; // Error if input is neither string nor number
+    const _: never = input; // compile error if input is unexpected
   }
 }
 ```
 
-Here, if the `input` variable is anything other than a string or number, TypeScript will throw an error, ensuring all cases are considered.
+---
 
-### 3. Custom Error Handling
+### 3. Functions That Must Not Return
 
-You can also use the `never` type to define functions that always throw errors without returning a value. This is helpful for creating robust error handling.
-
-```js
-function assertIsDefined<T>(value: T | undefined, message: string): T {
+```ts
+function assertIsDefined<T>(value: T | undefined): T {
   if (value === undefined) {
-    throw new Error(message);
+    throw new Error('Value is undefined');
   }
   return value;
 }
 ```
 
-In this case, if `value` is undefined, an error is thrown, and the function does not return anything.
+This pattern is common in error-throwing assertion functions.
+
+---
 
 ## Advanced Examples
 
-Some advanced examples
-
-### Example 1
+### Example 1 — `never` as a Subtype
 
 ```ts
-export const example1 = () => {
-  let logValue = '';
-
-  const createSomeDesc = (value: string | number | object): string | never => {
-    switch (typeof value) {
-      case 'string':
-        return 'log string';
-      case 'number':
-        return 'log number';
-      default:
-        throw new Error('error in createSomeDesc');
-    }
-  };
-
-  logValue = 'some string' + createSomeDesc({});
-};
-
-it('example1', () => {
-  expect(() => {
-    example1();
-  }).toThrow();
-});
+type TValue = string | (never extends string ? true : false); // true
 ```
 
-**Key Points:**
+Because `never` is a subtype of *every* type.
 
-- **Never as a subtype**: The never type is a subtype of every type, so according to the Liskov Substitution Principle, assigning `never` to any type is safe:
+---
 
-```ts
-type TValue = string | never extends string ? true : false; // true
-```
-
-- The `createSomeDesc` function throws an exception if the parameter is neither a string nor a number.
-
-- Assigning a new value to `logValue` is an unreachable operation, which clearly demonstrates incorrect behavior.
-
-This example shows what happens when the parameter type is extended without providing an implementation for `object`. The return type of `string | never` is included for clarity.
-
-Although this behavior in TypeScript might seem dangerous, it allows for free usage of code inside try/catch blocks. Comprehensive type descriptions, as described in the documentation, become necessary to control situations at the TypeScript level.
-
-### Type Expressions: Example 2
-
-Using `never` is key to creating utility types.
+### Example 2 — Eliminating Impossible Types
 
 ```ts
-type GenericWithRestriction<T extends string> = T;
 type GenericWithNever<T> = T extends string ? T : never;
 
-const neverAgainEx2 = () => {
-  const value: GenericWithRestriction<string> = '';
-  //@ts-ignore
-  const neverValue: GenericWithNever<number> = ''; // TS2322: Type string is not assignable to type never
-  const value2: GenericWithNever<string> = '';
-};
+const x: GenericWithNever<string> = 'ok';
+// @ts-expect-error
+const y: GenericWithNever<number> = 'nope';
 ```
 
-TypeScript "eliminates" any type that can lead to `never`. This allows us to use only types that make sense.
+If `T` is not a string, the result becomes `never`, removing invalid types.
 
-### Examples of Using Never in Expressions
+---
 
-Consider the following example:
+## Real-World Example: Generating Path-Based Keys
+
+Given a nested object:
 
 ```ts
 const messages = {
-  defaultPrompt: {
-    ok: 'Ok',
-    cancel: 'Cancel',
-  },
+  defaultPrompt: { ok: 'Ok', cancel: 'Cancel' },
   defaultAction: {
-    file: {
-      rm: 'delete file',
-      create: 'create file',
-    },
-    directory: {
-      rm: 'delete directory',
-      create: 'make directory',
-    },
+    file: { rm: 'delete file', create: 'create file' },
+    directory: { rm: 'delete directory', create: 'make directory' }
   },
-  title1: 'default title 1',
-};
-
-export const getMessageByKey = (key: string): string => eval(`messages.${key}`);
+  title1: 'default title'
+} as const;
 ```
 
-**Task**: Configure the type of `getMessageByKey` so that `key` accepts strings in the format of `path.to.value`. The implementation itself does not matter.
+Goal: allow keys like:
 
-We will turn messages into a literal using as const.
-
-**Option 1:**
-
-```ts
-type KeyTree = {
-  [key: string]: string | KeyTree;
-};
-
-type TExtractAllKeysTypeA<
-  O extends KeyTree,
-  K extends keyof O = keyof O,
-> = K extends string
-  ? O[K] extends KeyTree
-    ? `${K}.${TExtractAllKeysTypeA<O[K]>}`
-    : K
-  : never;
+```
+defaultAction.file.rm
+defaultPrompt.ok
+title1
 ```
 
-**Key Points:**
-
-- K extends string serves two functions:
-- Allows working with the distributivity of unions concerning the extends operation.
-- Narrows down the set of keys by excluding symbol, which will be useful for template string literals.
-- To define keys in the format of path.to.property, we use template string literals.
-- Recursion is used to create a set of all keys.
-- For ease of use, we set a default value for the second generic type.
-
-In this case, the explicit use of `never` plays a modest role, filtering out `symbol` from the set of keys `keyof O`. However, there is also implicit behavior: for key values other than `string | KeyTree`, the expression `${K}.${TExtractAllKeysTypeA<O[K]>}` will resolve to `never`, thereby excluding such keys. The utility can be transformed into:
+### Solution: Recursive Key Extraction
 
 ```ts
-type TExtractAllKeysTypeA<O, K extends keyof O = keyof O> = K extends string
-  ? O[K] extends string
-    ? K
-    : `${K}.${TExtractAllKeysTypeA<O[K]>}`
-  : never;
-```
-
-Of course, in this case, the literal `messages` is not controlled in any way.
-
-**Final Result:**
-
-```ts
-export const getMessageByKey = (
-  key: TExtractAllKeysTypeA<typeof messages>
-): string => eval(`messages.${key}`);
-```
-
-**Option 2:**
-
-```ts
-type TExtractAllKeysTypeB<O> = {
-  [K in keyof O]: K extends string
+type TExtractAllKeys<O, K extends keyof O = keyof O> =
+  K extends string
     ? O[K] extends string
       ? K
-      : `${K}.${TExtractAllKeysTypeB<O[K]>}`
+      : `${K}.${TExtractAllKeys<O[K]>}`
     : never;
-}[keyof O];
 ```
 
-- The number of generics has been reduced to one.
-- never is used in a more inventive way. TypeScript eliminates properties whose values are never.
-- Implicit conversion to never is utilized.
-
-Finally, we can consider a function that works with any `messages`:
+Usage:
 
 ```ts
-const _getMessageByKeyTypeA = <T extends KeyTree>(data: T) => {
-  return (key: TExtractAllKeysTypeA<T>): string => eval(`data.${String(key)}`);
-};
-
-const _getMessageByKeyTypeB = <T>(data: T) => {
-  return (key: TExtractAllKeysTypeB<T>): string => eval(`data.${String(key)}`);
-};
-
-export const getMessageByKeyTypeA = _getMessageByKeyTypeA(messages);
-export const getMessageByKeyTypeB = _getMessageByKeyTypeB(messages);
+const getMessageByKey = (key: TExtractAllKeys<typeof messages>): string =>
+  eval(`messages.${key}`);
 ```
 
-## Best Practices for Using the Never Type
+`never` eliminates invalid cases automatically.
 
-To use the `never` type effectively, consider the following best practices:
+---
 
-- **Leverage Exhaustiveness Checking**: Use never in switch statements or conditional statements to ensure all possible cases are handled.
+## Best Practices for Using `never`
 
-- **Be Clear with Intent**: Use never to explicitly indicate that certain functions are not expected to return. This enhances readability and helps other developers understand your code's intention.
+- **Use for exhaustive checking** to avoid missing branches.  
+- **Clarify intent** when a function should never return.  
+- **Combine with type guards** for total safety.  
+- **Use in utility types** to filter out unwanted members.  
+- **Avoid overuse**—keep code readable.
 
-- **Use Type Guards Wisely**: Implement never in type guards to enforce handling of all cases. This ensures your code is safe and robust.
-
-- **Document Your Functions**: When using never, add comments or documentation to clarify why a function does not return. This will help maintainers understand your code better.
-
-- **Avoid Overusing**: While never can be powerful, overusing it in simple scenarios can lead to confusion. Use it where appropriate, but keep your codebase maintainable.
+---
 
 ## Conclusion
 
-The `never` type in TypeScript is a powerful feature that can help you write safer, more predictable code. By understanding when and how to use it, you can enhance your TypeScript skills and develop robust applications.
+The `never` type is a powerful ally when writing robust TypeScript. Whether you’re validating exhaustive logic, cleaning up unreachable code, or building advanced type utilities, `never` ensures your code stays safe, predictable, and future-proof.
 
-With the tips and best practices outlined in this article, you’re well-equipped to leverage the `never` type like a pro. Happy coding!
+Mastering `never` means mastering TypeScript’s type system. With the patterns in this guide, you're ready to use it like a pro.

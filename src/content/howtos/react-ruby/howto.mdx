@@ -1,7 +1,7 @@
 ---
-title: 'How to Integrate React with Ruby on Rails: A Complete 2025 Guide'
+title: "How to Integrate React with Ruby on Rails Effectively"
 slug: react-ruby
-heading: How to Combine React with Ruby on Rails
+heading: "A Practical 2025 Guide to Combining React with Ruby on Rails"
 icon: /icons/react.png
 image: /icon.png
 permalink: howto/react-ruby
@@ -9,172 +9,225 @@ date: 2025-02-08
 author: anton liberant
 category: react
 type: howto
-tags: ['ruby']
-desc: Learn how to integrate React with Ruby on Rails seamlessly. This guide covers setup, configuration, best practices, and tools for building powerful full-stack apps.
+tags: ['ruby', 'react', 'rails']
+desc: Learn how to integrate React with Ruby on Rails in 2025. Explore API-only setups, unified apps with esbuild, react-rails, and modern full-stack best practices.
 ---
 
-Integrating React with Ruby on Rails is a powerful way to build modern full-stack applications. By combining the robust backend capabilities of Rails with the dynamic frontend features of React, you can create highly interactive and responsive web applications. In this guide, we'll walk you through the process of integrating React with Ruby on Rails step by step.
+React and Ruby on Rails remain a strong pairing for full‑stack development. Rails provides a mature backend with powerful conventions, while React delivers flexible UI rendering and component-driven architecture. Although both ecosystems continue to evolve—Rails 7+ adopting esbuild and import maps, and React 19 refining server-side rendering—developers still rely on a few core integration strategies. This guide covers these approaches in detail, showing how to choose and implement the one that fits your project best.
 
-Integrating React 19 with Ruby on Rails 3 can be approached in several ways, depending on your project's requirements and your preferred development workflow. Below are some common methods:
+## 1. Rails as an API + React as a Completely Separate Frontend
 
-## 1. Using Rails as an API with a Separate React Frontend
+This is the most popular approach today. Rails handles the backend (API, authentication, business logic), while React is a standalone client application.
 
-**Setup:**
-
-**Create a Rails API Application:**
-
+### Step 1: Create Rails API
 ```bash
-rails new myapp --api -d postgresql
-cd myapp
+rails new backend --api -d postgresql
+cd backend
 ```
 
-**Configure CORS**: Add the rack-cors gem to your Gemfile:
-
+### Step 2: Enable CORS
+Gemfile:
 ```ruby
-gem 'rack-cors'
+gem "rack-cors"
 ```
 
-Then, configure it in `config/initializers/cors.rb` to allow requests from your React frontend.
+`config/initializers/cors.rb`:
+```ruby
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins "http://localhost:5173"
+    resource "*", headers: :any, methods: %i[get post patch put delete options]
+  end
+end
+```
 
-**Create a React Application:**
-
+### Step 3: Create React App
 ```bash
-npx create-react-app react-frontend
-cd react-frontend
+npm create vite@latest frontend --template react-ts
+cd frontend
+npm install
 ```
 
-**Communication:**
+### Step 4: Connect React to Rails API
+```ts
+const res = await fetch("http://localhost:3000/tasks");
+const data = await res.json();
+```
 
-**API Requests**: Use `fetch` or libraries like Axios to communicate between your React frontend and Rails backend.
+### Pros
+- Fully independent frontend and backend.
+- Modern tooling: Vite, SWC, React 19.
+- Easy to scale and deploy separately.
 
-**Pros:**
+### Cons
+- Requires handling CORS.
+- Two repositories unless you use monorepo.
 
-- Clear separation of concerns between frontend and backend.
-- Independent deployment and scaling of frontend and backend.
-- Flexibility to use different technologies or frameworks for each part.
+---
 
-**Cons:**
+## 2. Integrating React Directly Inside Rails (Rails + esbuild)
 
-- Requires setting up and managing CORS.
-- Separate repositories and deployments can add complexity.
+Rails 7 introduced a modern JavaScript toolchain using `jsbundling-rails`.
 
-## 2. Integrating React Directly into Rails with `jsbundling-rails` and `esbuild`
-
-**Setup:**
-
-**Create a New Rails Application with esbuild:**
-
+### Step 1: Create Rails Project with esbuild
 ```bash
 rails new myapp -j esbuild
 cd myapp
 ```
 
-**Install React and Related Packages:**
-
+### Step 2: Install React
 ```bash
 npm install react react-dom
 ```
 
-Configure `esbuild` for JSX: Update the build script in your `package.json` to handle JSX:
-
+### Step 3: Configure esbuild for JSX
+`package.json`:
 ```json
 "scripts": {
-  "build": "esbuild app/javascript/*.* --bundle --sourcemap --outdir=app/assets/builds --loader:.js=jsx"
+  "build": "esbuild app/javascript/*.* --bundle --outdir=app/assets/builds --loader:.js=jsx --loader:.tsx=tsx"
 }
 ```
 
-**Create React Components**: Create a directory for your React components, e.g., app/javascript/components, and add your React components there.
-
-**Render React Components in Rails Views**: In your Rails views, add a div with an id where you want the React component to render. Then, in your JavaScript entry point (e.g., `app/frontend/app.js`), render the React component into that div:
-
+### Step 4: Create React Component
+`app/javascript/components/App.jsx`:
 ```jsx
-import React from 'react';
-import ReactDOM from 'react-dom';
+export default function App() {
+  return <h1>Hello from React inside Rails</h1>;
+}
+```
 
-import YourComponent from './components/YourComponent';
+### Step 5: Mount It in Rails
+`app/javascript/application.js`:
+```jsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./components/App";
 
-import YourComponent from './components/YourComponent';
-
-document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(
-    <YourComponent />,
-    document.getElementById('your-component-id')
-  );
+document.addEventListener("DOMContentLoaded", () => {
+  const el = document.getElementById("root");
+  if (el) ReactDOM.createRoot(el).render(<App />);
 });
 ```
 
-**Pros:**
-
-- Single codebase for both frontend and backend.
-- Simplified deployment process.
-- Direct access to Rails helpers and assets within React components.
-
-**Cons:**
-
-- Tighter coupling between frontend and backend.
-- Potential challenges with asset pipeline management.
-
-## 3. Using `react-rails` Gem
-
-**Setup:**
-
-**Add the Gem**: Add `react-rails` to your Gemfile:
-
-```ruby
-gem 'react-rails'
+Rails view:
+```erb
+<div id="root"></div>
 ```
 
-Then run:
+### Pros
+- Single repository.
+- Uses Rails asset pipeline.
+- Ideal for apps where React enhances parts of pages.
 
+### Cons
+- Not ideal for large SPAs.
+- Coupling between Rails and React build paths.
+
+---
+
+## 3. Using the `react-rails` Gem
+
+This long‑standing gem integrates React directly with Rails and even supports server‑side rendering.
+
+### Step 1: Install the Gem
+```ruby
+gem "react-rails"
+```
+
+Then:
 ```bash
 bundle install
-rails webpacker:install
-rails webpacker:install:react
 rails generate react:install
 ```
 
-**Create React Components**: Generate a React component:
-
+### Step 2: Generate a Component
 ```bash
-rails generate react:component YourComponent
+rails generate react:component Greeting name:string
 ```
 
-**Render React Components in Views**: Use the `react_component` helper in your Rails views:
-
+### Step 3: Render in Views
 ```erb
-<%= react_component("YourComponent", { props: @props }) %>
+<%= react_component("Greeting", {name: "Anton"}) %>
 ```
 
-**Pros:**
+### Pros
+- Very simple integration.
+- Server‑side rendering option.
+- Perfect for legacy Rails apps upgrading UI gradually.
 
-- Simplifies React integration with Rails.
-- Provides server-side rendering capabilities.
-- Leverages Rails helpers for React components.
+### Cons
+- Not as flexible as Vite or esbuild.
+- Less adoption in new Rails 7+ apps.
 
-**Cons:**
+---
 
-- Adds additional dependencies to your project.
-- May require configuration to work seamlessly with Rails 7.
+## 4. Using Rails + Superglue (Full‑stack Rails + React Integration)
 
-**Note:** Ensure that the `react-rails` gem is compatible with Rails 7. As of the latest updates, there have been discussions about adding Rails 7 support to `react-rails`. It's advisable to check the current status and any potential issues before proceeding.
+Superglue makes Rails behave more like Remix or Next.js—server-rendered pages enhanced by React "islands."
 
-## 4. Using `Superglue` for React Integration
+### Features
+- Rails form helpers usable inside React.
+- Server-driven navigation with React hydration.
+- Code splitting and SSR built-in.
 
-**Setup:**
+### Example
+```jsx
+import { form } from "@superglue/form";
 
-**Add Superglue**: Follow the instructions provided in the [Superglue documentation](https://github.com/thoughtbot/superglue) to integrate it into your Rails application.
+<form {...form("/articles")}>
+  <input type="text" name="title" />
+  <button>Create</button>
+</form>
+```
 
-**Pros:**
+### Pros
+- Full-stack development without API boilerplate.
+- Deep Rails integration.
+- Modern DX with SSR and islands.
 
-- Provides a seamless integration of React with Rails.
-- Allows the use of Rails form helpers within React components.
-- Supports server-side rendering and code splitting.
+### Cons
+- Still evolving.
+- Smaller ecosystem.
 
-**Cons:**
+---
 
-- Still in beta; may have unresolved issues.
-- Tighter coupling between React and Rails.
+## Choosing the Right Approach
 
-## Conclusion
+| Use Case | Recommended Setup |
+|---------|-------------------|
+| Large SPA with heavy client logic | Rails API + React standalone |
+| Small/medium app with some React widgets | Rails + esbuild |
+| Legacy Rails app | react‑rails |
+| Want SSR + Rails forms in React | Superglue |
 
-The best approach depends on your project's specific needs, team structure, and deployment considerations. For a clear separation between frontend and backend, using Rails as an API with a separate React frontend is advisable. If you prefer a unified codebase, integrating React directly into Rails using `jsbundling-rails` with `esbuild` or `webpack` is a solid choice. Always ensure that the libraries and gems you choose are compatible with Rails 7 and React 19. By following these guidelines, you can seamlessly integrate React with Ruby on Rails and build powerful full-stack applications with ease.
+---
+
+## Best Practices for Rails + React (2025)
+
+### 1. Use TypeScript in React
+Improves maintainability and safety.
+
+### 2. Use JWT or Session Cookies for Auth
+Rails API + cookies with `SameSite=Lax` works great.
+
+### 3. For Production: Put Rails Behind Nginx
+Serve `/api/*` to Rails and everything else to React build.
+
+### 4. Use Redis + Sidekiq for Background Jobs
+React frontend + WebSockets (ActionCable) = real‑time updates.
+
+### 5. Prefer Vite Over Webpack
+Much faster, simpler, and works with Ruby gems via plugin ecosystem.
+
+---
+
+## Final Thoughts
+
+React and Rails continue to complement each other remarkably well. Whether you prefer a clear separation of concerns or a unified full‑stack environment, Rails offers multiple integration paths. The best choice depends on your project size, deployment strategy, and workflow preferences.
+
+In 2025, the most future‑proof setup for large applications remains:
+
+**Rails as an API + React 19 with Vite as the frontend.**
+
+But Rails still shines when used with embedded React components, especially for traditional server‑rendered apps.
+

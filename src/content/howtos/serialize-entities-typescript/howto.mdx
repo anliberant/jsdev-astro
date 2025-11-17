@@ -1,5 +1,5 @@
 ---
-title: How to Serialize Entities Using Decorators in TypeScript
+title: Howto Serialize Entities Using Decorators in TypeScript
 slug: serialize-entities-typescript
 heading: Using Decorators to Serialize Entities in TypeScript
 icon: /icons/typescript.png
@@ -10,27 +10,17 @@ author: anton liberant
 category: typescript
 type: howto
 tags: ['serialization', 'decorators']
-desc: Learn to serialize TypeScript entities using custom decorators. Create decorators, manage properties, and ensure efficient, reliable data serialization.
+desc: Learn how to serialize TypeScript entities using decorators, mark properties safely, and build extensible, human-friendly serialization logic.
 ---
 
-Serialization is the process of converting an object into a format that can be easily stored or
-transmitted and later reconstructed. In TypeScript, decorators provide a powerful way to modify or
-annotate classes and their members. By combining decorators with serialization, you can streamline
-the process of converting complex objects into JSON or other formats. This article will guide you
-through the steps to serialize entities using decorators in TypeScript.
+Serialization turns objects into formats like JSON so they can be stored, sent over the network, or logged safely. TypeScript decorators make this process much cleaner by allowing you to annotate which properties should or should not be serialized.  
+In this howto, you’ll build a fully working serialization system using decorators — step by step and with clean, modern TypeScript patterns.
 
-![How to Serialize Entities Using Decorators in TypeScript](./images/serialize-entities-typescript.png)
+---
 
-## Step 1: Setting Up TypeScript with Decorators
+## Step 1: Enable Decorators in TypeScript
 
-First, make sure you have TypeScript set up with experimental decorators enabled, as decorators are
-still an experimental feature.
-
-- Install TypeScript (if you haven't already):
-
-<div className='code-cmd'>npm install typescript --save-dev</div>
-
-- Enable decorators in your tsconfig.json:
+Decorators are still experimental, so you must explicitly enable them.
 
 ```json
 {
@@ -41,19 +31,30 @@ still an experimental feature.
 }
 ```
 
-## Step 2: Understanding Decorators
+Install TypeScript if needed:
 
-Decorators are special functions that can be attached to classes, properties, methods, or
-parameters. In the context of serialization, they allow you to control how a class or its properties
-are serialized into a specific format (like JSON).
+```bash
+npm install typescript --save-dev
+```
 
-Decorators in TypeScript can be created using the `@` symbol followed by a function that takes
-parameters related to the object being decorated.
+---
 
-## Step 3: Creating a Serialization Decorator
+## Step 2: What Decorators Do
 
-Let's start by creating a simple decorator that will mark specific class properties for
-serialization.
+Decorators let you attach metadata or behavior to:
+
+- classes  
+- properties  
+- methods  
+- parameters  
+
+In serialization, they help you mark which properties should be included.
+
+---
+
+## Step 3: Creating a Serializable Property Decorator
+
+Here’s a minimal decorator that records which properties should be serialized:
 
 ```ts
 function Serializable(target: any, key: string) {
@@ -64,24 +65,21 @@ function Serializable(target: any, key: string) {
 }
 ```
 
-Here, the **Serializable** decorator is used to mark properties in a class for serialization. The
-target is the class, and key is the property name. We store all serializable properties in an array
-attached to the class's constructor.
+This attaches an array `serializableProperties` to the class constructor.
 
-## Step 4: Applying the Decorator to a Class
+---
 
-Next, we create a class with properties marked for serialization using the **@Serializable**
-decorator.
+## Step 4: Applying the Decorator to an Entity
 
 ```ts
 class User {
   @Serializable
-  public firstName: string;
+  firstName: string;
 
   @Serializable
-  public lastName: string;
+  lastName: string;
 
-  public password: string; // We don't want to serialize this
+  password: string; // sensitive, excluded
 
   constructor(firstName: string, lastName: string, password: string) {
     this.firstName = firstName;
@@ -91,56 +89,50 @@ class User {
 }
 ```
 
-In this example, the **firstName** and **lastName** properties are marked for serialization, but the
-**password** field is excluded since we don't apply the **@Serializable** decorator to it.
+Only decorated properties will be serialized.
+
+---
 
 ## Step 5: Implementing the Serialization Logic
 
-Now, let's add a function to serialize only the marked properties into JSON format.
-
 ```ts
 function serialize(instance: any): string {
-  const serializedData: any = {};
-  const serializableProperties =
-    instance.constructor.serializableProperties || [];
+  const output: any = {};
+  const props = instance.constructor.serializableProperties || [];
 
-  serializableProperties.forEach((key: string) => {
-    serializedData[key] = instance[key];
-  });
+  for (const key of props) {
+    output[key] = instance[key];
+  }
 
-  return JSON.stringify(serializedData);
+  return JSON.stringify(output);
 }
 ```
 
-The `serialize` function checks the class for properties that have been marked as serializable,
-extracts their values, and converts them into a JSON string.
+---
 
-## Step 6: Serializing the Object
-
-Finally, let’s serialize a **User** object and see how it works:
+## Step 6: Serializing an Entity
 
 ```ts
 const user = new User('John', 'Doe', 'secretPassword');
-const serializedUser = serialize(user);
-
-console.log(serializedUser); // Output: {"firstName":"John","lastName":"Doe"}
+console.log(serialize(user));
+// {"firstName":"John","lastName":"Doe"}
 ```
 
-As you can see, the **password** field is not included in the serialized output because it wasn’t
-decorated with **@Serializable**.
+The `password` field is ignored — exactly what we want.
 
-## Step 7: Extending the Decorator for Advanced Serialization
+---
 
-You can enhance the `Serializable` decorator to handle more advanced cases, such as renaming
-properties, setting custom rules, or handling nested objects. For instance, you can modify the
-decorator to accept additional metadata:
+## Step 7: Adding More Power — Aliases and Metadata
+
+A more advanced decorator allows renaming fields in output:
 
 ```ts
 function Serializable(alias?: string) {
-  return function (target: any, key: string) {
+  return (target: any, key: string) => {
     if (!target.constructor.serializableProperties) {
       target.constructor.serializableProperties = [];
     }
+
     target.constructor.serializableProperties.push({
       key,
       alias: alias || key,
@@ -149,35 +141,44 @@ function Serializable(alias?: string) {
 }
 ```
 
-This would allow you to rename properties during serialization:
+Usage:
 
 ```ts
 class User {
   @Serializable('first_name')
-  public firstName: string;
+  firstName: string;
 
   @Serializable('last_name')
-  public lastName: string;
+  lastName: string;
 
-  public password: string;
+  password: string;
 }
 ```
 
-And the resulting JSON output will now have the renamed properties:
+Updated serialization:
 
 ```ts
-const user = new User('John', 'Doe', 'secretPassword');
-const serializedUser = serialize(user);
-
-console.log(serializedUser); // Output: {"first_name":"John","last_name":"Doe"}
+const u = new User('John', 'Doe', 'secretPassword');
+console.log(serialize(u));
+// {"first_name":"John","last_name":"Doe"}
 ```
+
+---
 
 ## Conclusion
 
-Decorators in TypeScript offer a powerful and flexible way to handle serialization by allowing you
-to control which properties of an object should be serialized. With this approach, you can easily
-exclude sensitive data, rename properties, and even extend the functionality to handle complex
-nested structures.
+Decorators are a clean, expressive way to control how TypeScript entities are serialized.  
+With this pattern you can:
 
-By combining the power of decorators and serialization, you can ensure that your application's data
-is securely and efficiently handled when converting objects to and from formats like JSON.
+- mark safe properties  
+- hide sensitive data  
+- rename fields for APIs  
+- extend serialization rules  
+- support nested objects with custom logic  
+
+This makes your data structures more predictable, secure, and maintainable—especially in large-scale apps where consistency matters.
+
+If you'd like, I can expand this into:
+- a **Deep Serialization System** (nested + typed)  
+- a version for **backend frameworks** (NestJS, Express, tRPC)  
+- a more advanced `.mdx` demo with real-world entity patterns  

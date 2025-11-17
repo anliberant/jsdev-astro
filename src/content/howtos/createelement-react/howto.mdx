@@ -1,7 +1,7 @@
 ---
-title: How to Solve 'Cannot Read Property CreateElement of Undefined'
+title: "How to Fix 'Cannot Read Property createElement of Undefined'"
 slug: createelement-react
-heading: "Fix 'Cannot Read Property CreateElement of Undefined'"
+heading: Fixing React’s “Cannot Read Property createElement of Undefined”
 icon: /icons/react.png
 image: /icon.png
 permalink: howto/createelement-react
@@ -10,107 +10,217 @@ author: anton liberant
 category: react
 type: howto
 tags: ['createElement']
-desc: Fix React’s "Cannot read property 'createElement' of undefined" error by verifying imports, resolving version conflicts, and updating project configurations.
+desc: Solve React’s createElement undefined error by correcting imports, matching versions, and fixing bundler or rendering configuration issues.
 ---
 
-The error `Cannot read property 'createElement' of undefined` in React typically occurs when React or ReactDOM is not imported or configured correctly in your project. Here are common causes and solutions:
+# Fixing React’s “Cannot Read Property createElement of Undefined”
 
-## 1. React and ReactDOM Are Not Properly Imported
+The error **“Cannot read property 'createElement' of undefined”** in React appears when the environment attempts to call `React.createElement` but React itself is undefined. Because JSX compiles into calls to `createElement`, React must be present and properly resolved. When it is not, rendering fails immediately.
 
-Ensure you have imported `React` and `ReactDOM` at the top of your file:
+This guide explains the most common reasons this happens, how JSX compilation works behind the scenes, and how to fix the issue in modern React environments using bundlers like Vite, Webpack, Next.js, and others.
 
-```jsx
-import React from 'react';
-import ReactDOM from 'react-dom';
+---
 
-// For older versions
-```
+## 1. Why the Error Happens: JSX Compilation
 
-If you're using React 18 or later, you should use:
+Older JSX transforms (React < 17) compile:
 
 ```jsx
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+<div>Hello</div>
 ```
 
-## 2. Incorrect React or ReactDOM Installation
+into:
 
-Verify that both `react` and `react-dom` are installed in your project.
+```js
+React.createElement("div", null, "Hello");
+```
 
-Run the following commands:
+If React is undefined, `createElement` is undefined as well.
 
-<div className='code-cmd'>npm install react react-dom</div>
+React 17 and React 18 introduced the “automatic JSX transform,” which doesn’t require a manual `import React …`, but bundlers must still correctly resolve the React package.
 
-## 3. React Version Mismatch
+If React fails to load, JSX cannot compile, which leads to this error.
 
-If you are using an older version of `react-dom` but the latest react, it can cause this error. Ensure the versions of `react` and `react-dom` match in your package.json:
+---
+
+## 2. Ensure React and ReactDOM Are Properly Imported
+
+### React 17 and earlier:
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom";
+```
+
+### React 18:
+
+```jsx
+import React from "react";
+import { createRoot } from "react-dom/client";
+```
+
+Accidental import mistakes, typos, or missing imports cause React to be undefined during compilation.
+
+---
+
+## 3. Verify React Installation
+
+Run:
+
+```bash
+npm install react react-dom
+```
+
+If either package is missing, partial, or corrupted, bundlers will pass `undefined` into your compiled JSX code.
+
+---
+
+## 4. Fix React Version Mismatches
+
+React and ReactDOM **must** use compatible versions.
+
+Check:
 
 ```json
 "dependencies": {
-  "react": "^18.0.0",
-  "react-dom": "^18.0.0"
+  "react": "18.x",
+  "react-dom": "18.x"
 }
 ```
 
-Update them if necessary:
+Fix mismatches:
 
-<div className='code-cmd'>npm install react@latest react-dom@latest</div>
-
-## 4. Incorrect Use of `React.createElement`
-
-If you're manually using `React.createElement`, ensure the syntax is correct:
-
-```jsx
-const element = React.createElement('div', null, 'Hello, World!');
+```bash
+npm install react@latest react-dom@latest
 ```
 
-## 5. File Import Issues
+Mismatches are one of the most frequent causes when upgrading React.
 
-Ensure your `React` and `ReactDOM` imports are correct. If you're importing from a CDN or a custom build, double-check the paths.
+---
 
-**For CDN (HTML file):**
+## 5. If Using React.createElement Manually
+
+Some setups use React without JSX:
+
+```js
+const node = React.createElement("div", null, "Hello");
+```
+
+If this fails, React is undefined or incorrectly imported:
+
+```js
+console.log(React);
+```
+
+If this logs `{}` or undefined, bundler resolution is broken.
+
+---
+
+## 6. CDN Usage and Script Ordering Problems
+
+When using CDN:
 
 ```html
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 ```
 
-## 6. Configuration Issues in Build Tools
+React **must** load:
 
-If you're using a bundler like Webpack or Vite:
+1. before ReactDOM  
+2. before your application scripts  
 
-- Ensure your bundler is configured to resolve React properly.
-- Clear your build cache and rebuild the project.
+Mixing module scripts with UMD builds also breaks React imports.
 
-<div className='code-cmd'>npm run clean</div>
-<div className='code-cmd'>npm run build</div>
+---
 
-## 7. Using the Correct Root Rendering Method
+## 7. Bundler Configuration Issues (Vite, Webpack, Rollup)
 
-For React 18 or later, use `createRoot` to render your application:
+Common problems include:
+
+- incorrect alias configuration  
+- broken `node_modules` resolution  
+- incompatible ESM/CJS hybrid dependencies  
+- stale build caches  
+- incorrect JSX runtime settings  
+
+Clear caches:
+
+```bash
+rm -rf node_modules
+rm -rf dist .next .vite
+npm install
+npm run build
+```
+
+### JSX runtime mismatch (React 17+)
+
+If your `tsconfig.json` contains:
+
+```json
+"jsx": "react-jsx"
+```
+
+your bundler must support the automatic JSX runtime. Wrong config = undefined React.
+
+---
+
+## 8. Using the Correct Rendering API for Your Version
+
+### React 18:
 
 ```jsx
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-
-const root = createRoot(document.getElementById('root'));
+const root = createRoot(document.getElementById("root"));
 root.render(<App />);
 ```
 
-For React versions earlier than 18:
+### React < 18:
 
 ```jsx
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-## Debugging Tips
+Combining old ReactDOM with `createRoot` results in undefined behavior and often this exact error.
 
-- **Check the Console Logs**: Look for the exact line where the error occurs.
-- **Ensure Dependencies Are Correct:** Remove node_modules and reinstall packages
-  ```bash
-  rm -rf node_modules
-  npm install
-  ```
-- **Upgrade or Downgrade Versions**: Use compatible versions of React libraries.
+---
 
-If you're still facing issues, share the relevant parts of your code, and I’ll help debug further!
+## 9. Debugging Checklist
+
+### Check React import:
+
+```js
+console.log("React:", React);
+```
+
+### Check installed versions:
+
+```bash
+npm ls react react-dom
+```
+
+### Reinstall dependencies:
+
+```bash
+rm -rf node_modules
+npm install
+```
+
+### Confirm no conflicting packages exist:
+
+- `preact` aliases replacing `react`
+- mixed CJS/ESM builds
+- config rewriting `react` imports
+
+---
+
+## Conclusion
+
+“Cannot Read Property createElement of Undefined” signals that React failed to load or resolve, and JSX compilation is calling methods on an undefined value. Fixing it requires:
+
+- matching React + ReactDOM versions,  
+- correct imports,  
+- proper bundler configuration,  
+- and using the right rendering API for your React version.  
+
+Once React is properly installed and your tools know how to resolve it, the error disappears and JSX works as expected.
+

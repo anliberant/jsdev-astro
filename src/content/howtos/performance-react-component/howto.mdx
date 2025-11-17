@@ -1,81 +1,107 @@
 ---
-title: How to Troubleshoot React Performance Issues with Developer Tools
+title: "How to Troubleshoot React Performance Issues with Developer Tools"
 slug: performance-react-component
-heading: Mastering React Performance Analysis
+heading: "Mastering React Performance Analysis"
+permalink: howto/performance-react-component
 icon: /icons/react.png
 image: ./images/performance-react-component.png
-permalink: howto/performance-react-component
 date: 2025-02-19
 author: anton liberant
 category: react
 type: howto
 tags: ['react-profiler', 'useTrackedEffect', 'WhyDidYouRender']
-desc: Learn to analyze and optimize React component performance with React Profiler, WhyDidYouRender, and useTrackedEffect. Discover techniques to fix bottlenecks.
+desc: "Learn to analyze and optimize React component performance using React Profiler, WhyDidYouRender, and useTrackedEffect to detect slow renders."
+---
+
+React applications can slow down when components re-render too often, state updates propagate unnecessarily, or expensive computations run on every update. Identifying these bottlenecks can be difficult without the right tools. Fortunately, the React ecosystem provides powerful utilities that give insight into rendering behavior and help you understand exactly why components update.
+
+This article explains how to diagnose and correct performance issues in React using three essential tools:
+
+- **React Profiler** — for measuring render cost  
+- **WhyDidYouRender** — for detecting unnecessary re-renders  
+- **useTrackedEffect** — for understanding which dependencies triggered effects  
+
 ---
 
 ![Performance React component](./images/performance-react-component.png)
 
-React applications can sometimes experience performance issues due to unnecessary re-renders and inefficient state management. Fortunately, there are several tools to help developers analyze and optimize React component performance. This article will cover three essential tools: [React Profiler](https://react.dev/reference/react/Profiler), [WhyDidYouRender](https://github.com/welldone-software/why-did-you-render), and [useTrackedEffect](https://jsdev.space/snippets/usetrackedeffect/), providing insight into how they work and how to integrate them into your project.
+## 1. React Profiler: Measuring Rendering Cost
 
-## 1. React Profiler: Measuring Component Rendering Performance
+The React Profiler is built directly into the framework. It measures how long React spends rendering components and shows when updates happen, allowing you to pinpoint slow components or rendering patterns.
+
+Wrap any part of your tree with `<Profiler>`:
+
+```jsx
+import { Profiler } from "react";
+
+function AppWithProfiler() {
+  return (
+    <Profiler id="App" onRender={onRender}>
+      <App />
+    </Profiler>
+  );
+}
+
+function onRender(
+  id,
+  phase,
+  actualDuration,
+  baseDuration,
+  startTime,
+  commitTime
+) {
+  console.log({ id, phase, actualDuration, baseDuration, startTime, commitTime });
+}
+```
+
+### What to watch:
+
+- **actualDuration** — time spent rendering. Values consistently above ~16ms may impact perceived smoothness.
+- **baseDuration** — render cost without memoization. Good for evaluating `React.memo`.
+- **phase** — mounting vs updating.
+- **commitTime** — when React flushed updates to the DOM.
+
+Profiler is especially helpful for:
+
+- Components that render large lists  
+- Layout-heavy or animation-heavy UI  
+- Pages with global state updates that cascade into many components  
+
+---
 
 ![React Profiler](./images/react-profiler.png)
 
-The **React Profiler** is an in-built tool that helps developers measure the performance of React applications. It tracks the rendering time of components, the frequency of re-renders, and the cost associated with rendering, enabling developers to identify performance bottlenecks.
+---
 
-To use the React Profiler, wrap your component tree with the `<Profiler>` component:
+## 2. WhyDidYouRender: Detecting Unnecessary Re-Renders
 
-```jsx
-<Profiler id='App' onRender={onRender}>
-  <App />
-</Profiler>
+One of the most common performance issues in React is unnecessary re-renders. These occur when a component updates even though none of the values it depends on have changed. WhyDidYouRender helps trace and log these events.
+
+### Installation (Vite Example)
+
+```bash
+npm install @welldone-software/why-did-you-render -D
 ```
 
-`onRender` is a callback function that React calls whenever the component tree is updated. It provides the following parameters:
-
-- **id**: Identifies the part of the UI being measured.
-- **phase**: Indicates if the component is mounting or updating.
-- **actualDuration**: Time taken to render the component.
-- **baseDuration**: Estimated time to re-render the subtree without optimizations.
-- **startTime**: Timestamp when rendering started.
-- **commitTime**: Timestamp when rendering was committed.
-
-Use `actualDuration` to identify when a component takes too long to render. If it exceeds 16ms, it may indicate a performance issue.
-
-## 2. WhyDidYouRender: Understanding Unnecessary Re-Renders
-
-![WhyDidYouRender](./images/whydidyourender.png)
-
-**WhyDidYouRender** is a utility that helps track unnecessary re-renders in React components. It provides detailed information about why a component re-rendered, including which props or state changes triggered the re-render. This tool is especially helpful for optimizing performance when a component is unnecessarily re-rendered.
-
-To integrate WhyDidYouRender into a Vite project:
-
-**1. Install the package:**
-
-<div className='code-cmd'>
-  npm install @welldone-software/why-did-you-render -D
-</div>
-
-**2. Modify your `vite.config.js`:**
+### Add to `vite.config.js`:
 
 ```js
+import react from '@vitejs/plugin-react';
+
 export default defineConfig({
   plugins: [
     react({
-      jsxImportSource: '@welldone-software/why-did-you-render',
-    }),
+      jsxImportSource: "@welldone-software/why-did-you-render"
+    })
   ],
 });
 ```
 
-**3. Create a `wdyr.js` file:**
+### Create `wdyr.js`
 
 ```js
-import React from 'react';
-
-import whyDidYouRender from '@welldone-software/why-did-you-render';
-
-import whyDidYouRender from '@welldone-software/why-did-you-render';
+import React from "react";
+import whyDidYouRender from "@welldone-software/why-did-you-render";
 
 whyDidYouRender(React, {
   trackAllPureComponents: true,
@@ -84,62 +110,115 @@ whyDidYouRender(React, {
 });
 ```
 
-**4. Import the `wdyr.js` file in `main.jsx`:**
+### Import it before rendering your app
 
 ```js
-import './wdyr.js';
-import './wdyr.js';
+import "./wdyr.js";
 ```
 
-Key configuration options in WhyDidYouRender:
-
-- `include`: Specifies which components to trace based on a regular expression.
-- `trackHooks`: If enabled, tracks all React Hook changes.
-- `logOwnerReasons`: Logs the parent component that caused the re-render.
-
-For a component to trigger logging, set `whyDidYouRender` to true:
+### Enable it for a component
 
 ```jsx
-Component.whyDidYouRender = true;
+MyComponent.whyDidYouRender = true;
 ```
 
-## 3. useTrackedEffect: Efficiently Handling State Changes
+### What WhyDidYouRender tells you
 
-The useTrackedEffect hook is designed to track state changes and execute side effects only when necessary, improving performance over the standard `useEffect`.
+- Which **props changed**
+- Whether the change was **deep‑equal or referential**
+- Which **parent component caused the re-render**
+- Whether a component could benefit from `React.memo`
 
-**Example:**
+This tool is especially useful when:
+
+- You pass objects or arrays as props  
+- You frequently update global state  
+- Simple UI interactions trigger large tree updates  
+
+---
+
+![WhyDidYouRender](./images/whydidyourender.png)
+
+---
+
+## 3. useTrackedEffect: Understanding Dependency Changes
+
+`useTrackedEffect` is a custom hook that reveals *which* dependency changed between renders. This makes it easier to understand why a `useEffect` triggered and whether the update was necessary.
 
 ```jsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { useTrackedEffect } from "../hooks";
 
-import { useTrackedEffect } from '../hooks';
-
-import { useTrackedEffect } from '../hooks';
-
-export default () => {
+export default function Example() {
   const [count, setCount] = useState(0);
-  const [count2, setCount2] = useState(0);
+  const [other, setOther] = useState(0);
 
   useTrackedEffect(
     changes => {
-      console.log('Changed dependencies: ', changes);
+      console.log("Dependencies changed:", changes);
     },
-    [count, count2]
+    [count, other]
   );
 
   return (
     <div>
-      <p>Count: {count}</p>
-      <button onClick={() => setCount(count + 1)}>Increment</button>
-      <p>Count2: {count2}</p>
-      <button onClick={() => setCount2(count2 + 1)}>Increment</button>
+      <button onClick={() => setCount(count + 1)}>Inc Count</button>
+      <button onClick={() => setOther(other + 1)}>Inc Other</button>
     </div>
   );
-};
+}
 ```
 
-In the above example, `useTrackedEffect` detects which dependencies (e.g., `count` or `count2`) have changed and logs the changes, helping avoid unnecessary side effects.
+### What this hook helps diagnose:
+
+- Effects running more often than expected  
+- Objects/arrays recreated every render  
+- State changes in unrelated branches of the tree  
+- Missing memoization (e.g., `useCallback`, `useMemo`)  
+
+Instead of guessing which value changed, `useTrackedEffect` tells you directly.
+
+---
+
+## Practical Tips for React Performance
+
+### 1. Memoize expensive components
+
+```jsx
+export default React.memo(MyComponent);
+```
+
+### 2. Avoid creating objects inside JSX
+
+```jsx
+// avoid
+<Component options={{ x: 1 }} />
+
+// better
+const opts = { x: 1 };
+<Component options={opts} />
+```
+
+### 3. Use stable callbacks
+
+```jsx
+const handleClick = useCallback(() => doSomething(), []);
+```
+
+### 4. Reduce global state churn  
+Only store truly shared data in global stores; local state is often faster.
+
+### 5. Virtualize large lists  
+Libraries like React Window or React Virtuoso prevent rendering thousands of elements at once.
+
+---
 
 ## Conclusion
 
-By utilizing these three tools—React **Profiler**, **WhyDidYouRender**, and **useTrackedEffect**—you can optimize the performance of your React components. React Profiler helps you measure rendering performance, WhyDidYouRender identifies unnecessary re-renders, and `useTrackedEffect` helps efficiently track state changes. Integrating these tools into your development workflow can significantly improve the performance and efficiency of your React applications.
+Optimizing React performance requires understanding how and when components update.  
+
+- **React Profiler** helps measure render duration.  
+- **WhyDidYouRender** highlights unnecessary re-renders.  
+- **useTrackedEffect** reveals which dependencies triggered effects.  
+
+By incorporating these tools into your development workflow, you gain visibility into rendering behavior, avoid wasted renders, and ship React applications that feel smooth and responsive.
