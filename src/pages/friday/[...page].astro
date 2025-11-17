@@ -31,12 +31,12 @@ const { page } = Astro.props;
 const title =
   page.currentPage === 1 ?
     siteConfig.fridaysPageTitle
-  : siteConfig.fridaysPageTitle + ' ' + 'Page ' + page.currentPage;
+  : siteConfig.fridaysPageTitle + ' ' + page.currentPage;
 
 const description =
   page.currentPage === 1 ?
     siteConfig.fridaysPageDescription
-  : siteConfig.fridaysPageDescription + ' - Page ' + page.currentPage;
+  : siteConfig.fridaysPageDescription + ' ' + page.currentPage;
 ---
 
 <BaseLayout

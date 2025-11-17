@@ -13,11 +13,9 @@ tags: []
 desc: Learn to use CSS :link pseudo-class for styling unvisited links. Discover best practices to improve website design and user experience with targeted link styling.
 ---
 
-The `:link` pseudo-class in CSS is used to style links that have not yet been visited by the user.
-It specifically targets anchor (`<a>`) elements that have an `href` attribute, but which the browser
-considers "unvisited."
+The `:link` pseudo-class in CSS is used to style links that have not yet been visited by the user. It targets anchor (`<a>`) elements that contain an `href` attribute but remain “unvisited” in the browser history.
 
-## Example Usage:
+## Example Usage
 
 ```css
 a:link {
@@ -26,18 +24,17 @@ a:link {
 }
 ```
 
-## How It Works:
+## How It Works
 
-- **Targeting Unvisited Links**: The :link pseudo-class applies styles to links that the user has
-  not clicked or visited. After visiting, the :visited pseudo-class is used instead.
-- **Order of Pseudo-Classes**: When using multiple pseudo-classes (like :hover, :active, and
-  :visited), CSS has a recommended order for link styling:
-  - **:link** (unvisited link)
-  - **:visited** (visited link)
-  - **:hover** (when the link is hovered over)
-  - **:active** (when the link is being clicked)
+- **Targets unvisited links:** If the user has not clicked the link before, `:link` styles apply.
+- **Pairs with `:visited`** for links already clicked.
+- **Order matters:** CSS link pseudo-classes follow the LVHA rule:
+  - `:link`
+  - `:visited`
+  - `:hover`
+  - `:active`
 
-**Example with multiple pseudo-classes:**
+### Example with All Pseudo-Classes
 
 ```css
 a:link {
@@ -57,10 +54,9 @@ a:active {
 }
 ```
 
-### Important Notes:
+## Notes
 
-- The `:link` pseudo-class only applies to anchor elements (`<a>`) with an href attribute.
-- Without `href`, links won’t be affected by `:link` or `:visited`
+- Only anchors with **href** are affected.
+- Links without `href` don’t respond to `:link` or `:visited`.
 
-This allows you to style links consistently across your site while providing a clear visual
-difference between visited and unvisited links.
+This pseudo-class helps maintain consistent link styling while distinguishing unvisited vs. visited states to improve UX.

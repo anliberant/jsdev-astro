@@ -1,0 +1,113 @@
+---
+title: "Howto Fix the “Role Postgres Does Not Exist” Error in Docker"
+slug: fix-postgres-role-error
+heading: "Fixing the “Role ‘Postgres’ Does Not Exist” Error in PostgreSQL Docker"
+desc: Learn how to fix the "role 'postgres' does not exist" error when deploying a PostgreSQL Docker container, why it happens, and the correct solutions.
+icon: /icons/docker.png
+image: /icon.png
+date: 2025-11-17
+permalink: howto/fix-postgres-role-error
+author: anton liberant
+category: docker
+type: howto
+tags: ['postgresql', 'docker', 'backend']
+---
+
+When deploying a PostgreSQL instance inside a Docker container, one of the most common startup failures is:
+
+```
+psql: FATAL: role "postgres" does not exist
+```
+
+This error typically indicates that the initialization scripts did not create the default `postgres` superuser. Below we explore the causes and the correct fixes.
+
+---
+
+## 1. Why the Error Occurs
+
+### 1.1 Your data volume already has an old database
+
+PostgreSQL only creates users when the data directory is empty.  
+If you reuse a volume, the `postgres` role may simply not exist.
+
+### 1.2 You changed the default POSTGRES_USER
+
+```env
+POSTGRES_USER=myuser
+```
+
+This makes `myuser` the superuser — not `postgres`.
+
+### 1.3 Incorrect filesystem permissions
+
+If PostgreSQL cannot write to `/var/lib/postgresql/data`, initialization may silently fail.
+
+---
+
+## 2. Solutions
+
+### **A. Delete the old volume (recommended)**
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+### **B. Explicitly set POSTGRES_USER**
+
+```yaml
+environment:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: secret123
+```
+
+Restart:
+
+```bash
+docker compose down
+docker compose up -d
+```
+
+### **C. Manually create the missing role**
+
+```bash
+docker exec -it <container> bash
+psql -U myuser
+```
+
+Inside PostgreSQL:
+
+```sql
+CREATE ROLE postgres WITH SUPERUSER LOGIN PASSWORD 'changeme';
+```
+
+### **D. Fix permissions**
+
+```bash
+sudo chown -R 999:999 /path/to/volume
+docker compose restart
+```
+
+---
+
+## 3. Best Practices
+
+- Always specify `POSTGRES_USER` and `POSTGRES_PASSWORD`.
+- Prefer *named volumes* over bind mounts.
+- Add healthchecks:
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "pg_isready -U postgres"]
+  interval: 5s
+  timeout: 3s
+  retries: 5
+```
+
+---
+
+## 4. Conclusion
+
+This error happens because the container is using an already-initialized volume or the default superuser was changed. Resetting the volume, correcting your environment variables, or creating the role manually will resolve the problem.
+
+If you want extended troubleshooting for specific platforms (Railway, Render, Fly.io, Docker Swarm), I can add that too.

@@ -15,110 +15,41 @@ desc: Learn to create immutable objects in JavaScript with Object.freeze(), deep
 
 ## Mutable vs Immutable in JavaScript
 
-In JavaScript, the terms **mutable** and **immutable** refer to whether a value or object can be
-changed after it is created. Understanding this distinction is important for writing predictable and
-bug-free code.
+In JavaScript, the terms **mutable** and **immutable** refer to whether a value or object can be changed after it is created. Understanding this distinction is important for writing predictable and bug-free code.
 
 ### Mutable
 
-- **Mutable** objects can be changed or modified after they are created. This means that properties
-  of the object can be added, removed, or altered at any point during the program’s execution.
-- **Examples of mutable data types**: objects, arrays, functions.
-
-**Example: Mutable Object**
+Mutable objects can be changed or modified after they are created.
 
 ```js
 let person = { name: 'John', age: 30 };
-person.age = 35; // Changing the 'age' property
-console.log(person.age); // Output: 35
+person.age = 35;
 ```
-
-- Here, the **person** object is mutable, meaning that its properties can be changed after its
-  initial creation.
-
-**Example: Mutable Array**
-
-```js
-let numbers = [1, 2, 3];
-numbers.push(4); // Adding a new element to the array
-console.log(numbers); // Output: [1, 2, 3, 4]
-```
-
-- **Arrays are mutable**, so you can modify them by adding or removing elements.
 
 ### Immutable
 
-- **Immutable objects**, on the other hand, cannot be modified once they are created. Any operation
-  that appears to modify an immutable object will instead return a new object or value, leaving the
-  original unchanged.
-- **Examples of immutable data types**: primitive values like numbers, strings, booleans, and
-  objects that have been explicitly made immutable.
-
-**Example: Immutable Primitive (String)**
+Immutable values cannot be altered once created.
 
 ```js
 let name = 'John';
-let newName = name.toUpperCase(); // Creates a new string with all uppercase letters
-console.log(name); // Output: "John" (original string is unchanged)
-console.log(newName); // Output: "JOHN" (new string)
+let newName = name.toUpperCase();
 ```
-
-- **Strings in JavaScript are immutable**. Even though you can perform operations on them, the
-  original string is never modified; instead, a new string is created.
-
-### Conclusion for Immutable
-
-- **Mutable objects** can be changed after creation, making them more flexible but also prone to
-  accidental side effects.
-- **Immutable objects**, once created, cannot be changed, providing greater stability and
-  reliability, especially in complex applications.
-
-Understanding the difference between mutable and immutable data is essential for writing efficient,
-maintainable, and bug-free code in JavaScript.
 
 ## Why Immutability Matters
 
-- **Predictability**: Immutable data makes it easier to reason about the state of an application.
-  Since immutable objects don't change, you can be sure that their state remains constant over time.
-- **No Side Effects**: Immutability prevents unexpected side effects, as objects cannot be altered
-  by other parts of the code.
-- **Efficiency in Functional Programming**: Immutability is a core concept in functional
-  programming, as it allows for safer and more predictable operations without modifying the original
-  data.
+- Predictability  
+- No side effects  
+- Better functional programming  
 
-## Creating Immutable Objects in JavaScript
-
-Here are several ways to create immutable objects in JavaScript:
-
-### 1. Using Object.freeze()
-
-One of the most straightforward ways to make an object immutable is by using the built-in
-**Object.freeze()** method. It prevents modifications to the object, including adding, removing, or
-changing properties.
-
-**Example:**
+## 1. Using Object.freeze()
 
 ```js
-const person = {
-  name: 'John',
-  age: 30,
-};
-
+const person = { name: 'John', age: 30 };
 Object.freeze(person);
-
-person.age = 35; // This will not change the age property
-console.log(person.age); // Output: 30
+person.age = 35; // ignored
 ```
 
-- **Limitations**: `Object.freeze()` only makes the first level of the object immutable. If the
-  object contains nested objects, those nested objects will still be mutable.
-
-### 2. Using Deep Freeze
-
-To make an object and all of its nested properties immutable, you need to implement a deep freeze.
-This involves recursively freezing every property of the object.
-
-**Example:**
+## 2. Deep Freeze
 
 ```js
 function deepFreeze(obj) {
@@ -129,106 +60,34 @@ function deepFreeze(obj) {
   });
   return Object.freeze(obj);
 }
-
-const person = {
-  name: 'John',
-  address: {
-    city: 'New York',
-    zip: '10001',
-  },
-};
-
-deepFreeze(person);
-person.address.city = 'Los Angeles'; // This will not change the city property
-console.log(person.address.city); // Output: New York
 ```
 
-- **Deep freeze** ensures that nested objects are also immutable, providing true immutability across
-  all object levels.
-
-### 3. Using const for Primitive Values
-
-Although `const` does not make objects immutable, it can be used to make primitive values (like
-strings, numbers, booleans) immutable by preventing reassignment.
-
-**Example:**
+## 3. Using const for Primitive Values
 
 ```js
 const name = 'John';
-name = 'Jane'; // This will throw an error because 'name' is a constant
 ```
 
-- **Note**: `const` only ensures that the variable reference cannot be changed, but it does not
-  freeze the object itself.
-
-### 4. Using Immutable.js
-
-For more complex immutability needs, you can use libraries like
-[Immutable.js](https://immutable-js.com/), which provides data structures that are immutable by
-default. It supports immutable lists, maps, sets, and other types, making it easy to work with
-immutable data.
-
-**Example:**
+## 4. Using Immutable.js
 
 ```js
 const { Map } = require('immutable');
-
 const person = Map({ name: 'John', age: 30 });
-
-const updatedPerson = person.set('age', 35);
-console.log(person.get('age')); // Output: 30 (original remains unchanged)
-console.log(updatedPerson.get('age')); // Output: 35 (new object with updated value)
 ```
 
-- **Immutable.js** is a good solution when working with large applications that require efficient
-  handling of immutable data.
-
-### 5. Using Object.defineProperty()
-
-You can also use `Object.defineProperty()` to create immutable properties on an object by setting
-`writable: false`. This will prevent the property from being changed, but will not make the entire
-object immutable.
-
-**Example:**
+## 5. Using Object.defineProperty()
 
 ```js
 const person = {};
-Object.defineProperty(person, 'name', {
-  value: 'John',
-  writable: false,
-});
-
-person.name = 'Jane'; // This will not change the name property
-console.log(person.name); // Output: John
+Object.defineProperty(person, 'name', { value: 'John', writable: false });
 ```
 
-- **Note**: This method only works for specific properties and needs to be applied
-  property-by-property.
-
-### 6. Using Spread Operator to Create Immutable Copies
-
-Another method to ensure immutability is to create a new object every time you want to "change" it.
-Instead of modifying the original object, you can use the spread operator (`...`) to create a new
-copy of the object.
-
-**Example:**
+## 6. Using Spread Operator
 
 ```js
-const person = { name: 'John', age: 30 };
-
-// Create an immutable copy with an updated age
-const updatedPerson = { ...person, age: 35 };
-
-console.log(person.age); // Output: 30 (original remains unchanged)
-console.log(updatedPerson.age); // Output: 35 (new copy with updated value)
+const updated = { ...person, age: 35 };
 ```
-
-- This approach is commonly used in modern JavaScript frameworks (like React) where immutability is
-  often enforced.
 
 ## Conclusion
 
-Creating immutable objects in JavaScript can be achieved using various methods, from simple freezing
-with `Object.freeze()` to more complex solutions like deep freezing or using libraries like
-Immutable.js. Immutability ensures data integrity by preventing unintended changes to objects, which
-can help reduce bugs and improve code maintainability.
+Immutability helps avoid bugs and keeps your data consistent.
