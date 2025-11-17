@@ -1,7 +1,7 @@
 ---
-title: 'How to Solve: `Cannot find package mem-fs imported from` Error'
+title: "How to Solve: `Cannot find package mem-fs imported from` Error"
 slug: cannot-find-mem-fs
-heading: Fix 'Cannot find package mem-fs' Import Error
+heading: "Fix 'Cannot find package mem-fs' Import Error"
 icon: /icons/nodejs.png
 image: /icon.png
 permalink: howto/cannot-find-mem-fs
@@ -24,15 +24,18 @@ yarn add mem-fs
 ```
 
 Avoid global installs unless required:
+
 ```bash
-npm install -g mem-fs   # not recommended for project use
+npm install -g mem-fs   # not recommended
 ```
 
 ## 2. Check `package.json`
 
 ```json
-"dependencies": {
-  "mem-fs": "^1.0.0"
+{
+  "dependencies": {
+    "mem-fs": "^1.0.0"
+  }
 }
 ```
 
@@ -56,19 +59,19 @@ yarn install
 
 ## 4. Fix Import / Require Mismatch
 
-If using **CommonJS**:
+CommonJS:
 
 ```js
 const memFs = require('mem-fs');
 ```
 
-If using **ESM** (package.json must include `"type": "module"`):
+ESM:
 
 ```js
 import memFs from 'mem-fs';
 ```
 
-❗ Mismatched module systems cause this error very often.
+❗ Mismatched module systems often cause this error.
 
 ## 5. Verify Node.js Compatibility
 
@@ -77,26 +80,21 @@ node -v
 npm -v
 ```
 
-Older Node versions may not support some package builds.
-
 ## 6. Install a Compatible Version
 
 ```bash
 npm install mem-fs@1.1.3
 ```
 
-Check versions here:  
-https://www.npmjs.com/package/mem-fs
-
 ## 7. Local vs Global Conflict
 
-If you installed mem‑fs globally but not locally:
+If installed globally but not locally:
 
 ```bash
 npm link mem-fs
 ```
 
-Better: always install locally.
+Recommendation: always install locally.
 
 ## 8. Using mem‑fs with Yeoman? Use This Template
 
@@ -106,20 +104,18 @@ const editor = require('mem-fs-editor');
 
 const store = memFs.create();
 const fs = editor.create(store);
-
-// fs.write(), fs.commit(), etc.
 ```
 
-## Summary Table
+## Summary
 
 | Step | Fix |
 |------|-----|
 | 1 | Install mem‑fs locally |
-| 2 | Use correct require/import |
+| 2 | Use correct module system |
 | 3 | Reinstall `node_modules` |
-| 4 | Check Node + npm versions |
+| 4 | Check Node/npm versions |
 | 5 | Install compatible version |
 
 ## Conclusion
 
-The “Cannot find package 'mem‑fs'” error is almost always caused by a missing install, module format mismatch, or corrupted node_modules. Use the steps above to quickly fix the issue and get your project running smoothly.
+The error is almost always caused by a missing install, module mismatch, or corrupted node_modules. Follow the steps above to resolve it quickly.
