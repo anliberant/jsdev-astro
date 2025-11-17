@@ -1,5 +1,5 @@
 ---
-title: Object.freeze() and Object.seal() in JavaScript
+title: Howto Use Object.freeze() and Object.seal() in JavaScript
 slug: freeze-seal-js
 heading: Understanding Object.freeze() and Object.seal()
 icon: /icons/javascript.png
@@ -9,242 +9,193 @@ date: 2024-09-29
 author: anton liberant
 category: javascript
 type: howto
-tags: ['Object.freeze', 'Object.seal', 'immutable']
-desc: Learn the key differences between Object.freeze() and Object.seal() in JavaScript. Understand how they control object mutability and prevent unwanted changes.
+tags: ['immutability']
+desc: Learn the difference between Object.freeze() and Object.seal(), how they affect object mutability, and when to use each for safer, more predictable JavaScript code.
 ---
 
-Previously, we wrote about
-[How to Create Immutable Objects in JavaScript](https://jsdev.space/howto/immutable-objects-js/). In
-this howto, we'll explore the difference between **Object.freeze()** and **Object.seal()**.
+When building modern JavaScript applications, it's surprisingly easy to mutate objects without noticing — and those unintended changes often lead to difficult, time‑consuming bugs. That’s why JavaScript provides two powerful tools for controlling mutability: **Object.freeze()** and **Object.seal()**.
 
-![Object.freeze() and Object.seal() in JavaScript](./images/freeze-seal-js.png)
+Both methods limit how objects can be changed, but they do so in very different ways. Let’s break them down with clear examples and real-world use cases.
 
-Both **Object.freeze()** and **Object.seal()** are methods used to control how objects behave when
-modified, but they have distinct differences. Here's how each works:
+---
 
-## Object.freeze()
+## What Object.freeze() Actually Does
 
-The **Object.freeze()** method "freezes" an object, preventing any changes to its properties. This
-means:
+`Object.freeze()` makes an object *fully immutable*. Once frozen:
 
-- **No new properties** can be added to the object.
-- **Existing properties** cannot be removed.
-- **Modifications to existing properties** (like changing values) are not allowed.
-- **Reconfiguring property descriptors** (like changing from writable to non-writable) is not
-  allowed.
-- **The object becomes immutable**, but note that for nested objects, only the outer object is
-  frozen, not the deeper properties.
+- **No new properties** can be added  
+- **Existing properties cannot be removed**  
+- **Values cannot be changed**  
+- **Property descriptors cannot be reconfigured**  
 
-**Example:**
+In short: the object becomes locked.
+
+### Example
 
 ```js
-const person = { name: 'Alice', age: 30 };
+const profile = { name: 'Alice', age: 30 };
 
-// Freeze the object
-Object.freeze(person);
+Object.freeze(profile);
 
-// Trying to modify properties
-person.age = 25; // This will not work
-person.city = 'New York'; // Adding new property will also fail
+profile.age = 25;       // ❌ ignored
+profile.city = 'Paris'; // ❌ ignored
 
-console.log(person); // Output: { name: "Alice", age: 30 }
+console.log(profile); 
+// { name: "Alice", age: 30 }
 ```
 
-**Key Points:**
+### Important: Freezing is shallow
 
-- It makes the object **completely immutable**.
-- No changes to the object's structure or values are allowed.
-
-As you can see, all attempts to modify the object failed. On a low level, **Object.freeze()** adds a
-**non-configurable** flag to all the object’s properties, preventing them from being altered.
-
-However, if there are nested objects, **Object.freeze()** does not automatically freeze them. This
-means that the properties of nested objects can still be modified:
+Only the top-level object is frozen:
 
 ```js
-const person = {
+const user = {
   name: 'Alice',
-  age: 30,
-  address: {
-    city: 'New York',
-  },
+  address: { city: 'London' }
 };
 
-// Freeze the object
-Object.freeze(person);
+Object.freeze(user);
 
-// Trying to modify properties
-person.address.city = 'Los Angeles'; // This will work
+user.address.city = 'Berlin'; // ✅ still allowed
 ```
 
-To freeze nested objects, you’ll need to do it manually or write a recursive function.
-[DeepFreeze a nested Object/Array](https://jsdev.space/snippets/deepfreeze-js)
+To freeze everything deeply, you must recursively freeze nested objects.
 
-## Object.seal()
+---
 
-The **Object.seal()** method "seals" an object, restricting certain modifications but still allowing
-others:
+## What Object.seal() Does
 
-- **No new properties** can be added.
-- **Existing properties** cannot be removed.
-- **Modifying existing properties** (like changing their values) is allowed.
-- **Property descriptors** (like configurable) are set to false, meaning properties can't be
-  redefined or removed.
-- The object’s structure is sealed, but values can still be updated.
+`Object.seal()` is less strict. It *locks the structure* of the object, but **keeps values editable**.
 
-**Example:**
+A sealed object:
+
+- ❌ cannot gain new properties  
+- ❌ cannot delete existing properties  
+- ❌ cannot reconfigure properties  
+- ✅ *can* modify existing values  
+
+### Example
 
 ```js
 const car = { make: 'Chevrolet', model: 'Spark' };
 
-// Seal the object
 Object.seal(car);
 
-// Trying to add a new property
-car.year = 2022; // This will not work
+car.model = 'Camaro'; // ✅ allowed
+car.year = 2020;      // ❌ ignored
 
-// Modifying an existing property
-car.model = 'Camaro'; // This will work
-
-console.log(car); // Output: { make: "Toyota", model: "Camaro" }
+console.log(car);
+// { make: "Chevrolet", model: "Camaro" }
 ```
 
-**Key Points:**
+Sealing is perfect when you want predictable structure but flexible values.
 
-- Sealed objects can have their existing properties modified.
-- New properties cannot be added, and existing properties cannot be deleted.
+---
 
-## Usage Examples
+## When Should You Use Each?
 
-### Protecting Configuration Objects
+### Use **Object.freeze()** when:
+- You want strict immutability  
+- You’re protecting config objects  
+- You’re preventing accidental mutations  
+- Working with Redux-like state patterns  
 
-Configuration objects define the behavior of your application. They need to remain stable and
-unchangeable to avoid accidental errors:
+### Use **Object.seal()** when:
+- You want fixed structure but editable values  
+- You’re building APIs or shared objects  
+- You want to prevent additions/removals but allow updates  
 
-```js
-const config = {
-  apiUrl: 'https://api-domain.com',
-  timeout: 4000,
-  retries: 2,
-};
+---
 
-Object.freeze(config);
+## Practical Use Cases
 
-// Function to Retrieve Configuration
-function getConfig() {
-  return config;
-}
-
-// Usage Example
-console.log(getConfig().apiUrl); // "https://api-domain.com"
-
-// Attempt to Modify Configuration
-config.apiUrl = 'https://new-api-domain.com'; // This will not work
-console.log(getConfig().apiUrl); // Still "https://api-domain.com"
-```
-
-By using **Object.freeze()**, we ensure that any attempts to modify config will be ignored.
-
-### Usage in Redux Library
-
-In Redux, immutability of the state is key to predictability and easier debugging. By using
-**Object.freeze()**, you can protect the state from unwanted mutations.
-
-**Example:**
+### 1. Protecting Config Objects
 
 ```js
-const initialState = {
-  user: null,
-  loggedIn: false,
-};
-
-function reducer(state = initialState, action) {
-  switch (action.type) {
-    case 'LOGIN':
-      return Object.freeze({
-        ...state,
-        user: action.payload,
-        loggedIn: true,
-      });
-    case 'LOGOUT':
-      return Object.freeze(initialState);
-    default:
-      return state;
-  }
-}
-```
-
-Here, we use **Object.freeze()** to ensure that each time the state is updated, it remains
-unchanged.
-
-### Example with React
-
-In **React**, managing component state is often necessary. Protecting state using
-**Object.freeze()** can help prevent errors caused by data mutations.
-
-**Example:**
-
-```js
-import React, { useState } from 'react';
-
-const App = () => {
-  const [config, setConfig] = useState(
-    Object.freeze({
-      theme: 'light',
-      notificationsEnabled: true,
-    })
-  );
-
-  const toggleTheme = () => {
-    // Создаем новый объект вместо изменения существующего
-    setConfig(prevConfig =>
-      Object.freeze({
-        ...prevConfig,
-        theme: prevConfig.theme === 'light' ? 'dark' : 'light',
-      })
-    );
-  };
-
-  return (
-    <div style={{ background: config.theme === 'light' ? '#fff' : '#333' }}>
-      <h1>Текущая тема: {config.theme}</h1>
-      <button onClick={toggleTheme}>Сменить тему</button>
-    </div>
-  );
-};
-
-export default App;
-```
-
-In this example, we use **Object.freeze()** to protect the configuration state.
-
-### Protecting Constants and Global Variables
-
-When working with constants, you may need to ensure that these values are not accidentally modified.
-With **Object.freeze()**, you can make constants truly immutable.
-
-**Example:**
-
-```js
-const constants = Object.freeze({
-  MAX_CONNECTIONS: 150,
-  DEFAULT_TIMEOUT: 4000,
-  APP_NAME: 'MyApp',
+const config = Object.freeze({
+  apiUrl: 'https://api.example.com',
+  timeout: 5000
 });
 
-// Attempting to modify a constant
-constants.MAX_CONNECTIONS = 100; // Will not work
-
-console.log(constants.MAX_CONNECTIONS); // 150
+config.timeout = 2000; // ❌ ignored
 ```
 
-In this example, even if someone tries to change **MAX_CONNECTIONS**, the modification will not
-occur, and your application will remain stable.
+This ensures config remains stable throughout the app.
 
-## Summary of Differences
+---
 
-- **Object.freeze()** makes an object completely immutable, preventing any changes, including
-  modifications to values.
-- **Object.seal()** allows modifying existing properties but prevents adding or removing properties.
+### 2. Redux / State Management
 
-These methods are useful for locking down objects to prevent accidental or unwanted changes.
+Immutability = predictable updates.
+
+```js
+const initialState = Object.freeze({
+  count: 0,
+  user: null
+});
+```
+
+State updates return *new* frozen objects, preventing mutation bugs.
+
+---
+
+### 3. React: Safer Component State
+
+```js
+const [settings, setSettings] = useState(
+  Object.freeze({ theme: 'light', notifications: true })
+);
+
+function toggleTheme() {
+  setSettings(prev =>
+    Object.freeze({
+      ...prev,
+      theme: prev.theme === 'light' ? 'dark' : 'light'
+    })
+  );
+}
+```
+
+This protects state from accidental edits outside the setter.
+
+---
+
+### 4. Protecting Application Constants
+
+```js
+const CONSTANTS = Object.freeze({
+  MAX_RETRIES: 5,
+  APP_NAME: 'MyApp'
+});
+```
+
+A reliable way to ensure constants stay constant.
+
+---
+
+## Summary: freeze() vs seal()
+
+| Feature | `Object.freeze()` | `Object.seal()` |
+|--------|-------------------|-----------------|
+| Modify existing values | ❌ No | ✅ Yes |
+| Add properties | ❌ No | ❌ No |
+| Remove properties | ❌ No | ❌ No |
+| Reconfigure descriptors | ❌ No | ❌ No |
+| Freezes nested objects | ❌ No | ❌ No |
+| Use case | Full immutability | Lock structure but allow value changes |
+
+Both are excellent tools — you just need the right one for the job.
+
+---
+
+## Final Thoughts
+
+`Object.freeze()` and `Object.seal()` give you fine‑grained control over how objects can be changed. Whether you're building safer React components, locking down API configurations, or avoiding mutation bugs in your state management system, these methods help enforce predictability and stability in your codebase.
+
+If you want, I can also generate:
+
+- a “Deep Freeze” utility snippet  
+- a version of this article optimized for Substack  
+- MDX with CodeHike syntax blocks  
+
+Just tell me!

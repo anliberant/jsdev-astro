@@ -1,7 +1,7 @@
 ---
-title: How to Set, Retrieve, and Update Cookies Using JavaScript
+title: "How to Manage Cookies in JavaScript"
 slug: cookies-javascript
-heading: 'Manage Cookies in JavaScript: Set, Retrieve, Update'
+heading: "Managing Cookies in JavaScript: Set, Retrieve, Update"
 icon: /icons/javascript.png
 image: /icon.png
 permalink: howto/cookies-javascript
@@ -10,108 +10,174 @@ author: anton liberant
 category: javascript
 type: howto
 tags: ['cookies']
-desc: Learn to set, get, update, and delete cookies with JavaScript. Explore cookie attributes, best practices, and examples for efficient web app cookie management.
+desc: Learn how to set, retrieve, update, and delete cookies with JavaScript using secure attributes and best practices for modern web applications.
 ---
 
-Cookies are small pieces of data stored on the client’s browser, often used for session management, user preferences, and tracking. JavaScript provides straightforward methods to set, retrieve, and manage cookies. This article explains how to work with cookies effectively using JavaScript.
+Cookies remain one of the fundamental mechanisms for storing small pieces of information in the browser. They support authentication sessions, user preferences, and analytics features. Even as modern APIs like `localStorage`, `sessionStorage`, and IndexedDB have become popular, cookies continue to play a central role—especially when state must persist across browser tabs and be sent to the server automatically.
 
-## What Are Cookies in JavaScript?
+This article provides a clear, practical explanation of how cookies work in JavaScript, how to manipulate them safely, and how to incorporate modern “Secure”, “HttpOnly”, and “SameSite” attributes to avoid security pitfalls.
 
-Cookies are stored in key-value pairs and sent to the server with every HTTP request. You can manipulate cookies directly in JavaScript through the `document.cookie` property.
+---
 
-## How to Set Cookies in JavaScript
+## 1. What Cookies Are and How Browsers Handle Them
 
-You can create a cookie by assigning a string to the `document.cookie` property. Here’s a basic example:
+A cookie is a key–value pair stored in the browser. Whenever a request is made to a domain, cookies belonging to that domain are automatically included in the request headers:
+
+```
+Cookie: username=JohnDoe; theme=dark
+```
+
+JavaScript interacts with cookies exclusively through the `document.cookie` property. Cookies set by JavaScript are available only on the client side unless explicitly configured for server usage.
+
+---
+
+## 2. Creating Cookies in JavaScript
+
+Setting cookies involves assigning a formatted string to `document.cookie`:
 
 ```js
 document.cookie =
-  'username=JohnDoe; expires=Fri, 12 Jan 2025 12:00:00 UTC; path=/';
+  "username=JohnDoe; expires=Fri, 12 Jan 2025 12:00:00 UTC; path=/";
 ```
 
-### Breaking Down the Cookie String:
+### Key components of the cookie string
 
-- `username=JohnDoe`: The key-value pair stored in the cookie.
-- `expires`: The expiration date (optional). Without it, the cookie will be deleted when the browser closes.
-- `path`: The scope of the cookie. `/` makes it accessible across the entire site.
+- **username=JohnDoe** — the stored key–value pair  
+- **expires** — when the cookie should expire; without this, it becomes a session cookie  
+- **path** — restricts access to specific paths; `/` makes it site‑wide  
 
-## How to Retrieve Cookies in JavaScript
+### Optional but recommended attributes
 
-You can access cookies using `document.cookie`, which returns all cookies as a single string:
+- **Secure** — restricts cookie transmission to HTTPS  
+- **SameSite** — controls cross‑site request behavior (`Strict`, `Lax`, or `None`)  
+- **HttpOnly** — prevents JavaScript from accessing the cookie (cannot be set via JS, only server-side)
+
+A more complete and modern example:
+
+```js
+document.cookie =
+  "sessionId=abc123; expires=Fri, 12 Jan 2025 12:00:00 UTC; path=/; Secure; SameSite=Lax";
+```
+
+---
+
+## 3. Retrieving Cookies
+
+`document.cookie` returns a semicolon‑separated string of all available cookies:
 
 ```js
 console.log(document.cookie);
-// Output: "username=JohnDoe; theme=dark"
+// Example: "username=JohnDoe; theme=dark"
 ```
 
-To retrieve a specific cookie, you can parse the string:
+To extract specific values, you must parse this string manually or with a helper function.
+
+### A robust cookie retrieval helper
 
 ```js
 function getCookie(name) {
-  const cookies = document.cookie.split('; ');
-  for (let cookie of cookies) {
-    const [key, value] = cookie.split('=');
-    if (key === name) {
-      return value;
-    }
+  const cookies = document.cookie.split("; ");
+  for (const cookie of cookies) {
+    const [key, value] = cookie.split("=");
+    if (key === name) return value;
   }
   return null;
 }
-
-console.log(getCookie('username')); // Output: "JohnDoe"
 ```
 
-## How to Update Cookies
+Usage:
 
-To update a cookie, simply set it again with the same name but a new value:
+```js
+console.log(getCookie("username")); // "JohnDoe"
+```
+
+This approach handles missing cookies gracefully.
+
+---
+
+## 4. Updating Cookies
+
+A cookie is updated simply by redefining it with the same name:
 
 ```js
 document.cookie =
-  'username=JaneDoe; expires=Fri, 12 Jan 2025 12:00:00 UTC; path=/';
+  "username=JaneDoe; expires=Fri, 12 Jan 2025 12:00:00 UTC; path=/";
 ```
 
-## How to Delete Cookies
+Cookies are overwritten when they share:
+
+- the same name  
+- the same path  
+- the same domain  
+
+If any of these differ, they are treated as separate cookies.
+
+---
+
+## 5. Deleting Cookies Properly
 
 To delete a cookie, set its expiration date in the past:
 
 ```js
-document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
 ```
 
-## Best Practices for Using Cookies
+Deleting only works when the deletion cookie uses the same `path` and `domain` as the original.
 
-1. **Limit Sensitive Data**: Avoid storing sensitive information in cookies. Use session storage or server-side solutions instead.
-2. **Set Secure Attributes:**
+---
 
-- Use the `Secure` attribute to ensure cookies are only sent over HTTPS.
-- Add the `HttpOnly` flag to prevent client-side JavaScript from accessing cookies.
+## 6. Best Practices for Cookie Management
 
-3. **Use SameSite**: Prevent cross-site request forgery (CSRF) by setting the `SameSite` attribute.
+### Avoid storing sensitive data
+Cookies are sent automatically with each request and can be intercepted if not configured securely.
+
+### Prefer Secure cookies on production
+Only send cookies via HTTPS:
 
 ```js
-document.cookie = 'theme=dark; SameSite=Strict';
+document.cookie = "theme=dark; Secure";
 ```
 
-## Example: Setting and Retrieving Cookies
+### Use HttpOnly for authentication cookies
+Although JavaScript cannot set `HttpOnly`, your server should use it to block access from `document.cookie`.
+
+### Use SameSite to prevent CSRF
+Example:
+
+```js
+document.cookie = "theme=dark; SameSite=Strict";
+```
+
+### Keep cookie names short
+Browsers limit the overall cookie size per domain (typically 4 KB per cookie).
+
+---
+
+## 7. Example: Full Set and Retrieve Flow
 
 ```js
 // Set a cookie
-document.cookie = 'theme=dark; expires=Fri, 12 Jan 2025 12:00:00 UTC; path=/';
+document.cookie =
+  "theme=dark; expires=Fri, 12 Jan 2025 12:00:00 UTC; path=/; Secure; SameSite=Lax";
 
-// Retrieve the cookie
+// Get a cookie
 function getCookie(name) {
-  const cookies = document.cookie.split('; ');
-  for (let cookie of cookies) {
-    const [key, value] = cookie.split('=');
-    if (key === name) {
-      return value;
-    }
+  const cookies = document.cookie.split("; ");
+  for (const cookie of cookies) {
+    const [key, value] = cookie.split("=");
+    if (key === name) return value;
   }
   return null;
 }
 
-console.log(getCookie('theme')); // Output: "dark"
+console.log(getCookie("theme")); // "dark"
 ```
+
+This example illustrates secure handling and retrieval in a realistic environment.
+
+---
 
 ## Conclusion
 
-Cookies are a powerful tool for maintaining state and enhancing user experiences in web applications. By understanding how to set, retrieve, and manage cookies in JavaScript, you can leverage this feature to create more dynamic and personalized applications.
+Cookies remain a foundational part of web development, especially when working with user sessions, preferences, and server-side integrations. JavaScript’s `document.cookie` API is simple but powerful when used correctly. Understanding cookie attributes—especially `Secure`, `HttpOnly`, and `SameSite`—is essential for building secure, predictable, and user-friendly applications.
+

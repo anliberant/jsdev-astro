@@ -1,7 +1,7 @@
 ---
-title: 'How to solve Module parse failed: Bad character escape sequence'
+title: "How to Solve “Module parse failed: Bad character escape sequence”"
 slug: bad-character-escape-nextjs
-heading: 'Fixing Module parse failed: Bad character escape sequence'
+heading: Fixing Module Parse Errors Caused by Bad Escape Sequences in Next.js
 icon: /icons/javascript.png
 image: ./images/bad-character-escape-nextjs.png
 permalink: howto/bad-character-escape-nextjs
@@ -9,75 +9,203 @@ date: 2024-10-28
 author: anton liberant
 category: nextjs
 type: howto
-tags: ['nextjs', 'webpack']
-desc: 'Learn how to fix the "Module parse failed: Bad character escape sequence" error in Next.js with this simple troubleshooting guide.'
+tags: ['nextjs', 'webpack', 'windows']
+desc: "Fix “Module parse failed: Bad character escape sequence” in Next.js. Learn why it happens, how Windows paths break Webpack, and how to apply reliable fixes."
 ---
 
-In Next.js 15, a new issue has emerged on Windows platforms. I encountered it myself and went through all the GitHub threads on it. Let's dive into the logs to see what's happening.
+# Fixing “Module parse failed: Bad character escape sequence” in Next.js
 
-## Log Output:
+This error occurs frequently on **Windows**, especially in **Next.js 14–15**, and is caused by how Webpack parses file paths containing backslashes (`\\`). These backslashes get interpreted as escape sequences, leading to invalid JavaScript deep inside Next.js loaders.
+
+Below is an improved, expanded, and more complete guide with additional solutions and explanations.
+
+## The Error
 
 ```
-○ Compiling /api/auth/[...nextauth] ...
-⨯ ./node_modules/next/dist/build/webpack/loaders/next-metadata-route-loader.js?filePath=C%3A%5CUsers%5CuseR%5CDesktop%5CNextJS%5Chono-next-auth%5Csrc%5Capp%5Cfavicon.ico&isDynamicRouteExtension=0!?__next_metadata_route__
-Module parse failed: Bad character escape sequence (11:63)
-|   const fileSizeInMB = buffer.byteLength / 1024 / 1024
-|   if (fileSizeInMB > 8) {
->     throw new Error('File size for Open Graph image "C:\Users\useR\Desktop\NextJS\hono-next-auth\src\app\favicon.ico" exceeds 8MB. ' +
-|     `(Current: ${fileSizeInMB.toFixed(2)}MB)
-| ` +
+Module parse failed: Bad character escape sequence
 ```
 
-It’s clear that Webpack is mishandling the standard favicon file as if it were over 8MB in size, likely due to how paths are parsed.
+In the logs:
 
-![Module parse failed: Bad character escape sequence](./images/bad-character-escape-nextjs.png)
+```
+throw new Error('File size for Open Graph image "C:\\Users\\test\\project\\src\\app\\favicon.ico" exceeds 8MB.')
+```
 
-The `"Module parse failed: Bad character escape sequence"` error generally occurs when Webpack or another bundler encounters an invalid character escape in your code. This often happens when using backslashes (`\`) incorrectly, typically in file paths or regular expressions.
+Webpack interprets sequences like `\U`, `\t`, `\p` as escape characters, causing syntax errors.
 
-Here's an improved step-by-step guide to solving the "Module parse failed: Bad character escape sequence" error in Next.js, particularly if you’re on Windows.
+---
 
-## 1. Remove the favicon.ico file:
+# Why This Happens
 
-- Start by locating and removing the favicon.ico file from your Next.js project (/src/app/). This file can sometimes trigger unexpected issues with path parsing on Windows.
-- Run your application again to see if this resolves the error.
+Windows paths:
 
-## 2. Clear the .next folder:
+```
+C:\Users\myUser\project
+```
 
-- The `.next` folder stores build artifacts and cached files. Removing it forces Next.js to recompile everything, potentially clearing up corrupted or outdated caches.
-- To delete the folder, navigate to your project’s root directory and delete .next manually, or run:
+Webpack expects paths to be:
 
-<div className='code-cmd'>npx rimraf .next</div>
+```
+C:/Users/myUser/project
+```
 
-**Restart the development server with:**
+or properly escaped:
 
-<div className='code-cmd'>npm run dev</div>
+```
+C:\\Users\\myUser\\project
+```
 
-These steps should help resolve the `"Module parse failed: Bad character escape sequence"` error. If the issue persists, check for any unusual paths in your configuration or dependencies, especially those that may use backslashes (`\`) rather than forward slashes (`/`).
+When a loader (like **next-metadata-route-loader**) inserts an unescaped Windows path into a JavaScript string literal, Webpack fails.
 
-## 3. Verify Your Webpack Configuration
+---
 
-- If the error is thrown by a third-party library, you might need to adjust your Webpack configuration. Adding the `exclude` property to ignore specific libraries might help:
+# 1. Remove or Replace favicon.ico
+
+Many developers confirmed that `src/app/favicon.ico` being processed by Next.js metadata loader caused the crash.
+
+Try:
+
+```
+rm src/app/favicon.ico
+```
+
+Restart:
+
+```
+npm run dev
+```
+
+Then later place a favicon into `/public/favicon.ico`.
+
+---
+
+# 2. Clear the `.next` Cache
+
+The metadata cache often contains incorrectly escaped paths.
+
+```
+npx rimraf .next
+npm run dev
+```
+
+This alone fixes the issue for many.
+
+---
+
+# 3. Normalize Windows Paths Manually
+
+If your code or config generates paths, normalize them:
 
 ```js
-module: {
-  rules: [
-    {
-      test: /\.js$/,
-      exclude: /node_modules/,
-      use: {
-        loader: 'babel-loader',
-      },
-    },
-  ],
-},
+function fixPath(p) {
+  return p.replace(/\\/g, '/');
+}
 ```
 
-## 4. Check File Encodings
+Use this when passing paths to loaders or Webpack configuration.
 
-- Sometimes, a non-UTF-8 encoded file might cause this error. Ensure your files are saved in UTF-8 encoding.
+---
 
-## 5. Upgrade Dependencies
+# 4. Patch or Adjust Webpack Configuration
 
-- Occasionally, this issue is due to an outdated version of Webpack or related plugins. Check if you can upgrade to the latest versions of Webpack, Babel, and other related tools.
+If a loader emits raw Windows paths, you can override handling:
 
-These steps should help you identify and resolve the `"Module parse failed: Bad character escape sequence"` error in your project. Let me know if you need more specific guidance!
+```js
+module.exports = {
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.ico$/,
+      type: 'asset/resource',
+    });
+    return config;
+  }
+};
+```
+
+Disable verbose path info:
+
+```js
+config.output.pathinfo = false;
+```
+
+This prevents Webpack from inserting unescaped paths into comments.
+
+---
+
+# 5. Temporarily Disable Metadata Route Processing
+
+You can bypass the problematic loader:
+
+```js
+export const dynamic = "force-static";
+export const metadata = {};
+```
+
+If the error disappears, the issue is tied to metadata image handling.
+
+---
+
+# 6. Ensure Files Are UTF‑8 Encoded
+
+Incorrect encodings can produce malformed byte sequences Webpack cannot parse.
+
+---
+
+# 7. Upgrade Next.js + Webpack
+
+Many Windows path-escaping bugs were fixed after:
+
+```
+npm install next@latest
+npm install webpack@latest
+```
+
+Next.js 15 includes improved Windows support.
+
+---
+
+# 8. Patch the Broken Loader (Permanent Fix)
+
+If the issue is inside Next.js internals, patch the loader:
+
+```
+npm install patch-package
+```
+
+Modify:
+
+```
+node_modules/next/dist/build/webpack/loaders/next-metadata-route-loader.js
+```
+
+Change:
+
+```js
+"..." + filePath + "..."
+```
+
+to:
+
+```js
+"..." + filePath.replace(/\\/g, "\\\\") + "..."
+```
+
+Then save a patch:
+
+```
+npx patch-package next
+```
+
+This ensures every backslash is escaped properly.
+
+---
+
+# Summary
+
+| Cause | Fix |
+|-------|-----|
+| Windows backslashes parsed incorrectly | Normalize paths, escape backslashes |
+| next-metadata-route-loader bug | Upgrade or patch loader |
+| Corrupted or problematic favicon.ico | Remove or replace |
+| Cached metadata breaking build | Clear `.next` |
+| Misbehaving loader or plugin | Override with config |

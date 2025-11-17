@@ -1,7 +1,7 @@
 ---
-title: 'How to Use RegEx for Conditional Substring Search in JavaScript'
+title: "How to Use RegEx for Conditional Substring Search in JavaScript"
 slug: regex-substring-js
-heading: RegEx Conditional Substring Search in JavaScript
+heading: "RegEx Conditional Substring Search in JavaScript"
 icon: /icons/javascript.png
 image: /icon.png
 permalink: howto/regex-substring-js
@@ -13,120 +13,166 @@ tags: ['RegEx']
 desc: Master RegEx in JavaScript to perform conditional substring searches. Learn with practical examples and tips to extract and manipulate specific patterns efficiently.
 ---
 
-JavaScript’s RegEx engine offers robust tools for conditional substring searches. While not as feature-rich as some other engines, it is still capable of solving complex tasks with clever pattern construction. This guide covers examples of extracting substrings under specific conditions using JavaScript.
+JavaScript’s regular expression engine, while not as feature‑rich as engines found in languages like Python or Perl, provides enough power to handle many real-world text‑processing tasks. Conditional substring extraction—finding specific parts of text depending on the structure of a line—is one of those tasks. With clever pattern design and JavaScript’s built‑in methods, you can accomplish complex filtering without external libraries.
 
-## Key Concepts for JavaScript RegEx
+This updated article explores several patterns for extracting values based on conditions, avoiding nested structures, and working around limitations in the JavaScript RegEx engine.
 
-### 1. Condition-Based Search
+## Understanding the Core Techniques
 
-Extract substrings (e.g., words or numbers) from lines starting with a specific condition, such as the letter `a`.
+Performing conditional searches essentially means:  
+**“Find this substring only when it appears in a line meeting some rule.”**
 
-**Example strings:**
+JavaScript supports this through:
 
-```text
+- Line anchors (`^`, `$`)
+- Lookaheads and lookbehinds (where supported)
+- Non‑greedy quantifiers
+- Word boundaries (`\b`)
+- Nested matching with careful negative lookaheads
+
+Let's walk through practical examples.
+
+---
+
+## 1. Extracting Data Only From Lines Starting With a Condition
+
+Suppose you want to extract the first meaningful token after lines beginning with the letter `a`.
+
+Example input:
+
+```
 a apple = fruit + snack
 a 42 = number + meaning
 pear & apple = fruit + snack
 ```
 
-**JavaScript RegEx Solution:**
+### JavaScript Pattern
 
 ```js
-const regex = /(?<=^a\s).*?\b\w+\b/g;
+const pattern = /(?<=^a\s).*?\b\w+\b/gm;
 
-const text = `
+const input = `
 a apple = fruit + snack
 a 42 = number + meaning
 pear & apple = fruit + snack
 `;
 
-const matches = text.match(regex);
-console.log(matches); // Output: ['apple', '42']
+console.log(input.match(pattern));
+// → ["apple", "42"]
 ```
 
-**Pattern Breakdown:**
+### How It Works
 
-- **`(?<=^a\s)`** – Positive lookbehind for lines starting with `a` followed by a space.
-- **`.*?\b\w+\b`** – Non-greedy search to capture each word or digit after the condition.
+- `(?<=^a\s)` — positive lookbehind ensuring the line begins with `a` and a space  
+- `.*?` — non‑greedy expansion to move up to the next word  
+- `\b\w+\b` — extract the first meaningful token
 
-### 2. Searching Within Delimiters
+If lookbehind is not supported, use a capturing group:
 
-Extract words or numbers enclosed in quotes (`"` or `'`) only for lines starting with b.
+```js
+const matches = [...input.matchAll(/^a\s(.*?)(\w+)/gm)].map(m => m[2]);
+```
 
-**Example strings:**
+---
 
-```text
+## 2. Extracting Data Inside Quotes, Only for Certain Lines
+
+Example input:
+
+```
 b"banana & orange" = fruit + snack
 b"100 = score" + grade
 ```
 
-**JavaScript RegEx Solution:**
+### JavaScript Pattern
 
 ```js
-const regex = /(?<=^b["'])(.*?)(?=["'])/g;
+const quotePattern = /(?<=^b["'])(.*?)(?=["'])/gm;
 
 const text = `
 b"banana & orange" = fruit + snack
 b"100 = score" + grade
 `;
 
-const matches = text.match(regex).flatMap(match => match.match(/\b\w+\b/g));
-console.log(matches); // Output: ['banana', 'orange', '100', 'score']
+const extracted = text.match(quotePattern)
+  .flatMap(str => str.match(/\b\w+\b/g));
+
+console.log(extracted);
+// → ["banana", "orange", "100", "score"]
 ```
 
-**Pattern Breakdown:**
+### Pattern Explanation
 
-- **`(?<=^b["'])`** – Positive lookbehind for lines starting with `b` followed by a quote (`"` or `'`).
-- **`(.*?)`** – Non-greedy match for everything inside the quotes.
-- **`match(/\b\w+\b/g)`** – Extract words or digits from the captured substring.
+- `(?<=^b["'])` — lookbehind confirming the line starts with `b` and immediately a quote  
+- `(.*?)` — non‑greedy capture of everything inside  
+- `(?=["'])` — stop before the matching closing quote  
 
-### 3. Excluding Nested Patterns
+This allows you to selectively extract the content only from target lines—not from every line with quotes.
 
-Extract content within backticks (`) while skipping nested braces (`{}`).
+---
 
-**Example string:**
+## 3. Extracting Backtick Content While Ignoring Nested Braces
 
-```text
-`{data} processed with {excluded} items and 25 results`
+Example input:
+
+```
+`{data} processed with {ignore} items and 25 results`
 ```
 
-**JavaScript RegEx Solution:**
+Goal: extract only the meaningful text, **not the portions inside `{}`**.
+
+### JavaScript Pattern
 
 ```js
-const regex = /(?<=`)(?:(?!{.*?})[^`])+?(?=`)/g;
+const excludeBraces = /(?<=`)(?:(?!{[^}]*})[^`])+?(?=`)/g;
 
-const text = '`{data} processed with {excluded} items and 25 results`';
+const sample = '`{data} processed with {ignore} items and 25 results`';
 
-const matches = text.match(regex).flatMap(match => match.match(/\b\w+\b/g));
-console.log(matches); // Output: ['processed', 'with', 'items', '25', 'results']
+const words = sample.match(excludeBraces)
+  ?.flatMap(str => str.match(/\b\w+\b/g));
+
+console.log(words);
+// → ["processed", "with", "items", "25", "results"]
 ```
 
-**Pattern Breakdown:**
+### Explanation
 
-- **`(?<=\)`** – Positive lookbehind for the backtick character.
-- **`(?:(?!{.*?})[^])+?`** – Negative lookahead to exclude braces (`{}`) and stop at the next backtick.
-- **`match(/\b\w+\b/g)`** – Extract words or digits from the filtered content.
+- `(?<=\`)` — ensure we start right after a backtick  
+- `(?!{[^}]*})` — prevent matching content inside `{}` blocks  
+- `[^`]` — collect characters until the closing backtick  
+- `flatMap(...)` — extract individual words
 
-### Limitations and Optimizations
+This pattern is extremely useful when parsing template‑like strings while avoiding structured placeholders.
 
-**1. Limited Lookbehind Support:**
+---
 
-For environments without lookbehind, you can rework the pattern by capturing the leading condition explicitly:
+## Practical Limitations of JavaScript RegEx
 
-```js
-const regex = /^a["'](.*?)(?=["'])/g;
-```
+JavaScript lacks several advanced features like:
 
-**2. Prevent Backtracking:**
+- atomic groups (`(?>...)`)
+- conditionals (`(?(cond)yes|no)`)
+- backtracking control verbs (`(*SKIP)(*FAIL)`)
+- `\K` (reset start of full match)
 
-Optimize patterns with non-capturing groups to reduce performance overhead caused by excessive backtracking.
+### Workarounds
 
-**3. Hybrid Logic:**
+1. **Simulate lookbehind** by capturing the prefix and reading groups.  
+2. **Break complex tasks** into multiple passes:
+   ```js
+   const inside = line.match(/`([^`]*)`/)[1];
+   const filtered = inside.replace(/{[^}]*}/g, "");
+   ```
+3. **Use string functions** when RegEx becomes too brittle.
 
-Combine RegEx with JavaScript functions for complex scenarios where native features like `\K` are unavailable.
+RegEx should solve the matching portion, not perform full parsing of nested structures.
+
+---
 
 ## Conclusion
 
-JavaScript RegEx allows for precise substring searches when combined with creative pattern design. From handling delimiters to ignoring nested structures, these examples demonstrate how to solve practical problems efficiently.
+Conditional substring searches in JavaScript are entirely achievable with the right combination of lookaheads, boundaries, and controlled quantifiers. While the JavaScript RegEx engine has limitations compared to more advanced engines, it remains powerful enough to support a broad range of real-world use cases.
 
-Experiment with these patterns in your codebase, and share your insights!
+Use the examples and patterns from this guide as starting points, and adapt them to suit the structure and complexity of your data.
+
+Happy experimenting with RegEx in JavaScript!

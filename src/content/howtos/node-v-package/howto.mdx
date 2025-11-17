@@ -1,80 +1,174 @@
 ---
-title: How to Specify Node.js Version Requirements in package.json
-heading: Set Node.js Version Requirements in package.json
+title: Howto Specify Node.js Version Requirements in package.json
+slug: node-v-package
+heading: Setting Node.js Version Requirements in package.json
 icon: /icons/nodejs.png
 image: /icon.png
-slug: node-v-package
 permalink: howto/node-v-package
 date: 2024-11-13
 author: anton liberant
 category: nodejs
 type: howto
 tags: ['package.json', 'ci-cd']
-desc: Learn to set required Node.js versions in package.json using the engines field. Ensure compatibility, enforce versions, and test in CI/CD and local environments.
+desc: Learn how to define and enforce required Node.js versions in package.json using engines, CI/CD configs, and version managers to ensure consistent environments.
 ---
 
-To ensure compatibility and avoid runtime issues, setting the required Node.js version in your project’s `package.json` is crucial. This approach ensures that anyone running your code has the correct environment, avoiding version-related conflicts. Here’s a guide on how to define the Node.js version in `package.json` effectively:
+Ensuring that everyone runs your project on the correct Node.js version is essential for avoiding unexpected bugs, failing builds, and inconsistencies between development and production. In this guide, you’ll learn how to define Node.js version requirements in **package.json**, enforce them across environments, and validate versions in local development and CI/CD pipelines.
 
-## 1. Define Node.js Version Using engines Field
+## 1. Define Node.js Version With the `engines` Field
 
-The `engines` field in `package.json` allows you to specify which Node.js versions are compatible with your application. This setting can include a specific version, a range, or even a minimum version.
+The simplest way to specify supported Node.js versions is by adding the `engines` field to your `package.json`.
 
-**Example**:
+**Example:**
 
 ```json
 {
   "engines": {
-    "node": ">=14.0.0 <17.0.0"
+    "node": ">=18.0.0 <21.0.0"
   }
 }
 ```
 
-In this example, the application supports Node.js versions from 14 up to but not including 17.
+This configuration means:
 
-## 2. Enforce Node.js Version with engine-strict
+- Minimum version: **18.0.0**
+- Maximum version: anything **below 21**
 
-If you want to enforce this requirement, setting `engine-strict` in `npm` will cause installation to fail if the Node.js version doesn’t match. You can configure this by setting the `engine-strict` option in `.npmrc`:
+You can use semver ranges to express different compatibility conditions.
+
+### Common semver examples
+
+| Syntax | Meaning |
+|--------|---------|
+| `"18.x"` | Any Node.js version 18 |
+| `">=16"` | 16 or newer |
+| `"^20.0.0"` | 20.x.x but not 21 |
+| `">=14 <18"` | Node.js 14–17 |
+
+---
+
+## 2. Enforce Version Strictly With npm (engine-strict)
+
+By default, npm **does not block installation** if the version does not match.  
+To enforce strict compatibility, enable:
 
 ```bash
 npm config set engine-strict true
 ```
 
-This setting can be particularly useful for team projects where strict version control is necessary.
+This makes npm **refuse to install dependencies** when the Node.js version does not meet the requirement.  
+Useful for teams and large codebases.
 
-## 3. Additional Version Constraints Using Semantic Versioning
+To commit this rule to the project, add it to `.npmrc`:
 
-The Node.js version can be defined more precisely using Semantic Versioning (semver). Here are some examples:
+```txt
+engine-strict=true
+```
 
-- `^14.0.0`: Any minor or patch updates within version 14.
-- `>=12.0.0 <15.0.0`: Any version from 12 to less than 15.
-- `14.x`: Any 14.x version (e.g., 14.15.0, 14.17.3).
+---
 
-## 4. Compatibility with Continuous Integration (CI)
+## 3. Enforcing Node Version in CI/CD
 
-When setting up CI/CD, specify the Node.js version in both `package.json` and your CI configuration file to ensure consistency across environments. For example, in GitHub Actions, you might add:
+Your CI pipeline should use the same Node.js version as your local development and production.
+
+### GitHub Actions Example
 
 ```yaml
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - run: npm ci
+      - run: npm test
 ```
 
-This configuration keeps your local environment, `package.json`, and CI pipeline aligned on the same Node.js version.
+This ensures that CI runs on Node.js 20, matching your requirements in `package.json`.
 
-## 5. Testing Compatibility with nvm
+### GitLab CI Example
 
-For development environments, you can use Node Version Manager (nvm) to test your project across different Node.js versions:
+```yaml
+image: node:20
 
-<div className='code-cmd'>nvm install 14</div>
+stages:
+  - test
 
-<div className='code-cmd'>nvm use 14</div>
+test:
+  script:
+    - npm ci
+    - npm test
+```
 
-By running your project in the specified Node.js version locally, you can identify compatibility issues early on.
+---
+
+## 4. Use nvm for Local Development
+
+To test and switch Node.js versions locally, use **nvm (Node Version Manager)**.
+
+Install Node.js 20:
+
+```bash
+nvm install 20
+```
+
+Switch to Node.js 20:
+
+```bash
+nvm use 20
+```
+
+Set a default global version:
+
+```bash
+nvm alias default 20
+```
+
+### `.nvmrc` file
+
+Create a `.nvmrc` file for automatic version switching:
+
+```txt
+20
+```
+
+Developers can now run:
+
+```bash
+nvm use
+```
+
+…and nvm loads the correct version automatically.
+
+---
+
+## 5. Pin Node.js Version for Production (Docker)
+
+If you use Docker, always pin a specific version to guarantee a stable runtime.
+
+Example Dockerfile:
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json .
+RUN npm ci
+COPY . .
+CMD ["npm", "start"]
+```
+
+This ensures your production environment is **100% predictable**.
+
+---
 
 ## Conclusion
 
-Specifying Node.js version requirements in `package.json` is a critical step for project consistency. Using the `engines` field and enforcing it with `engine-strict` ensures your app runs on compatible versions. Combine this with CI configuration and local version testing to maintain reliable, version-compatible Node.js applications.
+Specifying Node.js version requirements helps you:
+
+- Avoid runtime errors caused by incompatible APIs  
+- Ensure consistent behavior across local machines, CI/CD, and production  
+- Establish predictable environments for teams and deployments  
+
+By combining the `engines` field, npm’s `engine-strict`, CI configuration, and tools like nvm, your project stays fully aligned with the correct Node.js version across all environments.
+

@@ -1,7 +1,7 @@
 ---
-title: How to Fix "secretOrPrivateKey Must Be Asymmetric Key for RS256"
+title: Howto Fix "secretOrPrivateKey Must Be Asymmetric Key for RS256"
 slug: secretorprivatekey-asymmetric-rs256
-heading: "Fixing 'secretOrPrivateKey Must Be Asymmetric Key for RS256'"
+heading: Fixing "secretOrPrivateKey Must Be Asymmetric Key for RS256"
 icon: /icons/nodejs.png
 image: /icon.png
 permalink: howto/secretorprivatekey-asymmetric-rs256
@@ -10,79 +10,195 @@ author: anton liberant
 category: nodejs
 type: howto
 tags: ['secretOrPrivateKey', 'rs256', 'asymmetric-key', 'jwt']
-desc: Fix the "secretOrPrivateKey must be an asymmetric key" error in RS256 JWT authentication with step-by-step solutions for secure and proper setup.
+desc: Fix the "secretOrPrivateKey must be an asymmetric key" error in RS256 JWT authentication with correct key formats, verification logic, and secure configuration.
 ---
 
-The error message "secretOrPrivateKey must be an asymmetric key when using RS256" typically occurs when you are trying to sign or verify a JSON Web Token (JWT) using the RS256 algorithm, but the provided key is not in the correct format. RS256 is an asymmetric signing algorithm, meaning it requires a private key for signing and a public key for verification.
+When working with JWT authentication using the RS256 algorithm, Node.js may throw the following error:
 
-Check also [How to solve ERROR secretOrPrivateKey must have a value](https://jsdev.space/howto/secretkey-value/)
+```
+Error: secretOrPrivateKey must be an asymmetric key for RS256
+```
 
-## 1. Use the Correct Key Type
+This happens when the key passed to `jsonwebtoken.sign()` or `jsonwebtoken.verify()` is not a valid RSA key. RS256 is an **asymmetric algorithm** and requires:
 
-Ensure you are using an RSA private key (asymmetric key) for signing. The key should be in PEM format, which looks something like this:
+- a **private RSA key** for signing  
+- a **public RSA key** for verification  
 
-```vbnet
+This article explains the causes of the error and offers several reliable solutions.
+
+---
+
+## 1. RS256 Requires an Asymmetric Key Pair
+
+RS256 uses RSA encryption. This means you must use a real RSA private key, not a string or HMAC secret.
+
+Correct RSA private key format:
+
+```
 -----BEGIN PRIVATE KEY-----
-(your private key content)
+YOUR_KEY_CONTENT
 -----END PRIVATE KEY-----
 ```
 
-## 2. Verify Key Format
+If your key does not look like this, RS256 will fail.
 
-Make sure that the private key you are using is indeed an RSA key. If you are generating keys, use a tool like OpenSSL to create them:
+---
+
+## 2. Generate a Valid RSA Private Key
+
+If you need to generate a valid RSA key pair, use OpenSSL:
 
 ```bash
 openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
 ```
 
-## 3. Check Your Code
+Then extract the public key:
 
-Ensure that you are correctly passing the private key to your JWT signing function. Here’s an example in Node.js using the jsonwebtoken library:
-
-```js
-import jwt from 'jsonwebtoken';
-
-import jwt from 'jsonwebtoken';
-
-const payload = { some_data: 'abc' };
-
-// Specify a secret key from an environmental variable
-const secretKey = 'some_secret_key';
-
-if (!secretKey) {
-  throw new Error('JWT_SECRET environmental variable is not defined');
-}
-
-const token = jwt.sign(payload, secretKey, { algorithm: 'RS256' });
+```bash
+openssl rsa -in private_key.pem -pubout -out public_key.pem
 ```
 
-## 4. Public Key for Verification
+This ensures both keys are properly formatted and compatible with RS256.
 
-When verifying the JWT, make sure you use the corresponding public key:
+---
+
+## 3. Correctly Sign JWT Using RS256
+
+A common mistake is passing a simple string instead of a real private key.
+
+Incorrect:
 
 ```js
-const publicKey = 'some_public_key';
+jwt.sign(payload, "my-secret", { algorithm: "RS256" });
+```
 
-jwt.verify(token, publicKey, { algorithms: ['RS256'] }, (err, decoded) => {
+Correct:
+
+```js
+import jwt from "jsonwebtoken";
+import fs from "fs";
+
+const privateKey = fs.readFileSync("./private_key.pem", "utf8");
+
+const token = jwt.sign(
+  { userId: 1 },
+  privateKey,
+  { algorithm: "RS256", expiresIn: "1h" }
+);
+```
+
+Ensure the key is loaded exactly as it exists in the `.pem` file.
+
+---
+
+## 4. Correctly Verify JWT Using the Public Key
+
+```js
+import jwt from "jsonwebtoken";
+import fs from "fs";
+
+const publicKey = fs.readFileSync("./public_key.pem", "utf8");
+
+jwt.verify(token, publicKey, { algorithms: ["RS256"] }, (err, decoded) => {
   if (err) {
-    console.error('Token verification failed:', err);
-  } else {
-    console.log('Decoded token:', decoded);
+    console.error("Verification failed:", err);
+    return;
   }
+  console.log("Decoded token:", decoded);
 });
 ```
 
-## 5. Environment Configuration
+The algorithm must be explicitly defined for security.
 
-If you are using environment variables to store your keys, ensure that the entire key is correctly assigned and that there are no missing or extra newline characters. For example:
+---
 
-```js
-const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
+## 5. Keys Stored in Environment Variables
+
+When storing PEM keys in `.env` files, newline characters must be preserved.
+
+Write them like this in `.env`:
+
+```
+PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+abc123...
+-----END PRIVATE KEY-----"
 ```
 
-## Additional Tips
+Or escape newlines:
 
-- **Debugging**: Add logging to ensure that the key being used is what you expect.
-- **Error Handling**: Implement proper error handling around your signing and verifying processes to catch any potential issues.
+```
+PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nabc123...\n-----END PRIVATE KEY-----"
+```
 
-By ensuring that you are using a valid RSA private key and following these steps, you should be able to resolve the "secretOrPrivateKey must be an asymmetric key when using RS256" error.
+Then load:
+
+```js
+const privateKey = process.env.PRIVATE_KEY.replace(/\n/g, "
+");
+```
+
+Missing or malformed newline characters often cause RS256 failures.
+
+---
+
+## 6. Using JWK Instead of PEM (Advanced)
+
+Some identity providers (Auth0, AWS Cognito, Okta) use JWK (JSON Web Key) format.  
+To use JWK, convert it using a library like `jwk-to-pem`:
+
+```bash
+npm install jwk-to-pem
+```
+
+```js
+import jwkToPem from "jwk-to-pem";
+
+const pem = jwkToPem(jwkObject);
+
+jwt.verify(token, pem, { algorithms: ["RS256"] });
+```
+
+This avoids issues when working with public keys from external auth systems.
+
+---
+
+## 7. Validate That the Key Is RSA and Not HMAC
+
+A frequent hidden cause: the key is actually an HMAC secret, not RSA.
+
+Diagnostic:
+
+```js
+console.log(privateKey.includes("BEGIN RSA"));
+```
+
+If it does not contain a PEM header, it's not an RSA key.
+
+---
+
+## 8. Common Mistakes to Avoid
+
+**Mistake:** Using HS256 secret with RS256.  
+**Fix:** Ensure algorithm and key type match.
+
+**Mistake:** Storing key in JSON config without newline preservation.  
+**Fix:** Use `.replace(/\n/g, "\n")` normalization.
+
+**Mistake:** Reading file incorrectly.  
+**Fix:** Always specify encoding in `readFileSync`.
+
+---
+
+## Summary
+
+The error `"secretOrPrivateKey must be an asymmetric key when using RS256"` almost always means the key is incorrect or improperly formatted.
+
+To fix it:
+
+1. Use a valid PEM RSA private key.  
+2. Use a corresponding public key for verification.  
+3. Ensure environment variables preserve newlines.  
+4. Verify algorithm matches the key type.  
+5. Consider JWK conversion for cloud providers.  
+
+With the correct setup, RS256 provides a secure and standards-compliant way to sign and verify JWTs.

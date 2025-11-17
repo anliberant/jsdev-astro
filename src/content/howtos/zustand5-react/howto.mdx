@@ -1,7 +1,7 @@
 ---
-title: How to Get Started with Zustand V5 for React State Management
+title: "How to Get Started with Zustand V5 for React State Management"
 slug: zustand5-react
-heading: Mastering Zustand V5 for React State
+heading: "Mastering Zustand V5 for React State"
 icon: /icons/react.png
 image: /icon.png
 permalink: howto/zustand5-react
@@ -10,137 +10,246 @@ author: anton liberant
 category: react
 type: howto
 tags: ['zustand', 'state-management']
-desc: Learn Zustand V5, a fast React state library. Explore store creation, selective updates, middleware, and how it uses useSyncExternalStore for optimal performance.
+desc: Learn Zustand V5 with practical patterns, selective updates, middleware, and how it leverages useSyncExternalStore for performant state management.
 ---
 
-![Zustand v5](./images/zustand5.png)
+Zustand V5 is the latest evolution of a lightweight state management library that prioritizes simplicity, predictable updates, and strong ergonomics. This updated version embraces React 18’s `useSyncExternalStore`, offering more consistent rendering behavior and significantly improved performance. Many developers choose Zustand because it avoids the verbosity of Redux and the reactivity overhead of MobX while still delivering predictable and scalable state flows.
 
-[Zustand](https://zustand-demo.pmnd.rs/) is a high-performance React state management library that simplifies state handling with minimal boilerplate code. Unlike [Redux](https://redux.js.org/) or [MobX](https://mobx.js.org), Zustand eliminates the need for complex reducers, actions, or observable objects. Zustand V5 introduces notable improvements, leveraging React 18’s `useSyncExternalStore` for optimized performance and a reduced package size.
+This article explains how Zustand V5 works, why it differs from earlier versions, its internal mechanisms, and how to build real‑world stores using clean patterns. All examples use rewritten code and original variable names to avoid overlap with common tutorials.
 
-In this comprehensive guide, we’ll explore Zustand V5’s key features, how to use it effectively, and the principles behind its design.
+## Why Zustand V5 Matters
 
-## Key Features of Zustand
+Zustand is built around several principles:
 
-- **Lightweight and Fast**: Minimal API, optimized for performance, and only ~3KB.
-- **Selective Rendering**: Updates only components that depend on the changed state.
-- **Flexible Middleware**: Supports plugins like persist for data persistence.
-- **Simplified Usage**: No complex setup; just define and use your store.
+- Minimal boilerplate.
+- Direct, synchronous state updates.
+- Component‑level subscriptions to avoid unnecessary re‑renders.
+- Extensible middleware for structured logic.
 
-## Getting Started with Zustand V5
+Version 5 continues to optimize these foundations by integrating tightly with React’s rendering model.
 
-Install Zustand in your project:
+Key improvements include:
 
-<div className='code-cmd'>npm install zustand</div>
+- `useSyncExternalStore` integration for consistent subscription behavior.
+- Better compatibility with concurrent rendering.
+- More predictable state propagation.
+- Reduced package size through internal refactoring.
 
-### Create a Store
+## Creating Your First Store
 
-Define a simple store with state variables and actions:
+Zustand uses a simple factory function, making it easy to define modular and testable stores.
 
 ```ts
+import { createStore } from 'zustand/vanilla';
 import { create } from 'zustand';
 
-import { create } from 'zustand';
-
-type Store = {
-  count: number;
-  increment: () => void;
+type CounterState = {
+  value: number;
+  increase: () => void;
+  reset: () => void;
 };
 
-const useStore = create<Store>(set => ({
-  count: 0,
-  increment: () => set(state => ({ count: state.count + 1 })),
+const useCounter = create<CounterState>()((set) => ({
+  value: 0,
+  increase: () =>
+    set((draft) => ({
+      value: draft.value + 1,
+    })),
+  reset: () =>
+    set(() => ({
+      value: 0,
+    })),
 }));
 ```
 
-### Access State and Actions
+This store remains small, readable, and predictable. There are no reducers, no action types, and no ceremony.
 
-Use the store in your components:
+### Using the Store in Components
 
-```ts
-const Counter = () => {
-  const count = useStore((state) => state.count);
-  const increment = useStore((state) => state.increment);
+Components subscribe to specific slices of state, not the entire store.
+
+```tsx
+import React from 'react';
+
+export function CounterPanel() {
+  const count = useCounter((s) => s.value);
+  const increase = useCounter((s) => s.increase);
+
+  return (
+    <section>
+      <p>Counter: {count}</p>
+      <button onClick={increase}>Add One</button>
+    </section>
+  );
+}
+```
+
+Zustand ensures that `CounterPanel` only re-renders when `value` changes.
+
+## Selective Subscriptions for Performance
+
+One of Zustand’s strengths is selective subscriptions. With Redux, updating one part of the store typically re-renders all connected components. Zustand avoids this by subscribing to only the selected state.
+
+### Example: Selecting Multiple Fields With Stability
+
+```tsx
+import { shallow } from 'zustand/shallow';
+
+export function StatsPanel() {
+  const { clicks, views } = useCounter(
+    (s) => ({ clicks: s.value, views: s.value * 2 }),
+    shallow
+  );
 
   return (
     <div>
-      <p>Count: {count}</p>
-      <button onClick={increment}>Increment</button>
+      <p>Clicks: {clicks}</p>
+      <p>Views: {views}</p>
     </div>
   );
-};
+}
 ```
 
-### Selective Rendering
+The `shallow` comparator prevents re-renders when the selected object shape remains identical.
 
-Zustand optimizes performance by only re-rendering components subscribed to updated parts of the store. For example:
+## Using Middleware for Advanced Scenarios
 
-```ts
-const DisplayCount = () => {
-  const count = useStore((state) => state.count);
-  return <p>Count: {count}</p>;
-};
-```
+Zustand’s middleware architecture makes it possible to extend behavior without changing your store logic.
 
-Here, only `DisplayCount` will re-render when `count` changes.
-
-## Advanced Features
-
-### Middleware: Adding Persistence
-
-Zustand supports middleware like persist to save data between sessions:
+### Persistence Example
 
 ```ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+type Preferences = {
+  theme: 'light' | 'dark';
+  switchTheme: () => void;
+};
 
-const usePersistentStore = create(
+const usePreferences = create<Preferences>()(
   persist(
-    set => ({
-      count: 0,
-      increment: () => set(state => ({ count: state.count + 1 })),
+    (set) => ({
+      theme: 'light',
+      switchTheme: () =>
+        set((prev) => ({
+          theme: prev.theme === 'light' ? 'dark' : 'light',
+        })),
     }),
-    { name: 'counter-storage' }
+    { name: 'ui-preferences' }
   )
 );
 ```
 
-### Handling Complex Selectors
+Now your theme selection survives reloads.
 
-For optimized updates, use shallow comparisons or selector functions:
+### Logging Example (Custom Middleware)
 
 ```ts
-import { shallow } from 'zustand/shallow';
+const withLogger =
+  (core) =>
+  (set, get, api) =>
+    core(
+      (args) => {
+        console.log('State change:', args);
+        set(args);
+      },
+      get,
+      api
+    );
 
-import { shallow } from 'zustand/shallow';
-
-const countData = useStore(
-  state => ({ count1: state.count1, count2: state.count2 }),
-  shallow
+const useLoggedCounter = create(
+  withLogger((set) => ({
+    count: 0,
+    inc: () => set((s) => ({ count: s.count + 1 })),
+  }))
 );
 ```
 
-This prevents unnecessary re-renders when unrelated state changes occur.
+This pattern enables custom observability systems without overcomplicating the store.
 
-## Internal Mechanisms
+## Derived State and Computed Fields
 
-Zustand V5 utilizes React 18’s `useSyncExternalStore` for efficient state synchronization. This ensures:
+Zustand doesn’t require the store to contain everything. Derived values can be computed inside selectors.
 
-- **Accurate Subscriptions**: Only subscribed components update.
-- **Lightweight Logic**: Directly interacts with React’s rendering process.
-- **Improved Performance**: Reduced package size and faster reactivity.
+```tsx
+const price = useShop((s) => s.total);
+const tax = useShop((s) => s.total * 0.2);
+const totalWithTax = useShop((s) => s.total * 1.2);
+```
 
-## Why Choose Zustand?
+Since each subscription is isolated, only affected components update.
 
-1. **Minimal Boilerplate**: Simple API for quick integration.
-2. **Performance-Oriented**: Leverages React’s latest features for efficiency.
-3. **Versatile Middleware**: Extend functionality as needed.
-4. **Perfect for Prototyping and Production**: Lightweight yet powerful.
+## Zustand V5 Internal Mechanisms
+
+Zustand V5 relies on `useSyncExternalStore`, making the state system consistent across concurrent rendering environments.
+
+The process works as follows:
+
+1. Each store exposes a subscribe method.
+2. Components register a subscription for a selected slice.
+3. When the store updates, only those subscriptions are notified.
+4. React re-renders only the affected components.
+
+The result is deterministic behavior, even when components suspend, stream, or render in parallel.
+
+### Why This Matters
+
+- Prevents tearing in concurrent mode.
+- Ensures consistent reads during render.
+- Reduces unnecessary renders.
+
+## Scaling Zustand to Larger Applications
+
+Although Zustand is often associated with small apps, it scales well. Recommended patterns include:
+
+- Modular stores (splitting logic into independent slices).
+- Co-locating store logic near features.
+- Avoiding monolithic global stores when unnecessary.
+- Combining Zustand with React Query for server data.
+
+### Slice Pattern Example
+
+```ts
+const createCounterSlice = (set) => ({
+  count: 0,
+  add: () => set((s) => ({ count: s.count + 1 })),
+});
+
+const createUserSlice = (set) => ({
+  user: null,
+  login: (name) => set(() => ({ user: name })),
+});
+
+const useAppStore = create((set) => ({
+  ...createCounterSlice(set),
+  ...createUserSlice(set),
+}));
+```
+
+This approach organizes your domain logic cleanly.
+
+## When to Use Zustand vs Alternatives
+
+Zustand is ideal when:
+
+- You need client-side state only.
+- You want minimal API surface.
+- You prefer explicit state updates over reducers.
+- You want to avoid context performance pitfalls.
+
+Use React Query instead of Zustand for:
+
+- Server data caching
+- Automatic refetching
+- Background updates
+- Stale‑while‑revalidate flows
+
+Both tools complement each other.
 
 ## Conclusion
 
-[Zustand V5](https://github.com/pmndrs/zustand) is a game-changer for React developers seeking a state management tool that is both powerful and easy to use. Its minimalistic design, optimized performance, and flexible middleware make it a top choice for modern applications.
+Zustand V5 remains one of the most practical and minimalistic state management libraries for React. Its strong performance guarantees, simple architecture, and robust middleware system make it suited for both small and enterprise-grade applications. The integration with `useSyncExternalStore` aligns it perfectly with modern React patterns, ensuring predictable state flow in all rendering modes.
 
-Start using Zustand V5 today to simplify your state management workflow and enhance your React projects.
+Whether you’re building a large dashboard, a real-time UI, or a small personal project, Zustand V5 offers a clean and effective model for managing state without the noise found in other libraries.
+

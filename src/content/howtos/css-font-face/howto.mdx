@@ -1,7 +1,7 @@
 ---
-title: 'How to Use CSS @font-face: A Complete Guide to Custom Web Fonts'
+title: "How to Use CSS @font-face for Custom Web Fonts"
 slug: css-font-face
-heading: Mastering CSS @font-face for Custom Web Fonts
+heading: "A Complete Guide to Using CSS @font-face for Web Typography"
 permalink: howto/css-font-face
 icon: /icons/css.png
 image: /icon.png
@@ -10,96 +10,146 @@ author: anton liberant
 category: css
 type: howto
 tags: ['@font-face']
-desc: Learn to implement custom web fonts with CSS @font-face. Discover font formats, optimize loading, and ensure cross-browser support with practical tips and examples.
+desc: "Learn to implement and optimize custom web fonts using CSS @font-face. Understand font formats, performance, variable fonts, and cross‑browser support."
 ---
 
-The `@font-face` rule in CSS allows you to use custom fonts on a webpage, ensuring consistent typography across different devices and browsers. This guide covers how to implement, optimize, and best use `@font-face` for web typography.
+Typography shapes the personality of a website. When the default system fonts are not enough, CSS provides a powerful tool: `@font-face`. This rule allows you to load and use custom fonts directly in the browser, ensuring consistent visual design across platforms. Although widely used, `@font-face` comes with important considerations related to performance, accessibility, and compatibility. This guide revisits the topic with a more practical and modern perspective.
 
-## 1. Defining a Custom Font with `@font-face`
+## 1. What @font-face Does
 
-To load a custom font, define it in your CSS:
+`@font-face` lets you define a font that does not exist on the user’s device. Once defined, the browser downloads the font files and applies them wherever the font-family name appears in your CSS. This eliminates dependency on system fonts and supports fully custom branding in web interfaces.
+
+## 2. Defining a Custom Font
+
+A basic `@font-face` block loads at least one source file and assigns a family name. Modern setups typically use WOFF2 and fall back to alternative formats only when necessary.
 
 ```css
 @font-face {
-  font-family: 'CustomFont';
+  font-family: "CustomFont";
   src:
-    url('fonts/custom-font.woff2') format('woff2'),
-    url('fonts/custom-font.woff') format('woff');
+    url("/fonts/custom-font.woff2") format("woff2"),
+    url("/fonts/custom-font.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 ```
 
-- `font-family`: Name assigned to the font.
-- `src`: Specifies font file paths and formats.
-- `font-weight` & `font-style`: Define variations (optional).
+### Key Properties
 
-## 2. Applying the Font
+- **font-family** — The internal name used in CSS.
+- **src** — Font file paths and their formats.
+- **font-weight / font-style** — Useful for multiple variants of the same family.
+- **font-display** — Controls rendering behavior during font loading.
 
-Once defined, use it in your styles:
+## 3. Applying the Font in Your Styles
+
+After defining the font, apply it anywhere:
 
 ```css
 body {
-  font-family: 'CustomFont', sans-serif;
+  font-family: "CustomFont", sans-serif;
 }
 ```
 
-## 3. Best Practices for @font-face
+It is important to keep system fonts as a fallback for resilience.
 
-**a) Use Multiple Font Formats for Compatibility**
+## 4. Browser Compatibility and Format Strategy
 
-Older browsers may not support modern formats. Provide fallbacks:
+WOFF2 is the most efficient and widely supported format today. WOFF remains a fallback for older browsers. Legacy formats like TTF or EOT rarely matter in modern development but are still used in long‑term compatibility environments.
 
 ```css
 @font-face {
-  font-family: 'CustomFont';
+  font-family: "CustomFont";
   src:
-    url('fonts/custom-font.woff2') format('woff2'),
-    url('fonts/custom-font.woff') format('woff'),
-    url('fonts/custom-font.ttf') format('truetype');
+    url("/fonts/custom-font.woff2") format("woff2"),
+    url("/fonts/custom-font.woff") format("woff"),
+    url("/fonts/custom-font.ttf") format("truetype");
 }
 ```
 
-**b) Load Fonts Efficiently**
+## 5. Performance Considerations
 
-- Prefer **WOFF2** format for modern browsers (better compression).
-- Use `font-display: swap` to prevent rendering delays:
-  ```css
-  @font-face {
-    font-family: 'CustomFont';
-    src: url('fonts/custom-font.woff2') format('woff2');
-    font-display: swap;
-  }
-  ```
-- **Host Locally**: Self-hosting fonts is faster than external CDNs.
+Fonts are render‑critical because text must remain readable while they load. Balanced font loading helps avoid delays or visual jumps.
 
-## 4. Using Variable Fonts
+### Recommended Practices
 
-Variable fonts allow flexibility in weight and style within a single file:
+- Prefer **WOFF2** whenever possible.
+- Enable non‑blocking loading with:
 
 ```css
 @font-face {
-  font-family: 'CustomFont';
-  src: url('fonts/custom-font.woff2') format('woff2');
-  font-weight: 100 900;
+  font-family: "CustomFont";
+  src: url("/fonts/custom-font.woff2") format("woff2");
+  font-display: swap;
 }
 ```
 
-This allows dynamic font-weight control:
+- Self‑host fonts instead of relying on external CDNs.
+- Limit the number of font families and weights to reduce network overhead.
+- Consider preloading primary font files using a `<link rel="preload">` tag.
+
+## 6. Variable Fonts: Modern Flexibility
+
+Variable fonts consolidate multiple styles into a single file, reducing network requests and expanding typographic options.
+
+```css
+@font-face {
+  font-family: "CustomFont";
+  src: url("/fonts/custom-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 75% 125%;
+  font-style: normal;
+}
+```
+
+This allows fine‑grained design control:
 
 ```css
 h1 {
-  font-family: 'CustomFont', sans-serif;
+  font-family: "CustomFont", sans-serif;
   font-weight: 700;
 }
 ```
 
-## 5. Accessibility & Performance Considerations
+Variable fonts work especially well in responsive design systems and dark‑mode themes where typography shifts based on context.
 
-- **Limit the Number of Custom Fonts**: Too many fonts can slow page load times.
-- **Use System Fonts as a Fallback**: Provide alternatives in `font-family`.
-- **Optimize Font Loading**: Use preload techniques and avoid blocking resources.
+## 7. Accessibility and Text Rendering
 
-## Conclusion
+Readable text should never disappear during font loading. This makes `font-display: swap` or `optional` essential for accessibility.
 
-Using `@font-face`, you can create a unique and consistent web typography experience. By optimizing performance, ensuring compatibility, and following best practices, you can enhance readability and design without compromising speed.
+Additional considerations:
+
+- Maintain contrast regardless of custom font usage.
+- Do not rely on custom fonts for critical UI icons unless a fallback exists.
+- Use progressive enhancement: the layout should remain usable in system fonts.
+
+## 8. Common Patterns and Real‑World Setup
+
+A typical modern configuration uses several weights or a variable font. For example:
+
+```css
+@font-face {
+  font-family: "BrandSans";
+  src: url("/fonts/brand-sans.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+```
+
+For icon fonts or internal system tools, developers sometimes include an additional monospace fallback.
+
+In component‑driven systems like design tokens, fonts are often loaded globally but used in scoped CSS layers or utility classes.
+
+## 9. Summary
+
+The `@font-face` rule remains a cornerstone of modern web typography. Mastering it means understanding formats, performance strategies, fallbacks, and variable font capabilities. With careful planning, custom fonts can enhance design without introducing slowdowns or layout disruption.
+
+Key principles to remember:
+
+- Use WOFF2 first, fall back only when necessary.
+- Apply `font-display` to avoid invisible text.
+- Consider variable fonts for versatility and performance.
+- Keep a robust fallback stack for accessibility.
+- Self‑host your fonts to gain full control over loading behavior.
+
+When implemented thoughtfully, custom web fonts become an essential part of a reliable and expressive design system.

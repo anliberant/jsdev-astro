@@ -1,7 +1,7 @@
 ---
-title: 'How to Use TypeScript in HTML: Complete Webpack Setup Guide'
+title: "How to Use TypeScript in HTML: Complete Webpack Setup Guide"
 slug: import-ts-html
-heading: Using TypeScript in HTML with Webpack Setup
+heading: "Using TypeScript in HTML with Webpack Setup"
 icon: /icons/typescript.png
 image: /icon.png
 permalink: howto/import-ts-html
@@ -13,83 +13,159 @@ tags: ['webpack']
 desc: Learn to integrate TypeScript with HTML using Webpack bundler. Step-by-step tutorial for configuration, compilation, and development setup with practical examples.
 ---
 
-Using TypeScript in an HTML page requires proper module bundling, and Webpack simplifies this process. This guide walks you through setting up Webpack to compile TypeScript and use it in an HTML page.
+TypeScript has become the de‑facto standard for writing reliable, well‑typed JavaScript applications. But using TypeScript directly inside a simple HTML page is not possible without a build tool. Modern browsers cannot execute `.ts` files natively, so a bundler must compile TypeScript into JavaScript.
+
+This guide provides a complete, updated 2025 workflow using **Webpack**, covering configuration, project structure, scripts, optimization, debugging, and production builds. It goes beyond basic examples to help you set up TypeScript in a scalable front‑end environment.
+
+---
 
 ## 1. Project Setup
 
-Initialize a new project and install dependencies:
+Start by creating a new project folder:
 
-<div className='code-cmd'>npm init -y</div>
+```bash
+mkdir ts-webpack-demo
+cd ts-webpack-demo
+npm init -y
+```
 
-<div className='code-cmd'>
-  npm install typescript webpack webpack-cli ts-loader --save-dev{' '}
-</div>
+Install Webpack, TypeScript, and supporting tools:
+
+```bash
+npm install typescript webpack webpack-cli ts-loader --save-dev
+```
+
+Optional (but recommended):
+
+```bash
+npm install webpack-dev-server html-webpack-plugin --save-dev
+```
+
+These packages enable live reloading and automatic HTML generation.
+
+---
 
 ## 2. Configure TypeScript
 
-Create `tsconfig.json:`
+Create `tsconfig.json`:
 
 ```json
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "module": "ESNext",
     "target": "ES6",
-    "moduleResolution": "Node"
-  }
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"]
 }
 ```
+
+Why this configuration matters:
+
+- `sourceMap: true` → enables browser debugging with original `.ts` files  
+- `strict: true` → full type‑safety  
+- `module: ESNext` → Webpack handles bundling, not TypeScript  
+
+---
 
 ## 3. Configure Webpack
 
 Create `webpack.config.js`:
 
 ```js
-const path = require('path');
+const path = require("path");
+const HtmlPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  entry: './src/index.ts',
+  entry: "./src/index.ts",
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    filename: "bundle.js",
+    path: path.resolve(__dirname, "dist"),
+    clean: true
   },
+  mode: "development",
+  devtool: "source-map",
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: [".ts", ".js"]
   },
   module: {
     rules: [
       {
         test: /\.ts$/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
-      },
-    ],
+        use: "ts-loader",
+        exclude: /node_modules/
+      }
+    ]
   },
-  mode: 'development',
+  plugins: [
+    new HtmlPlugin({
+      template: "./src/index.html"
+    })
+  ],
+  devServer: {
+    static: "./dist",
+    hot: true,
+    port: 3000
+  }
 };
 ```
 
-## 4. Create TypeScript Code
+Notable improvements over basic configs:
 
-Create `src/math.ts`:
+- `clean: true` cleans `dist/` automatically  
+- `HtmlPlugin` generates HTML with injected scripts  
+- `devServer` gives hot reloading  
+
+---
+
+## 4. Write TypeScript Code
+
+Create file structure:
+
+```
+src/
+ ├── index.ts
+ ├── math.ts
+ └── index.html
+```
+
+`src/math.ts`:
 
 ```ts
-export class MathUtils {
-  static add(a: number, b: number): number {
-    return a + b;
-  }
+export function multiply(a: number, b: number): number {
+  return a * b;
+}
+
+export function formatResult(x: number): string {
+  return `Result: ${x}`;
 }
 ```
 
-## 5. Build and Run Webpack
+`src/index.ts`:
 
-Run Webpack to compile the TypeScript files:
+```ts
+import { multiply, formatResult } from "./math";
 
-<div className='code-cmd'>npx webpack</div>
+const button = document.createElement("button");
+button.textContent = "Calculate 7 × 6";
+document.body.appendChild(button);
 
-## 6. Use in an HTML Page
+button.addEventListener("click", () => {
+  const result = multiply(7, 6);
+  console.log(formatResult(result));
+  alert(formatResult(result));
+});
+```
 
-Create `index.html`:
+---
+
+## 5. HTML Template
+
+`src/index.html`:
 
 ```html
 <!DOCTYPE html>
@@ -97,14 +173,137 @@ Create `index.html`:
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TypeScript with Webpack</title>
+    <title>TypeScript + Webpack</title>
   </head>
   <body>
-    <script src="./dist/bundle.js"></script>
+    <h1>TypeScript in HTML with Webpack</h1>
   </body>
 </html>
 ```
 
+Webpack will inject the final `bundle.js` automatically.
+
+---
+
+## 6. Build and Run Project
+
+### Development mode (live reload):
+
+```bash
+npx webpack serve
+```
+
+Open:  
+`http://localhost:3000`
+
+### Manual build:
+
+```bash
+npx webpack
+```
+
+Build output appears in `/dist`.
+
+---
+
+## 7. Production Build
+
+Create optimized JS:
+
+```bash
+npx webpack --mode production
+```
+
+This generates:
+
+- minified JavaScript  
+- tree‑shaken modules  
+- no sourcemaps  
+
+Ideal for deployment.
+
+---
+
+## 8. Debugging TypeScript in Browser
+
+Because we enabled Sourcemaps:
+
+```json
+"sourceMap": true
+```
+
+Chrome/Firefox lets you debug `.ts` files directly:
+
+- Press **F12**
+- Open **Sources**
+- Your TypeScript appears under `webpack://`
+
+---
+
+## 9. Common Errors + Fixes
+
+### ❌ “Cannot use import statement outside a module”
+Fix:  
+Ensure your script tag is NOT pointing to TypeScript:
+
+Wrong:
+
+```html
+<script src="./src/index.ts"></script>
+```
+
+Right:  
+
+```html
+<script src="bundle.js"></script>
+```
+
+### ❌ Module not found: Can't resolve './file'
+Fix:
+
+- Paths must be relative  
+- File extensions must match  
+- Webpack `resolve.extensions` must include `.ts`
+
+### ❌ ts-loader slow in large projects
+Use:
+
+```bash
+npm install fork-ts-checker-webpack-plugin --save-dev
+```
+
+Then add plugin for parallel type-checking.
+
+---
+
+## 10. Final Folder Structure
+
+```
+ts-webpack-demo/
+ ├── src/
+ │    ├── index.ts
+ │    ├── math.ts
+ │    └── index.html
+ ├── dist/
+ ├── tsconfig.json
+ ├── webpack.config.js
+ ├── package.json
+ └── node_modules/
+```
+
+---
+
 ## Conclusion
 
-With Webpack, you can efficiently compile and bundle TypeScript for use in an HTML page. This setup ensures a modular and maintainable development workflow.
+Webpack remains one of the most reliable bundlers for integrating TypeScript into an HTML application. It provides:
+
+- modular code organization  
+- fast dev server  
+- optimized production builds  
+- full debugging support  
+- automatic HTML script injection  
+
+This setup scales from small demos to large front‑end applications.
+
+Use this guide as a baseline for TypeScript projects that require clean, maintainable builds and a professional workflow.
+

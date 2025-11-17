@@ -1,7 +1,7 @@
 ---
-title: How to Choose Exactly One Mandatory Field in an Object
+title: "How to Require Exactly One Field in a TypeScript Object"
 slug: one-field-object
-heading: Selecting Exactly One Mandatory Field in an Object
+heading: "TypeScript Patterns for Enforcing Exactly One Required Field"
 icon: /icons/typescript.png
 image: /icon.png
 permalink: howto/one-field-object
@@ -10,92 +10,280 @@ author: anton liberant
 category: typescript
 type: howto
 tags: ['object', 'validation']
-desc: Learn how to enforce exactly one required property in a TypeScript object. Improve type safety with types that ensure only one key is selected at a time.
+desc: Enforce exactly one required property in a TypeScript object using advanced type patterns that ensure safety and prevent invalid combinations.
 ---
 
-When working with TypeScript, you might encounter scenarios where you need to ensure that exactly one field from an object is selected, and this field must be mandatory. This often happens in situations such as API requests, where you want to restrict the input to a single option.
+When building real‑world applications, it is common to design APIs or internal utilities that accept an object where **exactly one property must be provided**. This pattern appears in routing, filtering, messaging systems, data loaders, analytics events, and various “one‑of” configurations.  
 
-In this article, we'll explore how to implement this using TypeScript's type system.
+Although the problem sounds simple, enforcing this constraint at the type level—without runtime checks—requires a deeper understanding of TypeScript’s advanced type mechanics.
 
-## Problem Statement
+This article revisits the concept, expands on the original solution, and provides improved examples, better explanations, and modern patterns suitable for large projects and strongly typed APIs.
 
-Imagine you have an object representing a request that allows you to choose between `projectId`, `taskId`, or `userAccountId`, but only one of these fields should be selected. The initial TypeScript type might look like this:
+---
+
+## Why This Pattern Matters
+
+Consider an API that accepts a request to fetch messages. A message may belong to a project, a task, or an account. The business logic requires selecting exactly one:
+
+- `projectId`
+- `taskId`
+- `accountId`
+
+Developers must not pass more than one at the same time, and omitting all of them is also invalid.
+
+A naïve type definition might look like this:
 
 ```ts
 type FetchMessages = {
   projectId?: string;
   taskId?: string;
-  userAccountId?: string;
+  accountId?: string;
 };
 ```
 
-The goal is to create a type that:
+Despite its simplicity, it allows invalid combinations:
 
-- Ensures **exactly one** of these fields is selected.
-- Ensures **none** of the other fields are included.
-- Utilizes TypeScript’s type system to avoid manual validation.
+```ts
+{ projectId: "p1", taskId: "t1" } // invalid but allowed
+{}                               // invalid but allowed
+```
 
-## Solution Steps
+Solving this purely through TypeScript types is possible and eliminates entire classes of bugs.
 
-### 1. Single Field Extraction:
+---
 
-Start by defining a helper type that extracts exactly one field and removes undefined values:
+## A Natural but Insufficient Attempt
+
+Many developers first reach for a union:
+
+```ts
+type FetchMessages =
+  | { projectId: string }
+  | { taskId: string }
+  | { accountId: string };
+```
+
+This works—until you want optional metadata:
+
+```ts
+| { projectId: string; limit?: number }
+| { taskId: string; limit?: number }
+```
+
+Or shared fields:
+
+```ts
+| { projectId: string; offset?: number; includeHidden?: boolean }
+```
+
+Copy‑pasting every shared field into each union member quickly becomes unmaintainable.
+
+A reusable, strongly typed, automatic solution is far more suitable.
+
+---
+
+## A General Type: Exactly One Key Required
+
+We can construct a reusable helper type that enforces:
+
+- exactly one property from a union of keys
+- all other properties must not be present
+- shared optional metadata remains compatible
+
+### Step 1: Create an exclusive‑choice type
+
+```ts
+type RequireExactlyOne<T, K extends keyof T = keyof T> =
+  K extends keyof T
+    ? { [P in K]-?: T[P] } & { [Q in Exclude<K, P>]?: never }
+    : never;
+```
+
+This type uses distributive conditionals to generate:
+
+- a version for each key where that key is required
+- all other keys become `never`, preventing usage
+
+### Step 2: Apply It to the Model
+
+```ts
+type MessageSelector = {
+  projectId?: string;
+  taskId?: string;
+  accountId?: string;
+};
+
+type OneMessageSelector = RequireExactlyOne<MessageSelector>;
+```
+
+### Step 3: Test the Result
+
+```ts
+const validA: OneMessageSelector = { projectId: "p1" };
+const validB: OneMessageSelector = { taskId: "t1" };
+const validC: OneMessageSelector = { accountId: "u1" };
+```
+
+Invalid examples:
+
+```ts
+const invalidA: OneMessageSelector = {};                      
+// Error: one field required
+
+const invalidB: OneMessageSelector = { projectId: "p1", taskId: "t1" };
+// Error: mutually exclusive
+
+const invalidC: OneMessageSelector = { taskId: undefined };
+// Error: undefined is not allowed
+```
+
+---
+
+## Making It More Reusable
+
+Often the set of required‑exactly‑one fields is smaller than the entire object. Consider:
+
+```ts
+type QueryOptions = {
+  projectId?: string;
+  taskId?: string;
+  accountId?: string;
+  includeHidden?: boolean;
+  page?: number;
+};
+```
+
+We want *only* the selector to be exclusive, while metadata remains optional.
+
+This pattern separates them cleanly:
+
+```ts
+type SelectorKeys = "projectId" | "taskId" | "accountId";
+
+type ExclusiveSelector<T> = RequireExactlyOne<Pick<T, SelectorKeys>> &
+  Omit<T, SelectorKeys>;
+```
+
+Example:
+
+```ts
+type Query = ExclusiveSelector<QueryOptions>;
+```
+
+Now:
+
+```ts
+const q1: Query = { projectId: "x1", includeHidden: true };
+const q2: Query = { accountId: "abc", page: 5 };
+```
+
+And invalid combinations still fail.
+
+---
+
+## A Refined Version Using Mapped Types
+
+The original article showed the following pattern:
 
 ```ts
 type SelectOneField<T, K extends keyof T> = Record<K, Exclude<T[K], undefined>>;
-```
-
-This type ensures that only one key (`projectId`, `taskId`, or `userAccountId`) is mandatory.
-
-### 2. Combining Multiple Fields:
-
-To ensure this works for all three fields (`projectId`, `taskId`, `userAccountId`), map over each key and combine them:
-
-```ts
-type SelectOnlyOne<T> = {
-  [K in keyof T]: SelectOneField<T, K>;
-}[keyof T];
-```
-
-### 3.Ensuring Non-Optional:
-
-By default, TypeScript's mapped types can make the result optional. To make sure the result is mandatory, remove the ?:
-
-```ts
 type SelectOnlyOne<T> = {
   [K in keyof T]-?: SelectOneField<T, K>;
 }[keyof T];
 ```
 
-This results in a type where exactly one of the fields (`projectId`, `taskId`, or `userAccountId`) must be selected.
+This works reasonably well but lacks flexibility and does not prevent additional properties.
 
-### Example Usage
+A safer rewrite prevents extra keys and remains composable:
 
 ```ts
-type FetchMessages = {
-  projectId?: string;
-  taskId?: string;
-  userAccountId?: string;
-};
-
-// Ensures exactly one field is selected and non-optional
-type TestMessages = SelectOnlyOne<FetchMessages>;
-
-// Valid examples:
-const example1: TestMessages = { projectId: 'p1' }; // ✅ valid
-const example2: TestMessages = { taskId: 't1' }; // ✅ valid
-const example3: TestMessages = { userAccountId: 'u1' }; // ✅ valid
-
-// Invalid example: more than one field selected
-const example4: TestMessages = { projectId: 'p1', taskId: 't1' }; // ❌ invalid
+type ChooseOnlyOne<T> = {
+  [K in keyof T]: { [P in K]-?: NonNullable<T[P]> } &
+    { [Q in Exclude<keyof T, K>]?: never };
+}[keyof T];
 ```
 
-### Benefits of This Approach:
+Usage:
 
-- **Type Safety**: Ensures only one field is selected, with TypeScript catching invalid cases.
-- **Error Prevention**: Eliminates the need for manual runtime validation.
-- **Cleaner Code**: Using auto-generated types simplifies your solution and makes it easier to maintain.
+```ts
+type Exclusive = ChooseOnlyOne<{
+  projectId?: string;
+  taskId?: string;
+  accountId?: string;
+}>;
+```
 
-## Conclusion
+---
 
-By leveraging TypeScript's type system, you can create robust and safe types that enforce exactly one field to be selected in an object. This approach improves the clarity, safety, and maintainability of your code.
+## Practical Examples
+
+### Example: Analytics Event
+
+Only one of three tracking identifiers may be used:
+
+```ts
+type TrackEventId = ChooseOnlyOne<{
+  adId?: string;
+  pageId?: string;
+  productId?: string;
+}>;
+
+function trackEvent(id: TrackEventId) { /* ... */ }
+```
+
+Examples:
+
+```ts
+trackEvent({ adId: "A1" });        // valid
+trackEvent({ pageId: "home" });    // valid
+trackEvent({ productId: "P1" });   // valid
+trackEvent({ adId: "A1", pageId: "home" }); // error
+```
+
+### Example: Fetching Shared Resources
+
+```ts
+type LoadResource = {
+  projectId?: string;
+  taskId?: string;
+  version?: number;
+};
+
+type LoadRequest = ExclusiveSelector<LoadResource>;
+```
+
+---
+
+## Runtime Validation (Optional but Useful)
+
+Even with strong types, runtime validation is often necessary when accepting untyped external input.
+
+A small helper ensures correctness at runtime as well:
+
+```ts
+function assertExactlyOne<T extends object>(
+  obj: T,
+  keys: (keyof T)[]
+) {
+  const count = keys.filter(k => obj[k] !== undefined).length;
+  if (count !== 1) {
+    throw new Error("Exactly one of the fields must be provided.");
+  }
+}
+```
+
+Usage:
+
+```ts
+assertExactlyOne(payload, ["projectId", "taskId", "accountId"]);
+```
+
+---
+
+## Final Thoughts
+
+TypeScript gives developers powerful tools for enforcing structural correctness without cluttering code with checks. The “exactly one property must be set” pattern appears in many domains, and a reusable helper type such as `RequireExactlyOne` or `ChooseOnlyOne` can dramatically improve reliability across a codebase.
+
+Whether you are designing API contracts, data selectors, routing utilities, or analytics events, enforcing mutual exclusivity at the type level reduces ambiguity and hides entire classes of bugs before they reach production.
+
+By leaning on the type system, code becomes more expressive, safer, and easier to maintain.

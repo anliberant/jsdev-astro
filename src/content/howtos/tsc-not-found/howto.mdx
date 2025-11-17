@@ -1,7 +1,7 @@
 ---
-title: 'How to Fix the "tsc Command Not Found" Error in TypeScript'
+title: "How to Fix the tsc Command Not Found Error"
 slug: tsc-not-found
-heading: "Fixing 'tsc Command Not Found' in TypeScript"
+heading: Resolving the “tsc Command Not Found” Issue in TypeScript
 icon: /icons/typescript.png
 image: /icon.png
 permalink: howto/tsc-not-found
@@ -10,81 +10,231 @@ author: anton liberant
 category: typescript
 type: howto
 tags: ['tsc']
-desc: Learn how to fix the tsc command not found error by installing TypeScript globally, checking PATH settings, and troubleshooting common setup problems effectively.
+desc: Fix the tsc command not found error by verifying installations, configuring PATH correctly, and understanding how global vs local TypeScript works.
 ---
 
-TypeScript’s `tsc` (TypeScript Compiler) is an essential tool for compiling TypeScript code into JavaScript. If you encounter the error "`tsc: command not found`", it typically means TypeScript isn't installed or configured correctly. Here's a step-by-step guide to resolve this issue.
+The message **“tsc: command not found”** appears when the TypeScript compiler is not available in your system’s executable path. This usually happens because TypeScript is not installed globally, because the PATH environment variable does not include the directory where global npm binaries are stored, or because TypeScript is installed only inside a specific project rather than system‑wide.  
+This guide explains why the error occurs, how to diagnose the underlying cause, and how to fix it on macOS, Linux, and Windows. The explanations focus on real‑world development setups and avoid unnecessary abstractions.
 
-## Common Causes of the Error
+---
 
-1. TypeScript is not installed.
-2. TypeScript is installed locally instead of globally.
-3. The environment variable PATH does not include the TypeScript binary.
+## 1. Why the Error Appears
 
-## Step-by-Step Solution
+Even though the error seems straightforward, it can come from several scenarios:
 
-### 1. Verify TypeScript Installation
+- TypeScript is not installed at all.  
+- TypeScript is installed but only locally in a single project.  
+- TypeScript is installed globally, but the system cannot find the executable because PATH is misconfigured.  
+- Node.js or npm is installed incorrectly or using a nonstandard directory.  
+- You are using version managers such as nvm, fnm, volta, or asdf and the environment is not fully initialized.
 
-Run the following command in your terminal:
+Understanding the exact cause helps avoid installing packages repeatedly without solving the underlying issue.
 
-<div className='code-cmd'>tsc --version</div>
+---
 
-If you see an error, it means TypeScript isn’t installed or is not accessible globally.
+## 2. Check Whether TypeScript Is Installed
 
-### 2. Install TypeScript Globally
+Start by checking if the compiler exists on your system:
 
-Install TypeScript globally using npm:
+```bash
+tsc --version
+```
 
-<div className='code-cmd'>npm install -g typescript</div>
+If the terminal returns the version number, TypeScript is globally available.  
+If the terminal responds with “command not found,” the system cannot locate the binary.
 
-After installation, confirm by running:
+You can also check whether TypeScript exists locally inside a project:
 
-<div className='code-cmd'>tsc --version</div>
+```bash
+npm list typescript
+```
 
-### 3. Add TypeScript to Your PATH
+If this returns a version, then TypeScript is installed but only within that project.
 
-If tsc is installed but not recognized, ensure the installation path is added to your system’s PATH.
+---
 
-**On Windows:**
+## 3. Installing TypeScript Globally
 
-1. Locate the global node_modules folder (e.g., `C:\Users\<YourUser>\AppData\Roaming\npm`).
-2. Add the folder to your PATH:
+If you want `tsc` to be available in every folder on your machine, install it globally:
 
-- Open "Environment Variables" in System Settings.
-- Edit the `Path` variable and include the directory path.
+```bash
+npm install -g typescript
+```
 
-**On macOS/Linux:**
+After installation, verify:
 
-1. Add the npm global directory to your shell configuration:
-   <div className='code-cmd'>
-     export PATH=$PATH:$(npm config get prefix)/bin
-   </div>
-2. Save and restart your terminal.
+```bash
+tsc --version
+```
 
-### 4. Use npx for Local Installations
+If the command still fails, the package may be installed correctly but the executable directory is not added to PATH.
 
-If TypeScript is installed locally in a project, you can use `npx` to run the `tsc` command without a global installation:
+---
 
-<div className='code-cmd'>npx tsc --version</div>
+## 4. Understanding the PATH Issue
 
-### 5. Check Node.js and npm Installation
+npm installs global binaries in a specific folder. The operating system must know where that folder is. If the directory is not included in PATH, no command inside it can be executed by name.
 
-Ensure you have Node.js and npm installed. You can verify with:
+### Where npm stores global binaries
+
+You can check the exact path with:
+
+```bash
+npm config get prefix
+```
+
+Inside this prefix, the executable binaries are located in:
+
+```
+<prefix>/bin
+```
+
+If this directory is not part of PATH, the system does not know where `tsc` is.
+
+---
+
+## 5. Fixing PATH on macOS and Linux
+
+To add the npm global binary directory to PATH, append the following line to your shell configuration file (`~/.zshrc`, `~/.bashrc`, or `~/.profile`):
+
+```bash
+export PATH="$PATH:$(npm config get prefix)/bin"
+```
+
+After saving the file, reload your terminal:
+
+```bash
+source ~/.zshrc
+```
+
+(or the configuration file you edited).
+
+Now test:
+
+```bash
+tsc --version
+```
+
+If the version appears, PATH is configured correctly.
+
+---
+
+## 6. Fixing PATH on Windows
+
+On Windows, npm global binaries are commonly stored in:
+
+```
+C:\Users\<YourUser>\AppData\Roaming\npm
+```
+
+To add this directory to PATH:
+
+1. Open **System Properties** → **Advanced** → **Environment Variables**.  
+2. Find **Path** under your user variables.  
+3. Add the npm directory path from above.  
+4. Restart your terminal.
+
+After making the change, run:
+
+```powershell
+tsc --version
+```
+
+If TypeScript loads, the PATH was the underlying issue.
+
+---
+
+## 7. Running tsc with npx (When TypeScript Is Local)
+
+If a project uses TypeScript locally and you do not want a global installation, the correct way to access the compiler is:
+
+```bash
+npx tsc --version
+```
+
+`npx` automatically resolves the local version installed in the project’s node_modules folder.  
+This is the preferred approach in large multi-project repositories, monorepos, or CI environments.
+
+---
+
+## 8. Using Version Managers (nvm, fnm, volta, asdf)
+
+Node version managers often cause confusion because each Node version has its own global package directory. If you switch Node versions without reinstalling global tools, the system may lose access to previous global installations.
+
+For example, after switching Node versions with nvm:
+
+```bash
+nvm use 20
+tsc --version # may fail
+```
+
+You may need to reinstall TypeScript globally for the specific version managed by nvm:
+
+```bash
+npm install -g typescript
+```
+
+Alternatively, avoid global installations entirely and use `npx` in each project.
+
+---
+
+## 9. Checking Node.js and npm Installation
+
+Since `tsc` is installed through npm, incorrect or partial installation of Node.js can cause the error.
+
+Verify the installations:
 
 ```bash
 node -v
 npm -v
 ```
 
-If either is missing, download and install the latest version of Node.js from [https://nodejs.org](https://nodejs.org/).
+If either command fails, reinstall Node.js from:
 
-### 6. Reinstall TypeScript
+https://nodejs.org
 
-If issues persist, reinstall TypeScript:
+Or, if using a version manager, reinstall Node within your environment.
 
-<div className='code-cmd'>npm uninstall -g typescript</div>
-<div className='code-cmd'>npm install -g typescript</div>
+---
+
+## 10. Reinstall TypeScript When Necessary
+
+If the installation is corrupted or incomplete, reinstalling can help:
+
+```bash
+npm uninstall -g typescript
+npm install -g typescript
+```
+
+Always verify after reinstalling:
+
+```bash
+tsc --version
+```
+
+---
+
+## 11. Global vs Local Installations: When Each Makes Sense
+
+**Global installation is useful when:**
+
+- You compile small scripts outside any project.
+- You prefer running `tsc` without `npx`.
+- You need global CLIs available everywhere.
+
+**Local installation is better when:**
+
+- You work in teams and want consistent TypeScript versions.
+- You maintain multiple projects with different configurations.
+- You use CI environments that avoid global tools.
+
+In modern setups, many developers rely primarily on local installations and `npx`, using global TypeScript only for experimentation or sysadmin scripts.
+
+---
 
 ## Conclusion
 
-The "`tsc: command not found`" error is commonly due to a missing or misconfigured TypeScript installation. By following these steps, you can ensure that `tsc` works seamlessly on your system, allowing you to compile TypeScript code without interruption.
+The “tsc: command not found” error is straightforward once you understand how npm installs global binaries and how PATH determines whether your system can locate them.  
+By verifying the installation, checking PATH configuration, and understanding the difference between global and local TypeScript setups, you can ensure that your development environment remains consistent and reliable.
+
+Correct installation and configuration allow TypeScript to run smoothly and prevent this error from interrupting your workflow.

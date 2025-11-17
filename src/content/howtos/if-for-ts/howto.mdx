@@ -1,7 +1,7 @@
 ---
-title: How to Implement Conditional (If) and Recursive (For) Loops in TS
+title: "Implementing Conditional and Recursive Types in TypeScript"
 slug: if-for-ts
-heading: How to Use If and Recursive Loops in TypeScript
+heading: "A Practical Guide to Conditional and Recursive Types in TypeScript"
 icon: /icons/typescript.png
 image: /icon.png
 permalink: howto/if-for-ts
@@ -10,204 +10,213 @@ author: anton liberant
 category: typescript
 type: howto
 tags: []
-desc: Learn to implement conditional (if) and recursive (for) loops in TypeScript types using recursion, conditional types, and tuples with practical examples.
+desc: "Learn how to build conditional and recursive type-level logic in TypeScript using type gymnastics with clear examples and explanations."
 ---
 
-TypeScript, a superset of JavaScript, extends the capabilities of JavaScript with its powerful type system. One of the advanced features of TypeScript is type gymnastics, a term that refers to leveraging TypeScript’s type system to perform complex type-level computations. Type gymnastics can be used to implement sophisticated logic and type transformations at compile time, such as conditional (`if`) logic and recursive (`for`) loops.
+TypeScript has grown far beyond its initial purpose of offering static typing for JavaScript. Over the years, its type system has evolved into a powerful computational layer capable of performing operations during compilation. Developers now use TypeScript not only to validate shapes and contracts but also to compute, transform, and analyse types in ways that resemble functional programming.
 
-In this article, we will dive into how to implement conditional types (`if`), and recursive types (`for`) in TypeScript type gymnastics. We'll explore practical examples, and explain how to mix these concepts to create dynamic, type-safe code.
+This article revisits the topic of conditional and recursive logic in the type system. These ideas have been around for a while, but the language changes frequently, and earlier explanations sometimes lack clarity or skip important edge cases. Here, the goal is to give you a more human explanation, grounded in practical examples, without artificial patterns or overly academic language.
 
-## Understanding TypeScript’s Type System for Type Gymnastics
+The article is written from the perspective that you already use TypeScript daily, but perhaps have not yet explored the deeper parts of its type system. Everything is explained gradually, starting with conditional types, then recursion, and finally combining both.
 
-TypeScript’s type system is not just for static type-checking—it can also be used for type-level computations, which means you can write logic that affects types based on conditions, values, or other types. This opens the door to a host of possibilities, like defining types that depend on the values of other types or iterating over arrays at the type level.
+## Understanding TypeScript’s Type Computation Model
 
-In type gymnastics, we make use of the following core features:
+TypeScript does not execute JavaScript at compile time. Instead, it uses structural rules, pattern matching, distributive conditional types, and recursive expansion to determine the shape of a type. When we talk about “type gymnastics”, we are referring to the process of using these capabilities to compute types in a structured way.
 
-1. **Conditional Types**: Used to implement if-else like logic in types.
-2. **Recursive Types**: Used to simulate loops, which can be used for iterating over arrays or performing repetitive tasks at the type level.
-3. **Tuple Operations**: Utilized alongside recursion to handle arrays, map over them, or accumulate results.
+Three key concepts enable most advanced patterns:
 
-Let's dive into the details.
+- **Conditional types** — a mechanism similar to an `if` statement for types.
+- **Recursive types** — a pattern where a type refers to itself until a stopping condition is met.
+- **Tuple operations** — extending and deconstructing arrays to accumulate changes or iterate.
 
-## 1. Implementing Conditional (`if`) Logic in TypeScript
+Individually, these concepts are powerful, but their real value emerges when they are combined.
 
-In TypeScript, conditional types allow you to implement `if` logic directly in your type definitions. Conditional types are essentially a type-based equivalent of JavaScript's ternary operator: `condition ? trueValue : falseValue`. They allow us to define types that depend on a condition.
+## Conditional Types: The Type-Level “If”
 
-**Basic Syntax for Conditional Types**
-
-The syntax for a conditional type is:
+Conditional types allow decisions to be made within the type system. They follow a simple structure:
 
 ```ts
-type ConditionalType<Condition, TrueType, FalseType> = Condition extends true
-  ? TrueType
-  : FalseType;
+type Condition<C, T, F> = C extends true ? T : F;
 ```
 
-This means that if `Condition` extends `true`, the type will resolve to `TrueType`, and if not, it will resolve to `FalseType`.
+This corresponds to JavaScript’s ternary operator. But TypeScript conditional types work with any type relationship, not only booleans.
 
-**Example 1: Simple Conditional Type**
+### Basic Conditional Check
+
+Here is a minimal example:
 
 ```ts
-type IsTrue = ConditionalType<true, 'Yes', 'No'>; // "Yes"
-type IsFalse = ConditionalType<false, 'Yes', 'No'>; // "No"
+type IsString<T> = T extends string ? "string" : "not-string";
+
+type A = IsString<string>;   // "string"
+type B = IsString<number>;   // "not-string"
 ```
 
-Here, `IsTrue` will resolve to `"Yes"`, and `IsFalse` will resolve to `"No"`.
+The mechanic is simple: if `T` extends `string`, the type resolves to the first branch. Otherwise, the second.
 
-**Example 2: Conditional Type with More Complex Logic**
+### Narrowing With Conditional Types
 
-You can extend conditional types to perform more complex operations, such as checking whether a type extends another type. Let’s use a type to determine whether a given type is a string.
+Conditional types are also useful for enforcing more precise constraints.
 
 ```ts
-type IfString<T> = T extends string ? 'String' : 'Not String';
+type ExtractString<T> = T extends string ? T : never;
 
-type Result1 = IfString<string>; // "String"
-type Result2 = IfString<number>; // "Not String"
+type Result = ExtractString<string | number>; // string
 ```
 
-In this case, `IfString` checks whether `T` extends `string` and returns `"String"` if true, or `"Not String"` if false.
+The conditional distributes across unions, so it checks each member separately. This is the mechanism behind TypeScript’s built‑in utility types like `Extract`, `Exclude`, and `NonNullable`.
 
-## 2. Implementing Recursive (`for`) Loops in TypeScript
+## Recursive Types: Looping Without Loops
 
-While JavaScript has a straightforward `for` loop to iterate over collections, TypeScript does not have native support for loops at the type level. However, recursive types allow us to simulate looping behavior.
+TypeScript does not allow loops in type definitions, but recursion makes similar behaviour possible. Instead of executing statements, TypeScript evaluates type definitions by repeatedly applying the rules until a final state is reached.
 
-Recursive types are defined by having a type refer to itself within its definition. This is essential for creating loops in TypeScript’s type system.
+### Building a Tuple of Length N
 
-**Basic Syntax for Recursive Types**
-
-A basic recursive type pattern is:
-
-```ts
-type Loop<
-  T extends number,
-  Result extends any[] = [],
-> = Result['length'] extends T ? Result : Loop<T, [...Result, 1]>;
-```
-
-Here, `Loop` recursively builds an array of length `T`. The termination condition is when the array's length matches `T`.
-
-**Example 1: Building an Array of Length `N`**
+A common example is constructing an array purely at the type level.
 
 ```ts
 type BuildArray<
   N extends number,
-  Arr extends any[] = [],
-> = Arr['length'] extends N ? Arr : BuildArray<N, [...Arr, 1]>;
-
-type ArrayOf3 = BuildArray<3>; // [1, 1, 1]
-type ArrayOf5 = BuildArray<5>; // [1, 1, 1, 1, 1]
+  Acc extends unknown[] = []
+> = Acc["length"] extends N
+  ? Acc
+  : BuildArray<N, [...Acc, 1]>;
 ```
 
-In this example, `BuildArray<3>` creates an array with three elements, and `BuildArray<5>` creates an array with five elements. The recursion continues until the length of the array matches `N`.
-
-**Example 2: Simulating a `for` Loop to Map Over an Array**
-
-You can simulate a `for` loop to map over an array and apply transformations to its elements. Here's an example that converts an array of numbers to strings:
+This type continues to grow the tuple until its length matches `N`.
 
 ```ts
-type MapArray<
+type Three = BuildArray<3>; // [1, 1, 1]
+type Five = BuildArray<5>;  // [1, 1, 1, 1, 1]
+```
+
+TypeScript eventually stops expanding once `Acc["length"]` reaches the target.
+
+### Recursively Transforming Array Types
+
+Recursion is also useful for mapping and transforming elements:
+
+```ts
+type MapToStrings<Arr extends any[]> =
+  Arr extends [infer F, ...infer R]
+    ? [F extends number ? `${F}` : F, ...MapToStrings<R>]
+    : [];
+```
+
+This example converts numeric elements to their string representations.
+
+```ts
+type Out = MapToStrings<[1, "a", 3]>; // ["1", "a", "3"]
+```
+
+## Combining Conditional Logic and Recursion
+
+The techniques become most expressive when used together. Imagine filtering an array at the type level:
+
+### Filtering Elements Based on a Type
+
+```ts
+type Filter<
   Arr extends any[],
-  Handler extends (item: any) => any,
-> = Arr extends [infer First, ...infer Rest]
-  ? [ReturnType<Handler>, ...MapArray<Rest, Handler>]
+  Match
+> = Arr extends [infer F, ...infer R]
+  ? F extends Match
+    ? [F, ...Filter<R, Match>]
+    : Filter<R, Match>
   : [];
-
-type NumberToString = (n: number) => string;
-type StringArray = MapArray<[1, 2, 3], NumberToString>; // [string, string, string]
 ```
 
-This example demonstrates how to recursively transform each element of an array to a string. The `MapArray` type takes an array (`Arr`) and a handler function (`Handler`) and returns a new array where each element is transformed using the handler.
-
-## 3. Combining if and for in Type Gymnastics
-
-The real power of TypeScript's type gymnastics comes when we combine conditional types (`if`) and recursive types (`for`). This allows us to create complex logic that is both type-safe and flexible.
-
-**Example 1: Filtering an Array Based on Type**
-
-Suppose we want to filter an array to keep only the elements of a certain type. We can combine conditional types with recursion to implement a `filter` function at the type level.
+Usage:
 
 ```ts
-type FilterArray<Arr extends any[], FilterType> = Arr extends [
-  infer First,
-  ...infer Rest,
-]
-  ? First extends FilterType
-    ? [First, ...FilterArray<Rest, FilterType>] // if true, keep the element
-    : FilterArray<Rest, FilterType> // if false, skip the element
-  : [];
-
-type NumbersOnly = FilterArray<[1, 'a', 2, 'b', 3], number>; // [1, 2, 3]
-type StringsOnly = FilterArray<[1, 'a', 2, 'b', 3], string>; // ["a", "b"]
+type OnlyNumbers = Filter<[1, "a", 2, "b"], number>; // [1, 2]
 ```
 
-In this example, `FilterArray` checks each element of the array (`Arr`) to see if it extends `FilterType`. If it does, the element is included in the result; otherwise, it’s skipped.
+This pattern mirrors the logic of a `filter` callback in JavaScript.
 
-**Example 2: Conditional Replacement of Array Elements**
+### Replacing Items Conditionally
 
-Next, let’s implement a type that conditionally replaces certain elements in an array.
-
-```ts
-type ReplaceIf<Arr extends any[], Condition, Replacement> = Arr extends [
-  infer First,
-  ...infer Rest,
-]
-  ? First extends Condition
-    ? [Replacement, ...ReplaceIf<Rest, Condition, Replacement>] // if true, replace the element
-    : [First, ...ReplaceIf<Rest, Condition, Replacement>] // if false, keep the element
-  : [];
-
-type ReplacedArray = ReplaceIf<[1, 'a', 2, 'b', 3], number, 'num'>; // ["num", "a", "num", "b", "num"]
-```
-
-Here, `ReplaceIf` checks each element in the array (`Arr`). If the element matches the condition (`Condition`), it is replaced with `Replacement`; otherwise, it remains unchanged.
-
-## 4. Advanced Type Gymnastics Patterns
-
-Let’s explore some more advanced type gymnastics patterns by combining recursion, conditionals, and other TypeScript features.
-
-**Example 1: Counting Elements that Satisfy a Condition**
-
-You can use recursion to count how many elements in an array satisfy a given condition. Here's a `CountIf` type:
+Another common transformation is replacing some elements depending on their type.
 
 ```ts
-type CountIf<
+type Replace<
   Arr extends any[],
   Condition,
-  Count extends any[] = [],
-> = Arr extends [infer First, ...infer Rest]
-  ? First extends Condition
-    ? CountIf<Rest, Condition, [...Count, 1]> // if true, increment the counter
-    : CountIf<Rest, Condition, Count> // if false, keep the counter unchanged
-  : Count['length'];
-
-type CountNumbers = CountIf<[1, 'a', 2, 'b', 3], number>; // 3
+  With
+> = Arr extends [infer F, ...infer R]
+  ? F extends Condition
+    ? [With, ...Replace<R, Condition, With>]
+    : [F, ...Replace<R, Condition, With>]
+  : [];
 ```
 
-The `CountIf` type recursively traverses the array, incrementing the counter (`Count`) when an element matches the condition (`Condition`). Finally, it returns the length of the counter array, which represents the count of elements satisfying the condition.
+Example:
 
-**Example 2: Grouping Elements Based on a Condition**
+```ts
+type Out = Replace<[1, "a", 2], number, "num">;
+// ["num", "a", "num"]
+```
 
-We can also group elements in an array based on a condition using recursion and conditional types.
+### Counting Items Matching a Condition
+
+Numbers cannot be incremented directly in the type system, but tuple lengths serve as counters.
+
+```ts
+type Count<
+  Arr extends any[],
+  Match,
+  Acc extends unknown[] = []
+> = Arr extends [infer F, ...infer R]
+  ? F extends Match
+    ? Count<R, Match, [...Acc, 1]>
+    : Count<R, Match, Acc>
+  : Acc["length"];
+```
+
+```ts
+type Counted = Count<[1, "a", 2, "b", 3], number>; // 3
+```
+
+This technique is useful for validation logic or checking invariants at compile time.
+
+### Grouping Values
+
+Type-level partitioning allows grouping into “matches” and “non-matches”.
 
 ```ts
 type Partition<
   Arr extends any[],
-  Condition,
-  Truthy extends any[] = [],
-  Falsy extends any[] = [],
-> = Arr extends [infer First, ...infer Rest]
-  ? First extends Condition
-    ? Partition<Rest, Condition, [...Truthy, First], Falsy> // if true, add to the Truthy group
-    : Partition<Rest, Condition, Truthy, [...Falsy, First]> // if false, add to the Falsy group
-  : [Truthy, Falsy];
-
-type Grouped = Partition<[1, 'a', 2, 'b', 3], number>; // [[1, 2, 3], ["a", "b"]]
+  Match,
+  T extends any[] = [],
+  F extends any[] = []
+> = Arr extends [infer X, ...infer R]
+  ? X extends Match
+    ? Partition<R, Match, [...T, X], F>
+    : Partition<R, Match, T, [...F, X]>
+  : [T, F];
 ```
 
-The `Partition` type recursively checks each element in the array and groups it into either the `Truthy` or `Falsy` array based on whether it satisfies the condition.
+Example:
+
+```ts
+type Groups = Partition<[1, "a", 2, "b"], number>;
+// [[1, 2], ["a", "b"]]
+```
+
+## Patterns for Real Codebases
+
+Type-level computation is tempting to overuse, but it is most effective when applied to solve realistic problems:
+
+- Enforcing “fixed length” arrays.
+- Validating configuration objects.
+- Constructing route types in frontend frameworks.
+- Creating type-safe query builders.
+- Building reusable utility types for libraries.
+
+As a rule of thumb, recursive conditional types should solve structure‑level problems, not data‑processing ones. If the result will never influence runtime behaviour, it is usually safe.
 
 ## Conclusion
 
-TypeScript’s type system provides a rich set of tools for performing type gymnastics, which allows you to implement complex logic at the type level. By using conditional types and recursive types, we can simulate `if` statements and `for` loops to manipulate types, perform array operations, and solve computational problems at compile time.
+Conditional types and recursive types are not separate tools—they complement one another. Together they allow TypeScript to express constraints and transformations that resemble compile-time computation. With these techniques, you can build filters, mappers, counters, partitions, and more, all within the type system.
 
-Through the examples provided in this article, we have demonstrated how to implement basic and advanced logic using TypeScript's type system. Combining recursion and conditionals opens up new possibilities for type-safe, flexible, and dynamic type operations. Whether you're working with arrays, performing summations, filtering elements, or manipulating types in other ways, TypeScript’s type gymnastics can help you create powerful and efficient code.
+Used thoughtfully, type gymnastics strengthens the robustness of your code without introducing unnecessary complexity. The examples here are a foundation; once familiar with the patterns, you can adapt them to more complex real-world abstractions.

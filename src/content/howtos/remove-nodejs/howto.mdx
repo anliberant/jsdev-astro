@@ -1,7 +1,7 @@
 ---
-title: How to Completely Remove Node.js from Your Computer
+title: "How to Completely Remove Node.js from Your Computer"
 slug: remove-nodejs
-heading: How to Uninstall Node.js from Your System
+heading: "How to Uninstall Node.js from Your System"
 icon: /icons/nodejs.png
 image: /icon.png
 permalink: howto/remove-nodejs
@@ -9,137 +9,138 @@ date: 2025-02-03
 author: anton liberant
 category: nodejs
 type: howto
-tags: ['']
+tags: []
 desc: Master Node.js uninstallation on Windows, Mac, and Linux with this step-by-step guide to fully remove Node.js and avoid future configuration issues.
 ---
 
-To completely remove Node.js from your computer, follow the steps based on your operating system:
+Removing Node.js fully from a system often requires more than running an uninstaller. Depending on whether Node.js was installed using packages, Homebrew, system package managers, or version managers like NVM, remnants can remain in environment variables, hidden directories, or global module folders. This guide provides a clean, complete, and platform‑specific approach for Windows, macOS, and Linux.
 
-## Windows 🖥️
+## Windows
 
 ### 1. Uninstall Node.js via Control Panel
 
-1. Press `Win + R`, type `appwiz.cpl`, and hit Enter.
-2. Locate Node.js in the list.
-3. Right-click it and select Uninstall.
-4. Follow the uninstallation wizard.
+1. Press `Win + R`, type `appwiz.cpl`, and press Enter.  
+2. Find **Node.js** in the program list.  
+3. Right‑click → **Uninstall**.  
+4. Follow the uninstall wizard.
 
-### 2. Delete Remaining Files & Folders
+### 2. Remove Remaining Files and Directories
 
-- Open File Explorer and delete:
-  ```makefile
-  C:\Program Files\nodejs
-  C:\Users\<YourUsername>\AppData\Roaming\npm
-  C:\Users\<YourUsername>\AppData\Roaming\npm-cache
-  C:\Users\<YourUsername>\.npmrc (if exists)
-  ```
+Delete Node‑related folders:
 
-### 3. Remove Node.js from Environment Variables
+```
+C:\Program Files\nodejs
+C:\Users\<YourUser>\AppData\Roaming\npm
+C:\Users\<YourUser>\AppData\Roaming\npm-cache
+C:\Users\<YourUser>\.npmrc
+```
 
-1. Press `Win + R`, type `sysdm.cpl`, and press Enter.
-2. Go to Advanced → Click Environment Variables.
-3. Find Path under System variables, and remove entries for Node.js.
-4. Click `OK`.
+### 3. Clean Environment Variables
+
+1. Press `Win + R`, type `sysdm.cpl`.  
+2. Open **Advanced** → **Environment Variables**.  
+3. Under “System variables → Path”, delete Node.js and npm paths.  
+4. Confirm changes.
 
 ### 4. Verify Removal
 
-Open **Command Prompt** (`Win + R` → type `cmd` → Enter) and run:
-
-```sh
+```
 node -v
 npm -v
 ```
 
-If Node.js is removed, you’ll see a **"command not found"** error.
+You should see a *command not found* message.
 
-## MacOS 🍏
+---
 
-### 1. Uninstall via Homebrew (If Installed with Brew)
+## macOS
 
-If you installed Node.js using Homebrew, run:
+### 1. Uninstall via Homebrew (If installed with Brew)
 
-```sh
+```
 brew uninstall node
 ```
 
-### 2. Manually Delete Files
+### 2. Remove Node Files Manually
 
-Remove all Node.js-related files:
-
-```sh
+```
 sudo rm -rf /usr/local/lib/node_modules
 sudo rm -rf /usr/local/include/node
 sudo rm -rf /usr/local/bin/node
 sudo rm -rf ~/.npm ~/.nvm ~/.node
 ```
 
-### 3. Check and Remove Environment Variables
+### 3. Clean Shell Configuration
 
-Open **Terminal** and edit your shell configuration file:
+Edit your shell rc file:
 
-```sh
-nano ~/.bashrc  # For Bash users
-nano ~/.zshrc   # For Zsh users (default in macOS)
+```
+nano ~/.zshrc
 ```
 
-Remove any lines related to `node` or `npm`. Save and exit.
+Remove Node‑related exports or PATH entries, then reload:
+
+```
+source ~/.zshrc
+```
 
 ### 4. Verify Removal
 
-Check if Node.js is gone:
-
-```sh
+```
 node -v
 npm -v
 ```
 
-If it’s removed, the commands will return **"command not found"**.
+---
 
-## Linux (Ubuntu/Debian-based) 🐧
+## Linux (Ubuntu / Debian)
 
-### 1. Remove Node.js via Package Manager
+### 1. Uninstall Node.js
 
-If installed via **apt**, run:
+If installed via APT:
 
-```sh
+```
 sudo apt-get remove --purge nodejs
 sudo apt-get autoremove
 ```
 
-For **nvm (Node Version Manager)** users, uninstall with:
+If installed via NVM:
 
-```sh
+```
 nvm deactivate
 nvm uninstall node
 ```
 
-### 2. Delete Node.js Files
+### 2. Clean Node.js Directories
 
-```sh
+```
 sudo rm -rf /usr/local/lib/node_modules
 sudo rm -rf /usr/local/include/node
 sudo rm -rf /usr/local/bin/node
-sudo rm -rf ~/.npm ~/.nvm ~/.node
+rm -rf ~/.npm ~/.nvm ~/.node
 ```
 
-### 3. Remove Node.js from Environment Variables
+### 3. Remove PATH Entries
 
-Edit your shell configuration file:
+Edit:
 
-```sh
-nano ~/.bashrc  # For Bash users
-nano ~/.zshrc   # For Zsh users
+```
+nano ~/.bashrc
 ```
 
-Remove any Node.js-related paths and restart your terminal.
+Remove Node or npm exports.
 
 ### 4. Verify Removal
 
-```sh
+```
 node -v
 npm -v
 ```
 
-If Node.js is fully removed, the commands will return **"command not found"**.
+If both return *command not found*, Node.js was fully removed.
 
-Node.js is now completely removed from your computer! 🎉
+---
+
+## Conclusion
+
+Fully uninstalling Node.js requires removing global binaries, cached directories, and PATH entries. Whether you're switching versions, resetting your environment, or resolving conflicts, following platform‑specific cleanup steps ensures Node.js is removed completely and cleanly.

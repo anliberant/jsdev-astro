@@ -1,7 +1,7 @@
 ---
 title: 'How to Elegantly Rewrite localStorage and sessionStorage Methods'
 slug: localstorage-sessionstorage
-heading: 'Mastering Custom Implementations of localStorage and sessionStorage Methods'
+heading: 'Mastering Custom Implementations of localStorage and sessionStorage'
 icon: /icons/javascript.png
 image: /icon.png
 permalink: howto/localstorage-sessionstorage
@@ -10,53 +10,66 @@ author: anton liberant
 category: javascript
 type: howto
 tags: ['localStorage', 'sessionStorage']
-desc: Learn how to rewrite localStorage and sessionStorage methods with encapsulation for business customization, global monitoring, and data protection.
+desc: Learn how to rewrite and extend localStorage/sessionStorage with hooks, monitoring, protection, and custom logic while keeping native behavior intact.
 ---
 
-In front-end development, `localStorage` and `sessionStorage` are common tools for client-side data storage. However, certain business requirements—such as encryption, global monitoring, or preventing unauthorized access—may necessitate customizing their behavior. This article details how to rewrite these methods elegantly while retaining their native functionality.
+In front-end development, **localStorage** and **sessionStorage** are widely used for storing client-side data.  
+However, in more advanced applications, you may need *custom logic* on top of their native behavior—such as encryption, logging, key protection, analytics, or multi-layered validation.
 
-## Why Rewrite `localStorage` and `sessionStorage`?
+This guide shows how to elegantly rewrite storage methods **without breaking native functionality**, using proxies, hooks, and encapsulated patterns.
 
-Here are scenarios where rewriting can be beneficial:
+---
 
-1. **Business Customization**: Add logic for specific keys, like encryption or validation.
-2. **Global Monitoring**: Track access logs and operation frequency.
-3. **Data Protection**: Safeguard critical keys from unauthorized modifications.
+## Why Override localStorage and sessionStorage?
 
-## Core Approach
+You might need custom wrappers when:
 
-**1. Retain Native Methods**
+1. **Business Logic** — Special handling for certain keys (e.g., formatting, validation, encryption).
+2. **Global Monitoring** — Log every storage access for analytics or debugging.
+3. **Security** — Protect sensitive keys from modification or unauthorized reads.
+4. **Cross‑Team Governance** — Enforce consistent storage behavior across large applications.
 
-Store references to the original methods:
+---
+
+## Core Idea: Wrap, Don’t Replace
+
+The goal is **preserving original behavior** while adding extra processing.
+
+### Step 1: Save the Native Methods
 
 ```js
 const _setItem = localStorage.setItem;
 const _getItem = localStorage.getItem;
 ```
 
-**2. Proxy Methods**
-
-Rewrite the methods to include custom logic:
+### Step 2: Inject Custom Logic via Wrapper
 
 ```js
 localStorage.setItem = function (key, value) {
-  if (key === 'protectedKey') return; // Prevent modifications
+  if (key === "protectedKey") return; // Prevent modifications
   _setItem.call(this, key, value);
 };
 
 localStorage.getItem = function (key) {
-  return key === 'protectedKey' ? 'Access denied' : _getItem.call(this, key);
+  return key === "protectedKey" ? "Access denied" : _getItem.call(this, key);
 };
 ```
 
-## Flexible Configuration with Hooks
+This pattern keeps native functionality intact but adds rules for specific keys.
 
-Introduce hooks for customization:
+---
+
+## Flexible Hook-Based Proxy System
+
+A more scalable approach uses configurable *hooks*.
 
 ```js
 function proxyStorage(storage, config = {}) {
-  const { beforeSetItem = (k, v) => [k, v], afterGetItem = (k, v) => v } =
-    config;
+  const {
+    beforeSetItem = (k, v) => [k, v],
+    afterGetItem = (k, v) => v,
+  } = config;
+
   const _setItem = storage.setItem;
   const _getItem = storage.getItem;
 
@@ -72,15 +85,46 @@ function proxyStorage(storage, config = {}) {
 }
 ```
 
-### Examples of Usage:
+### Example Use Cases
 
-1. **Encrypt Data**: Use a library like CryptoJS to encrypt and decrypt stored data.
-2. **Log Operations**: Record all setItem and getItem calls.
-3. **Intercept Keys**: Block access to specific keys.
+#### 1. Encrypt Storage Data
 
-### Encapsulation with Singleton Class
+```js
+proxyStorage(localStorage, {
+  beforeSetItem: (key, value) => [key, btoa(value)],
+  afterGetItem: (key, value) => (value ? atob(value) : value),
+});
+```
 
-Encapsulate the proxy logic in a [singleton](https://jsdev.space/signleton-js/) class for ease of use:
+#### 2. Log Every Access
+
+```js
+proxyStorage(sessionStorage, {
+  beforeSetItem: (k, v) => {
+    console.log("SET", k, v);
+    return [k, v];
+  },
+  afterGetItem: (k, v) => {
+    console.log("GET", k, v);
+    return v;
+  },
+});
+```
+
+#### 3. Prevent Access to Sensitive Keys
+
+```js
+proxyStorage(localStorage, {
+  afterGetItem: (key, value) =>
+    key === "secret" ? null : value,
+});
+```
+
+---
+
+## Encapsulation with a Singleton Class
+
+This makes the proxy reusable and organized.
 
 ```js
 class StorageProxy {
@@ -95,7 +139,6 @@ class StorageProxy {
     this.originalSetItem = storage.setItem;
     this.originalGetItem = storage.getItem;
     this.config = config;
-
     this.proxy();
   }
 
@@ -123,6 +166,25 @@ class StorageProxy {
 }
 ```
 
+### Usage
+
+```js
+const customStorage = new StorageProxy(localStorage, {
+  beforeSetItem: (k, v) => [k, v.toUpperCase()],
+  afterGetItem: (k, v) => v,
+});
+```
+
+---
+
 ## Summary
 
-Rewriting `localStorage` and `sessionStorage` allows for powerful business logic integration, enhanced security, and better data management. Encapsulate this functionality into reusable classes or modules to make your projects more maintainable and secure.
+Rewriting `localStorage` and `sessionStorage` opens the door to:
+
+- Custom behavior  
+- Security enhancements  
+- Access monitoring  
+- Data validation  
+- Encryption and transformation  
+
+With wrappers, hooks, and patterns like singletons, you can tailor storage APIs while preserving the native browser functionality — making your front‑end architecture more secure, maintainable, and adaptable.

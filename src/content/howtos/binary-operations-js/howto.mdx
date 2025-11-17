@@ -1,7 +1,7 @@
 ---
-title: How to Perform Complex Binary Operations in JavaScript
+title: How to Perform Advanced Binary Operations in JavaScript
 slug: binary-operations-js
-heading: Performing Advanced Binary Operations in JavaScript
+heading: Mastering Advanced Binary Operations in JavaScript
 icon: /icons/javascript.png
 image: ./images/binary-operations-js.png
 permalink: howto/binary-operations-js
@@ -10,7 +10,7 @@ author: anton liberant
 category: javascript
 type: howto
 tags: ['binary-operations']
-desc: Master JavaScript binary operations with practical examples. Learn bitwise logic, masks, and rotations using a utility class. Includes code samples and guides.
+desc: Learn advanced binary operations in JavaScript with bitwise logic, masking, rotations, binary APIs, and real-world examples for handling complex data efficiently.
 ---
 
 In JavaScript, working with binary data is crucial for handling files, multimedia, cryptography, and other performance-intensive tasks. This article explores JavaScript's key binary-related APIs and how they enable robust data manipulation in browser environments. From creating and converting binary data with `Blob` and `ArrayBuffer` to real-time audio processing and Base64 encoding, this guide covers complex examples demonstrating how to leverage each API effectively. Understanding these tools empowers you to build applications that handle low-level data efficiently in web contexts.
@@ -40,8 +40,6 @@ function downloadImage(dataURL, filename) {
   link.download = filename;
   link.click();
 }
-// Example call
-downloadImage('data:image/jpeg;base64,[...]', 'downloaded_image.jpg');
 ```
 
 ### 2. ArrayBuffer: Mutable Binary Data Buffer
@@ -56,16 +54,14 @@ async function fetchImageData(url) {
   const arrayBuffer = await response.arrayBuffer();
   const view = new Uint8Array(arrayBuffer);
   console.log('Image data as Uint8Array:', view);
-  // Process the image data, e.g., extract specific color channels
 }
-fetchImageData('https://example.com/image.png');
 ```
 
 ### 3. TypedArray and DataView: Fine-Grained Byte Manipulation
 
-`TypedArray` enables precise handling of various binary data types like `Int8Array`, `Uint16Array`, and `Float32Array`. This precision is essential for handling multimedia and network protocols where byte-level data access is critical. Meanwhile, `DataView` offers even more flexibility by supporting both big-endian and little-endian reading and writing.
+`TypedArray` enables precise handling of various binary data types like `Int8Array`, `Uint16Array`, and `Float32Array`. Meanwhile, `DataView` offers flexibility by supporting both big-endian and little-endian access.
 
-**Example: Decoding and Displaying Audio Samples**
+**Example: Decoding Audio Samples**
 
 ```js
 async function processAudioData(url) {
@@ -74,166 +70,110 @@ async function processAudioData(url) {
   const dataView = new DataView(arrayBuffer);
   const samples = [];
   for (let i = 0; i < dataView.byteLength; i += 2) {
-    samples.push(dataView.getInt16(i, true)); // Assuming little-endian format
+    samples.push(dataView.getInt16(i, true));
   }
   console.log('Decoded audio samples:', samples);
 }
-processAudioData('https://example.com/audio.wav');
 ```
 
 ### 4. File and FileReader: Client-Side File Manipulation
 
-`File` represents user-selected files in the browser, typically from file inputs, and is an extension of `Blob`. With `FileReader`, you can access file contents as text, data URLs, or `ArrayBuffer`, which opens up possibilities for manipulating uploaded files directly in the browser.
+`FileReader` lets you read user-uploaded files like binary, JSON, or text.
 
-**Example: Reading an Uploaded JSON File**
+**Example: Reading a JSON file**
 
 ```js
-document
-  .getElementById('fileInput')
-  .addEventListener('change', function (event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const jsonData = JSON.parse(e.target.result);
-      console.log('Parsed JSON data:', jsonData);
-    };
-    reader.readAsText(file);
-  });
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    const jsonData = JSON.parse(e.target.result);
+    console.log('Parsed JSON data:', jsonData);
+  };
+  reader.readAsText(file);
+});
 ```
 
-### 5. Base64 Encoding: Text-Based Representation of Binary Data
+### 5. Base64 Encoding: Binary-to-Text
 
-Base64 encoding is widely used to encode binary data for storage and transmission in text form. Converting binary data to Base64 is essential when sending binary files over text-based channels like JSON or HTML. The `btoa` and `atob` functions convert ASCII strings to Base64 and back, while custom implementations handle binary strings.
-
-**Example: Convert Binary Data from ArrayBuffer to Base64**
+Useful for embedding binary data in JSON or HTML.
 
 ```js
 function arrayBufferToBase64(buffer) {
   let binary = '';
   const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
+  for (let b of bytes) binary += String.fromCharCode(b);
   return btoa(binary);
 }
 
 function base64ToArrayBuffer(base64) {
-  const binaryString = atob(base64);
-  const length = binaryString.length;
-  const bytes = new Uint8Array(length);
-  for (let i = 0; i < length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes.buffer;
 }
-// Example Usage
-const base64Data = arrayBufferToBase64(someArrayBuffer);
-console.log('Base64 Encoded Data:', base64Data);
 ```
 
-### Advanced Applications
+---
 
-**1. Real-Time Audio Analysis**
+## Advanced Binary Applications
 
-The Web Audio API allows real-time audio processing by decoding audio streams into `ArrayBuffer`, which can then be processed or analyzed for applications in music, gaming, or speech recognition.
+### Real-Time Audio Analysis (Web Audio API)
 
 ```js
 async function analyzeAudioStream(url) {
   const audioContext = new AudioContext();
   const response = await fetch(url);
   const audioData = await response.arrayBuffer();
-  const decodedData = await audioContext.decodeAudioData(audioData);
+  const decoded = await audioContext.decodeAudioData(audioData);
 
-  // Analyzing frequency and amplitude
   const analyser = audioContext.createAnalyser();
   const source = audioContext.createBufferSource();
-  source.buffer = decodedData;
+  source.buffer = decoded;
   source.connect(analyser);
-  analyser.fftSize = 2048;
-  const bufferLength = analyser.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
+
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
   function update() {
     analyser.getByteFrequencyData(dataArray);
-    console.log('Audio Frequency Data:', dataArray);
+    console.log(dataArray);
     requestAnimationFrame(update);
   }
+
   source.start();
   update();
 }
-analyzeAudioStream('https://example.com/audio.mp3');
 ```
 
-**2. Secure Encryption and Decryption**
-
-Using the `Crypto` API with `ArrayBuffer` enables robust encryption and decryption workflows, essential for protecting sensitive data in client applications.
+### Crypto API: Encryption and Decryption
 
 ```js
-async function encryptData(secretMessage, key) {
-  const encoded = new TextEncoder().encode(secretMessage);
-  const encrypted = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(12) },
-    key,
-    encoded
-  );
-  console.log('Encrypted data:', new Uint8Array(encrypted));
-}
-
-async function decryptData(encryptedData, key) {
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(12) },
-    key,
-    encryptedData
-  );
-  console.log('Decrypted message:', new TextDecoder().decode(decrypted));
+async function encryptData(text, key) {
+  const encoded = new TextEncoder().encode(text);
+  return crypto.subtle.encrypt({ name: 'AES-GCM', iv: new Uint8Array(12) }, key, encoded);
 }
 ```
 
-### Create Binary Operations Utility Class
+---
+
+# BinaryOps Utility Class
 
 ```js
-// Binary Operations Utility Class
 class BinaryOps {
-  /**
-   * Converts a number to its binary string representation with padding
-   * @param {number} num - Number to convert
-   * @param {number} bits - Minimum number of bits in output
-   * @returns {string} Binary string representation
-   */
   static toBinaryString(num, bits = 32) {
-    const binary = (num >>> 0).toString(2);
-    return binary.padStart(bits, '0');
+    return (num >>> 0).toString(2).padStart(bits, '0');
   }
 
-  /**
-   * Performs a circular left rotation on a number
-   * @param {number} num - Number to rotate
-   * @param {number} shifts - Number of positions to rotate
-   * @param {number} bits - Size of the number in bits
-   * @returns {number} Rotated number
-   */
   static rotateLeft(num, shifts, bits = 32) {
-    shifts = shifts % bits;
+    shifts %= bits;
     return ((num << shifts) | (num >>> (bits - shifts))) >>> 0;
   }
 
-  /**
-   * Performs a circular right rotation on a number
-   * @param {number} num - Number to rotate
-   * @param {number} shifts - Number of positions to rotate
-   * @param {number} bits - Size of the number in bits
-   * @returns {number} Rotated number
-   */
   static rotateRight(num, shifts, bits = 32) {
-    shifts = shifts % bits;
+    shifts %= bits;
     return ((num >>> shifts) | (num << (bits - shifts))) >>> 0;
   }
 
-  /**
-   * Counts the number of set bits (1s) in a number
-   * @param {number} num - Number to count bits in
-   * @returns {number} Number of set bits
-   */
   static popCount(num) {
     let count = 0;
     while (num) {
@@ -243,55 +183,22 @@ class BinaryOps {
     return count;
   }
 
-  /**
-   * Gets the position of the most significant bit
-   * @param {number} num - Number to analyze
-   * @returns {number} Position of MSB (0-based) or -1 if num is 0
-   */
   static getMSBPosition(num) {
-    if (num === 0) return -1;
-    return 31 - Math.clz32(num);
+    return num === 0 ? -1 : 31 - Math.clz32(num);
   }
 
-  /**
-   * Gets the position of the least significant bit
-   * @param {number} num - Number to analyze
-   * @returns {number} Position of LSB (0-based) or -1 if num is 0
-   */
   static getLSBPosition(num) {
-    if (num === 0) return -1;
-    return Math.log2(num & -num) | 0;
+    return num === 0 ? -1 : Math.log2(num & -num) | 0;
   }
 
-  /**
-   * Creates a bit mask of specified length
-   * @param {number} length - Length of mask in bits
-   * @returns {number} Bit mask
-   */
   static createMask(length) {
     return (1 << length) - 1;
   }
 
-  /**
-   * Extracts a bit field from a number
-   * @param {number} num - Number to extract from
-   * @param {number} start - Start position (0-based)
-   * @param {number} length - Length of bit field
-   * @returns {number} Extracted bit field
-   */
   static extractBits(num, start, length) {
-    const mask = this.createMask(length);
-    return (num >>> start) & mask;
+    return (num >>> start) & this.createMask(length);
   }
 
-  /**
-   * Sets a bit field in a number
-   * @param {number} num - Number to modify
-   * @param {number} value - Value to set
-   * @param {number} start - Start position (0-based)
-   * @param {number} length - Length of bit field
-   * @returns {number} Modified number
-   */
   static setBits(num, value, start, length) {
     const mask = this.createMask(length) << start;
     return (num & ~mask) | ((value << start) & mask);
@@ -299,50 +206,8 @@ class BinaryOps {
 }
 ```
 
-Let me explain the key features and how to use them:
-
-**Basic Binary Conversion**:
-
-```js
-// Convert number to binary string
-console.log(BinaryOps.toBinaryString(42)); // "00000000000000000000000000101010"
-```
-
-**Bit Rotation**:
-
-```js
-// Rotate left by 2 positions
-console.log(BinaryOps.rotateLeft(0b1100, 2)); // 0b0011
-
-// Rotate right by 1 position
-console.log(BinaryOps.rotateRight(0b1100, 1)); // 0b0110
-```
-
-**Bit Counting and Position**:
-
-```js
-// Count set bits
-console.log(BinaryOps.popCount(0b1010)); // 2
-
-// Find MSB position
-console.log(BinaryOps.getMSBPosition(12)); // 3
-
-// Find LSB position
-console.log(BinaryOps.getLSBPosition(12)); // 2
-```
-
-**Bit Field Operations**:
-
-```js
-// Extract 3 bits starting at position 2
-console.log(BinaryOps.extractBits(0b11111111, 2, 3)); // 0b111
-
-// Set 3 bits starting at position 2
-console.log(BinaryOps.setBits(0b11111111, 0b000, 2, 3)); // 0b11100011
-```
-
-The utility class includes detailed JSDoc comments for all methods and handles edge cases.
+---
 
 ## Conclusion
 
-JavaScript offers a rich toolkit for binary data operations within browser environments. By understanding and combining `Blob`, `ArrayBuffer`, `TypedArray`, `File`, `FileReader`, and `Base64`, developers can manage binary data effectively, supporting everything from file handling and audio processing to encryption and real-time data analysis. Mastering these APIs enables the development of performant, data-intensive applications directly in the browser.
+JavaScript provides a powerful toolkit for binary manipulation — from blobs, buffers, typed arrays, file handling to encryption, audio processing, and bitwise utilities. Mastering these APIs enables creation of efficient, performance-critical apps that operate on binary data.

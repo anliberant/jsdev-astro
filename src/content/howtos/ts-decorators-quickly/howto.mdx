@@ -13,65 +13,186 @@ tags: ['decorators']
 desc: Master TypeScript decorators fast! Enhance classes, methods, and properties with metadata annotations. Learn syntax, advanced patterns, and practical examples.
 ---
 
-Decorators in TypeScript are functions applied at runtime to classes or methods to modify or extend behavior.
+Decorators add powerful meta‑programming capabilities to TypeScript, allowing you to annotate and transform classes, methods, accessors, properties, and parameters. They help implement reusable logic, enforce constraints, and cleanly separate concerns in complex applications.
 
-## Enabling Decorators
+This guide covers essential decorator patterns with practical examples you can copy and use immediately.
 
-To enable experimental support, add this setting to your tsconfig.json or via CLI:
+## Enabling Decorators in TypeScript
+
+Decorators are still an experimental feature in TypeScript and must be enabled manually.
+
+Add the following to your **tsconfig.json**:
 
 ```json
 {
   "compilerOptions": {
-    "target": "ES5",
-    "experimentalDecorators": true
+    "target": "ES6",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }
 ```
 
+`emitDecoratorMetadata` provides runtime reflection metadata, often used with libraries like **class-transformer** or **InversifyJS**.
+
+---
+
 ## Class Decorators
 
-Class decorators modify the class constructor and prototype:
+A class decorator receives the constructor function and can modify or replace it.
 
 ```ts
-function sealed(constructor: Function) {
+function Sealed(constructor: Function) {
   Object.seal(constructor);
   Object.seal(constructor.prototype);
 }
 
-@sealed
-class BugReport {
-  // class logic
+@Sealed
+class ReportService {
+  name = 'Service 1';
 }
 ```
 
+### When to Use Class Decorators
+
+- Dependency injection frameworks  
+- Auto-registration systems  
+- Validation & metadata tagging  
+- Logging & analytics  
+
+---
+
 ## Method Decorators
 
-These wrap method properties and can adjust visibility or behavior:
+Method decorators intercept or modify a method’s `PropertyDescriptor`.
+
+### Example: Logging Decorator
 
 ```ts
-function enumerable(value: boolean) {
-  return (target: any, key: string, descriptor: PropertyDescriptor) => {
-    descriptor.enumerable = value;
+function Log(_target: any, key: string, descriptor: PropertyDescriptor) {
+  const original = descriptor.value;
+  descriptor.value = function (...args: any[]) {
+    console.log(`Called ${key} with`, args);
+    return original.apply(this, args);
   };
 }
 
-class Greeter {
-  @enumerable(false)
-  greet() {
-    return 'Hello';
+class UserService {
+  @Log
+  getUser(id: number) {
+    return { id, name: 'John' };
   }
 }
 ```
 
+### Use Cases
+
+- Performance measurement  
+- Access control  
+- Method retry logic  
+- Rate limiting  
+
+---
+
 ## Property Decorators
 
-These apply runtime modifications to class properties:
+Property decorators allow you to modify or enforce rules around class properties.
+
+### Example: Required Field Decorator
 
 ```ts
-class MyClass {
-  @MyDecorator
-  myProperty: string;
+function Required(target: any, key: string) {
+  let value = target[key];
+
+  const getter = () => value;
+  const setter = (newVal: any) => {
+    if (newVal === null || newVal === undefined) {
+      throw new Error(`${key} is required`);
+    }
+    value = newVal;
+  };
+
+  Object.defineProperty(target, key, {
+    get: getter,
+    set: setter
+  });
+}
+
+class Product {
+  @Required
+  title!: string;
 }
 ```
 
-Decorators allow modular adjustments to class structure, method behavior, and property access, enhancing TypeScript's functionality in complex applications.
+---
+
+## Accessor Decorators
+
+Accessor decorators can wrap getters or setters.
+
+```ts
+function Capitalize(_target: unknown, _key: string, descriptor: PropertyDescriptor) {
+  const original = descriptor.set!;
+  descriptor.set = function (value: string) {
+    original.call(this, value.toUpperCase());
+  };
+}
+
+class Category {
+  private _label = '';
+
+  @Capitalize
+  set label(v: string) {
+    this._label = v;
+  }
+
+  get label() {
+    return this._label;
+  }
+}
+```
+
+---
+
+## Parameter Decorators
+
+Parameter decorators add metadata about method parameters.
+
+```ts
+function Inject(name: string) {
+  return (target: any, key: string, index: number) => {
+    Reflect.defineMetadata('inject', name, target, key);
+  };
+}
+
+class Controller {
+  save(@Inject('db') db: any) {}
+}
+```
+
+---
+
+## Advanced Pattern: Composing Decorators
+
+You can stack multiple decorators:
+
+```ts
+@Sealed
+@LogClass
+class CarService {}
+```
+
+They execute bottom‑up (closest decorator runs first).
+
+---
+
+## Summary
+
+Decorators enable:
+
+- Clean meta‑programming  
+- Encapsulation of cross‑cutting concerns  
+- Elegant class, method, and property transformations  
+- Integration with DI and reflection frameworks  
+
+Once you master their patterns, decorators become one of the most expressive tools in TypeScript development.

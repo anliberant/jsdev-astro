@@ -38,8 +38,6 @@ const [state, updateState] = useOptimistic(initialState, reducerFunction);
 
 ## Example: Optimistic Updates for a Voting System
 
-Imagine a voting system where users can upvote posts. Here’s how you can use `useOptimistic` to handle votes optimistically:
-
 ```js
 import { useOptimistic } from 'react';
 
@@ -58,7 +56,6 @@ function VotingApp({ postId, initialVotes }) {
   const handleVote = async type => {
     updateVotes({ type });
     try {
-      // Simulate server request
       await fetch(`/api/vote`, {
         method: 'POST',
         body: JSON.stringify({ postId, type }),
@@ -81,16 +78,16 @@ function VotingApp({ postId, initialVotes }) {
 
 ## How `useOptimistic` Works
 
-1. **Immediate Feedback**: Updates the UI instantly without waiting for server response.
-2. **Error Handling**: Reverts changes or displays a notification if the server call fails.
-3. **Centralized Logic**: The reducer manages state transitions cleanly and predictably.
+1. **Immediate Feedback**: Updates the UI instantly.
+2. **Error Handling**: Reverts the state if server fails.
+3. **Centralized Logic**: Reducer keeps behavior predictable.
 
-## Benefits of `useOptimistic`
+## Benefits
 
-- **Improved UX**: Users see instant feedback on actions.
-- **Simplified Code**: Reduces the need for manual state rollback.
-- **Flexibility**: Works for various use cases, from form submissions to interactive updates.
+- **Improved UX**
+- **Less boilerplate**
+- **Flexible for many UI interactions**
 
 ## Conclusion
 
-React’s `useOptimistic` hook simplifies implementing optimistic updates, ensuring a smooth and responsive user experience. Whether handling likes, shopping cart updates, or other interactive features, this hook streamlines state management and error handling, making your applications both efficient and user-friendly.
+React’s `useOptimistic` hook streamlines optimistic UI patterns, helping you build smooth, responsive interfaces with minimal complexity.

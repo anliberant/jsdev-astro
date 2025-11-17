@@ -1,0 +1,138 @@
+---
+title: Identify If a Value Belongs to a Class in JavaScript
+slug: check-instance-js
+heading: Check If a Value Is an Instance of a Class in JavaScript
+date: 2025-11-17
+author: anton liberant
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/check-instance-js
+category: javascript
+type: snippets
+tags: ['instanceof', 'prototype']
+desc: Learn how to correctly check if a value is an instance of a class in JavaScript using prototype inspection, Symbol.hasInstance, and primitive mapping.
+---
+
+## Introduction
+
+Instance checking in JavaScript appears simple at first—just use `instanceof`.  
+But real-world scenarios (and tasks like *LeetCode 2618*) require correctly handling:
+
+- primitive values (`42`, `'hi'`, `true`, `5n`)
+- wrapper constructors (`Number`, `String`, etc.)
+- invalid constructor inputs  
+- functions as instances of `Function`
+- prototype chain traversal  
+- custom instance logic via `Symbol.hasInstance`
+
+This snippet provides three robust solutions, rewritten and improved for clarity, correctness, and edge-case safety.
+
+---
+
+## Solution 1 — Recommended  
+### Using `instanceof` + Primitive Mapping
+
+Works for objects and functions, with explicit special rules for built-in primitive wrappers.
+
+```js
+function isInstance(candidate, ctor) {
+  if (ctor == null || typeof ctor !== "function") return false;
+  if (candidate == null) return false;
+
+  if (candidate instanceof ctor) return true;
+
+  const type = typeof candidate;
+  if (ctor === Number) return type === "number";
+  if (ctor === String) return type === "string";
+  if (ctor === Boolean) return type === "boolean";
+  if (ctor === BigInt) return type === "bigint";
+  if (ctor === Symbol) return type === "symbol";
+
+  return false;
+}
+```
+
+---
+
+## Solution 2  
+### Manual Prototype Chain Traversal
+
+```js
+function isInstanceByPrototype(value, ctor) {
+  if (ctor == null || typeof ctor !== "function") return false;
+  if (value == null) return false;
+
+  const type = typeof value;
+
+  if (ctor === Number) return type === "number";
+  if (ctor === String) return type === "string";
+  if (ctor === Boolean) return type === "boolean";
+  if (ctor === BigInt) return type === "bigint";
+  if (ctor === Symbol) return type === "symbol";
+
+  if (type !== "object" && type !== "function") return false;
+
+  let proto = Object.getPrototypeOf(value);
+  const target = ctor.prototype;
+
+  while (proto) {
+    if (proto === target) return true;
+    proto = Object.getPrototypeOf(proto);
+  }
+
+  return false;
+}
+```
+
+---
+
+## Solution 3  
+### Using `Symbol.hasInstance`
+
+```js
+function isInstanceBySymbol(value, ctor) {
+  if (ctor == null || typeof ctor !== "function") return false;
+  if (value == null) return false;
+
+  const hook = ctor[Symbol.hasInstance];
+  if (typeof hook === "function" && hook.call(ctor, value)) {
+    return true;
+  }
+
+  const type = typeof value;
+  if (ctor === Number) return type === "number";
+  if (ctor === String) return type === "string";
+  if (ctor === Boolean) return type === "boolean";
+  if (ctor === BigInt) return type === "bigint";
+  if (ctor === Symbol) return type === "symbol";
+
+  return false;
+}
+```
+
+---
+
+## Examples
+
+```js
+class Creature {}
+class Feline extends Creature {}
+function Demo() {}
+
+console.log(isInstance(new Date(), Date));        
+console.log(isInstance(new Feline(), Creature));  
+console.log(isInstance(123, Number));             
+console.log(isInstance("ok", String));            
+console.log(isInstance(true, Boolean));           
+console.log(isInstance(7n, BigInt));              
+console.log(isInstance(Symbol("x"), Symbol));     
+
+console.log(isInstance(123, Object));             
+console.log(isInstance(null, Object));            
+console.log(isInstance(undefined, Number));       
+console.log(isInstance(Creature, Creature));      
+console.log(isInstance(Demo, Function));          
+```
+
+---
+

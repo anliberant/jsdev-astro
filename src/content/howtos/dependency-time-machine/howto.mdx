@@ -1,7 +1,7 @@
 ---
-title: How to Update a NodeJs Project with dependency-time-machine
+title: Howto Update a Node.js Project with dependency-time-machine
 slug: dependency-time-machine
-heading: Update Node.js Project with dependency-time-machine
+heading: Updating Node.js Dependencies with dependency-time-machine
 icon: /icons/nodejs.png
 image: /icon.png
 permalink: howto/dependency-time-machine
@@ -10,52 +10,110 @@ author: anton liberant
 category: nodejs
 type: howto
 tags: ['npm']
-desc: Learn how to update your Node.js project with dependency-time-machine. Roll back, upgrade, and manage dependencies to maintain a stable, efficient environment easily
+desc: Learn how to safely update Node.js dependencies using dependency-time-machine with automated testing, exclusions, and reproducible upgrade steps.
 ---
 
-To update a project using **dependency-time-machine**, you can follow a straightforward process that automates the task of updating dependencies in your package.json file in chronological order.
+# Updating Node.js Dependencies with dependency-time-machine
 
-## Step 1:Install the Tool
+Updating dependencies is critical for security, performance, and compatibility — but doing it manually can break your project. The **dependency-time-machine** tool solves this by updating packages *one at a time* in chronological order, letting you detect breaking changes early and keep your project stable.
 
-You can use the following command to install dependency-time-machine globally or run it via npx:
+This guide walks you through installation, automatic updates, test automation, exclusions, and advanced usage.
 
-<div className='code-cmd'>npx dependency-time-machine --update --install</div>
+## 1. Install dependency-time-machine
 
-Alternatively, install it globally using npm:
+You can run the tool without installing anything using **npx**:
 
-<div className='code-cmd'>npm install -g dependency-time-machine</div>
+```
+npx dependency-time-machine --update --install
+```
 
-## Step 2: Update Dependencies
+Or install it globally:
 
-Once installed, you can run the tool to start updating your dependencies:
+```
+npm install -g dependency-time-machine
+```
 
-<div className='code-cmd'>npx dependency-time-machine --update --install</div>
+Once installed, the CLI becomes available as `dependency-time-machine`.
 
-This command will check for the latest compatible versions of your dependencies and update them one by one, ensuring each version is compatible before proceeding to the next.
+## 2. Run an Update Cycle
 
-## Step 3: Auto-run Tests
+To begin updating dependencies safely, run:
 
-To automate testing after each update (using `npm test` by default), you can add the `--auto` flag:
+```
+npx dependency-time-machine --update --install
+```
 
-<div className='code-cmd'>
-  npx dependency-time-machine --update --install --auto
-</div>
+What this does:
 
-You can also customize the install and test commands:
+- scans your package.json  
+- detects outdated dependencies  
+- updates them **sequentially**, not all at once  
+- installs after each bump  
+- stops if a new version breaks your project  
 
-<div className='code-cmd'>
-  npx dependency-time-machine --update --install --auto --install-script "yarn
-  install" --test-script "yarn test"
-</div>
+This step-by-step approach is much safer than `npm update` or `npm-check-updates`.
 
-## Step 4: Excluding Dependencies
+## 3. Automate Tests During Updates
 
-If there are specific dependencies you want to exclude from the update process, use the `--exclude` flag:
+Enable auto-testing:
 
-<div className='code-cmd'>
-  npx dependency-time-machine --update --install --exclude react,react-dom
-</div>
+```
+npx dependency-time-machine --update --install --auto
+```
 
-Read also how to update all dependencies using [npm-check-updates](https://jsdev.space/howto/update-npm-dependencies/).
+By default, it runs:
 
-For more advanced options, such as excluding dependencies via a file or generating a timeline of updates, refer to the detailed documentation on [npm](https://www.npmjs.com/package/dependency-time-machine).
+```
+npm test
+```
+
+You can customize both install and test commands:
+
+```
+npx dependency-time-machine   --update --install --auto   --install-script "yarn install"   --test-script "yarn test"
+```
+
+## 4. Exclude Specific Dependencies
+
+```
+npx dependency-time-machine --update --install --exclude react,react-dom
+```
+
+## 5. Advanced Usage
+
+### Exclude via file
+
+Create a file:
+
+```
+react
+typescript
+webpack
+```
+
+Then:
+
+```
+npx dependency-time-machine --update --install --exclude-file skip.txt
+```
+
+### Generate timeline
+
+```
+npx dependency-time-machine --timeline
+```
+
+### Dry run
+
+```
+npx dependency-time-machine --update --dry
+```
+
+## 6. Combine with Other Tools
+
+Fast bulk updating:  
+[Update NPM Dependencies](https://jsdev.space/howto/update-npm-dependencies/)
+
+## Conclusion
+
+dependency-time-machine provides one of the safest ways to modernize dependencies. With sequential updates, automated tests, and advanced controls, it helps maintain stability in every Node.js project.
