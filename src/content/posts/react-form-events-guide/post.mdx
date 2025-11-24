@@ -1,0 +1,285 @@
+---
+title: 'Mastering React Form Events with TypeScript'
+slug: react-form-events-guide
+heading: "React Form Events & TypeScript: The Complete Beginner-Friendly Guide"
+image: ./images/react-form-events.png
+permalink: react-form-events-guide
+date: 2025-11-24
+author: anton liberant
+category: react
+type: post
+tags: ['error-handling', 'events', 'form-events']
+desc: "Learn how React form events work, how to type them in TypeScript, and explore improved examples: inputs, forms, buttons, keyboard events, validation, debouncing..."
+---
+
+Working with forms is one of the most common tasks in React — and one of the most misunderstood. Beginners often struggle with event types, how to strongly‑type form handlers, how to extract values, and how to work with keyboard, mouse, focus, and form‑submission events correctly.
+
+This improved guide explains **every major React form event**, adds **better TypeScript examples**, and focuses heavily on **real‑world patterns** like validation, debouncing, controlled inputs, preventing default behavior, and working with form data.
+
+---
+
+## Why React Form Events Matter
+
+Any time a user:
+
+- types into an input  
+- clicks a button  
+- submits a form  
+- focuses or blurs a field  
+- presses a key  
+- interacts with checkboxes, selects, radios, sliders  
+
+…React fires an event object you can react to.
+
+TypeScript helps us **ensure correctness**, catch mistakes, and avoid bugs like undefined values or invalid event targets.
+
+---
+
+## 1. `onChange`: The Most Important Form Event  
+
+### TypeScript Type:  
+
+```ts
+React.ChangeEvent<HTMLInputElement>
+```
+
+`onChange` fires whenever the value of an input changes.
+
+### Improved Real‑World Example: Typing with Validation
+
+```tsx
+import { useState } from "react";
+
+export function UsernameField() {
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
+
+  const handleUsername = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUsername(value);
+
+    if (value.length < 3) {
+      setError("Username must be at least 3 characters.");
+    } else {
+      setError("");
+    }
+  };
+
+  return (
+    <div>
+      <label>
+        Username:
+        <input type="text" value={username} onChange={handleUsername} />
+      </label>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </div>
+  );
+}
+```
+
+---
+
+## 2. `onSubmit`: Handling Entire Form Submission  
+### TypeScript Type:  
+```ts
+React.FormEvent<HTMLFormElement>
+```
+
+### Improved Example with FormData Extraction
+
+```tsx
+import { useState } from "react";
+
+export function LoginForm() {
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const form = e.currentTarget;
+    const data = new FormData(form);
+
+    const email = data.get("email") as string;
+    const password = data.get("password") as string;
+
+    setMessage(`Submitted: ${email} / ${password}`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="email" type="email" placeholder="Email" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button type="submit">Log In</button>
+      <p>{message}</p>
+    </form>
+  );
+}
+```
+
+---
+
+## 3. `onFocus`: Detecting When a User Enters a Field  
+
+```ts
+React.FocusEvent<HTMLInputElement>
+```
+
+Example: Highlight active field  
+
+```tsx
+import { useState } from "react";
+
+export function FocusExample() {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <div>
+      <input
+        onFocus={() => setFocused(true)}
+        style={{ borderColor: focused ? "dodgerblue" : "#ccc" }}
+      />
+      {focused && <p>You're typing now!</p>}
+    </div>
+  );
+}
+```
+
+---
+
+## 4. `onBlur`: When the User Leaves a Field  
+
+```ts
+React.FocusEvent<HTMLInputElement>
+```
+
+Example: Email validation  
+
+```tsx
+import { useState } from "react";
+
+export function EmailField() {
+  const [error, setError] = useState("");
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    setError(email.includes("@") ? "" : "Invalid email.");
+  };
+
+  return (
+    <div>
+      <input type="email" onBlur={handleBlur} placeholder="Enter email" />
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </div>
+  );
+}
+```
+
+---
+
+## 5. `onClick`: Buttons & Interactions  
+### TypeScript Type:
+```ts
+React.MouseEvent<HTMLButtonElement>
+```
+
+Example: Button loading state  
+
+```tsx
+import { useState } from "react";
+
+export function LoadingButton() {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    await new Promise(res => setTimeout(res, 1000));
+    setLoading(false);
+  };
+
+  return (
+    <button onClick={handleClick} disabled={loading}>
+      {loading ? "Loading..." : "Click me"}
+    </button>
+  );
+}
+```
+
+---
+
+## 6. Keyboard Events  
+
+```ts
+React.KeyboardEvent<HTMLInputElement>
+```
+
+Example: Submit on Enter  
+
+```tsx
+import { useState } from "react";
+
+export function SearchBox() {
+  const [query, setQuery] = useState("");
+
+  const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      alert(`Searching for: ${query}`);
+    }
+  };
+
+  return (
+    <input
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      onKeyDown={handleKey}
+      placeholder="Press Enter to search"
+    />
+  );
+}
+```
+
+---
+
+## 7. Bonus: Debounced Input  
+
+```tsx
+import { useState, useEffect } from "react";
+
+export function DebouncedInput() {
+  const [raw, setRaw] = useState("");
+  const [debounced, setDebounced] = useState("");
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(raw), 400);
+    return () => clearTimeout(id);
+  }, [raw]);
+
+  return (
+    <div>
+      <input
+        onChange={(e) => setRaw(e.target.value)}
+        placeholder="Type slowly..."
+      />
+      <p>Debounced: {debounced}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## Final Thoughts
+
+You now know how to handle:
+
+- change events  
+- submit events  
+- focus/blur  
+- click events  
+- keyboard events  
+- validation  
+- debouncing  
+- extracting FormData  
+
+React + TypeScript becomes much easier once you understand event types.
+
