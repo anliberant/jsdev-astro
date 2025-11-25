@@ -1,0 +1,277 @@
+---
+title: "Howto Use TypeScript’s never Type for Safer Error Handling"
+slug: typescript-never-error-handling-guide
+heading: Howto Master the `never` Type in TypeScript
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/typescript-never-error-handling-guide
+date: 2025-11-25
+author: anton liberant
+category: typescript
+type: howto
+tags: ['error-handling', 'never-type']
+desc: Learn how to correctly use TypeScript’s never type for impossible states, exhaustive checks, and safer error handling with discriminated unions and Result types.
+---
+
+TypeScript’s `never` type is one of the most misunderstood constructs in the language.  
+Developers often discover it, realize it represents “a value that can never exist,” and then try to force it into error‑handling code. In reality, `never` plays a critical role in correctness, safety, and exhaustiveness — but not in the way many assume.
+
+This article rewrites and expands the entire topic from scratch, providing clearer examples, updated patterns, fully refreshed naming conventions, and deep explanations of why `never` behaves the way it does.
+
+---
+
+## What `never` Really Means  
+The TypeScript type system models types as **sets of values**:
+
+- `number` is the set of all possible numbers  
+- `boolean` is the set `{true, false}`  
+- string literal types like `"ready"` are a set with a single element  
+- `never` is the **empty set**
+
+Because `never` has *no possible values*, no actual value can ever belong to it. That’s why the following function is valid:
+
+```ts
+export function triggerFailure(reason: string): never {
+  throw new Error(reason);
+}
+```
+
+TypeScript ensures that functions returning `never` cannot complete normally.
+
+```ts
+const outcome = triggerFailure("Unexpected state!");
+//    ^? never
+```
+
+`outcome` has type `never`, because TypeScript knows the function cannot return.
+
+---
+
+## The Common Mistake: Using `never` for Error Modeling  
+Developers sometimes attempt this pattern:
+
+```ts
+export function safeDivide(x: number, y: number): number | never {
+  if (y === 0) {
+    throw new Error("Division by zero!");
+  }
+  return x / y;
+}
+```
+
+They expect the return type to reflect both “good” and “error” states.
+
+But TypeScript evaluates:
+
+```
+number | never → number
+```
+
+The empty set adds nothing to the union — `never` collapses and becomes meaningless.
+
+This is why:
+
+```ts
+const result = safeDivide(10, 0);
+// result: number
+```
+
+This code successfully compiles but is misleading.  
+The `never` type **should never be used to describe an error state**.
+
+---
+
+## Why `never` Collapses in Unions  
+Unions represent the **set‑theoretic union** of their members.
+
+```
+(number-set) ∪ (empty-set) = number-set
+```
+
+This is not a TypeScript quirk — it is mathematically correct.
+
+Thus:
+
+- `string | never` → `string`
+- `boolean | never` → `boolean`
+- `T | never` → `T`
+
+`never` disappears because it cannot contribute any valid value.
+
+---
+
+## The Correct Use of `never`: Exhaustiveness Checking  
+`never` becomes powerful when used to model **impossible states**.
+
+### Step 1 — Create a discriminated union  
+
+```ts
+type CircleShape = { kind: "circle"; radius: number };
+type SquareShape = { kind: "square"; side: number };
+type RectShape = { kind: "rectangle"; width: number; height: number };
+
+type ShapeEntity = CircleShape | SquareShape | RectShape;
+```
+
+### Step 2 — Write an exhaustiveness checker
+
+```ts
+function assertImpossible(value: never): never {
+  throw new Error("Encountered an impossible case: " + JSON.stringify(value));
+}
+```
+
+### Step 3 — Use it inside a switch
+
+```ts
+export function computeArea(geom: ShapeEntity): number {
+  switch (geom.kind) {
+    case "circle":
+      return Math.PI * geom.radius ** 2;
+
+    case "square":
+      return geom.side ** 2;
+
+    case "rectangle":
+      return geom.height * geom.width;
+
+    default:
+      return assertImpossible(geom);
+  }
+}
+```
+
+If someone later updates:
+
+```ts
+type TriangleShape = { kind: "triangle"; a: number; b: number; c: number };
+type ShapeEntity = CircleShape | SquareShape | RectShape | TriangleShape;
+```
+
+The compiler immediately screams:
+
+```
+Argument of type 'TriangleShape' is not assignable to parameter of type 'never'.
+```
+
+This is exactly how `never` should be used:  
+✔ catching missing branches  
+✔ preventing silent logic failures  
+✔ enforcing total coverage of all cases  
+
+---
+
+## A Better Model for Error Handling: The Result Pattern  
+Instead of misusing `never`, model error states explicitly using a discriminated union:
+
+```ts
+type FailureInfo = { status: "fail"; message: string };
+type SuccessInfo<T> = { status: "ok"; data: T };
+
+type ResultBox<T> = FailureInfo | SuccessInfo<T>;
+```
+
+Helper creators:
+
+```ts
+const createFailure = (msg: string): FailureInfo => ({
+  status: "fail",
+  message: msg,
+});
+
+const createSuccess = <T>(value: T): SuccessInfo<T> => ({
+  status: "ok",
+  data: value,
+});
+```
+
+A safe division using proper error modeling:
+
+```ts
+export function robustDivide(n1: number, n2: number): ResultBox<number> {
+  if (n2 === 0) return createFailure("Division by zero");
+  return createSuccess(n1 / n2);
+}
+```
+
+Usage:
+
+```ts
+const output = robustDivide(8, 0);
+
+if (output.status === "fail") {
+  console.error("Error:", output.message);
+} else {
+  console.log("Result:", output.data);
+}
+```
+
+This is explicit, predictable, and fully typed.
+
+---
+
+## Wrapping Unsafe Functions: A `try`-Safe Wrapper  
+Sometimes an existing function throws. Wrap it safely:
+
+```ts
+export function handleSafely<Args extends unknown[], Ret>(
+  fn: (...p: Args) => Ret,
+  ...inputs: Args
+): ResultBox<Ret> {
+  try {
+    return createSuccess(fn(...inputs));
+  } catch (err: any) {
+    return createFailure(err?.message ?? "Unknown failure");
+  }
+}
+```
+
+Example:
+
+```ts
+function riskyDivide(a: number, b: number) {
+  if (b === 0) throw new Error("Boom!");
+  return a / b;
+}
+
+const checked = handleSafely(riskyDivide, 10, 0);
+```
+
+---
+
+## Converting ResultBox to a Throwing Function  
+If needed, convert the safe result back into a throwing workflow:
+
+```ts
+export function unwrapOrCrash<T>(supplier: () => ResultBox<T>): T {
+  const outcome = supplier();
+  if (outcome.status === "ok") return outcome.data;
+  throw new Error(outcome.message);
+}
+```
+
+Usage:
+
+```ts
+const finalAnswer = unwrapOrCrash(() => robustDivide(10, 2));
+```
+
+---
+
+## Summary  
+`never` is not an error type.  
+It is a compiler tool used to ensure correctness and detect unreachable or invalid states.
+
+**Use `never` for:**
+
+- Exhaustiveness checks  
+- Detecting logic gaps  
+- Modeling impossible conditions  
+
+**Do NOT use `never` for:**
+
+- Functions that throw  
+- Error-state modeling  
+- Representing branching outcomes  
+
+When used properly, `never` becomes one of the strongest static‑analysis tools in the TypeScript type system.
