@@ -1,0 +1,218 @@
+---
+title: 'Building Maintainable React Forms With Primitives'
+slug: react-form-primitives
+heading: Designing Predictable and Maintainable Forms in React
+image: ./images/react-form-primitives.png
+permalink: react-form-primitives
+date: 2026-01-02
+author: anton liberant
+category: react
+type: post
+tags: ['validation', 'form-validation', 'forms', 'architecture']
+desc: Learn how to replace messy custom React forms with a structured, reusable system based on primitives and field components for consistency and scalability.
+---
+
+## Introduction
+
+“Not again… another form.”
+
+Working with forms in React is one of the most common frontend tasks — and one of the easiest places to accumulate technical debt. Before worrying about architecture, every developer has to understand the basics: how form events work, how values flow from inputs, and how React and TypeScript model those interactions.
+
+If you’re not fully confident in that layer, the guide - [React Form Events & TypeScript](https://jsdev.space/react-form-events-guide/) does an excellent job of breaking down `onChange`, `onSubmit`, `onBlur`, `onFocus`, and their TypeScript typings in a clear, practical way.
+
+However, even with a solid understanding of form events, another problem quickly appears. Knowing *how* forms work doesn’t automatically tell you *how to structure them* once your application grows. A simple form with a few inputs is easy to manage, but as soon as you have 10–20 fields, shared validation rules, server errors, and multiple screens using the same inputs, ad‑hoc solutions stop scaling.
+
+This article focuses on that next layer of complexity. Instead of discussing events and handlers, we’ll look at how to design a **predictable, reusable form system** built on four ideas:
+
+1. **UI primitives** — small, “dumb” components responsible only for appearance.
+2. **A Cell wrapper** — a single place for labels, hints, and error messages.
+3. **Field components** — thin adapters between React Hook Form and your UI.
+4. **Schemas** — one source of truth for validation and TypeScript types.
+
+Together, these layers help turn forms from a recurring source of chaos into a solved, scalable part of your UI architecture.
+
+## The Scaling Problem: “Toy Form” vs “Product Form”
+
+A typical first form is built with local state and a submit handler. It works — until it doesn’t.
+
+```tsx
+import * as React from "react";
+
+export function SignInToy() {
+  const [email, setEmail] = React.useState("");
+  const [secret, setSecret] = React.useState("");
+  const [issues, setIssues] = React.useState<{ email?: string; secret?: string }>(
+    {}
+  );
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const next: typeof issues = {};
+    if (!email.includes("@")) next.email = "Please enter a valid email.";
+    if (secret.trim().length < 6) next.secret = "Minimum 6 characters.";
+    setIssues(next);
+
+    if (Object.keys(next).length === 0) {
+      // send request...
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit}>
+      <div>
+        <label>Email</label>
+        <input value={email} onChange={(e) => setEmail(e.target.value)} />
+        {issues.email && <div>{issues.email}</div>}
+      </div>
+
+      <div>
+        <label>Password</label>
+        <input
+          type="password"
+          value={secret}
+          onChange={(e) => setSecret(e.target.value)}
+        />
+        {issues.secret && <div>{issues.secret}</div>}
+      </div>
+
+      <button type="submit">Sign in</button>
+    </form>
+  );
+}
+```
+
+Now imagine this pattern multiplied across a large application. More fields mean more state, more branching validation logic, and more duplicated markup. At that point, reviewing, testing, and maintaining forms becomes disproportionately expensive.
+
+## Form Libraries Help Logic, Not UI
+
+Libraries like React Hook Form reduce boilerplate and improve performance, but they mainly solve **state management and validation wiring**. They don’t define how your fields should look, how errors are rendered, or how consistency is enforced across the UI.
+
+That missing layer is where most form complexity actually lives.
+
+## The Structured Approach
+
+The solution is to separate concerns clearly:
+
+- **Primitives** define how inputs look and behave at the lowest level.
+- **Cell** defines how a “field” is presented: label, hint, error.
+- **Field components** connect form state to UI.
+- **Schemas** define validation and typing in one place.
+
+This separation keeps each piece small and understandable — and makes the whole system easier to scale.
+
+## Step 1: UI Primitives
+
+Primitives are intentionally boring. They know nothing about forms or validation.
+
+```tsx
+import * as React from "react";
+
+export const TextInput = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>(function TextInput(props, ref) {
+  return <input ref={ref} {...props} className="input" />;
+});
+```
+
+Because primitives are generic, you can reuse them outside forms — in filters, search bars, or settings panels.
+
+## Step 2: The Cell Wrapper
+
+The `Cell` component standardizes layout and error display.
+
+```tsx
+import * as React from "react";
+
+type CellProps = {
+  label?: string;
+  hint?: React.ReactNode;
+  error?: string;
+  children: React.ReactNode;
+};
+
+export function Cell({ label, hint, error, children }: CellProps) {
+  return (
+    <div className="cell">
+      {label && <label className="cell__label">{label}</label>}
+      <div className="cell__control">{children}</div>
+      {hint && <div className="cell__hint">{hint}</div>}
+      {error && <div className="cell__error">{error}</div>}
+    </div>
+  );
+}
+```
+
+All visual consistency flows through this component.
+
+## Step 3: Field Components
+
+Field components glue React Hook Form to your UI.
+
+```tsx
+import { useFormContext } from "react-hook-form";
+
+export function TextField({ name, label, ...props }) {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
+
+  return (
+    <Cell label={label} error={errors[name]?.message}>
+      <TextInput {...register(name)} {...props} />
+    </Cell>
+  );
+}
+```
+
+Each field type lives in its own small file, making behavior explicit and predictable.
+
+## Step 4: Schemas and Validation
+
+Schemas (for example, with Zod) give you a single source of truth.
+
+```tsx
+import { z } from "zod";
+
+export const ProfileSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(6, "Minimum 6 characters"),
+});
+
+export type ProfileValues = z.infer<typeof ProfileSchema>;
+```
+
+Validation rules and TypeScript types stay in sync.
+
+## Step 5: Assembling a Form
+
+```tsx
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+export function ProfileForm() {
+  const methods = useForm({
+    resolver: zodResolver(ProfileSchema),
+  });
+
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(console.log)}>
+        <TextField name="email" label="Email" />
+        <TextField name="password" label="Password" type="password" />
+        <button type="submit">Save</button>
+      </form>
+    </FormProvider>
+  );
+}
+```
+
+The form reads like intent, not implementation details.
+
+## Conclusion
+
+Understanding React form events is the foundation — but structure is what makes forms scale. By layering primitives, a shared Cell wrapper, and small field components on top of a form library, you get consistency, reuse, and clarity without sacrificing flexibility.
+
+Once this system is in place, forms stop being a special problem and become just another predictable part of your UI.
