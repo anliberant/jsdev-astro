@@ -43,6 +43,7 @@ const howtos = defineCollection({
     permalink: z.string(),
     slug: z.string(),
     type: z.literal('howto'),
+    isDraft: z.boolean().optional(),
   }),
 });
 
@@ -63,6 +64,7 @@ const fridays = defineCollection({
       image: image(),
       permalink: z.string(),
       type: z.literal('friday'),
+      isDraft: z.boolean().optional(),
     }),
 });
 
@@ -85,6 +87,7 @@ const snippets = defineCollection({
     icon: z.string().optional(),
     permalink: z.string(),
     type: z.literal('snippets'),
+    isDraft: z.boolean().optional(),
   }),
 });
 
