@@ -1,0 +1,185 @@
+---
+title: 'Clean React Architecture for Sustainable Front-End Development'
+slug: maintainable-react-code
+heading: 'How to Write Clean & Maintainable React Code (Real Practices)'
+permalink: maintainable-react-code
+image: ./images/maintainable-react-code.png
+date: 2026-01-09
+author: anton liberant
+category: react
+type: post
+tags: ['architecture',]
+desc: Learn practical techniques for writing cleaner and more maintainable React code. Covers component boundaries, utilities, conditions, data access, naming, and more.
+---
+
+React projects tend to live much longer than developers expect. Features evolve, products pivot, team members change, and soon a “quick MVP” becomes a multi-year codebase. In that reality, the winning mindset isn’t “ship the UI fast”, but organize UI so future developers can ship fast too.
+
+Clean code in React is not about pedantic rules or academic purity. It's about:
+
+- predictable component structure
+- transparent data flow
+- minimal hidden assumptions
+- separation of concerns
+- reusable behavior and presentation layers
+
+In this extended guide, we’ll explore real-world patterns that keep React components clean, readable, and maintainable at scale — with improved examples, new entities, and modern TypeScript-friendly patterns.
+
+# 1. Extracting List Rendering Into Dedicated Components
+
+A common early smell: components that mix business logic, screen-level state, and large .map() rendering blocks.
+
+### Overloaded Component
+
+```tsx
+export function ProjectTabsPanel(props) {
+  const {
+    projectsArray,
+    selectedProjectId,
+    onProjectSelect,
+    filtersArray,
+    selectedFilterId,
+    onFilterSelect,
+  } = props;
+
+  const hasProjects = projectsArray.length > 0;
+  const hasFilters = filtersArray.length > 0;
+
+  if (!hasProjects && !hasFilters) {
+    return null;
+  }
+
+  return (
+    <div className="panel">
+      {hasProjects && (
+        <div className="project-section">
+          {projectsArray.map((item) => {
+            const isChosen = item.id === selectedProjectId;
+            return (
+              <button
+                key={item.id}
+                className={isChosen ? "btn active" : "btn"}
+                onClick={() => onProjectSelect(item.id)}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {hasFilters && (
+        <div className="filter-section">
+          {/* Filter rendering */}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Refactored List Component
+
+```tsx
+type ProjectListProps = {
+  items: Array<{ id: string; label: string }>;
+  activeId: string | null;
+  onSelect: (id: string) => void;
+};
+
+function ProjectTabsList({ items, activeId, onSelect }: ProjectListProps) {
+  return (
+    <>
+      {items.map((entry) => {
+        const isActive = entry.id === activeId;
+        return (
+          <button
+            key={entry.id}
+            className={isActive ? "btn active" : "btn"}
+            onClick={() => onSelect(entry.id)}
+          >
+            {entry.label}
+          </button>
+        );
+      })}
+    </>
+  );
+}
+```
+
+# 2. Moving Helper Functions Outside of Components
+
+```tsx
+export function TimestampText({ value }) {
+  const normalize = (ts: string) =>
+    new Date(ts).toLocaleString("en-US", { dateStyle: "medium" });
+
+  return <span>{normalize(value)}</span>;
+}
+```
+
+### Better Version
+
+```ts
+export const US_DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+export function formatTimestamp(input: string): string {
+  return US_DATE_FORMAT.format(new Date(input));
+}
+```
+
+```tsx
+export function TimestampText({ value }: { value: string }) {
+  return <span>{formatTimestamp(value)}</span>;
+}
+```
+
+# 3. Destructuring Props Explicitly
+
+```tsx
+function ProfileCard({ fullName, years }: { fullName: string; years: number }) {
+  return (
+    <>
+      <p>{fullName}</p>
+      <p>{years}</p>
+    </>
+  );
+}
+```
+
+# 4. Extracting Complex Conditions Into Named Constants
+
+```tsx
+useEffect(() => {
+  const shouldIgnoreScroll =
+    firstLoad && messages.length === 0 && newArrived;
+
+  if (shouldIgnoreScroll) return;
+
+  scrollDown();
+}, [firstLoad, messages.length, newArrived]);
+```
+
+# 5. Collapsing Deep Property Access
+
+```tsx
+function StatsValue({ record }: { record: any }) {
+  const stats = record?.details?.stats;
+  const value = stats?.value ?? "N/A";
+
+  return <div>{value}</div>;
+}
+```
+
+# 6. Avoiding Magic Numbers
+
+```tsx
+const BONUS_SCORE_THRESHOLD = 200;
+const BONUS_MULTIPLIER = 1.1;
+```
+
+## Conclusion
+
+Writing clean React code is about creating systems that survive time and team growth. By separating responsibilities, extracting logic, naming conditions, and removing magic values, you make code easier to maintain, onboard, and refactor. Clean code reduces cognitive load and speeds up development — today and years from now.
