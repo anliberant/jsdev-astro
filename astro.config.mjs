@@ -25,5 +25,15 @@ export default defineConfig({
       wrap: true,
       syntaxHighlight: 'shiki',
     },
-  }
+  },
+
+  build: {
+    inlineStylesheets: 'auto',
+  },
+
+  vite: {
+    build: {
+      cssMinify: true,
+    },
+  },
 });
