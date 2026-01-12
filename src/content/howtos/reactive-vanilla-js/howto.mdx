@@ -1,0 +1,305 @@
+---
+title: "Howto Build Reactive Declarative UI in Vanilla JavaScript"
+slug: reactive-vanilla-js
+heading: Declarative Reactive Interfaces Without Frameworks
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/reactive-vanilla-js
+date: 2026-01-12
+author: anton liberant
+category: javascript
+type: howto
+tags: ['reactivity']
+desc: A practical experiment using vanilla JavaScript, Web APIs, and Proxy-based state to create reactive, declarative UI without frameworks.
+---
+
+Modern UI frameworks offer abstraction layers that make user interfaces declarative and reactive. However, the web platform itself exposes primitives that can be composed to achieve similar patterns without introducing a dedicated UI library. This article demonstrates an experimental approach for creating a reactive, declarative UI flow using only **vanilla JavaScript**, **Web APIs**, and **Proxy-based state tracking**.
+
+The purpose of the experiment is to examine how far native capabilities can be pushed without framework-level abstractions and to illustrate architectural benefits of declarative behavior in UI code: improved clarity, maintainability, and reduced coupling.
+
+---
+
+## The Target Behavior
+
+The experiment focuses on a practical business scenario:
+
+> Display a modal dialog that performs periodic polling of an API endpoint. The dialog should remain open until a specific condition is met, then resolve or reject accordingly.
+
+The modal dynamically:
+
+- mounts itself into the DOM
+- starts and manages a polling process
+- exposes reactive internal state
+- updates based on the polling result
+- closes automatically when finished
+- provides optional developer controls
+
+The primary requirement is that **consumer code defines what should happen, not how to wire it**.
+
+---
+
+## Declarative Usage Example
+
+Example invocation:
+
+```js
+uiModalEngine.showPollingDialog({
+  endpoint: `${getServiceBaseUrl()}/process/wait_for/confirmation`,
+
+  requestPayload: () => ({
+    taskId: currentTask.id,
+    mode: "rapid",
+    includeAudit: true,
+  }),
+
+  requestOptions: {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  },
+
+  shouldContinue: (response) => response.ok && response.pending === true,
+
+  intervalMs: 1000,
+
+  buildContent: (mountNode) => {
+    const contentBlock = uiModalEngine.createContentBlock({
+      title: "Waiting for confirmation...",
+      description: "This dialog will close automatically once the operation completes.",
+    })
+    mountNode.appendChild(contentBlock)
+  },
+
+  onResolved: ({ dialogNode, response }) => {
+    metrics.track("operation_confirmed")
+    dialogNode.remove()
+  },
+
+  onRejected: ({ dialogNode, error }) => {
+    logger.error("operation_polling_failed", error)
+    dialogNode.remove()
+  },
+
+  devToolsEnabled: false,
+})
+```
+
+### Declarative Takeaways
+
+| Concern | Ownership |
+|---|---|
+| UI behavior | Declarative configuration |
+| UI rendering | Modal orchestrator |
+| DOM structure | DOM utility layer |
+| polling logic | polling helper |
+| reactive state | Proxy-based tracker |
+
+No framework is involved, yet responsibilities remain clearly segmented.
+
+---
+
+## Core Building Block: DOM Utility Layer
+
+To keep high-level code focused on behavior, DOM creation is delegated to a lightweight utility:
+
+```js
+class DomToolkit {
+  constructor(doc) {
+    this.doc = doc
+  }
+
+  static getInstance(doc) {
+    if (!DomToolkit.instance) DomToolkit.instance = new DomToolkit(doc)
+    return DomToolkit.instance
+  }
+
+  createElement({ tag, classes, id, attrs = {}, styles = {}, html }) {
+    const el = this.doc.createElement(tag)
+
+    if (id) el.id = id
+
+    if (typeof classes === "string") el.classList.add(classes)
+    if (Array.isArray(classes)) classes.forEach(c => el.classList.add(c))
+
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v))
+    Object.entries(styles).forEach(([k, v]) => el.style[k] = v)
+
+    if (html != null) el.innerHTML = html
+
+    return el
+  }
+}
+
+const domToolkit = DomToolkit.getInstance(document)
+```
+
+This removes boilerplate from business logic and centralizes standard element configuration.
+
+---
+
+## Reactive State via Proxy
+
+Next, the experiment introduces deep reactive state using the native `Proxy` object. This allows mutations at arbitrary depth to be observed without requiring explicit setters.
+
+```js
+class DeepStateProxy {
+  constructor(target, { onSet, onDelete } = {}) {
+    this.onSet = onSet
+    this.onDelete = onDelete
+    return this.wrap(target, [])
+  }
+
+  wrap(node, path) {
+    if (!node || typeof node !== "object") return node
+
+    const handler = {
+      set: (target, key, value) => {
+        const fullPath = [...path, key]
+        target[key] = this.wrap(value, fullPath)
+        this.onSet?.(value, fullPath)
+        return true
+      },
+      deleteProperty: (target, key) => {
+        if (!(key in target)) return false
+        const fullPath = [...path, key]
+        delete target[key]
+        this.onDelete?.(fullPath)
+        return true
+      },
+    }
+
+    Object.keys(node).forEach(k => {
+      node[k] = this.wrap(node[k], [...path, k])
+    })
+
+    return new Proxy(node, handler)
+  }
+}
+```
+
+Usage example:
+
+```js
+const state = new DeepStateProxy({
+  attempts: 0,
+  lastResponse: null,
+}, {
+  onSet: (value, path) => console.debug("state changed:", path.join("."), value),
+})
+```
+
+This approach:
+
+✔ enables deep mutation tracking  
+✔ does not require libraries  
+✔ keeps state as plain objects  
+✔ keeps consumer code minimal  
+
+---
+
+## Polling Logic as a Reusable Abstraction
+
+To isolate asynchronous logic:
+
+```js
+async function runPolling({ task, shouldStop, intervalMs }) {
+  while (true) {
+    const result = await task()
+    if (shouldStop(result)) return result
+    await new Promise(res => setTimeout(res, intervalMs))
+  }
+}
+```
+
+Isolating polling enables:
+
+- testability (polling logic has no DOM dependencies)
+- readability (consumer describes behavior declaratively)
+- reusability (polling can be embedded into other flows)
+
+---
+
+## Modal Orchestrator
+
+The orchestrator integrates DOM utilities, polling, and reactive state into a coherent unit:
+
+```js
+ModalOrchestrator.prototype.showPollingDialog = function (cfg) {
+  const {
+    endpoint, requestPayload, requestOptions,
+    shouldContinue, intervalMs,
+    buildContent, onResolved, onRejected,
+    devToolsEnabled = false,
+  } = cfg
+
+  const dialogNode = this.createDialogShell({ buildContent })
+  document.body.appendChild(dialogNode)
+
+  const state = new DeepStateProxy({
+    attempts: 0,
+    polling: true,
+    aborted: false,
+    lastResponse: { ok: false },
+  }, {
+    onSet: (value, path) => {
+      if (devToolsEnabled) console.debug("state:", path.join("."), value)
+    },
+    onDelete: () => { throw new Error("state mutation violation") },
+  })
+
+  state.polling = true
+
+  runPolling({
+    task: async () => {
+      const payload = requestPayload()
+      const res = await fetch(endpoint, { ...requestOptions, body: JSON.stringify(payload) })
+        .then(r => r.json())
+        .catch(err => ({ ok: false, error: err.message, errored: true }))
+
+      if (!shouldContinue(res) && !res.errored) state.polling = false
+      else state.attempts++
+
+      state.lastResponse = res
+      return res
+    },
+    shouldStop: () => !state.polling,
+    intervalMs,
+  })
+    .then(res => onResolved?.({ dialogNode, response: res }))
+    .catch(err => onRejected?.({ dialogNode, error: err }))
+}
+```
+
+Note the absence of framework-specific concepts such as:
+
+- components
+- hooks
+- virtual DOM
+- stores
+
+Yet the intent remains clear and maintainable.
+
+---
+
+## Observations & Takeaways
+
+Key architectural observations include:
+
+1. **Declarative descriptions scale better than imperative wiring**  
+   The consumer code reads as a behavioral specification, not as a set of instructions.
+
+2. **Reusable utilities reduce future cost**  
+   DOM plumbing and polling logic are built once and reused many times.
+
+3. **Native Web APIs are powerful enough for complex flows**  
+   `Proxy`, `fetch`, `Promise`, and basic DOM operators enable experimentation without dependencies.
+
+4. **Frameworks are optional, whereas abstraction is not**  
+   Frameworks package abstractions; they are not the only way to achieve them.
+
+---
+
+## Conclusion
+
+This experiment shows that declarative UI behavior and reactive state management do not strictly require third-party frameworks. While production systems benefit from established ecosystems, understanding how native patterns can replicate core ideas provides architectural insight and improves reasoning about frameworks.
+
+By relying solely on the web platform, the experiment highlights the expressive power of **vanilla JavaScript**, clarifies why modern frameworks emphasize declarativity and reactivity, and reinforces the idea that good abstractions—framework or not—ultimately enable scalable UI code.
