@@ -1,0 +1,230 @@
+---
+title: How to Convert a String to a Date in JavaScript
+slug: string-to-date-js
+heading: Converting Strings to Date Objects in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/string-to-date-js
+date: 2026-01-13
+author: anton liberant
+category: javascript
+type: howto
+tags: ["dates", "date-fns"]
+desc: Learn how to convert date strings into JavaScript Date objects safely, avoid parsing pitfalls, and validate user input.
+---
+
+Parsing dates from strings in JavaScript can be tricky due to locale differences, ambiguous formats, and browser inconsistencies. For example:
+
+- `"01/02/2026"` could mean January 2nd or February 1st depending on locale,
+- `"2026-01-12"` parses reliably but may be interpreted in local timezone,
+- `"2026-01-12 10:00"` is parsed differently by different engines,
+- `new Date(string)` handles formats inconsistently.
+
+To avoid these pitfalls, developers should take control over parsing rules rather than relying on automatic behavior.
+
+Before moving on, if timezones are also part of your workflow, this related article might be useful:
+
+Related guide (timezone handling):
+[Timezone-Safe Development with date-fns and date-fns-tz](https://jsdev.space/howto/timezones-date-fns/)
+
+## Built‑in Parsing: Pitfalls
+
+Avoid relying on native parsing for non-ISO strings:
+
+```js
+new Date("2026-01-12 10:00"); // ambiguous, local parsing rules
+new Date("01/12/2026");      // locale-dependent
+```
+
+Better:
+
+```js
+new Date("2026-01-12T10:00:00Z"); // explicit UTC
+```
+
+Or using a parsing library like `date-fns` to enforce expected formats.
+
+## Using date-fns for Safe Parsing
+
+`date-fns` enables explicit parsing patterns:
+
+```js
+import { parse, isValid } from "date-fns";
+
+const input = "12.01.2026";
+const pattern = "dd.MM.yyyy";
+const reference = new Date();
+
+const result = parse(input, pattern, reference);
+
+if (isValid(result)) {
+  console.log(result.toISOString());
+}
+```
+
+This prevents locale ambiguity and ensures reproducibility.
+
+## React Form Parsing Demo (Practical Example)
+
+For more advanced form handling patterns, see  
+[**React Form Primitives:**](https://jsdev.space/react-form-primitives/)
+
+The following example demonstrates how to parse a date string entered by a user inside a React controlled form, validate it, and show a formatted output.
+
+```tsx
+import React, { useState } from "react";
+import { parse, isValid, format } from "date-fns";
+
+type SupportedFormat = "yyyy-MM-dd" | "dd.MM.yyyy" | "MM/dd/yyyy";
+
+const formatExamples: Record<SupportedFormat, string> = {
+  "yyyy-MM-dd": "2026-01-12",
+  "dd.MM.yyyy": "12.01.2026",
+  "MM/dd/yyyy": "01/12/2026",
+};
+
+export function DateStringForm() {
+  const [raw, setRaw] = useState("");
+  const [pattern, setPattern] = useState<SupportedFormat>("yyyy-MM-dd");
+  const [parsed, setParsed] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit: React.FormEventHandler = (e) => {
+    e.preventDefault();
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      setParsed(null);
+      setError("Please enter a date string.");
+      return;
+    }
+    const reference = new Date();
+    const result = parse(trimmed, pattern, reference);
+    if (!isValid(result)) {
+      setParsed(null);
+      setError(
+        \`Cannot parse "\${trimmed}" as \${pattern}. Example: \${formatExamples[pattern]}\`
+      );
+      return;
+    }
+    setParsed(result);
+    setError(null);
+  };
+
+  return (
+    <div style={{ maxWidth: 480, margin: "2rem auto", fontFamily: "system-ui" }}>
+      <h2>String to Date parsing demo</h2>
+      <p style={{ marginBottom: "1rem" }}>
+        This example shows how to convert a date string into a JavaScript{" "}
+        <code>Date</code> object using controlled form inputs and{" "}
+        <code>date-fns</code>. For more advanced form patterns, see{" "}
+        <a
+          href="https://jsdev.space/react-form-primitives/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          React Form Primitives
+        </a>
+        .
+      </p>
+
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
+        <label style={{ display: "grid", gap: "0.25rem" }}>
+          <span>Date string</span>
+          <input
+            type="text"
+            value={raw}
+            onChange={(e) => setRaw(e.target.value)}
+            placeholder={formatExamples[pattern]}
+            style={{
+              padding: "0.5rem 0.75rem",
+              borderRadius: 6,
+              border: "1px solid #ccc",
+              fontFamily: "inherit",
+            }}
+          />
+        </label>
+
+        <label style={{ display: "grid", gap: "0.25rem" }}>
+          <span>Expected format</span>
+          <select
+            value={pattern}
+            onChange={(e) => setPattern(e.target.value as SupportedFormat)}
+            style={{
+              padding: "0.5rem 0.75rem",
+              borderRadius: 6,
+              border: "1px solid #ccc",
+              fontFamily: "inherit",
+            }}
+          >
+            <option value="yyyy-MM-dd">yyyy-MM-dd (2026-01-12)</option>
+            <option value="dd.MM.yyyy">dd.MM.yyyy (12.01.2026)</option>
+            <option value="MM/dd/yyyy">MM/dd/yyyy (01/12/2026)</option>
+          </select>
+        </label>
+
+        <button
+          type="submit"
+          style={{
+            marginTop: "0.5rem",
+            padding: "0.5rem 0.75rem",
+            borderRadius: 6,
+            border: "none",
+            background: "#111827",
+            color: "white",
+            cursor: "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          Parse date
+        </button>
+      </form>
+
+      <div style={{ marginTop: "1rem", fontSize: 14 }}>
+        {error && (
+          <p style={{ color: "#b91c1c", margin: 0 }}>
+            {error}
+          </p>
+        )}
+
+        {parsed && !error && (
+          <div
+            style={{
+              marginTop: "0.75rem",
+              padding: "0.75rem",
+              borderRadius: 6,
+              background: "#f9fafb",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <div>
+              <strong>Parsed Date object:</strong>
+            </div>
+            <div>
+              <code>{parsed.toString()}</code>
+            </div>
+            <div style={{ marginTop: "0.5rem" }}>
+              <strong>ISO (UTC):</strong>{" "}
+              <code>{parsed.toISOString()}</code>
+            </div>
+            <div style={{ marginTop: "0.25rem" }}>
+              <strong>Formatted (yyyy-MM-dd):</strong>{" "}
+              <code>{format(parsed, "yyyy-MM-dd")}</code>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+## Summary
+
+Key takeaways:
+
+- Native `Date` parsing is inconsistent for non-ISO formats,
+- Using explicit parsing rules prevents locale ambiguity,
+- React integration is straightforward with controlled inputs,
+- `date-fns` improves reliability and validation.
+
+This updated MDX now includes both conceptual guidance and a practical UI demo.
