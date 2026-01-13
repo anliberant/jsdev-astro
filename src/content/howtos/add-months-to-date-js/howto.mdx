@@ -1,0 +1,128 @@
+---
+title: How to Add Months to a Date in JavaScript
+slug: add-months-to-date-js
+heading: Practical Month Arithmetic and Calendar Logic in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/add-months-to-date-js
+date: 2026-01-13
+author: anton liberant
+category: javascript
+type: howto
+tags: ["dates", "date-fns", "timezone", "calendar"]
+desc: Learn reliable ways to add months to a JavaScript Date, accounting for month lengths, edge cases, and timezone differences using native APIs and date-fns.
+---
+
+Working with dates in JavaScript looks simple until you need real calendar arithmetic. Adding months is a subtle operation because month lengths vary, timezones affect results, and end-of-month behavior is not always obvious.
+
+Before diving in, if you also work with timezones, you may benefit from this related article:
+
+Previous related guide (timezone handling):  
+[Timezone-Safe Development with date-fns and date-fns-tz
+](https://jsdev.space/howto/timezones-date-fns/)
+
+## Why Adding Months Is Not Just Adding 30 Days
+
+Some developers assume that one month equals 30 days:
+
+```js
+const date = new Date("2024-01-31");
+const result = new Date(date.getTime() + 30 * 24 * 60 * 60 * 1000);
+console.log(result.toISOString());
+```
+
+This does not guarantee an accurate month shift. For January 31, this often produces a date in early March instead of the end of February.
+
+## Adding Months Using Native JavaScript
+
+The native approach uses `setMonth`:
+
+```js
+const date = new Date("2024-01-31");
+const result = new Date(date);
+result.setMonth(result.getMonth() + 1);
+console.log(result.toISOString());
+```
+
+However, this may result in an overflow. January 31 plus one month produces a date in March because February has fewer days.
+
+### Fixing End-of-Month Behavior
+
+If your domain needs end-of-month semantics (billing, subscriptions), you can enforce it:
+
+```js
+function addMonthsEndSafe(date, months) {
+  const d = new Date(date);
+  const day = d.getDate();
+  d.setMonth(d.getMonth() + months);
+  if (d.getDate() < day) {
+    d.setDate(0);
+  }
+  return d;
+}
+
+console.log(addMonthsEndSafe(new Date("2024-01-31"), 1));
+```
+
+This correctly yields `2024-02-29` when applicable.
+
+## Adding Months Using date-fns
+
+The `date-fns` library provides `addMonths` for clean edge-case handling:
+
+```js
+import { addMonths } from "date-fns";
+
+console.log(addMonths(new Date("2024-01-31"), 1));
+// → 2024-02-29
+```
+
+Subtracting months:
+
+```js
+import { subMonths } from "date-fns";
+
+console.log(subMonths(new Date("2024-05-20"), 3));
+// → 2024-02-20
+```
+
+## Handling Timezones
+
+If your application involves user timezones, use `date-fns-tz` for formatting:
+
+```js
+import { addMonths } from "date-fns";
+import { utcToZonedTime, format } from "date-fns-tz";
+
+const utc = addMonths(new Date("2026-01-12T15:00:00.000Z"), 1);
+const zone = "America/New_York";
+const local = utcToZonedTime(utc, zone);
+
+console.log(format(local, "yyyy-MM-dd HH:mmXXX"));
+```
+
+This helps avoid DST-related formatting issues.
+
+## Comparison Summary
+
+| Method | End-of-month safe | DST aware | Recommended |
+|---|---|---|---|
+| `+30 days` | No | No | Never |
+| `setMonth` | Partial | Yes | Good |
+| Custom safe function | Yes | Yes | Billing scenarios |
+| `date-fns addMonths` | Yes | Yes | Most applications |
+
+## Choosing the Right Strategy
+
+| Use Case | Approach |
+|---|---|
+| Billing | custom EOM logic |
+| UI calendars | date-fns `addMonths` |
+| Internal UTC timestamps | native `setMonth` |
+| Finance | custom logic + UTC |
+
+## Summary
+
+Adding months is not just arithmetic. Calendar correctness requires accounting for month length differences, handling overflows safely, respecting user timezones when needed, and choosing the right approach for the domain.
+
+`date-fns` simplifies most real-world scenarios, while custom logic may be necessary for financial systems and subscription billing.
