@@ -1,0 +1,160 @@
+---
+title: How to Handle Timezones with date-fns and date-fns-tz
+slug: timezones-date-fns
+heading: Timezone-Safe Development with date-fns and date-fns-tz
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/timezones-date-fns
+date: 2026-01-13
+author: anton liberant
+category: javascript
+type: howto
+tags: ['date-fns', 'date-fns-tz']
+desc: Learn how to manage timezones, UTC conversions, and scheduling logic using date-fns, date-fns-tz, and PostgreSQL in real-world applications.
+---
+
+**Why Timezones Matter**
+
+Working with dates is deceptively complex. Different regions have local timezone offsets, daylight saving rules (DST), and historical changes.
+
+Almost every backend stores timestamps in **UTC**, while frontends must show them in **local time**. Mistakes lead to wrong displayed times, off-by-one-day bugs, incorrect scheduling, and misaligned business rules.
+
+Instead of building logic manually, this article uses `date-fns` and `date-fns-tz`, two lightweight libraries designed for timezone-safe manipulation.
+
+## Installation
+
+```bash
+npm install date-fns date-fns-tz
+```
+## Basic Concepts
+
+1. **UTC is the universal storage format**  
+   Example: `"2024-10-11T10:30:00.000Z"`
+
+2. **Local time is a presentation layer**  
+   UI must render times in the user’s timezone.
+
+3. **`date-fns-tz` gives explicit control**  
+   Prevents “magic conversion bugs”.
+
+## Parsing a UTC Timestamp into Local Time
+
+```js
+import { format } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
+
+const iso = "2026-01-12T15:00:00.000Z";
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const date = utcToZonedTime(iso, timezone);
+console.log(format(date, "yyyy-MM-dd HH:mm:ssXXX"));
+```
+
+## Converting Local Time to UTC
+
+```js
+import { zonedTimeToUtc } from "date-fns-tz";
+
+const userInput = "2026-01-12 18:30:00";
+const timezone = "Europe/Berlin";
+
+const utc = zonedTimeToUtc(userInput, timezone);
+console.log(utc.toISOString());
+```
+
+## Formatting With Timezones
+
+```js
+import { format, formatISO } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
+
+const iso = "2026-07-01T12:00:00Z";
+const zone = "America/New_York";
+
+const local = utcToZonedTime(iso, zone);
+
+console.log(format(local, "PPpp"));
+console.log(formatISO(local));
+```
+
+## Handling Daylight Saving Time (DST)
+
+```js
+const winter = "2026-01-10T12:00:00Z";
+const summer = "2026-07-10T12:00:00Z";
+const zone = "America/New_York";
+
+console.log(format(utcToZonedTime(winter, zone), "HH:mmXXX"));
+console.log(format(utcToZonedTime(summer, zone), "HH:mmXXX"));
+```
+
+## Comparing Dates Across Timezones
+
+```js
+import { getTime } from "date-fns";
+
+const same = getTime(new Date(a)) === getTime(new Date(b));
+```
+
+## Scheduling Use Case
+
+```js
+import { zonedTimeToUtc } from "date-fns-tz";
+
+function schedule(userLocalDateTime, userZone) {
+  const utc = zonedTimeToUtc(userLocalDateTime, userZone);
+  return utc.toISOString();
+}
+```
+
+For rendering:
+
+```js
+import { utcToZonedTime } from "date-fns-tz";
+
+function present(utcIso, userZone) {
+  return utcToZonedTime(utcIso, userZone);
+}
+```
+
+## Browser Timezones
+
+```js
+const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+```
+
+## Common Pitfalls
+
+Wrong:
+
+```js
+new Date("2026-01-12 10:00");
+```
+
+Correct:
+
+```js
+new Date("2026-01-12T10:00:00Z");
+```
+
+or convert using `zonedTimeToUtc`.
+
+## When to Use Which Function
+
+| Task | Function |
+|---|---|
+| UTC → local | `utcToZonedTime(utc, zone)` |
+| Local → UTC | `zonedTimeToUtc(local, zone)` |
+| Format | `format(date, pattern)` |
+| Store | `date.toISOString()` |
+
+## Summary
+
+Working with timezones is not simple subtraction. It requires:
+
+- consistent UTC storage,
+- correct local presentation,
+- DST-aware conversions,
+- predictable comparisons.
+
+`date-fns` and `date-fns-tz` help avoid most timezone-related pitfalls while staying lightweight.
