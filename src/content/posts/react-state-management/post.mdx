@@ -1,0 +1,741 @@
+---
+title: Choosing the Right State Strategy in React
+slug: react-state-management
+heading: How to Master State Management in Modern React
+image: ./images/react-state-management.png
+permalink: react-state-management
+date: 2026-01-19
+author: anton liberant
+category: react
+type: post
+tags: ['Zustand', 'Redux', 'Jotai', 'MobX', 'Valtio']
+desc: Learn how to choose and use state management tools in React, including Context, Redux, Zustand, Jotai, MobX, and Valtio.
+---
+
+State management in React is both a superpower and a recurring source of complexity. As applications grow, state stops being “just some useState hooks” and turns into a mix of:
+
+- local UI state (inputs, dialogs, tabs),
+- shared UI state (layout, theme, auth),
+- server state (queries, caches, background refresh),
+- domain state (entities, workflows, lifecycles),
+- and performance constraints (minimizing wasted renders).
+
+There is no single perfect tool that solves every case. Instead, each approach makes different trade‑offs around **subscriptions**, **granularity**, **debuggability**, and **team workflow**.
+
+This article walks through several state management strategies that React developers actually use in production today. Instead of yet another todo list, we will use more realistic examples: a **market dashboard**, **trade lifecycle**, **user preferences**, and **reactive UIs**.
+
+We will look at:
+
+- When local state is enough.
+- When Context helps, and when it hurts.
+- How Redux Toolkit enables event logs and workflows.
+- How Zustand provides simple global stores with selectors.
+- How Jotai models state as small atoms.
+- How MobX and Valtio embrace reactive, mutable models.
+- How to decide which tool to use for which problem.
+
+---
+
+## The Two Fundamental Problems of React State
+
+Every state management discussion eventually runs into two opposite pain points:
+
+1. **Data changes, but the UI does not update.**  
+   This is a *data flow* problem: React does not know what changed, or the change happened outside its subscription graph.
+
+2. **UI updates even though the relevant data did not change.**  
+   This is a *subscriptions* problem: components subscribed to too much state or subscribe in a way that always returns new values.
+
+Every library in the React ecosystem is, in one way or another, an attempt to make these two problems manageable.
+
+---
+
+## Approach 1: Local State with `useState` and `useReducer`
+
+The simplest and often the most robust approach is to keep state **local** to the component that needs it.
+
+Local state is a great fit for:
+
+- widget‑level interactions (modals, dropdowns, accordions);
+- form inputs and validation inside a single screen;
+- transient data that does not need to be shared.
+
+Consider a small **sparkline chart** that visualizes the last 50 price ticks of a stock. This is pure UI state; nothing else needs to know about it.
+
+```tsx
+import { useReducer, useEffect } from "react";
+
+interface Candle {
+  t: number;
+  p: number;
+}
+
+type Action = { type: "tick"; price: number };
+
+function chartReducer(state: Candle[], action: Action): Candle[] {
+  switch (action.type) {
+    case "tick":
+      return [...state.slice(-49), { t: Date.now(), p: action.price }];
+    default:
+      return state;
+  }
+}
+
+export function Sparkline({ feed }: { feed: () => number }) {
+  const [candles, dispatch] = useReducer(chartReducer, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      dispatch({ type: "tick", price: feed() });
+    }, 500);
+    return () => clearInterval(id);
+  }, [feed]);
+
+  return (
+    <pre style={{ fontSize: 12 }}>
+      {JSON.stringify(candles.slice(-5), null, 2)}
+    </pre>
+  );
+}
+```
+
+React does not need a state library to manage this. The logic is:
+
+- encapsulated,
+- easy to test,
+- and easy to throw away if the component is refactored.
+
+### When local state is ideal
+
+- The data does not need to be shared across distant components.
+- The component can own the entire lifecycle of that state.
+- Performance characteristics are simple and local.
+
+### When local state becomes a problem
+
+- Many siblings need the same state and start lifting it up repeatedly.
+- Different screens must coordinate around shared entities or workflows.
+- Debugging requires inspecting the evolution of state over time.
+
+As soon as state needs to be **shared or observed by many components**, we usually escalate beyond pure `useState`/`useReducer`.
+
+---
+
+## Approach 2: React Context for Shared UI State
+
+React Context solves a specific problem: **prop drilling**. Instead of passing props through multiple levels, a Provider at the top of a subtree can expose state and APIs to any descendant.
+
+Context is a great fit for:
+
+- theme,
+- locale,
+- the current authenticated user,
+- feature flags,
+- routing metadata,
+- “ambient” UI state that rarely changes.
+
+However, Context has a sharp edge: **when the Provider value reference changes, all consumers re‑render.** Memoization is critical.
+
+### Example: Shared Watchlist with Context
+
+Imagine a market dashboard where multiple components show and modify a user’s stock watchlist.
+
+```tsx
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
+
+interface WatchlistContextShape {
+  symbols: string[];
+  add: (symbol: string) => void;
+  remove: (symbol: string) => void;
+}
+
+const WatchlistContext = createContext<WatchlistContextShape | null>(null);
+
+export function WatchlistProvider({ children }: { children: ReactNode }) {
+  const [symbols, setSymbols] = useState<string[]>(["AAPL", "MSFT"]);
+
+  const add = useCallback(
+    (sym: string) =>
+      setSymbols(prev => (prev.includes(sym) ? prev : [...prev, sym])),
+    [],
+  );
+
+  const remove = useCallback(
+    (sym: string) => setSymbols(prev => prev.filter(s => s !== sym)),
+    [],
+  );
+
+  const value = useMemo(
+    () => ({ symbols, add, remove }),
+    [symbols, add, remove],
+  );
+
+  return (
+    <WatchlistContext.Provider value={value}>
+      {children}
+    </WatchlistContext.Provider>
+  );
+}
+
+export function useWatchlist() {
+  const ctx = useContext(WatchlistContext);
+  if (!ctx) throw new Error("WatchlistProvider is missing");
+  return ctx;
+}
+```
+
+Any descendant can call `useWatchlist()` to read or update the watchlist. For state that changes rarely, this works very well.
+
+### Pros of Context
+
+- No external dependencies.
+- Perfect for ambient state (theme, locale, auth, feature flags).
+- Natural lifetime scoping: unmounting a Provider resets state.
+
+### Cons of Context
+
+- All consumers re‑render whenever `value` changes (unless you split Providers).
+- No built‑in selectors or fine‑grained subscriptions.
+- No action log, no time travel, and limited debugging visibility.
+
+Context is powerful but should not be the default for **high‑frequency** or **large shared** state. For those cases, other tools are better suited.
+
+---
+
+## Approach 3: Redux Toolkit for Workflow‑Oriented State
+
+Redux was designed around a very specific philosophy:
+
+> State follows actions. Every change is an event in a log.
+
+In its modern form (Redux Toolkit + React‑Redux), Redux is best used when:
+
+- there are clear business events with semantic meaning,
+- debugging requires inspecting *how* and *when* state changed,
+- multiple teams need a shared, predictable architecture,
+- reproducibility and time‑travel debugging are important.
+
+Think of a **trade order lifecycle** in a trading system:
+
+- draft → submitted → executed → settled
+
+This is not just state — it is a sequence of events that must be traceable.
+
+### Example: Trade Lifecycle with Redux Toolkit
+
+```ts
+// tradeSlice.ts
+import { createSlice, configureStore, PayloadAction } from "@reduxjs/toolkit";
+
+export type TradeStatus = "draft" | "submitted" | "executed" | "settled";
+
+export interface Trade {
+  id: string;
+  symbol: string;
+  quantity: number;
+  status: TradeStatus;
+}
+
+interface TradeState {
+  items: Trade[];
+}
+
+const initialState: TradeState = {
+  items: [],
+};
+
+const tradesSlice = createSlice({
+  name: "trades",
+  initialState,
+  reducers: {
+    createTrade: (
+      state,
+      action: PayloadAction<{ id: string; symbol: string; quantity: number }>,
+    ) => {
+      state.items.push({
+        ...action.payload,
+        status: "draft",
+      });
+    },
+    submitTrade: (state, action: PayloadAction<string>) => {
+      const trade = state.items.find(t => t.id === action.payload);
+      if (trade && trade.status === "draft") {
+        trade.status = "submitted";
+      }
+    },
+    executeTrade: (state, action: PayloadAction<string>) => {
+      const trade = state.items.find(t => t.id === action.payload);
+      if (trade && trade.status === "submitted") {
+        trade.status = "executed";
+      }
+    },
+    settleTrade: (state, action: PayloadAction<string>) => {
+      const trade = state.items.find(t => t.id === action.payload);
+      if (trade && trade.status === "executed") {
+        trade.status = "settled";
+      }
+    },
+  },
+});
+
+export const {
+  createTrade,
+  submitTrade,
+  executeTrade,
+  settleTrade,
+} = tradesSlice.actions;
+
+export const store = configureStore({
+  reducer: {
+    trades: tradesSlice.reducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+```
+
+Selectors subscribe components to specific slices of the store. Only components whose selected slices changed will re‑render.
+
+### Pros of Redux Toolkit
+
+- Strong DevTools (time travel, action log, state inspection).
+- Predictable one‑way data flow: `dispatch → reducer → new state`.
+- Well‑suited for large teams and long‑lived products.
+- Easy to test and reason about.
+
+### Cons of Redux Toolkit
+
+- More structure and boilerplate than local state or Zustand.
+- Overkill for small apps or purely visual widgets.
+
+Use Redux when state is closely tied to **business workflows** and **auditability**, not just UI behavior.
+
+---
+
+## Approach 4: Zustand for Minimal Global Stores
+
+Zustand sits in a sweet spot between Context and Redux:
+
+- It provides global stores accessed via hooks.
+- Components subscribe through **selectors**.
+- It does not impose a formal action/reducer pattern.
+
+Zustand is a good fit when:
+
+- You want global state without the ceremony of Redux.
+- You still want selector‑based subscriptions.
+- You need middlewares like persistence or logging, but not full Redux semantics.
+
+### Example: User Preferences with Persistence
+
+Here’s a store for user UI preferences in our dashboard: theme and preferred currency.
+
+```ts
+// useUserPrefs.ts
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+type Currency = "USD" | "EUR" | "JPY";
+
+interface UserPrefsState {
+  darkMode: boolean;
+  currency: Currency;
+  toggleDarkMode: () => void;
+  setCurrency: (c: Currency) => void;
+}
+
+export const useUserPrefs = create<UserPrefsState>()(
+  persist(
+    (set) => ({
+      darkMode: false,
+      currency: "USD",
+      toggleDarkMode: () =>
+        set(prev => ({ darkMode: !prev.darkMode })),
+      setCurrency: (currency) => set({ currency }),
+    }),
+    { name: "user-prefs" },
+  ),
+);
+```
+
+A component can subscribe to just the currency:
+
+```tsx
+const currency = useUserPrefs(s => s.currency);
+```
+
+Only components reading `currency` will re‑render when it changes.
+
+### Pros of Zustand
+
+- Small, focused API.
+- Selector‑based subscriptions (fine‑grained control).
+- Middlewares (persist, devtools) are easy to plug in.
+- Works well for mid‑sized apps and feature‑based stores.
+
+### Cons of Zustand
+
+- Less opinionated architecture; teams must define conventions.
+- No built‑in concept of actions/events beyond what you define yourself.
+
+Zustand is often a great default when Redux feels heavy but Context is not enough.
+
+---
+
+## Approach 5: Jotai for Atomic, Composable State
+
+Jotai models state as **atoms** — small, individually subscribable units. Components subscribe only to the atoms they read, and derived atoms can express relationships between pieces of state.
+
+This is useful when:
+
+- state is naturally decomposed into many small units;
+- derived values and computed relationships are common;
+- you want to avoid manual selectors.
+
+### Example: Currency Conversion Panel with Atoms
+
+```ts
+// atoms.ts
+import { atom } from "jotai";
+
+export const baseCurrencyAtom = atom<"USD" | "EUR">("USD");
+export const targetCurrencyAtom = atom<"USD" | "EUR">("EUR");
+export const amountAtom = atom(100);
+
+// imagine that rate map comes from an API or a query hook
+const staticRates: Record<string, number> = {
+  "USD_EUR": 0.92,
+  "EUR_USD": 1.09,
+};
+
+export const convertedAmountAtom = atom((get) => {
+  const from = get(baseCurrencyAtom);
+  const to = get(targetCurrencyAtom);
+  const amount = get(amountAtom);
+
+  if (from === to) return amount;
+
+  const key = `${from}_${to}`;
+  const rate = staticRates[key] ?? 1;
+  return Math.round(amount * rate * 100) / 100;
+});
+```
+
+In a React component:
+
+```tsx
+// ConversionPanel.tsx
+import { useAtom } from "jotai";
+import {
+  amountAtom,
+  baseCurrencyAtom,
+  targetCurrencyAtom,
+  convertedAmountAtom,
+} from "./atoms";
+
+export function ConversionPanel() {
+  const [amount, setAmount] = useAtom(amountAtom);
+  const [base, setBase] = useAtom(baseCurrencyAtom);
+  const [target, setTarget] = useAtom(targetCurrencyAtom);
+  const [converted] = useAtom(convertedAmountAtom);
+
+  return (
+    <section>
+      <div>
+        <label>
+          Amount
+          <input
+            type="number"
+            value={amount}
+            onChange={e => setAmount(Number(e.target.value) || 0)}
+          />
+        </label>
+      </div>
+
+      <div>
+        <select value={base} onChange={e => setBase(e.target.value as any)}>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
+        <span>→</span>
+        <select value={target} onChange={e => setTarget(e.target.value as any)}>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+
+      <p>
+        Result: <strong>{converted}</strong> {target}
+      </p>
+    </section>
+  );
+}
+```
+
+Any component that reads `convertedAmountAtom` will re‑render only when one of its dependencies changes.
+
+### Pros of Jotai
+
+- Fine‑grained, atom‑level subscriptions.
+- Simple mental model: atoms are just values.
+- Derived atoms make relationships between state explicit.
+
+### Cons of Jotai
+
+- Complex graphs of atoms can become hard to reason about in very large apps.
+- No built‑in action concept; you must encode workflows yourself.
+
+Jotai is especially nice in design systems, forms, and component‑centric applications.
+
+---
+
+## Approach 6: MobX for Observable, Domain‑Driven State
+
+MobX takes a more reactive, object‑oriented approach:
+
+- domain objects are made **observable**;
+- components wrapped with `observer` react to any observable property they read;
+- computed values are updated automatically when dependencies change.
+
+This is powerful for desktop‑like UIs, complex forms, and domain models with many derived values.
+
+### Example: Reactive Portfolio Metrics
+
+```ts
+// portfolioStore.ts
+import { makeAutoObservable } from "mobx";
+
+interface Position {
+  symbol: string;
+  shares: number;
+  price: number;
+}
+
+export class PortfolioStore {
+  positions: Position[] = [
+    { symbol: "AAPL", shares: 10, price: 187 },
+    { symbol: "MSFT", shares: 5, price: 320 },
+  ];
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  get totalValue() {
+    return this.positions.reduce(
+      (sum, p) => sum + p.shares * p.price,
+      0,
+    );
+  }
+
+  updatePrice(symbol: string, price: number) {
+    const pos = this.positions.find(p => p.symbol === symbol);
+    if (pos) pos.price = price;
+  }
+}
+
+export const portfolioStore = new PortfolioStore();
+```
+
+```tsx
+// PortfolioWidget.tsx
+import { observer } from "mobx-react-lite";
+import { portfolioStore } from "./portfolioStore";
+
+export const PortfolioWidget = observer(() => {
+  return (
+    <div>
+      <h2>Portfolio</h2>
+      <ul>
+        {portfolioStore.positions.map(p => (
+          <li key={p.symbol}>
+            {p.symbol}: {p.shares} @ ${p.price}
+          </li>
+        ))}
+      </ul>
+      <p>Total value: ${portfolioStore.totalValue}</p>
+    </div>
+  );
+});
+```
+
+MobX tracks which observables each `observer` component reads and re‑renders only those components when the relevant fields change.
+
+### Pros of MobX
+
+- Extremely fine‑grained reactivity.
+- Minimal boilerplate once the pattern is understood.
+- Great fit for domain models with many derived values.
+
+### Cons of MobX
+
+- More implicit behavior; you must understand how tracking works.
+- Less aligned with purely functional patterns.
+
+MobX works best when a project embraces reactive domain objects as a first‑class concept.
+
+---
+
+## Approach 7: Valtio for Proxy‑Based Mutable Stores
+
+Valtio also uses Proxies, but focuses on a very ergonomic API:
+
+- state is a plain JavaScript object;
+- `proxy()` wraps it in a reactive layer;
+- `useSnapshot()` subscribes components to accessed properties.
+
+This approach is ideal for **highly interactive UIs** such as:
+
+- draggable layouts,
+- dashboards with many small widgets,
+- real‑time collaborative cursors,
+- visual editors.
+
+### Example: Window Layout with Valtio
+
+```ts
+// layout.ts
+import { proxy } from "valtio";
+
+interface WindowModel {
+  id: number;
+  x: number;
+  y: number;
+  title: string;
+}
+
+export const layoutState = proxy({
+  windows: [
+    { id: 1, x: 80, y: 40, title: "Orders" },
+    { id: 2, x: 320, y: 120, title: "Market Depth" },
+  ] as WindowModel[],
+
+  move(id: number, x: number, y: number) {
+    const win = this.windows.find(w => w.id === id);
+    if (win) {
+      win.x = x;
+      win.y = y;
+    }
+  },
+});
+```
+
+```tsx
+// Window.tsx
+import { useSnapshot } from "valtio";
+import { layoutState } from "./layout";
+
+export function Window({ id }: { id: number }) {
+  const snap = useSnapshot(layoutState);
+  const win = snap.windows.find(w => w.id === id);
+  if (!win) return null;
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: win.x,
+        top: win.y,
+        padding: 12,
+        border: "1px solid #ccc",
+        background: "#fff",
+      }}
+    >
+      <strong>{win.title}</strong>
+    </div>
+  );
+}
+```
+
+Only components that read particular fields will re‑render when those fields change.
+
+### Pros of Valtio
+
+- Simple, mutable API that feels natural.
+- Property‑level subscriptions via snapshots.
+- Great for complex, interactive layouts.
+
+### Cons of Valtio
+
+- By default, stores are often singletons; SSR and multi‑user isolation require extra work.
+- Fewer built‑in patterns around actions or workflows.
+
+Valtio is a strong choice where the UI feels more like a desktop application or a canvas rather than a simple form.
+
+---
+
+## Comparing the Approaches
+
+Here is a high‑level comparison of the approaches discussed, focusing on **how** they subscribe to state and **how much** structure they require.
+
+| Approach              | Subscription granularity    | Boilerplate | DevTools / Debugging  | Best suited for                                  |
+|-----------------------|-----------------------------|------------:|------------------------|--------------------------------------------------|
+| Local state           | Component                   | very low    | basic React DevTools  | Simple widgets, forms, local UI                  |
+| Context               | All consumers per Provider  | low         | basic React DevTools  | Theme, locale, auth, flags                       |
+| Redux Toolkit         | Selector result             | medium      | excellent             | Workflows, logs, multi‑team products             |
+| Zustand               | Selector result             | low         | good (with middleware)| Global app state, filters, preferences           |
+| Jotai                 | Atom value                  | low         | good                  | Atomic state, derived values, UI composition     |
+| MobX                  | Observable property         | low         | good to excellent     | Domain models, complex derived graphs            |
+| Valtio                | Property access via Proxy   | low         | basic to good         | Interactive dashboards, layouts, editors         |
+
+No single row is “the winner”. Each approach optimizes for different constraints: predictability, expressiveness, performance, or developer experience.
+
+---
+
+## A Practical Decision Checklist
+
+When choosing a state management strategy, it helps to ask a few practical questions:
+
+1. **Who owns this state?**  
+   If it belongs to a single component, keep it local.
+
+2. **Who needs to read this state?**  
+   If it is only needed in one subtree, Context or a local store may be enough.
+
+3. **How often does this state change?**  
+   High‑frequency updates favor fine‑grained or reactive models (Zustand, Jotai, MobX, Valtio).
+
+4. **Do I need a log of what happened?**  
+   If the answer is yes, Redux with DevTools is hard to beat.
+
+5. **How many people work on this codebase?**  
+   Larger teams benefit from standardized patterns and strong tooling.
+
+6. **Does the state represent a business workflow?**  
+   If so, modeling transitions as actions can be extremely valuable.
+
+Based on the answers, you might end up with a hybrid:
+
+- local state for forms and one‑off components,
+- Context for theme/auth/locale,
+- Zustand for global UI state and filters,
+- Redux for complex business workflows,
+- Jotai for atomic, derived UI state,
+- MobX or Valtio for highly interactive or domain‑heavy areas.
+
+---
+
+## Conclusion
+
+State management in React is not about picking a single “best” library. It is about understanding:
+
+- how React’s render cycle relates to state changes,
+- how subscriptions and selectors affect performance,
+- and how different tools model updates and workflows.
+
+Instead of asking “Which library should I use?”, it is often more productive to ask:
+
+- “What kind of state is this?”  
+- “Who needs to observe it?”  
+- “How should changes be tracked and debugged?”  
+
+By aligning tools with the actual shape of your state — local vs shared, low vs high frequency, simple vs workflow‑driven — you can build React applications that are both easier to reason about and more pleasant to maintain.
+
+There is no silver bullet, but there is a clear pattern: the closer a tool matches the **real behavior** of your domain, the simpler your state layer becomes.
