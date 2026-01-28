@@ -16,7 +16,6 @@ export async function GET(context) {
 		return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
 	});
 	return rss({
-		site: 'https://jsdev.space',
 		stylesheet: '/rss/styles.xsl',
 		title: siteConfig.title,
 		// `<description>` field in output xml
@@ -26,13 +25,12 @@ export async function GET(context) {
 		// See "Generating items" section for examples using content collections and glob imports
 		items: sortedPosts.map((post) => ({
 			title: post.data.title,
-			date: post.data.date,
+			pubDate: post.data.date,
 			description: post.data.desc,
 			link: `/${post.data.permalink}/`,
 			content: sanitizeHtml(parser.render(post.body), {
 				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])
 			}),
-			...post.data,
 		})),
 		// (optional) inject custom xml
 		customData: `<language>en-us</language>`,
