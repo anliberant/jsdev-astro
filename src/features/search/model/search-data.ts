@@ -6,7 +6,15 @@ export function transformCollectionToSearchable(
   category: 'posts' | 'howtos' | 'snippets' | 'fridays'
 ): SearchableContent[] {
   return collection.map((item, index) => {
-    let href = `/${item.data?.permalink || item.slug}/`;
+    let basePath = '';
+    if (category === 'howtos') {
+      basePath = '/howto';
+    } else if (category === 'snippets') {
+      basePath = '/snippets';
+    } else if (category === 'fridays') {
+      basePath = '/friday';
+    }
+    let href = `${basePath}/${item.data?.permalink || item.slug}/`;
     
     return {
       id: item.id || `${category}-${index}`,
