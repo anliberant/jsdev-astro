@@ -28,9 +28,11 @@ export async function GET(context) {
 			pubDate: post.data.date,
 			description: post.data.desc,
 			link: `/${post.data.permalink}/`,
-			content: sanitizeHtml(parser.render(post.body), {
-				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])
-			}),
+			content: post.id.endsWith('.mdx')
+				? post.data.desc
+				: sanitizeHtml(parser.render(post.body), {
+						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])
+					}),
 		})),
 		// (optional) inject custom xml
 		customData: `<language>en-us</language>`,
