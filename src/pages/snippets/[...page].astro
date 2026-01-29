@@ -58,11 +58,7 @@ const numberOfPages = Math.ceil(sortedSnippets.length / siteConfig.postsPerPage)
 
     {
       page.currentPage === 1 ?
-        <HeadingBlock
-          title={siteConfig.snippetsHeadTitle}
-          headingTwo={siteConfig.snippetsHeadingTwo}
-          description={siteConfig.snippetsHeadDescription}
-        />
+        <HeadingBlock title={siteConfig.snippetsHeadTitle} />
       : <h1 class='page-heading'>JavaScript Snippets Page {page.currentPage}</h1>
     }
     <Howtos howtos={page.data} />

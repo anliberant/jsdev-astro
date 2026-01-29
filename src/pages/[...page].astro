@@ -7,6 +7,7 @@ import BaseLayout from '@/app/layouts/base-layout.astro';
 import FeaturedPosts from '@/entities/post/featured-posts.astro';
 import Posts from '@/entities/post/posts.astro';
 import Button from '@/shared/ui/base/button.astro';
+import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 import Pagination from '@/shared/ui/layout/pagination.astro';
 
 const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);
@@ -45,6 +46,13 @@ const description =
   title={title}
   description={description}>
   <main class='main'>
+    {
+      page.currentPage === 1 ?
+        <HeadingBlock title={siteConfig.mainHeadTitle} />
+      : <h1 class='page-heading'>
+          {siteConfig.shortTitle} Page {page.currentPage}
+        </h1>
+    }
     {page.currentPage === 1 && <FeaturedPosts posts={featuredPosts} />}
     {recentPosts && <Posts posts={page.currentPage === 1 ? recentPosts : page.data} />}
     {

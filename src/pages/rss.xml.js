@@ -6,35 +6,66 @@ import MarkdownIt from 'markdown-it';
 
 const parser = new MarkdownIt();
 
+const MAX_ITEMS = 50;
+const MAX_CONTENT_CHARS = 8000;
+
+function stripTags(html) {
+	return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function truncate(text, maxLen) {
+	if (!text) return '';
+	return text.length > maxLen ? `${text.slice(0, maxLen - 1)}…` : text;
+}
+
 export async function GET(context) {
 	const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);
 	const allHowtos = await getCollection('howtos', ({ data }) => !data.isDraft);
 	const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
 	const allFridays = await getCollection('fridays', ({ data }) => !data.isDraft);
+
 	const allContent = [...allPosts, ...allHowtos, ...allSnippets, ...allFridays];
-	const sortedPosts = allContent.sort((a, b) => {
+
+	const sorted = allContent.sort((a, b) => {
 		return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
 	});
+
+	const site = context.site ?? siteConfig.siteUrl;
+
 	return rss({
 		stylesheet: '/rss/styles.xsl',
 		title: siteConfig.title,
-		// `<description>` field in output xml
 		description: siteConfig.description,
-		site: context.site,
-		// Array of `<item>`s in output xml
-		// See "Generating items" section for examples using content collections and glob imports
-		items: sortedPosts.map((post) => ({
-			title: post.data.title,
-			pubDate: post.data.date,
-			description: post.data.desc,
-			link: `/${post.data.permalink}/`,
-			content: post.id.endsWith('.mdx')
-				? post.data.desc
-				: sanitizeHtml(parser.render(post.body), {
-						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])
-					}),
-		})),
-		// (optional) inject custom xml
+		site,
+		items: sorted.slice(0, MAX_ITEMS).map((entry) => {
+			const link = `/${String(entry.data.permalink).replace(/^\/|\/$/g, '')}/`;
+
+			const rawHtml =
+				entry.id.endsWith('.mdx')
+					? ''
+					: sanitizeHtml(parser.render(entry.body), {
+						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+						allowedAttributes: {
+							a: ['href', 'name', 'target', 'rel'],
+							img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
+						},
+						allowVulnerableTags: false,
+					});
+
+			const fallbackDesc = typeof entry.data.desc === 'string' ? entry.data.desc : '';
+			const excerptFromHtml = rawHtml ? truncate(stripTags(rawHtml), 260) : '';
+			const description = fallbackDesc || excerptFromHtml;
+
+			const content = rawHtml ? truncate(rawHtml, MAX_CONTENT_CHARS) : undefined;
+
+			return {
+				title: entry.data.title,
+				pubDate: entry.data.date,
+				description,
+				link,
+				...(content ? { content } : {}),
+			};
+		}),
 		customData: `<language>en-us</language>`,
 	});
 }
