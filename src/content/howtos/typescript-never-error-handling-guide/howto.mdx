@@ -1,7 +1,7 @@
 ---
-title: "Howto Use TypeScript’s never Type for Safer Error Handling"
-slug: typescript-never-error-handling-guide
-heading: Howto Master the `never` Type in TypeScript
+title: "How to Use the never Type for Real-World Error Handling"
+slug: typescript-never
+heading: Using TypeScript’s never Type for Real-World Error Handling
 icon: /icons/typescript.png
 image: /icon.png
 permalink: howto/typescript-never-error-handling-guide
@@ -10,13 +10,18 @@ author: anton liberant
 category: typescript
 type: howto
 tags: ['error-handling', 'never-type']
-desc: Learn how to correctly use TypeScript’s never type for impossible states, exhaustive checks, and safer error handling with discriminated unions and Result types.
+desc: Learn how to use TypeScript’s never type to model impossible states, enforce exhaustive checks, and catch missing error cases before they reach production.
 ---
 
-TypeScript’s `never` type is one of the most misunderstood constructs in the language.  
-Developers often discover it, realize it represents “a value that can never exist,” and then try to force it into error‑handling code. In reality, `never` plays a critical role in correctness, safety, and exhaustiveness — but not in the way many assume.
+The `never` type in TypeScript is often explained as “a function that never returns”.
+While technically correct, this explanation is rarely useful in real-world codebases.
 
-This article rewrites and expands the entire topic from scratch, providing clearer examples, updated patterns, fully refreshed naming conventions, and deep explanations of why `never` behaves the way it does.
+In practice, `never` becomes powerful when you want the compiler to fail loudly as your
+application evolves — especially when handling errors, exhaustive checks, and states
+that should be impossible but tend to appear over time.
+
+In this article, we’ll look at how `never` behaves in production code, why it is easy
+to misuse, and how it helps catch entire classes of bugs before they reach runtime.
 
 ---
 
@@ -46,6 +51,37 @@ const outcome = triggerFailure("Unexpected state!");
 `outcome` has type `never`, because TypeScript knows the function cannot return.
 
 ---
+
+## Exhaustive error handling
+
+```ts 
+type ApiResult =
+  | { status: "success"; data: string }
+  | { status: "error"; error: Error };
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled case: ${JSON.stringify(value)}`);
+}
+
+function handleResult(result: ApiResult) {
+  switch (result.status) {
+    case "success":
+      return result.data;
+
+    case "error":
+      throw result.error;
+
+    default:
+      return assertNever(result);
+  }
+}
+```
+
+Here, never ensures that every possible state of ApiResult is handled.
+If a new status is added later, TypeScript will immediately report an error.
+
+This is where never becomes valuable — not as a theoretical type,
+but as a guardrail for evolving codebases.
 
 ## The Common Mistake: Using `never` for Error Modeling  
 Developers sometimes attempt this pattern:
@@ -256,6 +292,20 @@ Usage:
 const finalAnswer = unwrapOrCrash(() => robustDivide(10, 2));
 ```
 
+## Why `never` Often Fails in Real Projects
+
+Using `never` does not automatically make code safer.
+
+Common mistakes include:
+- assuming `never` replaces runtime validation
+- overusing it in public APIs
+- hiding real errors behind “impossible” states
+
+In production, `never` works best when combined with:
+- discriminated unions
+- explicit runtime checks
+- strict compiler settings
+
 ---
 
 ## Summary  
@@ -275,3 +325,4 @@ It is a compiler tool used to ensure correctness and detect unreachable or inval
 - Representing branching outcomes  
 
 When used properly, `never` becomes one of the strongest static‑analysis tools in the TypeScript type system.
+
