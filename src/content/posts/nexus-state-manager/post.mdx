@@ -1,0 +1,200 @@
+---
+title: "Nexus State: A Modern Atomic State Manager for JavaScript"
+slug: nexus-state-manager
+heading: Nexus State - Lightweight Atomic State Management for Modern Apps
+image: ./images/nexus-state-manager.png
+permalink: nexus-state-manager
+date: 2026-02-20
+author: anton liberant
+category: javascript
+type: post
+tags: ['nexus']
+desc: Deep technical overview of Nexus State, a minimal atomic state manager with async atoms, middleware, persistence, and built-in DevTools.
+---
+
+State management remains one of the most complex areas in frontend engineering. Over the years, we’ve seen Redux, MobX, Zustand, and Jotai attempt to balance structure, performance, and developer experience.
+
+Nexus State introduces an atomic model built around simplicity while still offering powerful capabilities such as:
+
+- Built-in DevTools  
+- Time Travel debugging  
+- Async state primitives  
+- Persistence plugins  
+- Middleware system  
+- Multi-framework support  
+
+This article explores its architecture, core patterns, and practical usage.
+
+---
+
+## Core Concept: Atoms
+
+Atoms are minimal, isolated pieces of state.
+
+```ts
+import { atom, createStore } from '@nexus-state/core'
+
+const sessionCounter = atom(0, 'sessionCounter')
+
+const multipliedValue = atom((read) => read(sessionCounter) * 5, 'multipliedValue')
+
+const mainStore = createStore()
+
+mainStore.set(sessionCounter, 4)
+console.log(mainStore.get(multipliedValue)) // 20
+```
+
+Derived atoms recompute automatically when dependencies change.
+
+---
+
+## Store & Subscriptions
+
+```ts
+const unsubscribeHandler = mainStore.subscribe(sessionCounter, (value) => {
+  console.log('Updated:', value)
+})
+
+mainStore.set(sessionCounter, 12)
+unsubscribeHandler()
+```
+
+The store handles dependency tracking and batched updates.
+
+---
+
+# React Example
+
+```tsx
+import { useAtom } from '@nexus-state/react'
+
+const progressAtom = atom(0, 'progress')
+const percentAtom = atom((read) => read(progressAtom) * 10, 'percent')
+
+export function ProgressPanel() {
+  const [progress, updateProgress] = useAtom(progressAtom)
+  const [percent] = useAtom(percentAtom)
+
+  return (
+    <div>
+      <h2>Progress: {progress}</h2>
+      <p>Percentage: {percent}%</p>
+      <button onClick={() => updateProgress(prev => prev + 1)}>
+        Increase
+      </button>
+    </div>
+  )
+}
+```
+
+Only components depending on changed atoms re-render.
+
+---
+
+# Async Atoms
+
+```ts
+import { asyncAtom } from '@nexus-state/async'
+
+const [accountAtom, fetchAccount] = asyncAtom({
+  fetchFn: async () => {
+    const response = await fetch('/api/account')
+    return response.json()
+  }
+})
+```
+
+Async atoms encapsulate loading, error, and resolved states.
+
+---
+
+# Persistence Example
+
+```ts
+import { persist, localStorageStorage } from '@nexus-state/persist'
+
+persist(progressAtom, {
+  key: 'app_progress',
+  storage: localStorageStorage
+})(mainStore)
+```
+
+State is automatically restored on reload.
+
+---
+
+# Middleware Example
+
+```ts
+import { middleware } from '@nexus-state/middleware'
+
+const auditMiddleware = middleware(progressAtom, {
+  beforeSet: (_, next) => {
+    console.log('Before:', next)
+    return next
+  },
+  afterSet: (_, next) => {
+    console.log('After:', next)
+  }
+})
+```
+
+---
+
+# Performance Characteristics
+
+Nexus State optimizes:
+
+- Selective component updates  
+- Batched state mutations  
+- Lazy evaluation of derived atoms  
+- Zero DevTools overhead in production builds  
+
+---
+
+# Comparison Snapshot
+
+Compared to Redux:
+
+- Less boilerplate  
+- No action types  
+- Native async support  
+- Smaller bundle  
+
+Compared to Zustand:
+
+- Built-in Time Travel  
+- Multi-framework support  
+
+Compared to MobX:
+
+- Explicit dependency graph  
+- Smaller runtime size  
+
+Compared to Jotai:
+
+- Store instance isolation  
+- Built-in persistence  
+
+---
+
+# When Nexus State Makes Sense
+
+Use it when:
+
+- You want atomic isolation  
+- You need computed state out of the box  
+- Debugging tools matter  
+- You work across multiple frameworks  
+- You build micro-frontends  
+
+---
+
+# Resources
+
+Documentation: https://nexus-state.website.yandexcloud.net
+
+Source Code: https://sourcecraft.dev/astashkin-a/nexus-state
+
+Demo Applications: https://codesandbox.io/p/sandbox/nryqsj  
+
