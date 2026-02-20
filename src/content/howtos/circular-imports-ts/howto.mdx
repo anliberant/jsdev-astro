@@ -1,0 +1,238 @@
+---
+title: How to Fix Circular Imports in a React/TypeScript Application
+slug: circular-imports-ts
+heading: Fixing Circular Imports in a Real Frontend Codebase
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/circular-imports-ts
+date: 2026-02-20
+author: anton liberant
+category: typescript
+type: howto
+tags: ['imports']
+desc: Learn how to detect, understand, and systematically fix circular imports in a React + TypeScript project. Practical examples, module structure diagrams...
+---
+
+ircular (recursive) imports are one of those issues that look small at first — until they start breaking runtime behavior, tests, hot reload, or production builds.
+
+They rarely appear as a single obvious mistake. More often, they are a symptom of deeper architectural problems: unclear module boundaries, excessive barrel files, and uncontrolled cross-feature dependencies.
+
+In this article, we’ll walk through a practical approach to:
+
+- Detect circular imports  
+- Understand why they happen  
+- Refactor the structure safely  
+- Prevent them from coming back  
+
+---
+
+## A Real Module Structure Example
+
+```
+modules/
+  client/
+    index.ts              # Public API of the module
+    redux/
+      actions.ts
+      reducer.ts
+      types.ts
+      index.ts
+    ui/
+      ClientComponent.tsx
+    service.ts
+    types.ts
+```
+
+This is a common structure:
+
+- `redux/` contains state logic  
+- `ui/` contains components  
+- `service.ts` contains business logic  
+- `index.ts` exposes the public API  
+
+Nothing looks wrong at first glance. But this structure can easily create circular dependencies if not handled carefully.
+
+---
+
+## Barrel Files: The Hidden Source of Cycles
+
+Barrel files (`index.ts`) are useful — but dangerous when overused.
+
+### The Common Mistake
+
+```ts
+modules/index.ts
+export * from "./client";
+export * from "./order";
+```
+
+This expands your dependency graph and increases the risk of circular imports.
+
+Instead of importing specific modules, developers start importing from `@modules`, which forces evaluation of everything.
+
+---
+
+## Correct vs Incorrect Imports
+
+### Correct
+
+```ts
+import { clientActions } from "@modules/client";
+```
+
+### Incorrect
+
+```ts
+import { clientActions } from "@modules";
+```
+
+The second option hides the dependency path and makes cycles easier to create accidentally.
+
+---
+
+## Internal Module Imports: Always Use Relative Paths
+
+### Incorrect
+
+```ts
+import { clientActions } from ".";
+```
+
+### Correct
+
+```ts
+import { clientActions } from "./redux/actions";
+import { clientTypes } from "./types";
+```
+
+Always use direct relative imports inside the same module.
+
+---
+
+## High Cohesion: Export Only What Is Public
+
+### Incorrect
+
+```ts
+export { clientActions, clientReducer } from "./redux";
+export { ClientComponent } from "./ui";
+export { clientTypes } from "./types";
+```
+
+This exposes internal implementation details.
+
+### Correct
+
+```ts
+export { ClientService } from "./service";
+export type { Client } from "./types";
+```
+
+Only export what external modules truly need.
+
+---
+
+## Understanding Dependency Graphs
+
+```
+utils/                   ← leaf node
+ ├─ index.ts
+ ├─ format.ts
+ └─ validate.ts
+
+modules/
+ ├─ client/              ← depends on utils
+ │   └─ index.ts
+ └─ order/               ← depends on client and utils
+     └─ index.ts
+```
+
+Safe dependency direction:
+
+```
+utils → client → order
+```
+
+No back-references. No cycles.
+
+---
+
+## Example of a Circular Dependency
+
+### Before
+
+```ts
+client/service.ts
+import { orderService } from "@modules/order";
+
+order/service.ts
+import { clientService } from "@modules/client";
+```
+
+Dependency graph:
+
+```
+client → order → client
+```
+
+---
+
+## How to Fix It
+
+### Option 1: Extract Shared Logic
+
+```ts
+@modules/shared/types.ts
+export type { Client, Order };
+```
+
+Now both modules depend on shared:
+
+```
+client → shared
+order  → shared
+```
+
+---
+
+### Option 2: Split Large Modules
+
+Break a feature into:
+
+- client-core (business logic)
+- client-ui (UI components)
+
+Then:
+
+```ts
+import { clientCoreService } from "@modules/client-core";
+```
+
+Smaller modules reduce coupling.
+
+---
+
+## Detecting Circular Imports
+
+Recommended tools:
+
+- madge  
+- dependency-cruiser  
+- eslint-plugin-import  
+
+---
+
+## Final Thoughts
+
+Circular imports are not just annoying errors — they are architectural feedback.
+
+A clean dependency graph:
+
+- Improves maintainability  
+- Makes testing easier  
+- Reduces unpredictable runtime behavior  
+- Keeps teams aligned  
+
+The real goal isn’t just “no circular imports”.
+
+It’s a clean, predictable module architecture.
