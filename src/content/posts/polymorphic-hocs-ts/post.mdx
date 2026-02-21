@@ -1,0 +1,418 @@
+---
+title: 'Polymorphic Decorators in React: HOCs on Steroids'
+slug: polymorphic-hocs-ts
+heading: Polymorphic HOCs in React with TypeScript
+image: ./images/polymorphic-hocs-ts.png
+permalink: polymorphic-hocs-ts
+date: 2026-02-22
+author: anton liberant
+category: react
+type: post
+tags:
+  ['architecture', 'patterns', 'hoc', 'decorators']
+desc: A deep dive into type-safe polymorphic decorators (HOCs) in React.
+  Learn clean logic composition, reusable routing, and
+  advanced TypeScript patterns.
+---
+
+Modern React applications rarely fail because of rendering complexity.
+They fail because logic spreads across components in unpredictable ways.
+
+Analytics. Routing. Permissions. Feature flags. Loading states. A/B
+testing. Logging.
+
+All of these are cross-cutting concerns. When they are implemented
+directly inside JSX trees, components become deeply nested, hard to
+maintain, and almost impossible to scale in large teams.
+
+This article explores a production-grade architectural approach:
+
+**Polymorphic decorators implemented as strongly typed Higher-Order
+Components (HOCs).**
+
+The objectives:
+
+-   Separate logic from rendering
+-   Preserve strict TypeScript safety
+-   Enable reusable composition
+-   Avoid JSX nesting hell
+-   Scale across large React applications
+
+This is not theory. Everything below is practical and
+production-oriented.
+
+------------------------------------------------------------------------
+
+# The Core Problem: JSX Nesting Explosion
+
+Imagine a simple requirement.
+
+A button must:
+
+1.  Generate an href from `/product/:id`
+2.  Inject route parameters
+3.  Send analytics on click
+4.  Stay polymorphic
+5.  Remain fully type-safe
+
+The typical JSX composition quickly becomes unreadable:
+
+``` tsx
+<TrackClick
+  as={(props) => (
+    <ResolveRoute
+      as={PrimaryButton}
+      template="/product/:id"
+      params={{ id: "42" }}
+      {...props}
+    />
+  )}
+  elementKey="hero-btn"
+  eventLabel="hero_click"
+/>
+```
+
+Or using asChild-style composition:
+
+``` tsx
+<ResolveRoute template="/product/:id" params={{ id: "42" }} asChild>
+  <TrackClick elementKey="hero-btn" eventLabel="hero_click" asChild>
+    <PrimaryButton variant="solid">
+      Buy Now
+    </PrimaryButton>
+  </TrackClick>
+</ResolveRoute>
+```
+
+Even though it works, readability suffers.
+
+Now compare with:
+
+``` tsx
+const SmartButton = withRouteResolver(
+  withAnalyticsTracking(PrimaryButton)
+)
+
+<SmartButton
+  template="/product/:id"
+  params={{ id: "42" }}
+  elementKey="hero-btn"
+  eventLabel="hero_click"
+  variant="solid"
+/>
+```
+
+Flat. Predictable. Maintainable.
+
+------------------------------------------------------------------------
+
+# Turning Polymorphic Components into Decorators
+
+Classic polymorphic component:
+
+``` tsx
+import {
+  ElementType,
+  createElement,
+  MouseEventHandler,
+} from "react"
+
+type MergeProps<Base, Extra> =
+  Omit<Base, keyof Extra> & Extra
+
+type PropsOf<T extends ElementType> =
+  React.ComponentPropsWithoutRef<T>
+
+function WithSideEffect<
+  TComponent extends ElementType<{ onClick?: MouseEventHandler }>
+>({
+  as,
+  onClick,
+  sideEffect,
+  ...rest
+}: MergeProps<
+  PropsOf<TComponent>,
+  {
+    as: TComponent
+    sideEffect?: MouseEventHandler
+    onClick?: MouseEventHandler
+  }
+>) {
+  const handleClick: MouseEventHandler = (event) => {
+    onClick?.(event)
+    sideEffect?.(event)
+  }
+
+  return createElement(as, {
+    ...rest,
+    onClick: handleClick,
+  })
+}
+```
+
+The transformation is simple:
+
+Remove `as` from props and accept the component as a function parameter.
+
+That converts polymorphic behavior into a reusable decorator.
+
+------------------------------------------------------------------------
+
+# Analytics Decorator (Production-Ready)
+
+``` tsx
+import { ComponentType, MouseEventHandler } from "react"
+
+type AnalyticsProps = {
+  elementKey: string
+  eventLabel?: string
+}
+
+export function withAnalyticsTracking<
+  TBase extends {
+    onClick?: MouseEventHandler
+    label?: string
+  }
+>(BaseComponent: ComponentType<TBase>) {
+  return function AnalyticsWrapped(
+    props: TBase & AnalyticsProps
+  ) {
+    const {
+      elementKey,
+      eventLabel,
+      onClick,
+      ...rest
+    } = props
+
+    const handleClick: MouseEventHandler = (event) => {
+      console.log("Tracking event:", {
+        elementKey,
+        label: eventLabel ?? props.label ?? elementKey,
+      })
+
+      onClick?.(event)
+    }
+
+    return (
+      <BaseComponent
+        {...(rest as TBase)}
+        onClick={handleClick}
+      />
+    )
+  }
+}
+```
+
+This decorator:
+
+-   Preserves original props
+-   Injects analytics
+-   Keeps type inference intact
+-   Works with any compatible component
+
+------------------------------------------------------------------------
+
+# Route Resolver Decorator
+
+Centralized routing logic prevents chaos.
+
+``` tsx
+type RouteProps<T extends string> = {
+  template: T
+  params: Record<string, string>
+}
+
+export function withRouteResolver<
+  TBase extends { href?: string }
+>(BaseComponent: ComponentType<TBase>) {
+  return function RouteWrapped<
+    TTemplate extends string
+  >(props: TBase & RouteProps<TTemplate>) {
+    const { template, params, ...rest } = props
+
+    const resolvedHref = Object.entries(params).reduce(
+      (url, [key, value]) =>
+        url.replace(`:${key}`, value),
+      template
+    )
+
+    return (
+      <BaseComponent
+        {...(rest as TBase)}
+        href={resolvedHref}
+      />
+    )
+  }
+}
+```
+
+This enables:
+
+-   Template validation
+-   Central formatting
+-   Localization integration
+-   Analytics chaining
+-   Strict parameter control
+
+------------------------------------------------------------------------
+
+# Composing Decorators Safely
+
+``` tsx
+const EnhancedButton = withRouteResolver(
+  withAnalyticsTracking(PrimaryButton)
+)
+```
+
+Composition remains predictable because:
+
+-   Each decorator isolates logic
+-   Rendering remains untouched
+-   TypeScript enforces compatibility
+
+------------------------------------------------------------------------
+
+# Building a Decoratable Card System
+
+Base card:
+
+``` tsx
+type CardBaseProps = {
+  className?: string
+  style?: React.CSSProperties
+  children?: React.ReactNode
+}
+
+export function CardBase({
+  className,
+  style,
+  children,
+}: CardBaseProps) {
+  return (
+    <div
+      className={`rounded-lg p-4 shadow ${className ?? ""}`}
+      style={style}
+    >
+      {children}
+    </div>
+  )
+}
+```
+
+Loading decorator:
+
+``` tsx
+export function withLoadingState<
+  T extends { children?: React.ReactNode }
+>(BaseComponent: ComponentType<T>) {
+  return function LoadingWrapped(
+    props: T & { isLoading?: boolean }
+  ) {
+    const { isLoading, children, ...rest } = props
+
+    return (
+      <BaseComponent {...(rest as T)}>
+        {isLoading ? <div>Loading...</div> : children}
+      </BaseComponent>
+    )
+  }
+}
+```
+
+Compose utility:
+
+``` tsx
+function compose(
+  ...decorators: Array<
+    (component: ComponentType<any>) => ComponentType<any>
+  >
+) {
+  return (base: ComponentType<any>) =>
+    decorators.reduceRight(
+      (acc, decorator) => decorator(acc),
+      base
+    )
+}
+```
+
+Final card:
+
+``` tsx
+export const Card = compose(
+  withLoadingState
+)(CardBase)
+```
+
+------------------------------------------------------------------------
+
+# TypeScript Limitation: Generic Collisions
+
+Decorators work perfectly --- until multiple introduce computed
+generics.
+
+Example:
+
+``` tsx
+return function WithRoute<TTemplate extends string>(
+  props: ExtractProps<TBase> & LinkProps<TTemplate>
+)
+```
+
+Stacking several generic-heavy decorators may:
+
+-   Collapse inference
+-   Override template literal types
+-   Reduce safety guarantees
+
+Practical rule:
+
+Use only one computed-generic decorator per chain.
+
+------------------------------------------------------------------------
+
+# Where This Pattern Excels
+
+Ideal for:
+
+-   Analytics
+-   Logging
+-   Permission layers
+-   Feature flags
+-   Centralized routing
+-   Business rule injection
+-   UI library extensions
+
+Less ideal for:
+
+-   Highly dynamic render patterns (FACC is stronger there)
+
+------------------------------------------------------------------------
+
+# Architectural Impact
+
+In large React + TypeScript applications:
+
+-   Components are not always under your control
+-   Consistency is critical
+-   Logic duplication becomes expensive
+-   Routing must be standardized
+-   Analytics must be predictable
+
+Polymorphic decorators solve all of these problems cleanly.
+
+------------------------------------------------------------------------
+
+# Final Conclusion
+
+Polymorphic HOCs:
+
+-   Remove JSX nesting
+-   Preserve strict typing
+-   Enable reusable cross-cutting logic
+-   Scale in complex applications
+-   Allow decorating third-party components
+
+They are not a silver bullet --- TypeScript inference has limits.
+
+But when applied thoughtfully, they provide one of the cleanest and most
+scalable architectural patterns available in modern React.
