@@ -1,0 +1,416 @@
+---
+title: "SOLID Principles in React: SRP and OCP"
+slug: react-solid-srp-ocp
+heading: Applying SRP and Open Closed Principle in React
+image: ./images/react-solid-srp-ocp.png
+permalink: react-solid-srp-ocp
+date: 2026-02-26
+author: anton liberant
+category: react
+type: post
+tags: ['architecture', 'solid', 'srp', 'ocp']
+desc: Learn how Single Responsibility and Open Closed principles apply
+  to React components, hooks, and scalable frontend architecture.
+---
+
+## SOLID Principles in React Architecture
+
+Software architecture almost never collapses instantly.
+
+Most React applications begin in a perfectly reasonable state.  
+- A few components.  
+- Some hooks.  
+- Clean folders.  
+- Readable logic.
+
+Everything feels simple.
+
+Then reality arrives.
+
+- New product requirements appear.  
+- APIs evolve.  
+- Design variants multiply.  
+- State management spreads across the application.
+
+And suddenly something strange happens:
+
+Changing one feature unexpectedly breaks three unrelated screens.
+
+At this point developers usually blame React, state management, or framework decisions. But the real problem is almost always architectural.
+
+The system stopped respecting **responsibilities**.
+
+---
+
+## Why SOLID Still Matters in React
+
+SOLID principles were originally introduced for object-oriented programming by Robert C. Martin.
+
+React is not object-oriented in the classical sense.
+
+Yet modern React applications map surprisingly well to SOLID ideas:
+
+| OOP Concept | React Equivalent |
+|---|---|
+| Class | Component |
+| Method | Hook / handler |
+| Dependency | Service / API |
+| Composition | Component composition |
+| Abstraction | Hook interface |
+
+React didn’t remove architecture problems.
+
+It simply changed where they appear.
+
+Let’s explore the three SOLID principles that have the biggest real-world impact in React systems.
+
+---
+
+## Single Responsibility Principle (SRP) in React
+
+Software architecture often sounds abstract until a project starts
+growing. Messy components, duplicated logic, and unpredictable bugs
+begin to appear.
+
+The Single Responsibility Principle states:
+
+> A module should have only one reason to change.
+
+In React, responsibilities usually split into:
+
+-   data logic
+-   rendering
+-   composition
+
+SRP **does not mean**:
+
+- one function
+- small component
+- minimal lines of code
+
+Instead, it means:
+
+A module should change for **one category of reason**.
+
+### Bad Example
+
+``` tsx
+export function AccountProfile() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then(res => res.json())
+      .then(data => {
+        setProfile(data);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <section>
+      <h2>{profile.name}</h2>
+      <p>{profile.email}</p>
+    </section>
+  );
+}
+```
+
+Component responsibilities:
+
+-   fetching data
+-   managing state
+-   rendering UI
+
+Multiple reasons to change.
+
+### Correct SRP Architecture
+
+A scalable React architecture separates **logic from presentation**.
+
+### Data Hook
+
+``` tsx
+export function useProfileData() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then(res => res.json())
+      .then(setProfile)
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { profile, loading };
+}
+```
+
+This hook answers one question:
+
+How do we obtain data?
+
+Nothing else.
+
+### View Component
+
+``` tsx
+export function ProfileView({ profile, loading }) {
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <section>
+      <h2>{profile.name}</h2>
+      <p>{profile.email}</p>
+    </section>
+  );
+}
+```
+
+Pure UI.
+
+No knowledge about APIs or storage.
+
+### Container
+
+``` tsx
+export function ProfileContainer() {
+  const state = useProfileData();
+  return <ProfileView {...state} />;
+}
+```
+
+Now each part has one responsibility.
+
+Changing backend logic never affects rendering.
+
+------------------------------------------------------------------------
+
+## Real SRP Benefit
+
+SRP enables:
+
+- safer refactoring
+- reusable UI components
+- independent testing
+- predictable scaling
+
+Large React applications survive long-term mainly because of this separation.
+
+## Open Closed Principle (OCP) in React
+
+The Open Closed Principle states:
+
+> Software entities should be open for extension but closed for
+> modification.
+
+You should add new behavior without rewriting existing components.
+
+### Typical Violation
+
+``` tsx
+export function ActionButton({ type, onClick }) {
+  if (type === "primary") {
+    return <button className="primary" onClick={onClick}>Primary</button>;
+  }
+
+  if (type === "danger") {
+    return <button className="danger" onClick={onClick}>Danger</button>;
+  }
+
+  if (type === "success") {
+    return <button className="success" onClick={onClick}>Success</button>;
+  }
+
+  return null;
+}
+```
+
+Every new variation requires modifying the component.
+
+Over time this becomes fragile and error-prone.
+
+### OCP-Friendly Approach
+
+``` tsx
+const buttonVariants = {
+  primary: "primary",
+  danger: "danger",
+  success: "success",
+};
+
+export function ActionButton({ variant, onClick, children }) {
+  return (
+    <button
+      className={buttonVariants[variant]}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+```
+
+Adding new behavior:
+
+``` ts
+buttonVariants.warning = "warning";
+```
+
+No component modification required.
+
+### Composition-Based Extension
+
+Modern React strongly favors composition.
+
+``` tsx
+export function Button({ className, ...props }) {
+  return <button className={className} {...props} />;
+}
+
+export function DangerButton(props) {
+  return <Button className="danger" {...props} />;
+}
+
+export function PrimaryButton(props) {
+  return <Button className="primary" {...props} />;
+}
+```
+
+The base abstraction remains stable while functionality grows externally.
+
+This is OCP applied naturally.
+
+------------------------------------------------------------------------
+
+## Dependency Inversion Principle (DIP)
+
+This principle separates scalable architecture from tightly coupled applications.
+
+Definition:
+
+> High-level modules should not depend on low-level modules.
+
+Translated to React:
+
+UI should not depend directly on infrastructure.
+
+## Hidden Dependency Problem
+
+```tsx
+export function OrdersPage() {
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/orders")
+      .then(r => r.json())
+      .then(setOrders);
+  }, []);
+}
+```
+
+This component depends directly on:
+
+- transport layer
+- backend structure
+- API implementation
+
+Backend change → UI rewrite.
+
+## Introducing Abstraction
+
+### Provider Interface
+
+```ts
+export interface OrdersProvider {
+  getOrders(): Promise<any[]>;
+}
+```
+
+### Concrete Implementation
+
+```ts 
+export class ApiOrdersProvider implements OrdersProvider {
+  async getOrders() {
+    const res = await fetch("/api/orders");
+    return res.json();
+  }
+}
+```
+
+### Hook Depends on Abstraction
+
+```tsx 
+export function useOrders(provider: OrdersProvider) {
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    provider.getOrders().then(setOrders);
+  }, [provider]);
+
+  return orders;
+}
+```
+
+### Usage Layer
+
+```tsx
+const provider = new ApiOrdersProvider();
+
+export function OrdersPage() {
+  const orders = useOrders(provider);
+  return <OrdersList orders={orders} />;
+}
+```
+
+Now UI depends on abstraction, not infrastructure.
+
+## Why DIP Matters in Modern React
+
+Dependency inversion enables:
+
+- easy mocking
+- testing without APIs
+- switching data sources
+- SSR / CSR flexibility
+- offline-first applications
+
+Most enterprise React architectures unknowingly follow this rule.
+
+---
+
+## How SRP, OCP and DIP Work Together
+
+| Principle | React Translation      |
+| --------- | ---------------------- |
+| SRP       | Separate logic and UI  |
+| OCP       | Extend via composition |
+| DIP       | Depend on abstractions |
+
+
+Together they produce systems that evolve safely.
+
+---
+
+## Final Thoughts
+
+React itself rarely causes architectural problems. Problems appear when responsibilities mix.
+
+If adding a feature forces you to edit existing stable code,
+architecture probably violates OCP.
+
+If changing data logic breaks UI, SRP is likely violated.
+
+When components:
+
+- own too much logic
+- depend on infrastructure
+- require modification for extension
+
+change becomes dangerous.
+
+Modern React architecture is less about clever components and more about
+controlled responsibilities and safe extension.
