@@ -21,6 +21,7 @@ const posts = defineCollection({
       image: image(),
       permalink: z.string(),
       slug: z.string(),
+      relatedSlugs: z.array(z.string()).optional(),
       isDraft: z.boolean().optional(),
     }),
 });
@@ -49,6 +50,7 @@ const howtos = defineCollection({
       permalink: z.string(),
       slug: z.string(),
       type: z.literal('howto'),
+      relatedSlugs: z.array(z.string()).optional(),
       isDraft: z.boolean().optional(),
     }),
 });
@@ -74,6 +76,7 @@ const fridays = defineCollection({
       image: image(),
       permalink: z.string(),
       type: z.literal('friday'),
+      relatedSlugs: z.array(z.string()).optional(),
       isDraft: z.boolean().optional(),
     }),
 });
@@ -101,6 +104,7 @@ const snippets = defineCollection({
     icon: z.string().optional(),
     permalink: z.string(),
     type: z.literal('snippets'),
+    relatedSlugs: z.array(z.string()).optional(),
     isDraft: z.boolean().optional(),
   }),
 });

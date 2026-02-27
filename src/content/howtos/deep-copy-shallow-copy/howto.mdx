@@ -174,5 +174,5 @@ Deep cloning large objects can be expensive. Benchmark before using in hot code 
 | structuredClone | Deep | Fast, native | Browser support varies |
 | Lodash cloneDeep | Deep | Robust | Extra dependency |
 
-Deep and shallow copying are essential for safe, predictable data handling in JavaScript. With these techniques, you can confidently manage complex state, avoid mutation bugs, and write cleaner, more maintainable code.
+Rule of thumb: if the object is flat, spread it. If it has nesting and you mutate the clone, use `structuredClone`. Reach for Lodash only when you need circular reference support.
 

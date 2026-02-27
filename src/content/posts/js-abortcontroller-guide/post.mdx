@@ -12,7 +12,7 @@ tags: ['AbortController']
 desc: Cancel fetch requests, timers, and async operations in JavaScript with AbortController. Improve performance and user experience by managing async tasks properly.
 ---
 
-`AbortController` is a powerful tool in JavaScript that allows you to cancel asynchronous operations at any time. It is particularly useful for network requests, timers, and data streaming. This article will explore how AbortController works, its use cases, and potential pitfalls.
+Fetch fires, the user navigates away, and the response arrives to a component that no longer exists. `AbortController` lets you cancel in-flight requests, timers, and streams so you stop wasting bandwidth and avoid updating unmounted UI.
 
 ## What is AbortController?
 
@@ -248,6 +248,4 @@ document
 
 ## Conclusion
 
-AbortController is a valuable tool for managing asynchronous operations efficiently in JavaScript. By integrating it into your code, you can improve performance, reduce resource waste, and enhance user experience.
-
-What are your experiences with AbortController? Share your thoughts in the comments!
+Use `AbortController` anywhere you kick off async work that the user might abandon — search inputs, page navigations, file downloads. The pattern is always the same: create a controller, pass `signal`, call `.abort()` when you’re done.

@@ -12,9 +12,7 @@ tags: ['auth', 'google', 'github', 'postgresql', 'docker', 'shadcn', 'oauth']
 desc: Implement Google and GitHub auth in Next.js with Prisma and NextAuth. Secure sign-in, data handling, and better UX with step-by-step integration.
 ---
 
-Implementing user authentication is a foundational part of building secure and dynamic web applications. In this article, we’ll walk through how to set up authentication in a Next.js application, using NextAuth for seamless integration with Google and GitHub OAuth providers, and Prisma to manage our user data in a database. By the end of this guide, you’ll have a solid authentication setup with external OAuth providers that store user data efficiently.
-
-We’ll use the newly released Next.js version 15, PostgreSQL set up via Docker, Prisma for type safety, and ShadcnUI for fast UI development. By the end, we'll have an application where users can authenticate via Google or GitHub, with their data instantly stored in our database.
+We’ll wire up Google and GitHub login in a Next.js 15 app using NextAuth, store user records in PostgreSQL through Prisma, and build the UI with ShadcnUI. By the last step you’ll have a working OAuth flow where a new user clicks “Sign in with Google,” gets redirected, and lands back in the app with their profile already saved in the database.
 
 **Prerequisites**
 
