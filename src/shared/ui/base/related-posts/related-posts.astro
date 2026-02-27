@@ -5,37 +5,75 @@ import RelatedCard from './related-card.astro';
 
 export interface Props {
   slug: string;
-  collection: 'posts' | 'howtos' | 'friday' | 'snippets';
+  collection: 'posts' | 'howtos' | 'fridays' | 'snippets';
 }
 
+const MAX_RELATED = 6;
 const { slug, collection } = Astro.props;
 
-const allPosts = await getCollection(collection);
+const collectionsToSearch = ['posts', 'howtos', 'snippets'] as const;
 
-const currentPost = allPosts.find(p => p.data.slug === slug);
+const allItems = (
+  await Promise.all(
+    collectionsToSearch.map(async name => {
+      const items = await getCollection(name, ({ data }) => !data.isDraft);
+      return items.map(item => ({ ...item, _collection: name }));
+    })
+  )
+).flat();
+
+const currentPost = allItems.find(
+  p => p.data.slug === slug && p._collection === collection
+);
 
 if (!currentPost) {
   throw new Error(`Current post not found for slug: ${slug}`);
 }
 
-const currentCategory = currentPost.data.category;
-const currentDate = new Date(currentPost.data.date);
+const currentTags: string[] = ('tags' in currentPost.data ? currentPost.data.tags : []) ?? [];
+const currentCategory: string = ('category' in currentPost.data ? currentPost.data.category : '') ?? '';
+const manualSlugs: string[] = ('relatedSlugs' in currentPost.data ? currentPost.data.relatedSlugs : []) ?? [];
 
-const related = allPosts
-  .filter(
-    post =>
-      post.slug !== slug &&
-      post.data.category === currentCategory &&
-      new Date(post.data.date) < currentDate
-  )
-  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-  .slice(0, 6);
+const manualPosts = manualSlugs
+  .map(s => allItems.find(p => p.data.slug === s))
+  .filter(Boolean);
+
+const manualSlugSet = new Set(manualSlugs);
+
+function getRelevance(post: (typeof allItems)[number]): number {
+  const postTags: string[] = ('tags' in post.data ? post.data.tags : []) ?? [];
+  const postCategory: string = ('category' in post.data ? post.data.category : '') ?? '';
+
+  let score = 0;
+  if (postCategory && postCategory === currentCategory) score += 2;
+
+  const tagSet = new Set(postTags.map(t => t.toLowerCase()));
+  for (const tag of currentTags) {
+    if (tagSet.has(tag.toLowerCase())) score += 1;
+  }
+
+  return score;
+}
+
+const remaining = MAX_RELATED - manualPosts.length;
+
+const autoRelated = remaining > 0
+  ? allItems
+      .filter(p => p.data.slug !== slug && !manualSlugSet.has(p.data.slug))
+      .map(p => ({ post: p, score: getRelevance(p) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, remaining)
+      .map(({ post }) => post)
+  : [];
+
+const related = [...manualPosts, ...autoRelated];
 ---
 
 {
   related.length > 0 && (
     <div class='related-wrapper'>
-      <h3 class='related-heading'>More from {currentCategory}</h3>
+      <h3 class='related-heading'>Related articles</h3>
       <section class='related-list'>
         {related.map(post => (
           <RelatedCard post={post} />

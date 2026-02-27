@@ -1,0 +1,72 @@
+---
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+
+const collections = ['posts', 'howtos', 'snippets'] as const;
+
+let found: { title: string; permalink: string } | null = null;
+
+for (const name of collections) {
+  if (found) break;
+  const items = await getCollection(name);
+  const match = items.find(p => p.data.slug === slug);
+  if (match) {
+    found = { title: match.data.title, permalink: match.data.permalink };
+  }
+}
+---
+
+{
+  found && (
+    <a href={`/${found.permalink}/`} class='inline-related'>
+      <span class='inline-related-label'>Read also</span>
+      <span class='inline-related-title'>{found.title}</span>
+    </a>
+  )
+}
+
+<style>
+  .inline-related {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    margin: 1.5rem 0;
+    border-left: 3px solid hsl(var(--primary, 220 90% 56%));
+    background-color: hsl(var(--card));
+    border-radius: 0 var(--radius) var(--radius) 0;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .inline-related:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  :global(.dark) .inline-related:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  }
+
+  .inline-related-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+  }
+
+  .inline-related-title {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .inline-related:hover .inline-related-title {
+    text-decoration: underline;
+  }
+</style>
