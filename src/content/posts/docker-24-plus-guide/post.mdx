@@ -10,9 +10,10 @@ category: docker
 type: post
 tags: ['Docker-24']
 desc: Explore what's new in Docker 24+ and Docker Compose v2, from buildx to remote contexts. This is a follow-up to our Docker commands cheatsheet.
+subtitle: 'Explore what''s new in Docker 24+ and Docker Compose v2, from buildx to remote contexts. This is a follow-up to our Docker commands cheatsheet.'
 ---
 
-> 📌 This article is a follow-up to the [Docker Commands Cheatsheet](https://jsdev.space/docker-commands-cheatsheet/). If you're just getting started, start there — this article covers advanced features introduced in Docker 24+ and Docker Compose v2.
+>  This article is a follow-up to the [Docker Commands Cheatsheet](https://jsdev.space/docker-commands-cheatsheet/). If you're just getting started, start there — this article covers advanced features introduced in Docker 24+ and Docker Compose v2.
 
 ---
 
@@ -30,11 +31,11 @@ Key improvements include:
 
 ---
 
-## 🚀 Goodbye `docker-compose`, Hello `docker compose`
+ Goodbye `docker-compose`, Hello `docker compose`
 
 In Docker 24+, the legacy `docker-compose` binary is deprecated in favor of `docker compose` (with a space).
 
-✅ New Syntax:
+ New Syntax:
 
 ```bash
 docker compose up -d
@@ -48,9 +49,9 @@ This change unifies Compose into the Docker CLI and brings new capabilities like
 - Better error messages and performance
 - Compatibility with docker context
 
-> ⚠️ If you still rely on docker-compose, it’s time to switch — the new command supports all features and more.
+>  If you still rely on docker-compose, it’s time to switch — the new command supports all features and more.
 
-## 🧱 Buildx — Multi-Platform Docker Builds
+ Buildx — Multi-Platform Docker Builds
 
 Docker 24+ comes with `buildx` by default — a powerful tool for building images for different CPU architectures (like ARM and x86).
 
@@ -65,7 +66,7 @@ Perfect for:
 - Building universal images for CI/CD pipelines
 - Parallelized multi-stage builds
 
-## 🌐 Remote Contexts with `docker context`
+ Remote Contexts with `docker context`
 
 Contexts allow you to define multiple Docker environments — local, SSH-based, cloud-based — and easily switch between them.
 
@@ -86,22 +87,22 @@ To list contexts:
 docker context ls
 ```
 
-## 🧪 Other Docker 24+ Features You Should Know
+ Other Docker 24+ Features You Should Know
 
 - Container image signing: Ensures your image hasn't been tampered with.
 - Improved volume management: Better lifecycle handling, especially in Compose setups.
 - Advanced docker compose cp: Copy files between local and container directly via Compose.
 
-## 🔧 Should You Upgrade?
+ Should You Upgrade?
 
 Yes — Docker 24+ modernizes the entire CLI experience. You get:
 
 - Unified tooling via docker compose
 - Multi-arch builds without hacks
-- Seamless remote deployments
+- smooth remote deployments
 - Better performance and native support for M1/M2
 
-### 🧭 What’s Next?
+ What’s Next?
 
 In future articles, we’ll explore:
 
@@ -109,7 +110,7 @@ In future articles, we’ll explore:
 - docker init scaffolding
 - Compose profiles for managing complex apps
 
-## ✅ Summary
+ Summary
 
 ![Docker 24 Cheatsheet](./images/docker-24-cheatsheet.png "Docker 24 Cheatsheet")
 
@@ -117,4 +118,10 @@ Docker 24+ is not just a version bump — it’s a shift to a cleaner, unified, 
 
 If you found this helpful, check out the [original cheatsheet here](https://jsdev.space/docker-commands-cheatsheet/), or leave a comment with what you'd like covered next.
 
-Happy shipping 🐳
+Happy shipping
+
+## Related articles
+
+- [Master Dockerfile Validation with Docker Build Checks](/docker-build-checks/)
+- [Docker for Developers: Essential Commands in One Cheatsheet](/docker-commands-cheatsheet/)
+- [Top 10 CSS Tips to Master in 2024](/10-css-tips/)

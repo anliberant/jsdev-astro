@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: []
 desc: Barrel files look convenient — until they break type safety, slow builds, and complicate refactors. Here's why you should stop using them now.
+subtitle: 'Barrel files look convenient — until they break type safety, slow builds, and complicate refactors. Here''s why you should stop using them now.'
 ---
 
 Barrel files (`index.ts` or `index.js`) are often introduced in JavaScript and TypeScript projects to simplify imports. Instead of writing:
@@ -30,7 +31,7 @@ It’s shorter, cleaner — and a trap.
 
 While barrel files may appear to reduce friction in small projects, they become a serious liability in large codebases. From performance degradation to broken types and circular dependencies, the problems outweigh the benefits.
 
-## 🚨 What Is a Barrel File?
+ What Is a Barrel File?
 
 A barrel file is an `index.ts` or `index.js` file used to re-export modules from a directory:
 
@@ -43,7 +44,7 @@ export * from './Dropdown';
 
 This allows you to import everything from a central location.
 
-## 🔍 Why Barrel Files Are Problematic
+ Why Barrel Files Are Problematic
 
 ### 1. **They Obscure Dependency Graphs**
 
@@ -65,7 +66,7 @@ TypeScript may lose track of source locations when everything is re-exported. In
 
 Refactoring a single component becomes risky. Changing its name or location may require updating several barrels, or worse — you might miss one and end up with silent runtime bugs.
 
-## ✅ What You Should Do Instead
+ What You Should Do Instead
 
 ### 1. **Use Explicit Imports**
 
@@ -101,7 +102,7 @@ Avoid re-exporting types and components together. If you must use a barrel, limi
 
 Tools like Nx, Plop, or Hygen can automate import scaffolding without needing barrels.
 
-## 💡 When Are Barrels Okay?
+ When Are Barrels Okay?
 
 - For **types-only exports** that won’t be bundled
 - For **public APIs of libraries** (not apps)
@@ -109,7 +110,7 @@ Tools like Nx, Plop, or Hygen can automate import scaffolding without needing ba
 
 Still, even in those cases, you should prefer named exports and strict boundaries over `export *`.
 
-## 🚫 A Real-World Example of Breakage
+ A Real-World Example of Breakage
 
 Consider this file structure:
 
@@ -129,8 +130,14 @@ export * from './Modal';
 
 Now, if `Modal.tsx` imports `Button`, and another file imports both from `ui`, you’ve created a hidden circular dependency. You won’t notice until something randomly breaks in production.
 
-## 🧼 Clean Imports > Clever Imports
+ Clean Imports > Clever Imports
 
 Barrel files are clever — until they’re not. If you value type safety, refactor confidence, and performance, it’s time to rethink your import strategy.
 
 **Stop flattening your architecture.** Embrace clear, explicit, and maintainable imports.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

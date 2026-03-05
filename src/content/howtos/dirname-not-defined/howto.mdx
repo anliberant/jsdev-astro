@@ -11,6 +11,7 @@ category: nodejs
 type: howto
 tags: ['__dirname', 'path', 'esmodule', 'filename', 'ReferenceError']
 desc: Fix the '__dirname is not defined' error in ES modules. Learn why it happens, how to restore dirname and filename, and modern ESM-safe alternatives.
+subtitle: 'Fix the ''__dirname is not defined'' error in ES modules. Learn why it happens, how to restore dirname and filename, and modern ESM-safe alternatives.'
 ---
 
 If you've switched your Node.js project to **ES modules** (`"type": "module"`), you may be surprised to see this error:
@@ -20,7 +21,7 @@ ReferenceError: __dirname is not defined in ES module scope
 ```
 
 This happens because unlike CommonJS, ES modules don’t include globals like `__dirname` and `__filename`.  
-This guide explains **why** this occurs, how to **recreate** these globals safely, and modern **best practices** for working with file paths in Node.js.
+Here's **why** this occurs, how to **recreate** these globals safely, and modern **best practices** for working with file paths in Node.js.
 
 ---
 
@@ -234,12 +235,12 @@ This causes resolution inconsistencies.
 
 | API | Works in ESM? | Purpose |
 |-----|---------------|---------|
-| `__dirname` | ❌ | CommonJS-only module dir |
-| `__filename` | ❌ | CommonJS-only module file |
-| `import.meta.url` | ✅ | URL path of module |
-| `fileURLToPath()` | ✅ | Convert URL → file path |
-| `process.cwd()` | ✅ | Current working directory |
-| `new URL()` | ✅ | Browser-compatible file resolution |
+| `__dirname` |  | CommonJS-only module dir |
+| `__filename` |  | CommonJS-only module file |
+| `import.meta.url` |  | URL path of module |
+| `fileURLToPath()` |  | Convert URL → file path |
+| `process.cwd()` |  | Current working directory |
+| `new URL()` |  | Browser-compatible file resolution |
 
 ---
 
@@ -251,12 +252,18 @@ To fix **“ReferenceError: __dirname is not defined in ES module scope”**:
 2. Use a utility wrapper for cleaner code.  
 3. Remove `"type": "module"` if you prefer CommonJS.  
 4. Use bundler-specific solutions for browser builds.  
-5. Leverage modern ESM APIs like `new URL()` and `import.meta.resolve()`.
+5. use modern ESM APIs like `new URL()` and `import.meta.resolve()`.
 
 With these tools, you can confidently manage file paths in modern Node.js and avoid breaking changes across module systems.
 
 ---
 
 <footer>
-<p>🟢 Updated for Node.js 22+, Webpack 5, Vite 5, and modern ESM workflows.</p>
+<p> Updated for Node.js 22+, Webpack 5, Vite 5, and modern ESM workflows.</p>
 </footer>
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

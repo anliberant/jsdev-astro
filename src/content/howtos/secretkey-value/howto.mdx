@@ -11,6 +11,7 @@ category: nodejs
 type: howto
 tags: ['jwt']
 desc: Learn how to fix the 'secretOrPrivateKey must have a value' error in Node.js. This guide offers step-by-step solutions to resolve JWT configuration issues quickly.
+subtitle: 'Learn how to fix the ''secretOrPrivateKey must have a value'' error in Node.js. This guide offers step-by-step solutions to resolve JWT configuration issues quickly.'
 ---
 
 This error appears when working with JWT libraries such as **jsonwebtoken**, and the secret key required to sign or verify tokens is missing or undefined. The issue usually comes from misconfigured environment variables, missing config values, or incorrect authentication setup.
@@ -102,7 +103,7 @@ Add a small check during app startup:
 
 ```js
 if (!process.env.JWT_SECRET) {
-  console.error('❌ Missing JWT_SECRET');
+  console.error(' Missing JWT_SECRET');
   process.exit(1);
 }
 ```
@@ -121,3 +122,9 @@ The `"secretOrPrivateKey must have a value"` error happens when the JWT secret i
 - Validate secrets during application startup.
 
 Once the secret is correctly set, JWT signing and verification should work without issues.
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

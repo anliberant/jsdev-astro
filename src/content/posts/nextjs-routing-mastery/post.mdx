@@ -10,13 +10,14 @@ category: nextjs
 type: post
 tags: ["routing"]
 desc: "A practical, bug-free guide to Next.js 15 routing: dynamic routes, route groups, parallel slots, and intercepting modals—with production‑ready code."
+subtitle: "A practical, bug-free guide to Next.js 15 routing: dynamic routes, route groups, parallel slots, and intercepting modals—with production‑ready code."
 ---
 
 Routing is where most real-world Next.js apps get tricky: huge content sets, different layouts per area, mobile/desktop splits, permission-aware UI, and context-preserving modals.
 
 This guide combines the essentials from two routing articles and upgrades them with **clean patterns and safer code for Next.js 15 (App Router)**.
 
-> ✅ You'll learn: **Dynamic Routes**, **Route Groups**, **Parallel Routes**, and **Intercepting Routes** with copy-pasteable, production-ready examples.
+>  You'll learn: **Dynamic Routes**, **Route Groups**, **Parallel Routes**, and **Intercepting Routes** with copy-pasteable, production-ready examples.
 
 ## 1) Dynamic Routes (`[param]`, `[...all]`, `[[...opt]]`)
 
@@ -140,7 +141,7 @@ app/
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
   return (
     <section className="p-6">
-      <header className="mb-4 border-b pb-2">🛒 Shop Header</header>
+      <header className="mb-4 border-b pb-2"> Shop Header</header>
       {children}
     </section>
   );
@@ -160,7 +161,7 @@ app/
    ├─ layout.tsx  // contains its own <html> and <body>
    └─ dashboard/page.tsx
 ```
-> ℹ️ Important: Navigating between root layouts triggers a **full document reload**.
+>  Important: Navigating between root layouts triggers a **full document reload**.
 
 ---
 
@@ -277,13 +278,13 @@ export default function Default() {
 
 ## 5) Production Patterns & Pitfalls
 
-**✅ Best Practices**
+** Best Practices**
 
 - **Data Fetching per Segment**: Prefer Server Components and stream UI updates with `loading.tsx`.
 - **SEO per Page**: Use `generateMetadata` in every route segment for precise control.
 - **SSG + ISR**: Combine `generateStaticParams` with revalidation for the perfect performance blend.
 
-**⚠️ Pitfalls to Avoid**
+** Pitfalls to Avoid**
 
 - **Cross-Root Navigation triggers** a full page reload—design your UX around this limitation.
 - **Route Groups** do not change URLs—be careful about potential path conflicts.
@@ -350,3 +351,9 @@ TL;DR (Summary)
 - **Intercepting routes**: `(..)folder` to render another route in context (e.g., modal) while maintaining a shareable URL.
 
 Build complex layouts with confidence — clean, scalable, and production-ready.
+
+## Related articles
+
+- [Tailwind CSS Dark Mode Integration in Next.js 14](/dark-mode-react/)
+- [Master Progressive Image Loading in Next.js](/image-loading-next/)
+- [Implement Google & GitHub Login in Next.js with NextAuth](/next-oauth-prisma/)

@@ -11,6 +11,7 @@ category: react
 type: howto
 tags: ['react-query']
 desc: Learn how to properly type QueryOptions, useQuery, and query functions in React Query using TypeScript for strong type safety and autocompletion.
+subtitle: 'Learn how to properly type QueryOptions, useQuery, and query functions in React Query using TypeScript for strong type safety and autocompletion.'
 ---
 
 React Query is powerful for data fetching, but proper TypeScript integration can make it even better. In this guide, you’ll learn how to type `useQuery`, `QueryOptions`, and query functions with complete confidence.
@@ -19,7 +20,7 @@ TypeScript support helps you write resilient data hooks that scale — with auto
 
 ---
 
-## ✅ Basic Typing Example
+ Basic Typing Example
 
 Let’s start with a typical query:
 
@@ -44,7 +45,7 @@ export function useUserQuery() {
 
 ---
 
-## 🧠 Typing `QueryOptions` Manually
+ Typing `QueryOptions` Manually
 
 You can extract and reuse the `UseQueryOptions` type:
 
@@ -76,7 +77,7 @@ export const useUserQuery = (options?: UserQueryOptions) => {
 
 ---
 
-## 🧱 Typing Generic Query Hook
+ Typing Generic Query Hook
 
 For reusable logic:
 
@@ -106,7 +107,7 @@ function useProductQuery(id: number) {
 
 ---
 
-## 💡 Tip: `queryFn` infers return type
+ Tip: `queryFn` infers return type
 
 When `queryFn` is inline with a `Promise<T>` return:
 
@@ -120,7 +121,7 @@ No extra typing needed!
 
 ---
 
-## 📦 Bonus: With Axios
+ Bonus: With Axios
 
 ```ts
 const fetchUsers = async (): Promise<User[]> => {
@@ -133,7 +134,7 @@ useQuery<User[], Error>(['users'], fetchUsers);
 
 ---
 
-## ✅ Summary
+ Summary
 
 | Generic        | Role                                 |
 |----------------|--------------------------------------|
@@ -147,3 +148,9 @@ useQuery<User[], Error>(['users'], fetchUsers);
 By mastering these generics, you can turn every query into a safe, typed, and reusable hook. This improves maintainability and prevents subtle bugs at scale.
 
 Whether you’re building a hobby project or a production-grade dashboard, strong typing in React Query is an investment worth making.
+
+## Related articles
+
+- [Fixing React’s “Cannot Read Property createElement of Undefined”](/howto/createelement-react/)
+- [Theme Switcher with DaisyUI and TanStack Router](/howto/daisyui-theme-switcher/)
+- [Properly Configuring Jest for React and Next.js](/howto/jest-rtl-setup-react-nextjs/)

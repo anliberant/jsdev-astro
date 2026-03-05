@@ -11,20 +11,21 @@ category: javascript
 type: howto
 tags: ['viewport']
 desc: Use JavaScript’s visualViewport API to handle mobile viewport shifts, keyboard overlays, zooming, and dynamic layout adjustments for a smoother UI.
+subtitle: 'Use JavaScript’s visualViewport API to handle mobile viewport shifts, keyboard overlays, zooming, and dynamic layout adjustments for a smoother UI.'
 ---
 
 On modern mobile browsers, the **visible part of a webpage isn't always the same as the layout viewport**. When a user zooms in, pinches, or when the on-screen keyboard appears, the **visual viewport** changes — and if your UI doesn’t react to those shifts, things jump around, overlap, or disappear off-screen.
 
 This is where the **`window.visualViewport` API** becomes incredibly useful. It lets you understand what the user *actually sees right now*, so you can adjust your layout in real time.
 
-## 💡 What Exactly Is the Visual Viewport?
+ What Exactly Is the Visual Viewport?
 
 Think of the page as two layers:
 
 - **Layout viewport** — the full page where CSS layout happens  
 - **Visual viewport** — the area the user can actually see (after zooming, panning, or when the keyboard pops up)
 
-## 🔍 Key Properties of `window.visualViewport`
+ Key Properties of `window.visualViewport`
 
 - **`visualViewport.width`** — visible width  
 - **`visualViewport.height`** — visible height  
@@ -45,7 +46,7 @@ function printViewportInfo() {
 }
 ```
 
-## 🔄 Listening for Viewport Changes
+ Listening for Viewport Changes
 
 ```js
 window.visualViewport.addEventListener('resize', () => {
@@ -59,7 +60,7 @@ window.visualViewport.addEventListener('scroll', () => {
 });
 ```
 
-## 🎨 Adjusting Layout Based on the Visual Viewport
+ Adjusting Layout Based on the Visual Viewport
 
 ```js
 const floatingBox = document.getElementById('floating-box');
@@ -75,17 +76,23 @@ window.visualViewport.addEventListener('scroll', syncWithViewport);
 syncWithViewport();
 ```
 
-## 🧪 Real-World Use Cases
+ Real-World Use Cases
 
 - Keep inputs visible when keyboard opens  
 - Adjust chat bars or sticky footers  
 - Maintain layout while zoomed  
 - Improve accessibility while zooming  
 
-## 🚫 Limitations
+ Limitations
 
 The API cannot force zoom, reposition the viewport, or change browser UI.
 
-## ✅ Conclusion
+ Conclusion
 
 The **Visual Viewport API** helps keep mobile layouts stable during zoom, pan, or keyboard interactions. By reacting to viewport changes in real-time, you create a smoother, more reliable user experience.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

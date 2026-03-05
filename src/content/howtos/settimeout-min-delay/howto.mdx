@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['setTimeout']
 desc: Learn why setTimeout never executes at 0ms, how browsers enforce minimum delays, and how to design precise timing in modern JavaScript applications.
+subtitle: 'Learn why setTimeout never executes at 0ms, how browsers enforce minimum delays, and how to design precise timing in modern JavaScript applications.'
 ---
 
 JavaScript’s **setTimeout** looks simple on the surface: schedule a callback after a delay. Yet even when the delay is set to `0`, the callback never executes instantly. Instead, browsers enforce a *minimum delay*, historically ranging from 0ms to 15ms, now standardized to **4ms** under specific conditions.
@@ -59,7 +60,7 @@ If the timer nesting level reaches 5 or more:
 minimum timeout = max(requested timeout, 4ms)
 ```
 
-Additionally:
+Also:
 
 - Negative delays are treated as **0ms**
 - Very small delays (\<4ms) are allowed *only* for shallow nesting levels
@@ -192,3 +193,9 @@ Use this API for precise measurements, not for scheduling.
 The 4ms minimum delay in `setTimeout` is not a bug — it’s a deliberate and standardized design that balances compatibility, performance, battery life, and protection against runaway timer recursion.
 
 Understanding how the browser schedules timers helps you write code that behaves predictably across platforms and performantly across devices. When precise timing matters, reach for APIs that were designed for that purpose, not for workarounds based on `setTimeout(0)`.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

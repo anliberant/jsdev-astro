@@ -10,6 +10,7 @@ category: react
 type: post
 tags: ['SSR', 'SPA', 'SSG', 'hydrateRoot']
 desc: Explore React's evolution from SPA to SSR and SSG. Learn how hydrateRoot boosts rendering, SEO, and user experience in React 18 apps.
+subtitle: 'Explore React''s evolution from SPA to SSR and SSG. Learn how hydrateRoot boosts rendering, SEO, and user experience in React 18 apps.'
 ---
 
 When React (alongside Vue and Angular) first surged in popularity, the front-end world embraced **Single Page Applications (SPA)** as the go-to architecture. But as demands for better SEO and faster loading times grew, **Server-Side Rendering (SSR)** and **Static Site Generation (SSG)** rose back into relevance — although, truthfully, these aren’t new ideas. They’ve existed in the web’s earlier PHP-powered era, just under different names.
@@ -90,7 +91,7 @@ const domRoot = document.getElementById('app-root');
 createRoot(domRoot).render(<App />);
 ```
 
-✅ Works, but no content until JS executes.
+ Works, but no content until JS executes.
 
 ### SSR Version
 
@@ -128,7 +129,7 @@ const domRoot = document.getElementById('app-root');
 hydrateRoot(domRoot, <App />);
 ```
 
-✅ Content is visible instantly, then React hydrates it for interactivity.
+ Content is visible instantly, then React hydrates it for interactivity.
 
 ## Why Not `createRoot?`
 
@@ -137,7 +138,7 @@ If you used `createRoot()` in an SSR/SSG context, React would wipe the HTML and 
 - Page flicker
 - Lost performance gains
 
-✅ `hydrateRoot()` instead reuses the existing DOM, only binding event listeners and internal state.
+ `hydrateRoot()` instead reuses the existing DOM, only binding event listeners and internal state.
 
 ## React 18's Enhancements to SSR and SSG
 
@@ -162,7 +163,7 @@ hydrateRoot(
 );
 ```
 
-✅ Useful when parts of the UI don’t need to be interactive right away.
+ Useful when parts of the UI don’t need to be interactive right away.
 
 ### 3. Streaming HTML with `renderToPipeableStream`
 
@@ -178,7 +179,7 @@ const { pipe } = renderToPipeableStream(<App />, {
 });
 ```
 
-✅ Users see content sooner.
+ Users see content sooner.
 
 ### 4. Error Tolerance
 
@@ -186,15 +187,15 @@ Hydration mismatch no longer crashes the app immediately — React 18 attempts r
 
 ## Common Hydration Pitfalls (And Fixes)
 
-### ❌ Client-Only APIs
+ Client-Only APIs
 
 ```tsx
 function Info() {
-  return <p>{window.innerWidth}</p>; // ⛔ SSR: `window` is undefined
+  return <p>{window.innerWidth}</p>; //  SSR: `window` is undefined
 }
 ```
 
-✅ Fix:
+ Fix:
 
 ```tsx
 function Info() {
@@ -206,15 +207,15 @@ function Info() {
 }
 ```
 
-### ❌ Random Values
+ Random Values
 
 ```tsx
 function Randomizer() {
-  return <p>{Math.random()}</p>; // ⚠️ Server/client mismatch
+  return <p>{Math.random()}</p>; //  Server/client mismatch
 }
 ```
 
-✅ Fix:
+ Fix:
 
 ```tsx
 function Randomizer() {
@@ -226,7 +227,7 @@ function Randomizer() {
 }
 ```
 
-### ❌ Async Data Without Sync on Server
+ Async Data Without Sync on Server
 
 ```tsx
 function Profile() {
@@ -240,7 +241,7 @@ function Profile() {
 }
 ```
 
-✅ In SSR, fetch the data **before** rendering:
+ In SSR, fetch the data **before** rendering:
 
 ```tsx
 // pages/index.tsx
@@ -284,7 +285,7 @@ export default function Home({ timestamp }) {
 }
 ```
 
-✅ `hydrateRoot` happens automatically under the hood.
+ `hydrateRoot` happens automatically under the hood.
 
 ## Try It Yourself: Manual SSR with Express
 
@@ -342,3 +343,9 @@ React 18’s `hydrateRoot` brings server-rendered HTML to life:
 - Supports advanced patterns like streaming and partial hydration
 
 Whether you’re using a full framework like Next.js or a custom Express server, understanding this core hydration step will help you debug issues and build faster, more SEO-friendly apps.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)

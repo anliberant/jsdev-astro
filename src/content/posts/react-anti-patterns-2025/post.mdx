@@ -10,6 +10,7 @@ category: react
 type: post
 tags: ['patterns']
 desc: A practical guide to 15 common React anti-patterns—why they hurt performance and predictability, and how to fix each with clear code examples.
+subtitle: 'A practical guide to 15 common React anti-patterns—why they hurt performance and predictability, and how to fix each with clear code examples.'
 ---
 
 > Quick, copy‑ready fixes for the React gotchas that silently slow apps and confuse teammates.
@@ -188,7 +189,7 @@ function Viewer({ id }: { id: string }) {
 
   React.useEffect(() => {
     fetch(`/api/items/${id}`).then(r => r.json()).then(setData);
-  }, []); // ❌
+  }, []); // 
   return <pre>{JSON.stringify(data)}</pre>;
 }
 ```
@@ -204,7 +205,7 @@ function Viewer({ id }: { id: string }) {
       .then(r => r.json())
       .then(d => { if (!cancelled) setData(d); });
     return () => { cancelled = true; };
-  }, [id]); // ✅
+  }, [id]); // 
   return <pre>{JSON.stringify(data)}</pre>;
 }
 ```
@@ -287,7 +288,7 @@ function List() {
 **Bad**
 ```tsx
 function Panel({ ready }: { ready: boolean }) {
-  if (!ready) return null; // ❌ hooks below become conditional
+  if (!ready) return null; //  hooks below become conditional
   const [open, setOpen] = React.useState(false);
   return <button onClick={() => setOpen(o => !o)}>{String(open)}</button>;
 }
@@ -481,3 +482,9 @@ function Viewer({ doc }: { doc: { id: string; body: string } }) {
 ---
 
 > Got a suspicious re-render or a flaky effect? Run this checklist against the component and measure first. If you want, send me a snippet and I’ll propose a minimal, production-safe fix.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)

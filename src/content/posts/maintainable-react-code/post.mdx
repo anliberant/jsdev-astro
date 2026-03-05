@@ -10,6 +10,7 @@ category: react
 type: post
 tags: ['architecture']
 desc: Learn practical techniques for writing cleaner and more maintainable React code. Covers component boundaries, utilities, conditions, data access, naming, and more.
+subtitle: 'Learn practical techniques for writing cleaner and more maintainable React code. Covers component boundaries, utilities, conditions, data access, naming, and more.'
 ---
 
 React projects tend to live much longer than developers expect. Features evolve, products pivot, team members change, and soon a “quick MVP” becomes a multi-year codebase. In that reality, the winning mindset isn’t “ship the UI fast”, but organize UI so future developers can ship fast too.
@@ -24,7 +25,7 @@ Clean code in React is not about pedantic rules or academic purity. It's about:
 
 In this extended guide, we’ll explore real-world patterns that keep React components clean, readable, and maintainable at scale — with improved examples, new entities, and modern TypeScript-friendly patterns.
 
-# 1. Extracting List Rendering Into Dedicated Components
+## 1. Extracting List Rendering Into Dedicated Components
 
 A common early smell: components that mix business logic, screen-level state, and large .map() rendering blocks.
 
@@ -106,7 +107,7 @@ function ProjectTabsList({ items, activeId, onSelect }: ProjectListProps) {
 }
 ```
 
-# 2. Moving Helper Functions Outside of Components
+## 2. Moving Helper Functions Outside of Components
 
 ```tsx
 export function TimestampText({ value }) {
@@ -136,7 +137,7 @@ export function TimestampText({ value }: { value: string }) {
 }
 ```
 
-# 3. Destructuring Props Explicitly
+## 3. Destructuring Props Explicitly
 
 ```tsx
 function ProfileCard({ fullName, years }: { fullName: string; years: number }) {
@@ -149,7 +150,7 @@ function ProfileCard({ fullName, years }: { fullName: string; years: number }) {
 }
 ```
 
-# 4. Extracting Complex Conditions Into Named Constants
+## 4. Extracting Complex Conditions Into Named Constants
 
 ```tsx
 useEffect(() => {
@@ -162,7 +163,7 @@ useEffect(() => {
 }, [firstLoad, messages.length, newArrived]);
 ```
 
-# 5. Collapsing Deep Property Access
+## 5. Collapsing Deep Property Access
 
 ```tsx
 function StatsValue({ record }: { record: any }) {
@@ -173,7 +174,7 @@ function StatsValue({ record }: { record: any }) {
 }
 ```
 
-# 6. Avoiding Magic Numbers
+## 6. Avoiding Magic Numbers
 
 ```tsx
 const BONUS_SCORE_THRESHOLD = 200;
@@ -183,3 +184,9 @@ const BONUS_MULTIPLIER = 1.1;
 ## Conclusion
 
 Writing clean React code is about creating systems that survive time and team growth. By separating responsibilities, extracting logic, naming conditions, and removing magic values, you make code easier to maintain, onboard, and refactor. Clean code reduces cognitive load and speeds up development — today and years from now.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)

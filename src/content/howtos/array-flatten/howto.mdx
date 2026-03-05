@@ -11,11 +11,12 @@ category: javascript
 type: howto
 tags: ['flatten']
 desc: Learn how to flatten nested arrays in JavaScript using recursion, iteration, and modern techniques. Includes full ES5, ES6, reduce, stack, and spread implementations
+subtitle: 'Learn how to flatten nested arrays in JavaScript using recursion, iteration, and modern techniques. Includes full ES5, ES6, reduce, stack, and spread implementations'
 ---
 
-Flattening arrays is a common task in JavaScript development, especially when dealing with nested structures. In this article, you’ll learn how to implement your own `Array.prototype.myFlat` method from scratch—just like the native `flat()`—using different techniques.
+Flattening arrays is a common task in JavaScript development, especially when dealing with nested structures. In this guide, you’ll learn how to implement your own `Array.prototype.myFlat` method from scratch—just like the native `flat()`—using different techniques.
 
-## 🔍 What Is Array Flattening?
+ What Is Array Flattening?
 
 Flattening means converting a deeply nested array into a single-level array:
 
@@ -26,7 +27,7 @@ const arr = [0, 1, [2, [3, [4, 5]]]];
 
 ---
 
-## ✅ Understanding Native `flat()`
+ Understanding Native `flat()`
 
 ```js
 [1, [2, [3]]].flat(2);         // [1, 2, 3]
@@ -44,7 +45,7 @@ const arr = [0, 1, [2, [3, [4, 5]]]];
 
 ---
 
-## 📐 ES6 Implementation with Recursion
+ ES6 Implementation with Recursion
 
 ```js
 Array.prototype.myFlat = function (depth = 1) {
@@ -64,7 +65,7 @@ Array.prototype.myFlat = function (depth = 1) {
 
 ---
 
-## 🔁 Reduce-Based Functional Version
+ Reduce-Based Functional Version
 
 ```js
 Array.prototype.myFlat = function (depth = 1) {
@@ -81,7 +82,7 @@ Array.prototype.myFlat = function (depth = 1) {
 
 ---
 
-## 🧱 Stack-Based Iterative Implementation
+ Stack-Based Iterative Implementation
 
 ```js
 Array.prototype.myFlat = function (depth = 1) {
@@ -106,7 +107,7 @@ Array.prototype.myFlat = function (depth = 1) {
 
 ---
 
-## ✨ Spread-Based Deep Flatten (No Depth Limit)
+ Spread-Based Deep Flatten (No Depth Limit)
 
 ```js
 Array.prototype.myFlat = function () {
@@ -118,11 +119,11 @@ Array.prototype.myFlat = function () {
 };
 ```
 
-> ⚠️ Spread version fully flattens the array. No depth control.
+>  Spread version fully flattens the array. No depth control.
 
 ---
 
-## 🧪 Examples
+ Examples
 
 ```js
 const array = [1, , 2, undefined, [3, [4, [5, 6]]]];
@@ -134,7 +135,7 @@ console.log(array.myFlat(Infinity)); // [1, 2, undefined, 3, 4, 5, 6]
 
 ---
 
-## 🧠 Summary
+ Summary
 
 We’ve covered multiple strategies for flattening arrays:
 
@@ -144,3 +145,9 @@ We’ve covered multiple strategies for flattening arrays:
 - Deep flatten using `spread`
 
 The recursive approach is readable, but a stack is safer for large depths. Now you can flatten like a pro, with or without `.flat()`!
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)
+- [Mastering Early and Late Binding in TypeScript & JavaScript](/howto/binding-js/)

@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['reactivity']
 desc: A practical experiment using vanilla JavaScript, Web APIs, and Proxy-based state to create reactive, declarative UI without frameworks.
+subtitle: 'A practical experiment using vanilla JavaScript, Web APIs, and Proxy-based state to create reactive, declarative UI without frameworks.'
 ---
 
 Modern UI frameworks offer abstraction layers that make user interfaces declarative and reactive. However, the web platform itself exposes primitives that can be composed to achieve similar patterns without introducing a dedicated UI library. This article demonstrates an experimental approach for creating a reactive, declarative UI flow using only **vanilla JavaScript**, **Web APIs**, and **Proxy-based state tracking**.
@@ -189,10 +190,10 @@ const state = new DeepStateProxy({
 
 This approach:
 
-✔ enables deep mutation tracking  
-✔ does not require libraries  
-✔ keeps state as plain objects  
-✔ keeps consumer code minimal  
+ enables deep mutation tracking  
+ does not require libraries  
+ keeps state as plain objects  
+ keeps consumer code minimal  
 
 ---
 
@@ -303,3 +304,9 @@ Key architectural observations include:
 This experiment shows that declarative UI behavior and reactive state management do not strictly require third-party frameworks. While production systems benefit from established ecosystems, understanding how native patterns can replicate core ideas provides architectural insight and improves reasoning about frameworks.
 
 By relying solely on the web platform, the experiment highlights the expressive power of **vanilla JavaScript**, clarifies why modern frameworks emphasize declarativity and reactivity, and reinforces the idea that good abstractions—framework or not—ultimately enable scalable UI code.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

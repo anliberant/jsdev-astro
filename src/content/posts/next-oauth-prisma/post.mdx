@@ -9,10 +9,11 @@ author: anton liberant
 category: nextjs
 type: post
 tags: ['auth', 'google', 'github', 'postgresql', 'docker', 'shadcn', 'oauth']
-desc: Implement Google and GitHub auth in Next.js with Prisma and NextAuth. Secure sign-in, data handling, and better UX with step-by-step integration.
+desc: Build Google and GitHub OAuth in Next.js with NextAuth and Prisma, including database setup and session handling.
+subtitle: 'Build Google and GitHub OAuth in Next.js with NextAuth and Prisma, including database setup and session handling.'
 ---
 
-We’ll wire up Google and GitHub login in a Next.js 15 app using NextAuth, store user records in PostgreSQL through Prisma, and build the UI with ShadcnUI. By the last step you’ll have a working OAuth flow where a new user clicks “Sign in with Google,” gets redirected, and lands back in the app with their profile already saved in the database.
+In this guide, you will wire Google and GitHub login into a Next.js 15 app with NextAuth, persist users in PostgreSQL through Prisma, and add a minimal ShadcnUI sign-in screen.
 
 **Prerequisites**
 
@@ -26,7 +27,7 @@ We’ll wire up Google and GitHub login in a Next.js 15 app using NextAuth, stor
 
 ## Steps to Create User Authentication
 
-Let’s dive into setting up the project and adding user authentication.
+Start with the project setup, then configure the providers and database step by step.
 
 ### Step 1: Initialize Next.js Project
 
@@ -825,10 +826,14 @@ The `remotePatterns` array lists trusted sources for loading images from externa
 
 ### Test and Verify Authentication
 
-After setting up the database, NextAuth configurations, and UI, you can test the authentication workflow. When a user signs in with Google or GitHub, NextAuth will store their information in the database via Prisma, enabling a seamless authentication experience across sessions.
+After setting up the database, NextAuth configurations, and UI, you can test the authentication workflow. When a user signs in with Google or GitHub, NextAuth will store their information in the database via Prisma, enabling a smooth authentication experience across sessions.
 
 ## Wrapping Up
 
-With this setup, you’ve established a robust user authentication system in Next.js using NextAuth and Prisma. This implementation is scalable, letting you expand user data management and customize the authentication experience as needed. Using NextAuth with Prisma offers flexibility, and the integration with OAuth providers like Google and GitHub provides a simple, secure way to handle authentication in modern web applications.
+At this point, your app supports OAuth sign-in with persistent sessions and a database-backed user model. From here, extend the same setup with role-based access and protected routes.
 
-Happy coding!
+## Related articles
+
+- [Build NestJS CRUD with PostgreSQL](/nestjs-crud/)
+- [How to Set Up Local PostgreSQL with Docker Compose](/howto/postgresql-docker-compose/)
+- [Fix Next.js Escape Sequence Error](/howto/bad-character-escape-nextjs/)

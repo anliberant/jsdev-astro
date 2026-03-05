@@ -1,53 +1,67 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { Image } from 'astro:assets';
 import { CollectionEntry, getCollection, render } from 'astro:content';
 
 import BaseLayout from '@/app/layouts/base-layout.astro';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
+import { formatDate } from '@/shared/utils';
 
 export const getStaticPaths = (async () => {
-  const allFridays = await getCollection(
-    'fridays',
-    ({ data }) => !data.isDraft
-  );
+  const allFridays = await getCollection('fridays', ({ data }) => !data.isDraft);
   return allFridays.map(friday => ({
-    params: {
-      slug: friday.data.slug,
-    },
-    props: {
-      friday,
-    },
+    params: { slug: friday.data.slug },
+    props: { friday },
   }));
 }) satisfies GetStaticPaths;
-
-const { slug } = Astro.params;
 
 type Props = {
   friday: CollectionEntry<'fridays'>;
 };
-const { friday } = Astro.props;
 
-const { Content } = await render(friday);
+const { friday } = Astro.props;
+const { Content, remarkPluginFrontmatter } = await render(friday);
 
 const breadcrumbItems = [
   { label: 'Fridays', href: '/friday/' },
   { label: friday.data.title },
 ];
+
+const newDate = formatDate(friday.data.date);
 ---
 
 <BaseLayout
   title={friday.data.title}
   description={friday.data.desc}
   image={friday.data.image.src}
-  type='article'
->
+  type='article'>
   <main class='main'>
-    <Breadcrumbs items={breadcrumbItems} class='mt-10' />
+    <section aria-label='Breadcrumbs'>
+      <Breadcrumbs
+        items={breadcrumbItems}
+        class='mt-10'
+      />
+    </section>
+
     <article class='post-article'>
-      <h1 class='post-title'>{friday.data.title}</h1>
-      <Content components={mdxComponents} />
+      <header class='post-header'>
+        <h1 class='post-title'>{friday.data.heading}</h1>
+        <p class='post-subtitle'>{friday.data.subtitle}</p>
+        <p class='read-meta'>
+          <time datetime={friday.data.date.toISOString()}>{newDate}</time>
+          <span
+            class='read-time'
+            aria-label='Estimated reading time'>
+            {remarkPluginFrontmatter?.minutesRead ?? ''}
+          </span>
+        </p>
+      </header>
+
+      <section
+        class='post-content'
+        aria-label='Article content'>
+        <Content components={mdxComponents} />
+      </section>
     </article>
   </main>
 </BaseLayout>

@@ -10,6 +10,7 @@ category: typescript
 type: post
 tags: []
 desc: Learn how different TypeScript typing patterns affect tech debt, scalability, and readability. Discover when to use interfaces, generics, mapped types, or Record.
+subtitle: 'Learn how different TypeScript typing patterns affect tech debt, scalability, and readability. Discover when to use interfaces, generics, mapped types, or Record.'
 ---
 
 TypeScript typing patterns directly influence **technical debt**. Poorly chosen patterns lead to boilerplate, errors, and costly refactoring. Clear, type-safe approaches accelerate onboarding, reduce debugging time, and keep your codebase predictable.  
@@ -50,10 +51,10 @@ type PathPiece = {
   };
 }[SegmentKind];
 
-// ✅ Strictly enforces type-coordinates relationship
+//  Strictly enforces type-coordinates relationship
 const piece1: PathPiece = { kind: "line", coords: [10, 20] };
 const piece2: PathPiece = { kind: "quadratic", coords: [5, 15, 25, 35] };
-// ❌ Error: wrong number of coordinates
+//  Error: wrong number of coordinates
 // const piece3: PathPiece = { kind: "line", coords: [1, 2, 3] };
 ```
 
@@ -159,10 +160,10 @@ const segment: PathPieceInterface = {
 
 | Pattern                        | Type Safety | Readability | Scalability | Best For                  |
 |--------------------------------|-------------|-------------|-------------|---------------------------|
-| Mapped Types + Indexed Access  | ⭐⭐⭐⭐        | ⭐⭐          | ⭐⭐⭐⭐        | Complex, evolving schemas |
-| Record Utility Type             | ⭐⭐⭐         | ⭐⭐⭐         | ⭐⭐⭐⭐        | Quick prototyping         |
-| Generic Union                  | ⭐⭐⭐⭐        | ⭐⭐⭐⭐        | ⭐⭐⭐⭐        | Flexible APIs             |
-| Interface Inheritance           | ⭐⭐⭐⭐        | ⭐⭐⭐⭐        | ⭐⭐⭐         | Teams with juniors        |
+| Mapped Types + Indexed Access  |         |           |         | Complex, evolving schemas |
+| Record Utility Type             |          |          |         | Quick prototyping         |
+| Generic Union                  |         |         |         | Flexible APIs             |
+| Interface Inheritance           |         |         |          | Teams with juniors        |
 
 ---
 
@@ -179,4 +180,10 @@ const segment: PathPieceInterface = {
 
 The **choice of typing pattern directly impacts tech debt**. Over time, stricter, more maintainable patterns pay off in fewer bugs, easier onboarding, and faster development.  
 
-TypeScript gives us many ways to express the same idea—choosing the right one is about balancing **team experience**, **project size**, and **future scalability**.  
+TypeScript gives us many ways to express the same idea—choosing the right one is about balancing **team experience**, **project size**, and **future scalability**.
+
+## Related articles
+
+- [20 Essential TypeScript Tips for 2024](/20-ts-tricks/)
+- [Navigating TypeScript's Type System: 24 Brilliant Advanced Techniques](/advanced-type-tricks/)
+- [Converting Object Keys to camelCase with TypeScript](/camelcase-ts/)

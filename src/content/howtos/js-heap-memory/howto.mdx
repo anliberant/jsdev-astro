@@ -11,11 +11,12 @@ category: javascript
 type: howto
 tags: ['nodejs', 'memory', 'heap']
 desc: Resolve the JavaScript heap out of memory error in Node.js with practical fixes, memory tuning, and code optimization strategies.
+subtitle: 'Resolve the JavaScript heap out of memory error in Node.js with practical fixes, memory tuning, and code optimization strategies.'
 ---
 
 The error **“FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed – JavaScript heap out of memory”** appears when a Node.js process runs out of available memory. Node.js limits the amount of memory a single process can use, and when your application or build tool exceeds this limit, the process crashes.
 
-This guide explains why the error occurs, how to resolve it, and how to prevent it in long‑running or memory‑intensive applications.
+Here's why the error occurs, how to resolve it, and how to prevent it in long‑running or memory‑intensive applications.
 
 ## Why the Error Happens
 
@@ -224,3 +225,9 @@ This extends the heap only for the build command.
 The “JavaScript heap out of memory” error is a practical challenge, especially in large applications and heavy build processes. Increasing memory can temporarily resolve the issue, but long‑term stability comes from updating dependencies, optimizing memory usage, streaming large inputs, or restructuring workloads.
 
 By combining configuration changes with good development practices, you can prevent this error from interrupting your development or production environments.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

@@ -10,13 +10,14 @@ category: react
 type: post
 tags: ['hydration', 'suspense',]
 desc: React 19 introduces smarter hydration with selective loading, progressive interactivity, streaming SSR, and server components that need no JavaScript.
+subtitle: 'React 19 introduces smarter hydration with selective loading, progressive interactivity, streaming SSR, and server components that need no JavaScript.'
 ---
 
 Hydration has always been a critical part of SSR (Server-Side Rendering) in React. But prior to React 19, it came with performance drawbacks—like blocking interactivity and redundant JavaScript execution. Fortunately, React 19 introduces a revamped hydration model with smarter strategies: selective, progressive, and streaming hydration, plus support for server components that eliminate hydration altogether.
 
 In this guide, we’ll walk through how hydration works, what’s new, and how to avoid common mistakes—with all updated code examples and terminology.
 
-## 🧠 Understanding Hydration in React
+ Understanding Hydration in React
 
 Hydration is the process of converting server-rendered HTML into a fully interactive React app in the browser. React attaches event listeners and restores client-side state without re-rendering everything.
 
@@ -26,7 +27,7 @@ Hydration is the process of converting server-rendered HTML into a fully interac
 - Interactive components become usable with less delay
 - Hybrid rendering allows fast-first-paint and dynamic behavior
 
-## 🔁 What's New in React 19 Hydration?
+ What's New in React 19 Hydration?
 
 React 19 introduces several improvements:
 
@@ -38,7 +39,7 @@ React 19 introduces several improvements:
 Let’s look at the comparison table:
 ![Hydration in React](./images/hydration-in-react.png)
 
-## 🔧 How Hydration Happens
+ How Hydration Happens
 
 React hydration involves three stages:
 
@@ -46,7 +47,7 @@ React hydration involves three stages:
 2. **Hydrate in the Browser** - React uses JavaScript to attach interactivity without replacing the DOM.
 3. **Activate React Lifecycle** - Once hydrated, the app resumes full functionality with state updates, events, and hooks.
 
-## ⚙️ Selective Hydration in Action
+ Selective Hydration in Action
 
 With React 19, hydration prioritizes components that need to be interactive first.
 
@@ -74,7 +75,7 @@ export default function ProductOverview() {
 }
 ```
 
-## 🧭 Progressive Hydration
+ Progressive Hydration
 
 This method hydrates components gradually to reduce main-thread load.
 
@@ -97,7 +98,7 @@ export default function AdminDashboard() {
 }
 ```
 
-## 🌊 Streaming with Suspense
+ Streaming with Suspense
 
 Streaming lets React send HTML to the browser in chunks and hydrate it as it loads.
 
@@ -123,7 +124,7 @@ export default function ItemPage() {
 }
 ```
 
-## 🖥️ Server Components (No Hydration Needed)
+ Server Components (No Hydration Needed)
 
 Server Components are rendered entirely on the backend and transmitted as HTML—no JavaScript needed on the client.
 
@@ -142,13 +143,13 @@ export default async function StaticDetails({ itemId }: { itemId: string }) {
 }
 ```
 
-## 🚫 Hydration Errors and Fixes
+ Hydration Errors and Fixes
 
 Hydration mismatches happen when the server-rendered HTML differs from the client’s virtual DOM expectations. Common causes include timestamps, randomness, or user data rendered too early.
 
 See the translated issue summary below:
 
-### ❌ Issue: Time Mismatch
+ Issue: Time Mismatch
 
 Problem: `new Date()` renders differently on server vs. client.
 Fix: Move the logic to a useEffect hook.
@@ -167,7 +168,7 @@ export default function ClockDisplay() {
 }
 ```
 
-### ❌ Issue: Random Values Change
+ Issue: Random Values Change
 
 Problem: `Math.random()` differs between server and client.
 Fix: Generate random values after hydration.
@@ -186,7 +187,7 @@ export default function SessionCode() {
 }
 ```
 
-### ❌ Issue: Dynamic User Data
+ Issue: Dynamic User Data
 
 Problem: SSR renders user data that may not be available or may change.
 Fix: Fetch on the client after mount.
@@ -207,7 +208,7 @@ export default function WelcomeBanner() {
 }
 ```
 
-## 🧪 Debugging Hydration
+ Debugging Hydration
 
 Use these techniques to catch and fix hydration issues:
 
@@ -221,7 +222,7 @@ Use these techniques to catch and fix hydration issues:
   ```
 4. **Minimize “use client”** - Only use it on components that require interactivity.
 
-## ✅ Hydration Best Practices in React 19
+ Hydration Best Practices in React 19
 
 - Prefer server components to avoid unnecessary hydration.
 - Hydrate critical UI immediately (e.g., forms, inputs).
@@ -230,8 +231,14 @@ Use these techniques to catch and fix hydration issues:
 - Use `Suspense` and `lazy()` to chunk rendering and hydration.
 - Monitor hydration performance with DevTools.
 
-## 🏁 Final Thoughts
+ Final Thoughts
 
 React 19’s hydration overhaul gives you precise control over when and how your app becomes interactive. You can now optimize performance without sacrificing developer experience or functionality.
 
 Whether you're building eCommerce sites, dashboards, or content-heavy blogs, adopting selective and progressive hydration patterns will lead to smoother, faster applications.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)

@@ -10,9 +10,10 @@ category: javascript
 type: post
 tags: ['fetch']
 desc: Learn why await fetch() might be causing delays in your JavaScript applications and how to optimize it for better performance. 
+subtitle: 'Learn why await fetch() might be causing delays in your JavaScript applications and how to optimize it for better performance.'
 ---
 
-When developing JavaScript applications, it's easy to overlook performance issues related to `fetch()`. However, even simple code like `await fetch()` can unexpectedly slow down your app, causing delays in network requests and frustrating users. In this article, we’ll explore the reasons why `fetch()` may cause slowdowns and provide solutions to fix it.
+When developing JavaScript applications, it's easy to overlook performance issues related to `fetch()`. However, even simple code like `await fetch()` can unexpectedly slow down your app, causing delays in network requests and frustrating users. In this guide, we’ll explore the reasons why `fetch()` may cause slowdowns and provide solutions to fix it.
 
 ## 1. Cold TCP Connections: 200ms Delays Out of Nowhere
 
@@ -254,4 +255,10 @@ This approach keeps memory usage low, even with large datasets.
 
 Optimizing the performance of `await fetch()` involves addressing several bottlenecks. From reusing connections to switching to efficient streaming formats, each fix contributes to faster and more efficient network requests. Consider Undici for faster requests, avoid unnecessary serialization with `JSON.stringify()`, and implement strategies like concurrency control and caching to significantly improve your app’s performance.
 
-Keep testing, measure performance regularly, and consider alternatives like **GraphQL-over-HTTP/2**, **gRPC-web**, or **msgpack** to further optimize your application. 
+Keep testing, measure performance regularly, and consider alternatives like **GraphQL-over-HTTP/2**, **gRPC-web**, or **msgpack** to further optimize your application.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Base64 Encoding and Unicode Strings in JavaScript](/base64-unicode/)

@@ -10,6 +10,7 @@ category: javascript
 type: post
 tags: ['WebTransport']
 desc: Explore the WebTransport API for efficient, low-latency web communication with bidirectional streams. Learn its benefits, use cases, and how to boost app performance
+subtitle: 'Explore the WebTransport API for efficient, low-latency web communication with bidirectional streams. Learn its benefits, use cases, and how to boost app performance'
 ---
 
 Discover the [WebTransport API](https://www.w3.org/TR/webtransport/), a revolutionary technology that enables efficient, low-latency communication between web clients and servers. Learn how this innovative protocol enhances real-time data transfer, supports bidirectional streams, and improves overall web application performance. Explore its use cases, benefits, and implementation tips to stay ahead in modern web development.
@@ -33,8 +34,8 @@ In June 2023, WebTransport support was added to [Socket.io](https://socket.io/).
 HTTP/3 is built on Google’s [QUIC](https://en.wikipedia.org/wiki/QUIC) protocol, which itself is based on [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) and aims to address several limitations inherent to the [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) protocol:
 
 - **Head-of-Line (HOL) Blocking**: Unlike HTTP/2, which supports multiplexing (multiple streams transmitted over a single connection), if one stream fails in HTTP/2, others must wait for it to be restored. QUIC eliminates this issue by allowing streams to be independent.
-- **Higher Performance**: QUIC outperforms TCP in various ways. One key reason is that QUIC natively implements security measures (unlike TCP, which relies on TLS), leading to fewer round trips. Additionally, QUIC streams offer a more efficient transport mechanism compared to TCP's packet-based transmission, particularly beneficial in heavily loaded networks.
-- **Seamless Network Transition**: QUIC uses a unique connection identifier that allows packets to be delivered correctly across different networks. This identifier can persist across network changes, enabling uninterrupted downloads even when switching from Wi-Fi to mobile networks. In contrast, HTTP/2 relies on IP addresses, which can cause disruptions during network transitions.
+- **Higher Performance**: QUIC outperforms TCP in various ways. One key reason is that QUIC natively implements security measures (unlike TCP, which relies on TLS), leading to fewer round trips. Also, QUIC streams offer a more efficient transport mechanism compared to TCP's packet-based transmission, particularly beneficial in heavily loaded networks.
+- **smooth Network Transition**: QUIC uses a unique connection identifier that allows packets to be delivered correctly across different networks. This identifier can persist across network changes, enabling uninterrupted downloads even when switching from Wi-Fi to mobile networks. In contrast, HTTP/2 relies on IP addresses, which can cause disruptions during network transitions.
 - **Unreliable Delivery**: HTTP/3 supports unreliable delivery, which can be more efficient than guaranteed delivery in certain scenarios.
 
 To enable HTTP/3 (QUIC) support in Google Chrome, go to `chrome://flags` and enable the Experimental QUIC protocol option.
@@ -902,6 +903,12 @@ With these adjustments, your server and client should now support WebTransport v
 
 By following the steps outlined in this guide, you’ve successfully set up a WebTransport server with socket.io using Node.js and enabled support for the `HTTP/3 (QUIC)` protocol in Google Chrome. From generating SSL certificates to handling WebTransport connections and configuring Chrome to trust your custom setup, you’ve explored a practical implementation of this modern protocol.
 
-WebTransport is still an emerging technology, and while it’s not yet natively supported in Node.js, tools like `@fails-components/webtransport` provide a way to experiment with its capabilities. With proper configurations and the flexibility of `socket.io`, you can leverage the speed and efficiency of WebTransport for real-time data transfer in modern web applications.
+WebTransport is still an emerging technology, and while it’s not yet natively supported in Node.js, tools like `@fails-components/webtransport` provide a way to experiment with its capabilities. With proper configurations and the flexibility of `socket.io`, you can use the speed and efficiency of WebTransport for real-time data transfer in modern web applications.
 
 Keep in mind that as WebTransport evolves, more stable and production-ready solutions will likely emerge, making it even easier to integrate this protocol into your projects. For now, this setup serves as an excellent starting point for experimenting with the future of real-time communication.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

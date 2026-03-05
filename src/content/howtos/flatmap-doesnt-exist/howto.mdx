@@ -11,6 +11,7 @@ category: typescript
 type: howto
 tags: ['flat', 'flatMap']
 desc: Fix missing flat and flatMap errors in TypeScript by updating configs, ensuring modern runtime support, applying polyfills, or refactoring array logic.
+subtitle: 'Fix missing flat and flatMap errors in TypeScript by updating configs, ensuring modern runtime support, applying polyfills, or refactoring array logic.'
 ---
 
 Errors such as **“Property 'flat' does not exist on type any[]”** or **“flatMap is not a function”** appear when your TypeScript configuration or JavaScript runtime does not support the ECMAScript features that introduced these methods. The issue is not with your array type—it's with the environment in which the code is being checked or executed.
@@ -171,3 +172,9 @@ If you are targeting multiple environments, always document the maximum depth yo
 Errors involving missing `flat`, `flatMap`, or `flatten` stem from mismatched expectations between TypeScript configuration, runtime capabilities, and project type declarations. The cleanest solution is aligning your `tsconfig.json` and runtime with ES2019 or newer. When older environments must be supported, polyfills or refactoring techniques keep the codebase functional and predictable.
 
 By understanding how TypeScript assigns array types and how your runtime interprets them, you can maintain compatibility while still using modern, expressive JavaScript APIs.
+
+## Related articles
+
+- [Fixing Circular Imports in a Real Frontend Codebase](/howto/circular-imports-ts/)
+- [Validate ENV Variables in TypeScript with Zod](/howto/env-ts-zod/)
+- [Declaring and Managing Global Variables in TypeScript](/howto/global-vars-ts/)

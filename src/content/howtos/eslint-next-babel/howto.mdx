@@ -11,11 +11,12 @@ category: nodejs
 type: howto
 tags: ['eslint', 'babel']
 desc: Resolve the '[eslint] Parsing error - Cannot find module "next/babel"' issue in Next.js. Follow step-by-step solutions to fix ESLint and Babel config errors.
+subtitle: 'Resolve the ''[eslint] Parsing error - Cannot find module "next/babel"'' issue in Next.js. Follow step-by-step solutions to fix ESLint and Babel config errors.'
 ---
 
 When you see the **"Parsing error: Cannot find module 'next/babel'"**, it usually means ESLint can’t locate the Next.js Babel preset. This often happens in misconfigured projects or when upgrading Next.js/ESLint/Babel.
 
-Below is an improved, clearer, and more complete guide.
+Here is an improved, clearer, and more complete guide.
 
 ## Why This Error Happens
 
@@ -66,7 +67,7 @@ Next.js comes with Babel preconfigured.
 
 Make sure you did **not accidentally add** an empty or broken Babel config:
 
-❌ **Remove or fix these if empty:**
+ **Remove or fix these if empty:**
 
 - `.babelrc`
 - `babel.config.js`
@@ -136,13 +137,13 @@ Incorrect patterns may cause ESLint to apply wrong parsers.
 
 If you migrated from older Next.js versions (pre‑12):
 
-❌ Remove from `.eslintrc`:
+ Remove from `.eslintrc`:
 
 ```json
 "extends": ["next/babel"]
 ```
 
-❌ Remove from `.eslintignore`:
+ Remove from `.eslintignore`:
 
 ```
 .next/babel
@@ -181,3 +182,9 @@ The error **"Cannot find module 'next/babel'"** comes from outdated ESLint confi
 After applying the fixes above, your Next.js ESLint setup should run without any parsing issues.
 
 ![Parsing error: Cannot find module 'next/babel'](./images/eslint-next-babel.png)
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

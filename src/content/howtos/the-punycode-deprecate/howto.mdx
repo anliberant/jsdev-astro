@@ -11,6 +11,7 @@ category: nodejs
 type: howto
 tags: ['punycode']
 desc: "Learn how to resolve the 'DeprecationWarning: The punycode module is deprecated' error in Node.js with step-by-step guidance and best practices."
+subtitle: "Learn how to resolve the 'DeprecationWarning: The punycode module is deprecated' error in Node.js with step-by-step guidance and best practices."
 ---
 
 The warning **“DeprecationWarning: The punycode module is deprecated”** appears when Node.js detects that your code—or one of your dependencies—is using the legacy built‑in `punycode` module. This module was deprecated in **Node.js 7** and fully removed in **Node.js 15**, so only the standalone `punycode` npm package is supported today.
@@ -203,3 +204,8 @@ This hides the warning but does **not** fix the root cause.
 
 The long‑term, reliable solution is to migrate all code to the standalone `punycode` npm package and ensure your toolchain no longer references the removed built‑in module.
 
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

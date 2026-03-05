@@ -10,6 +10,7 @@ category: javascript
 type: post
 tags: ['base64', 'unicode']
 desc: Learn how to handle Base64 encoding and decoding in JavaScript, including strategies for managing Unicode strings and avoiding common pitfalls.
+subtitle: 'Learn how to handle Base64 encoding and decoding in JavaScript, including strategies for managing Unicode strings and avoiding common pitfalls.'
 ---
 
 Base64 encoding transforms binary data into a text format that’s safe for transmission and storage. It’s commonly used for data URLs, such as inline images, and to address issues like missing favicons in browsers. But how does Base64 handle strings in JavaScript, especially when Unicode is involved? This article explores the key aspects, functions, and challenges of Base64 encoding and decoding in JavaScript.
@@ -41,7 +42,7 @@ JavaScript strings use the UTF-16 encoding, which represents characters using on
 **Example:**
 
 ```js
-const unicodeString = 'hello❤️';
+const unicodeString = 'hello';
 try {
   const encoded = btoa(unicodeString);
 } catch (error) {
@@ -70,12 +71,12 @@ function bytesToBase64(bytes) {
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder();
 
-const unicodeString = 'hello❤️';
+const unicodeString = 'hello';
 const encoded = bytesToBase64(utf8Encoder.encode(unicodeString));
 console.log(encoded); // Encoded Base64 string
 
 const decoded = utf8Decoder.decode(base64ToBytes(encoded));
-console.log(decoded); // hello❤️
+console.log(decoded); // hello
 ```
 
 ## A Common Edge Case: Lone Surrogates
@@ -128,7 +129,7 @@ function isWellFormed(str) {
   }
 }
 
-const input = 'hello❤️';
+const input = 'hello';
 
 if (isWellFormed(input)) {
   const utf8Encoder = new TextEncoder();
@@ -147,3 +148,9 @@ if (isWellFormed(input)) {
 ## Conclusion
 
 Base64 encoding in JavaScript can handle strings effectively, even with Unicode, if you use the right tools. By leveraging `TextEncoder` and `TextDecoder`, you ensure compatibility while avoiding common errors. Always validate your strings to handle malformed cases gracefully.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

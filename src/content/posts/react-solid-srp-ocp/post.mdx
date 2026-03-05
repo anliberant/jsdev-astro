@@ -10,12 +10,14 @@ category: react
 type: post
 tags: ['architecture', 'solid', 'srp', 'ocp']
 desc: Learn how Single Responsibility and Open Closed principles apply
+subtitle: 'Learn how Single Responsibility and Open Closed principles apply'
   to React components, hooks, and scalable frontend architecture.
 ---
 
 ## SOLID Principles in React Architecture
 
 Software architecture almost never collapses instantly.
+
 
 Most React applications begin in a perfectly reasonable state.  
 - A few components.  
@@ -39,6 +41,8 @@ Changing one feature unexpectedly breaks three unrelated screens.
 At this point developers usually blame React, state management, or framework decisions. But the real problem is almost always architectural.
 
 The system stopped respecting **responsibilities**.
+
+Read more: [Understanding SOLID Principles](https://jsdev.space/solid-design-principles/)
 
 ---
 
@@ -78,9 +82,9 @@ The Single Responsibility Principle states:
 
 In React, responsibilities usually split into:
 
--   data logic
--   rendering
--   composition
+- data logic
+- rendering
+- composition
 
 SRP **does not mean**:
 
@@ -121,9 +125,9 @@ export function AccountProfile() {
 
 Component responsibilities:
 
--   fetching data
--   managing state
--   rendering UI
+- fetching data
+- managing state
+- rendering UI
 
 Multiple reasons to change.
 
@@ -414,3 +418,9 @@ change becomes dangerous.
 
 Modern React architecture is less about clever components and more about
 controlled responsibilities and safe extension.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)

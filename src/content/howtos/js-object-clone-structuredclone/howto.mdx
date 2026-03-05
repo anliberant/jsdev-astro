@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['structuredClone', 'deep-clone']
 desc: Learn to deep clone complex JavaScript objects using the built-in structuredClone() method. Handle nested data and special types with this modern, efficient approach
+subtitle: 'Learn to deep clone complex JavaScript objects using the built-in structuredClone() method. Handle nested data and special types with this modern, efficient approach'
 ---
 
 Deep cloning in JavaScript has always been tricky. Developers often relied on hacks like `JSON.stringify()` + `JSON.parse()` or external libraries, which only worked for the simplest cases. But now, there's a native and powerful alternative: structuredClone().
@@ -19,7 +20,7 @@ In this guide, you’ll learn how `structuredClone()` works, what it supports, w
 
 ![Deep cloning in JavaScript](./images/object-clone-structuredclone.png)
 
-## 🔄 Why `structuredClone()` Is Not Just JSON 2.0
+ Why `structuredClone()` Is Not Just JSON 2.0
 
 Let’s start with a classic problem.
 
@@ -47,7 +48,7 @@ Worse, if your object has circular references, it’ll crash:
 const node = {};
 node.self = node;
 
-JSON.stringify(node); // ❌ TypeError: Converting circular structure to JSON
+JSON.stringify(node); //  TypeError: Converting circular structure to JSON
 ```
 
 Enter `structuredClone()`:
@@ -62,15 +63,15 @@ console.log(structuredCopy.map instanceof Map); // true
 
 It handles these cases **correctly, deeply, and safely**.
 
-## ✅ What `structuredClone()` Supports
+ What `structuredClone()` Supports
 
 This method works with a wide range of types:
 
-### ✅ Primitives:
+ Primitives:
 
 `undefined`, `null`, `boolean`, `number`, `bigint`, `string`, `symbol`
 
-### ✅ Data Structures:
+ Data Structures:
 
 - Objects and arrays
 - `Date`, `RegExp`, `Map`, `Set`
@@ -78,7 +79,7 @@ This method works with a wide range of types:
 - `Blob`, `File`, `ImageData`, `MessagePort`, `FileList`
 - Browser-specific objects like `MessageChannel`, `OffscreenCanvas`
 
-### 🔬 Binary Example:
+ Binary Example:
 
 ```js
 const buffer = new ArrayBuffer(16);
@@ -90,7 +91,7 @@ console.log(clone === buffer); // false
 
 Useful for transferring binary data to **Web Workers** or **BroadcastChannel**.
 
-## 🔁 Deep Nesting and Circular Structures
+ Deep Nesting and Circular Structures
 
 `structuredClone()` can also handle circular references:
 
@@ -104,32 +105,32 @@ console.log(clone.self === clone); // true
 
 This makes it perfect for serializing **graphs, trees, and cyclic structures**, where JSON completely fails.
 
-## 🧱 Limitations of `structuredClone()`
+ Limitations of `structuredClone()`
 
 While powerful, it doesn’t handle everything.
 
-### ❌ 1. Functions
+ 1. Functions
 
 ```js
 const withFn = {
   sayHi: () => console.log('hi'),
 };
 
-structuredClone(withFn); // ❌ DataCloneError
+structuredClone(withFn); //  DataCloneError
 ```
 
 Functions can’t be cloned. Behavior (code) is lost.
 
-### ❌ 2. DOM Elements
+ 2. DOM Elements
 
 ```js
 const div = document.createElement('div');
-structuredClone(div); // ❌ DataCloneError
+structuredClone(div); //  DataCloneError
 ```
 
 UI elements aren't cloneable — only data is.
 
-### ❌ 3. Prototypes and Class Instances
+ 3. Prototypes and Class Instances
 
 ```js
 class MyClass {
@@ -147,7 +148,7 @@ console.log(clone.x); // 42
 
 Only the **plain object structure** is cloned — not the prototype chain.
 
-## ⚖️ Performance: Is It Slow?
+ Performance: Is It Slow?
 
 Compared to `JSON.parse(JSON.stringify(...))`, yes — `structuredClone()` is slower for flat structures.
 
@@ -159,9 +160,9 @@ But it’s much more stable, and actually faster for:
 
 If performance is critical (e.g., cloning every animation frame), consider alternatives like `Object.assign()` (shallow) or `lodash/cloneDeep`.
 
-## 🆚 Alternatives and Polyfills
+ Alternatives and Polyfills
 
-### 📦 Lodash cloneDeep
+ Lodash cloneDeep
 
 ```js
 import cloneDeep from 'lodash/cloneDeep';
@@ -177,17 +178,17 @@ Works for nested objects and arrays — but:
 - Can’t clone `Map`, `Set`, `Date` accurately
 - Won’t handle circular structures unless configured
 
-### 🌐 Browser Support
+ Browser Support
 
-- ✅ Supported: Chrome 98+, Firefox 94+, Safari 15+, Node.js 17+
-- ❌ Not Supported: IE11, Safari < 14, Node < 17
+- Supported: Chrome 98+, Firefox 94+, Safari 15+, Node.js 17+
+- Not Supported: IE11, Safari < 14, Node < 17
 
 For older environments, use:
 
 - `structured-clone` polyfill
 - Fallback to `cloneDeep()` or `JSON.parse()` with checks
 
-## 🚀 Real-World Use Cases
+ Real-World Use Cases
 
 ### 1. Undo/Redo in Rich Editors
 
@@ -233,12 +234,12 @@ worker.postMessage(structuredClone(bigData));
 
 Structured clone avoids `Transferable` limitations and keeps data safe.
 
-## ⚠️ When Not to Use It
+ When Not to Use It
 
 <table>
   <thead>
     <tr>
-      <th>**❌ Scenario**</th>
+      <th>** Scenario**</th>
       <th>**Alternative**</th>
     </tr>
   </thead>
@@ -262,7 +263,7 @@ Structured clone avoids `Transferable` limitations and keeps data safe.
   </tbody>
 </table>
 
-## 🧠 Final Thoughts
+ Final Thoughts
 
 `structuredClone()` is the modern way to deep clone in JavaScript:
 
@@ -274,3 +275,9 @@ Structured clone avoids `Transferable` limitations and keeps data safe.
 It's especially powerful in React, Vue, and Svelte apps for state snapshotting, and is perfect for passing data to IndexedDB, `postMessage`, or between browser tabs.
 
 Use it with care — know where it shines and where it doesn’t. And say goodbye to `JSON.parse(JSON.stringify(...))` once and for all.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

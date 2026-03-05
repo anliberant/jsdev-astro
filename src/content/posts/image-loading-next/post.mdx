@@ -10,6 +10,7 @@ category: nextjs
 type: post
 tags: ['nextjs-tips', 'image-loading']
 desc: Learn how to optimize progressive image loading in Next.js using blur effects, color placeholders, thumbnails, and built-in features for enhanced performance.
+subtitle: 'Learn how to optimize progressive image loading in Next.js using blur effects, color placeholders, thumbnails, and built-in features for enhanced performance.'
 ---
 
 Progressive image loading is a critical feature in modern web applications, enhancing user experience by delivering smooth transitions from placeholders to fully loaded images. Next.js, with its powerful `next/image` component, provides advanced capabilities to implement progressive loading efficiently.
@@ -18,7 +19,7 @@ This guide covers five effective strategies for optimizing image loading in Next
 
 ## 1. Using the Main Color of the Image
 
-Extracting the dominant color from an image and using it as a placeholder offers a seamless transition before the image fully loads. In Next.js, this can be achieved by generating a `blurDataURL`.
+Extracting the dominant color from an image and using it as a placeholder offers a smooth transition before the image fully loads. In Next.js, this can be achieved by generating a `blurDataURL`.
 
 **Implementation Example:**
 
@@ -113,7 +114,7 @@ Using low-resolution thumbnails as placeholders before the high-quality image lo
 
 ## 4. Combining Blur and Compression
 
-This technique involves displaying a blurred, highly compressed image while the full-resolution image loads. In Next.js, you can leverage libraries like `browser-image-compression` to achieve this.
+This technique involves displaying a blurred, highly compressed image while the full-resolution image loads. In Next.js, you can use libraries like `browser-image-compression` to achieve this.
 
 **Custom Component Example:**
 
@@ -204,3 +205,9 @@ export default BlurPlaceholderExample;
 ## Conclusion
 
 Progressive image loading is a vital part of optimizing web performance and enhancing user experience. By leveraging the built-in features of Next.js alongside advanced techniques like blur effects and thumbnails, you can significantly improve the visual appeal and responsiveness of your application. Start implementing these strategies today to create better, faster, and more engaging web experiences!
+
+## Related articles
+
+- [Tailwind CSS Dark Mode Integration in Next.js 14](/dark-mode-react/)
+- [Implement Google & GitHub Login in Next.js with NextAuth](/next-oauth-prisma/)
+- [Creating a Next.js Image Editor with glfx.js](/nextjs-image-editor-tutorial/)

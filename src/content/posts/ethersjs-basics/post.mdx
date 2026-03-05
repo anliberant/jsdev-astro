@@ -10,12 +10,13 @@ category: web3
 type: post
 tags: ["web3.js", "ethers.js", "blockchain", "dapp"]
 desc: Connect MetaMask, read ERC-20 balances, and interact with Ethereum smart contracts using Ethers.js and Ethcall in JavaScript.
+subtitle: 'Connect MetaMask, read ERC-20 balances, and interact with Ethereum smart contracts using Ethers.js and Ethcall in JavaScript.'
 ---
 
 [Ethers.js — From MetaMask to Smart Contracts](https://docs.ethers.org/) is a powerful toolkit for interacting with Ethereum-compatible blockchains.  
 In this tutorial, we’ll explore how to connect MetaMask, read ERC-20 token balances, and optimize multiple blockchain calls efficiently using **Ethers.js** and **Ethcall**.
 
-## 🧭 What You’ll Learn
+ What You’ll Learn
 
 1. How blockchain interaction works in JavaScript  
 2. The concepts of **Provider** and **Contract**  
@@ -23,7 +24,7 @@ In this tutorial, we’ll explore how to connect MetaMask, read ERC-20 token bal
 4. Reading token balances from smart contracts  
 5. Optimizing multiple blockchain calls with **Ethcall**
 
-## 🧩 Understanding Providers
+ Understanding Providers
 
 A **Provider** gives your app access to blockchain data.
 
@@ -37,7 +38,7 @@ const rpcProvider = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/e
 const walletProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
 ```
 
-## 🔗 Connecting MetaMask
+ Connecting MetaMask
 
 Let’s create a reusable MetaMask connection utility with proper error handling.
 
@@ -71,10 +72,10 @@ export async function connectWallet() {
 }
 ```
 
-💡 **Note:** The original Russian article had a typo —  
+ **Note:** The original Russian article had a typo —  
 the line `provider = window.ethereum` only *stores* the provider instance for later initialization; it doesn’t initialize anything yet.
 
-## ⚙️ Tracking Network and Account Changes
+ Tracking Network and Account Changes
 
 MetaMask emits events when users switch networks or accounts.  
 You can listen for these events and update your app reactively:
@@ -105,7 +106,7 @@ const NETWORKS = {
 };
 ```
 
-## 🧱 Working with Smart Contracts
+ Working with Smart Contracts
 
 A **Contract** lets you read and write on-chain data.
 
@@ -132,7 +133,7 @@ const tokenAbi = [
 ];
 ```
 
-## 💰 Reading ERC-20 Token Balances
+ Reading ERC-20 Token Balances
 
 Let’s fetch a DAI token balance on Polygon using Ethers.js.
 
@@ -165,7 +166,7 @@ async function getDaiBalance() {
 }
 ```
 
-## 🚀 Optimizing Calls with Ethcall
+ Optimizing Calls with Ethcall
 
 Fetching multiple balances individually is slow.  
 Use **Ethcall** to batch them efficiently.
@@ -212,7 +213,7 @@ This drastically reduces the number of RPC requests — ideal for dashboards and
 
 ---
 
-## 🧾 Conclusion
+ Conclusion
 
 Ethers.js remains one of the most developer-friendly libraries for working with Ethereum-compatible chains.  
 You’ve learned how to:
@@ -228,3 +229,9 @@ With these tools, you can build DeFi dashboards, NFT marketplaces, or any dApp t
 - [Ethers.js Documentation](https://docs.ethers.org/)  
 - [Ethcall GitHub](https://github.com/Destiner/ethcall)  
 - [MetaMask Developer Docs](https://docs.metamask.io/)
+
+## Related articles
+
+- [From Web2 to Web3: Building Decentralized Frontends with wagmi](/wagmi-react/)
+- [Top 10 CSS Tips to Master in 2024](/10-css-tips/)
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)

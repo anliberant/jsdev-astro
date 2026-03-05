@@ -11,6 +11,7 @@ category: react
 type: howto
 tags: ['localforage', 'react-query']
 desc: Understand how useCallback, useMemo, and React.memo work
+subtitle: 'Understand how useCallback, useMemo, and React.memo work'
   together to optimize rendering, reduce re-renders, and improve React
   app performance.
 ---
@@ -20,7 +21,7 @@ performance heroes: **useCallback**, **useMemo**, and **React.memo**.\
 But when should you use them, and how do they differ? This guide breaks
 down each concept with clear explanations and practical examples.
 
-## 🧩 1. Why Components Re-Render
+ 1. Why Components Re-Render
 
 Every time a parent's state updates, its entire function re-runs,
 recreating variables and functions. That's why child components
@@ -57,7 +58,7 @@ const fn2 = () => {};
 console.log(fn1 === fn2); // false
 ```
 
-## ⚙️ 2. `React.memo`: Skipping Useless Renders
+ 2. `React.memo`: Skipping Useless Renders
 
 `React.memo` is a higher-order component that performs a **shallow
 comparison** of props. If they haven't changed, React skips
@@ -65,24 +66,24 @@ re-rendering.
 
 ``` tsx
 const Child = React.memo(({ onClick }) => {
-  console.log("🎨 Child rendered");
+  console.log(" Child rendered");
   return <button onClick={onClick}>Click me</button>;
 });
 ```
 
-It compares new vs. old props. If they're equal → ✅ skip render;
-otherwise → ❌ re-render.
+It compares new vs. old props. If they're equal →  skip render;
+otherwise →  re-render.
 
-⚠️ Limitation: Shallow comparison fails for new object or function
+ Limitation: Shallow comparison fails for new object or function
 references.
 
 ``` tsx
-// ❌ These always create new references
+//  These always create new references
 <Child onClick={() => {}} />
 <Child config={{ theme: "dark" }} />
 ```
 
-## 🔁 3. `useCallback`: Stable Function References
+ 3. `useCallback`: Stable Function References
 
 `useCallback` memoizes a function and returns the same reference unless
 dependencies change.
@@ -97,7 +98,7 @@ Use it with `React.memo` for stable props:
 
 ``` tsx
 const Child = React.memo(({ onClick }) => {
-  console.log("🎨 Child rendered");
+  console.log(" Child rendered");
   return <button onClick={onClick}>Click me</button>;
 });
 
@@ -127,7 +128,7 @@ const fetchUser = useCallback(() => {
 }, [userId]);
 ```
 
-## 💡 4. `useMemo`: Cache Expensive Computations
+ 4. `useMemo`: Cache Expensive Computations
 
 While `useCallback` caches a **function reference**, `useMemo` caches a
 **computed value**.
@@ -144,7 +145,7 @@ function ProductList({ products }) {
   const [filter, setFilter] = useState("");
 
   const filtered = useMemo(() => {
-    console.log("🔍 Filtering...");
+    console.log(" Filtering...");
     return products.filter(p =>
       p.name.toLowerCase().includes(filter.toLowerCase())
     );
@@ -161,18 +162,18 @@ function ProductList({ products }) {
 }
 ```
 
-✅ Without `useMemo`: recalculates on every re-render.\
-✅ With `useMemo`: recalculates only when dependencies change.
+ Without `useMemo`: recalculates on every re-render.\
+ With `useMemo`: recalculates only when dependencies change.
 
-## 🧠 5. Combined Strategy
+ 5. Combined Strategy
 
--   **`useCallback`** → memoize functions passed to children\
--   **`useMemo`** → memoize derived or heavy computations\
--   **`React.memo`** → skip rendering children with identical props
+- **`useCallback`** → memoize functions passed to children\
+- **`useMemo`** → memoize derived or heavy computations\
+- **`React.memo`** → skip rendering children with identical props
 
 Together, they stabilize props and eliminate unnecessary renders.
 
-## 🎯 6. Best Practices
+ 6. Best Practices
 
   ----------------------------------------------------------------------------
   Scenario             Recommended Solution                      Why
@@ -189,29 +190,29 @@ Together, they stabilize props and eliminate unnecessary renders.
   Component props      `React.memo`                              Avoid
   rarely change                                                  re-render
 
-  Simple components    ❌ Skip optimization                      Overhead not
+  Simple components     Skip optimization                      Overhead not
                                                                  worth it
   ----------------------------------------------------------------------------
 
-## 🚫 Common Pitfalls
+ Common Pitfalls
 
--   **Overuse:** Avoid wrapping every function --- measure first!\
--   **Missing React.memo:** `useCallback` alone won't stop re-renders.\
--   **Missing dependencies:** Always declare dependency arrays to avoid
+- **Overuse:** Avoid wrapping every function --- measure first!\
+- **Missing React.memo:** `useCallback` alone won't stop re-renders.\
+- **Missing dependencies:** Always declare dependency arrays to avoid
     stale closures.
 
-## 🧩 7. Full Example
+ 7. Full Example
 
 ``` tsx
 import React, { useState, useMemo, useCallback, memo } from "react";
 
 const ResultDisplay = memo(({ result }) => {
-  console.log("🎨 ResultDisplay rendered");
+  console.log(" ResultDisplay rendered");
   return <div>Result: {result}</div>;
 });
 
 const ActionButton = memo(({ onAction, label }) => {
-  console.log("🎨 ActionButton rendered");
+  console.log(" ActionButton rendered");
   return <button onClick={onAction}>{label}</button>;
 });
 
@@ -220,7 +221,7 @@ export default function App() {
   const [text, setText] = useState("");
 
   const heavyResult = useMemo(() => {
-    console.log("💡 Heavy calculation...");
+    console.log(" Heavy calculation...");
     let total = 0;
     for (let i = 0; i < 1_000_000; i++) total += i;
     return total + count;
@@ -229,7 +230,7 @@ export default function App() {
   const handleAdd = useCallback(() => setCount(c => c + 1), []);
   const handleReset = useCallback(() => setCount(0), []);
 
-  console.log("🧩 App rendered");
+  console.log(" App rendered");
 
   return (
     <div>
@@ -248,12 +249,18 @@ export default function App() {
 }
 ```
 
-## 🏁 8. Conclusion
+ 8. Conclusion
 
--   `useCallback` → remember the **function**\
--   `useMemo` → remember the **value**\
--   `React.memo` → remember the **component**
+- `useCallback` → remember the **function**\
+- `useMemo` → remember the **value**\
+- `React.memo` → remember the **component**
 
 These hooks work best together when applied intentionally, not
 everywhere.\
 Measure, identify bottlenecks, and optimize where it truly matters.
+
+## Related articles
+
+- [Fixing React’s “Cannot Read Property createElement of Undefined”](/howto/createelement-react/)
+- [Theme Switcher with DaisyUI and TanStack Router](/howto/daisyui-theme-switcher/)
+- [Properly Configuring Jest for React and Next.js](/howto/jest-rtl-setup-react-nextjs/)

@@ -11,16 +11,17 @@ category: nodejs
 type: howto
 tags: ['webpack']
 desc: Learn how to configure Webpack step-by-step --- from simple
+subtitle: 'Learn how to configure Webpack step-by-step --- from simple'
   entry/output setups to advanced plugins, loaders, optimizations, and
   environment-specific builds.
 ---
 
-Hi developers! 👋 This guide will demystify **Webpack configuration**
+Hi developers!  This guide will demystify **Webpack configuration**
 from beginner to expert. If the `webpack.config.js` file once looked
 like a foreign language, by the end of this article you'll understand
 every piece of it --- and how to customize it for real-world projects.
 
-## 🎯 1. Your First Webpack Config (Hello World)
+ 1. Your First Webpack Config (Hello World)
 
 Let's start with the simplest example to understand the structure.
 
@@ -46,7 +47,7 @@ module.exports = {
 Even this tiny config can bundle your app. Think of it as the "Hello
 World" of Webpack.
 
-## ⚙️ 2. Core Concepts: Entry, Output, Loaders, and Plugins
+ 2. Core Concepts: Entry, Output, Loaders, and Plugins
 
 ### Entry --- The Starting Point
 
@@ -127,7 +128,7 @@ plugins: [
 ];
 ```
 
-## 🧱 3. Real-World Setup Example
+ 3. Real-World Setup Example
 
 Here's a practical config used in real projects --- complete and
 environment-aware.
@@ -199,7 +200,7 @@ module.exports = (env, argv) => {
 };
 ```
 
-## 🧩 4. Environment Configs: Dev vs. Production
+ 4. Environment Configs: Dev vs. Production
 
 ### Development
 
@@ -243,7 +244,7 @@ module.exports = {
 };
 ```
 
-## 🧠 5. Advanced Webpack Tricks
+ 5. Advanced Webpack Tricks
 
 ### Dynamic Configs
 
@@ -280,7 +281,7 @@ module.exports = [
 ];
 ```
 
-## ⚡ 6. Optimization Essentials
+ 6. Optimization Essentials
 
 ``` js
 optimization: {
@@ -304,16 +305,22 @@ optimization: {
 };
 ```
 
-## 🏁 Summary
+ Summary
 
 Configuring Webpack is like **building with LEGO** --- start small and
 keep improving.
 
-✅ Understand the pillars: **Entry**, **Output**, **Loader**,
+ Understand the pillars: **Entry**, **Output**, **Loader**,
 **Plugin**\
-✅ Separate development and production configs\
-✅ Use code-splitting and caching wisely\
-✅ Optimize only where it matters
+ Separate development and production configs\
+ Use code-splitting and caching wisely\
+ Optimize only where it matters
 
 Keep experimenting --- Webpack mastery comes from **practice**, not
 memorization.
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

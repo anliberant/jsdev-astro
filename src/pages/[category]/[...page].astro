@@ -128,6 +128,16 @@ const pageDescription = `${description} ${
           {categoryName} Page {page.currentPage}
         </h1>
     }
+    <section class='taxonomy-intro'>
+      <p>
+        This category archive contains {totalPosts} posts focused on {categoryName}. Start with the
+        newest guides and move through pagination for deeper references and older patterns.
+      </p>
+      <p>
+        Articles usually include implementation details, code examples, and edge cases relevant to
+        real production setups.
+      </p>
+    </section>
     <Posts posts={page.data} />
     {
       numberOfPages > 1 && (
@@ -140,3 +150,16 @@ const pageDescription = `${description} ${
     }
   </main>
 </BaseLayout>
+
+<style>
+  .taxonomy-intro {
+    margin: 0.75rem 0 1.5rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.75;
+  }
+
+  .taxonomy-intro p {
+    margin: 0.5rem 0;
+  }
+</style>
+

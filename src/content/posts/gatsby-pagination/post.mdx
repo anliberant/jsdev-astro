@@ -10,6 +10,7 @@ category: gatsby
 type: post
 tags: ['pagination']
 desc: Create pagination in Gatsby with GraphQL by configuring the createPages API in gatsby-node.js to generate paginated pages for posts, categories, and tags.
+subtitle: 'Create pagination in Gatsby with GraphQL by configuring the createPages API in gatsby-node.js to generate paginated pages for posts, categories, and tags.'
 ---
 
 Creating a reusable pagination system in **Gatsby** using **GraphQL** without relying on external
@@ -116,19 +117,19 @@ export const onCreateWebpackConfig = ({ actions }) => {
 Answer the questions
 
 ```bash
-✔ Preflight checks.
-✔ Verifying framework. Found Gatsby.
-✔ Validating Tailwind CSS.
-✔ Validating import alias.
+ Preflight checks.
+ Verifying framework. Found Gatsby.
+ Validating Tailwind CSS.
+ Validating import alias.
 √ Which style would you like to use? » New York
 √ Which color would you like to use as the base color? » Neutral
 √ Would you like to use CSS variables for theming? ... no / yes
-✔ Writing components.json.
-✔ Checking registry.
-✔ Updating tailwind.config.js
-✔ Updating src\styles\global.css
-✔ Installing dependencies.
-✔ Created 1 file:
+ Writing components.json.
+ Checking registry.
+ Updating tailwind.config.js
+ Updating src\styles\global.css
+ Installing dependencies.
+ Created 1 file:
   - src\lib\utils.ts
 
 Success! Project initialization completed.
@@ -642,3 +643,9 @@ const numPages = getNumPages(totalCount);
 Now you've created a reusable pagination component in Gatsby. You can use this component to paginate
 through posts, categories, or tags. This scalable solution ensures that your content is
 well-organized and easy to navigate, especially as your dataset grows.
+
+## Related articles
+
+- [Integrate Algolia Search in Gatsby with React Hook Form](/gatsby-algolia/)
+- [Building Related Posts for Your Gatsby Site](/related-posts-gatsby/)
+- [Create a Table of Contents in Gatsby Without Plugins](/table-of-contents-gatsby/)

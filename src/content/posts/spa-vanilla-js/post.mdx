@@ -9,10 +9,11 @@ author: anton liberant
 category: javascript
 type: post
 tags: ['spa']
-desc: Learn to build client-side routing in single-page apps with vanilla JavaScript. A step-by-step guide to creating a robust SPA router without frameworks or libraries.
+desc: Learn to build client-side routing in single-page apps with vanilla JavaScript. A step-by-step guide to creating a reliable SPA router without frameworks or libraries.
+subtitle: 'Learn to build client-side routing in single-page apps with vanilla JavaScript. A step-by-step guide to creating a reliable SPA router without frameworks or libraries.'
 ---
 
-Single-page applications (SPAs) have revolutionized web development by offering smoother user experiences with seamless navigation. At the heart of every SPA lies a routing system that manages page transitions without full page reloads. In this guide, we'll explore how to build a robust routing system using vanilla JavaScript, understanding the core concepts and implementing them from scratch.
+Single-page applications (SPAs) have revolutionized web development by offering smoother user experiences with smooth navigation. At the heart of every SPA lies a routing system that manages page transitions without full page reloads. In this guide, we'll explore how to build a reliable routing system using vanilla JavaScript, understanding the core concepts and implementing them from scratch.
 
 In a Single Page Application (SPA), routing is primarily about managing browser URLs and rendering the corresponding views. There are two common routing modes: **Hash Mode** and **History Mode**.
 
@@ -61,7 +62,7 @@ location.replace('#anotherSection');
 
 ## History Mode
 
-History mode leverages the browser's history API to update the URL without a page refresh. It uses the `window.popstate` event to detect navigation changes.
+History mode uses the browser's history API to update the URL without a page refresh. It uses the `window.popstate` event to detect navigation changes.
 
 ### History API Overview
 
@@ -206,7 +207,7 @@ const router = new Router(routes);
 
 ### Handling Navigation Events
 
-To create a seamless navigation experience, we need to intercept link clicks:
+To create a smooth navigation experience, we need to intercept link clicks:
 
 ```js
 document.addEventListener('click', e => {
@@ -338,7 +339,7 @@ router.setState({
 
 This example provides a human-friendly and clean approach to SPA development.
 
-### Project Structure 📌
+### Project Structure 
 
 ```bash
 /spa-project
@@ -347,7 +348,7 @@ This example provides a human-friendly and clean approach to SPA development.
 └── app.js
 ```
 
-### index.html (Main HTML file) 📄
+### index.html (Main HTML file) 
 
 ```html
 <!DOCTYPE html>
@@ -374,7 +375,7 @@ This example provides a human-friendly and clean approach to SPA development.
 </html>
 ```
 
-### style.css (Basic Styling) 🎨
+### style.css (Basic Styling) 
 
 ```css
 body {
@@ -405,7 +406,7 @@ nav a:hover {
 }
 ```
 
-### app.js (The SPA Router) 🚀
+### app.js (The SPA Router) 
 
 ```js
 // SPA Router - Handles navigation and rendering
@@ -461,21 +462,21 @@ class Router {
 const router = new Router();
 
 // Define routes
-router.add('/', () => `<h1>🏡 Home</h1><p>Welcome to the home page!</p>`);
+router.add('/', () => `<h1> Home</h1><p>Welcome to the home page!</p>`);
 router.add(
   '/about',
-  () => `<h1>📖 About</h1><p>This is a simple SPA built in JavaScript.</p>`
+  () => `<h1> About</h1><p>This is a simple SPA built in JavaScript.</p>`
 );
 router.add(
   '/contact',
-  () => `<h1>📞 Contact</h1><p>Feel free to reach out!</p>`
+  () => `<h1> Contact</h1><p>Feel free to reach out!</p>`
 );
-router.add('/404', () => `<h1>❌ 404</h1><p>Page not found.</p>`);
+router.add('/404', () => `<h1> 404</h1><p>Page not found.</p>`);
 ```
 
 <Codepen id='raBbZpa' />
 
-### ow It Works 🎯
+### ow It Works 
 
 **1. Dynamic Routing**
 
@@ -494,21 +495,21 @@ router.add('/404', () => `<h1>❌ 404</h1><p>Page not found.</p>`);
 
 - The `popstate` event ensures proper navigation.
 
-✅ **Run the SPA**
+ **Run the SPA**
 
 - Just open index.html in a browser.
 - Click the links to navigate.
 - Try using Back and Forward buttons.
 
-🏁 **Summary**
+ **Summary**
 
-✅ No page reloads \
-✅ Works with history & hash mode \
-✅ Simple yet powerful
+ No page reloads \
+ Works with history & hash mode \
+ Simple yet powerful
 
 This is a clean and easy implementation of an SPA router. Want to add AJAX, animations, or state management? You can easily extend this!
 
-🔥 **Next Steps:**
+ **Next Steps:**
 
 - Add API fetching (e.g., `fetch()` to load dynamic content).
 - Implement components for a more modular structure.
@@ -517,3 +518,9 @@ This is a clean and easy implementation of an SPA router. Want to add AJAX, anim
 ## Conclusion
 
 Building a custom router for your SPA using vanilla JavaScript provides complete control over navigation and state management. While modern frameworks offer sophisticated routing solutions, understanding the underlying principles helps you make better architectural decisions and troubleshoot issues more effectively.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

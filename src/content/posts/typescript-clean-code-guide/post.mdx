@@ -10,6 +10,7 @@ category: typescript
 type: post
 tags: []
 desc: Discover practical clean-code practices in TypeScript with new examples and use cases. Learn how to simplify naming, and write more maintainable code.
+subtitle: 'Discover practical clean-code practices in TypeScript with new examples and use cases. Learn how to simplify naming, and write more maintainable code.'
 ---
 
 Clean code is more than just aesthetics — it’s about writing code that scales with your team, reduces bugs, and makes onboarding easier. TypeScript’s type system gives you powerful tools to enforce good practices. Let’s explore some principles, with **fresh examples** that go beyond the classics.
@@ -54,9 +55,9 @@ function logBookInfo(book: Book) {
 
 ```ts
 function getWeatherIcon(condition: string) {
-  if (condition === "rainy") return "🌧️";
-  if (condition === "sunny") return "☀️";
-  return "❓";
+  if (condition === "rainy") return "";
+  if (condition === "sunny") return "";
+  return "";
 }
 ```
 
@@ -72,11 +73,11 @@ enum Weather {
 function getWeatherIcon(condition: Weather) {
   switch (condition) {
     case Weather.Sunny:
-      return "☀️";
+      return "";
     case Weather.Rainy:
-      return "🌧️";
+      return "";
     case Weather.Cloudy:
-      return "☁️";
+      return "";
   }
 }
 ```
@@ -210,8 +211,14 @@ it("should reject invalid login", () => { /* ... */ });
 ```
 ---
 
-## ✅ Conclusion
+ Conclusion
 
 Clean code in TypeScript is about clarity, predictability, and teamwork. By writing **self-explanatory names, using enums, preferring immutability, and splitting responsibilities**, you make your codebase easier to scale and maintain.
 
 TypeScript gives you strong typing as a safety net — but **discipline and consistency** are what make codebases truly professional.
+
+## Related articles
+
+- [20 Essential TypeScript Tips for 2024](/20-ts-tricks/)
+- [Navigating TypeScript's Type System: 24 Brilliant Advanced Techniques](/advanced-type-tricks/)
+- [Converting Object Keys to camelCase with TypeScript](/camelcase-ts/)

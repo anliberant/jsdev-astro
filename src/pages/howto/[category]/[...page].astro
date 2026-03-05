@@ -131,6 +131,16 @@ const pageDescription = `Explore ${totalPosts} ${categoryName.toLowerCase()} pos
           {categoryName} Page {page.currentPage}
         </h1>
     }
+    <section class='taxonomy-intro'>
+      <p>
+        This archive lists {totalPosts} how-to tutorials in {categoryName}, from quick fixes to
+        complete setup walkthroughs.
+      </p>
+      <p>
+        If you are troubleshooting a specific error, scan the latest entries first, then continue to
+        older pages for alternative approaches.
+      </p>
+    </section>
     <Posts posts={page.data} />
     {
       numberOfPages > 1 && (
@@ -143,3 +153,16 @@ const pageDescription = `Explore ${totalPosts} ${categoryName.toLowerCase()} pos
     }
   </main>
 </BaseLayout>
+
+<style>
+  .taxonomy-intro {
+    margin: 0.75rem 0 1.5rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.75;
+  }
+
+  .taxonomy-intro p {
+    margin: 0.5rem 0;
+  }
+</style>
+

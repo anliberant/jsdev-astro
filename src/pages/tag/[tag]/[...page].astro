@@ -191,6 +191,15 @@ const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
       </div>
     </header>
 
+    <section class='taxonomy-intro'>
+      <p>
+        Tag pages collect articles that share the same implementation theme, making it easier to
+        compare approaches across frameworks and release cycles.
+      </p>
+      <p>
+        Use this list to find related guides quickly and identify recurring patterns around {tagName}.
+      </p>
+    </section>
     <Posts posts={page.data} />
 
     {
@@ -277,4 +286,14 @@ const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
       font-size: 1rem;
     }
   }
+  .taxonomy-intro {
+    margin: 1rem 0 1.5rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.75;
+  }
+
+  .taxonomy-intro p {
+    margin: 0.5rem 0;
+  }
 </style>
+

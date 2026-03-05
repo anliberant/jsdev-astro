@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['pdf']
 desc: Learn how to embed PDF files on web pages using HTML, images, or JavaScript libraries like PDF.js. Compare methods, pros, cons, and best use cases.
+subtitle: 'Learn how to embed PDF files on web pages using HTML, images, or JavaScript libraries like PDF.js. Compare methods, pros, cons, and best use cases.'
 ---
 
 ## Introduction
@@ -45,9 +46,9 @@ The simplest way to embed PDFs is with HTML’s built-in tags.
 
 | Tag      | Recommended? | Fallback Support | Notes |
 |----------|--------------|------------------|-------|
-| `<iframe>` | ✅ Best choice | ❌ | Adds border by default |
-| `<object>` | 👍 Semantic | ✅ | May fail on older/mobile browsers |
-| `<embed>`  | ❌ Not ideal | ❌ | Compatibility issues |
+| `<iframe>` |  Best choice |  | Adds border by default |
+| `<object>` |  Semantic |  | May fail on older/mobile browsers |
+| `<embed>`  |  Not ideal |  | Compatibility issues |
 
 **Browser behavior:**  
 - **Desktop:** All three methods use the built-in PDF viewer.  
@@ -59,12 +60,12 @@ The simplest way to embed PDFs is with HTML’s built-in tags.
 Instead of embedding directly, you can pre-convert PDFs:  
 
 - **To Images** (e.g., via Apache PDFBox)  
-  - ✅ Works everywhere  
-  - ❌ Larger files, reduced quality, no search/copy  
+  -  Works everywhere  
+  -  Larger files, reduced quality, no search/copy  
 
 - **To HTML** (e.g., pdf2htmlEX)  
-  - ✅ Acts like a web page  
-  - ❌ No editing or annotations  
+  -  Acts like a web page  
+  -  No editing or annotations  
 
 This method is good for **archives or static display** where editing isn’t needed.  
 
@@ -106,4 +107,10 @@ Best for **professional apps requiring advanced PDF workflows**.
 ## Conclusion  
 If you need a **quick solution**, use `<iframe>`. For **archival or static data**, convert PDFs to HTML. For **enterprise apps or feature-rich workflows**, use libraries like PDF.js or Dynamsoft Document Viewer.  
 
-Embedding PDFs is about choosing the right balance between simplicity, performance, and functionality.  
+Embedding PDFs is about choosing the right balance between simplicity, performance, and functionality.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

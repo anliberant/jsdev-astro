@@ -10,6 +10,7 @@ category: javascript
 type: post
 tags: []
 desc: Discover when returning a value from a JavaScript constructor actually makes sense — and how it can produce self-constructing functions and inheritance patterns
+subtitle: 'Discover when returning a value from a JavaScript constructor actually makes sense — and how it can produce self-constructing functions and inheritance patterns'
 ---
 
 Most JavaScript developers learn that constructors shouldn’t explicitly return anything. After all, constructors are supposed to create and initialize instances — not hand back arbitrary objects. But there’s a curious exception that’s both legal and powerful: **a constructor can return its own function or class.**
@@ -58,7 +59,7 @@ const innerInstance = new Custom(); // Works!
 ```
 
 This creates a fascinating effect:
-➡️ The **instance of the constructor** is itself a **constructor**.
+ The **instance of the constructor** is itself a **constructor**.
 
 You can now chain `new` twice — a concept rarely seen in real-world code but perfectly valid.
 
@@ -170,3 +171,9 @@ It’s unusual but possible to express, and may be useful in advanced metaprogra
 Most developers will never need this pattern — and that’s okay. But understanding it deepens your grasp of JavaScript’s object model and reveals just how flexible the language really is.
 
 Sometimes the best way to learn is to find that one “impossible” question — and realize JavaScript already has a quirky, elegant answer.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

@@ -10,6 +10,7 @@ category: sql
 type: post
 tags: ['postgresql', 'databases', 'analytics']
 desc: "A complete modern SQL guide: SELECT, filtering, sorting,
+subtitle: '"A complete modern SQL guide: SELECT, filtering, sorting,'
   aggregates, JOINs, DML/DDL, CTEs, execution order, indexes, and window
   functions."
 ---
@@ -54,8 +55,8 @@ The power comes from constraints and relationships.
 
 Unlike spreadsheets, relational databases enforce:
 
-1.  Strong typing
-2.  Explicit relationships
+. Strong typing
+. Explicit relationships
 
 ### Primary Keys and Foreign Keys
 
@@ -65,8 +66,8 @@ Foreign Key (FK) --- reference to another table's primary key.
 
 Example:
 
--   `users(id, name)`
--   `orders(id, user_id, total)`
+- `users(id, name)`
+- `orders(id, user_id, total)`
 
 `orders.user_id` references `users.id`.
 
@@ -77,10 +78,10 @@ non‑existent user.
 
 Most projects rely on a core set:
 
--   INT / BIGINT --- numeric identifiers and counters
--   TEXT / VARCHAR --- strings
--   TIMESTAMPTZ --- date-time stored in UTC
--   JSONB (PostgreSQL) --- flexible semi‑structured data
+- INT / BIGINT --- numeric identifiers and counters
+- TEXT / VARCHAR --- strings
+- TIMESTAMPTZ --- date-time stored in UTC
+- JSONB (PostgreSQL) --- flexible semi‑structured data
 
 Always store timestamps in UTC. Convert on the client side.
 
@@ -235,11 +236,11 @@ Instead of looking at thousands of rows, we compute metrics.
 
 Aggregate functions:
 
--   COUNT
--   SUM
--   AVG
--   MIN
--   MAX
+- COUNT
+- SUM
+- AVG
+- MIN
+- MAX
 
 Example:
 
@@ -490,10 +491,10 @@ WHERE dept_rank <= 3;
 
 Window functions enable:
 
--   Ranking
--   Running totals
--   Moving averages
--   Row comparisons (LAG / LEAD)
+- Ranking
+- Running totals
+- Moving averages
+- Row comparisons (LAG / LEAD)
 
 Once mastered, window functions replace large portions of application-side logic.
 
@@ -503,13 +504,13 @@ Once mastered, window functions replace large portions of application-side logic
 
 SQL executes in this order:
 
-1.  FROM / JOIN
-2.  WHERE
-3.  GROUP BY
-4.  HAVING
-5.  SELECT
-6.  ORDER BY
-7.  LIMIT
+. FROM / JOIN
+. WHERE
+. GROUP BY
+. HAVING
+. SELECT
+. ORDER BY
+. LIMIT
 
 Understanding this prevents common mistakes.
 
@@ -549,12 +550,18 @@ SQL is easy to start and difficult to master.
 
 Core recommendations:
 
--   Avoid SELECT \*
--   Use LEFT JOIN intentionally
--   Understand NULL
--   Learn window functions early
--   Know execution order
+- Avoid SELECT \*
+- Use LEFT JOIN intentionally
+- Understand NULL
+- Learn window functions early
+- Know execution order
 
 Frameworks change. Data remains.
 
 Invest in SQL.
+
+## Related articles
+
+- [Top 10 CSS Tips to Master in 2024](/10-css-tips/)
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [10 Free AI Tools You Can Use Without Registration](/10-free-ai-2025/)

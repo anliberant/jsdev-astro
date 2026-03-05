@@ -10,6 +10,7 @@ category: react
 type: post
 tags: ['solid']
 desc: Master advanced SOLID principles in React and React Native. Write clean, maintainable, and scalable code with practical examples that elevate your development skills
+subtitle: 'Master advanced SOLID principles in React and React Native. Write clean, maintainable, and scalable code with practical examples that elevate your development skills'
 ---
 
 Applying SOLID principles in React and React Native ensures better maintainability, scalability, and code clarity. Let's break down each principle with refined code examples and enhanced comments for clarity.
@@ -93,8 +94,8 @@ export default UserList;
 
 Why this is better?
 
-✅ `UserService.ts` handles data fetching, making UserList.tsx cleaner. \
-✅ Improves testability—fetching logic can be tested separately.
+ `UserService.ts` handles data fetching, making UserList.tsx cleaner. \
+ Improves testability—fetching logic can be tested separately.
 
 ## 2. Open-Closed Principle (OCP)
 
@@ -132,8 +133,8 @@ const Button = ({ label, className = "" }) => {
 
 Why this is better?
 
-✅ New button styles can be added without modifying the core component. \
-✅ More flexible for future design changes.
+ New button styles can be added without modifying the core component. \
+ More flexible for future design changes.
 
 ## 3. Liskov Substitution Principle (LSP)
 
@@ -146,7 +147,7 @@ Here, `SquareButton` extends `Button` but removes necessary props (`label`), bre
 ```tsx
 const Button = ({ label }) => <button>{label}</button>;
 
-const SquareButton = () => <button>🔲</button>; // Violates LSP
+const SquareButton = () => <button></button>; // Violates LSP
 ```
 
 **Improved Example (Following LSP)**
@@ -159,7 +160,7 @@ const Button = ({ label, children }) => (
 );
 
 const SquareButton = ({ children }) => (
-  <Button>{children || "🔲"}</Button>
+  <Button>{children || ""}</Button>
 );
 
 // Usage:
@@ -169,7 +170,7 @@ const SquareButton = ({ children }) => (
 
 Why this is better?
 
-✅ `SquareButton` can replace Button anywhere without breaking the UI.
+ `SquareButton` can replace Button anywhere without breaking the UI.
 
 ## 4. Interface Segregation Principle (ISP)
 
@@ -227,8 +228,8 @@ const ErrorMessage = ({ message }) =>
 
 Why this is better?
 
-✅ Each component has only the required props. \
-✅ Easier to maintain and extend.
+ Each component has only the required props. \
+ Easier to maintain and extend.
 
 ## 5. Dependency Inversion Principle (DIP)
 
@@ -281,15 +282,21 @@ const fetchUsersFromAPI = async () => {
 
 Why this is better?
 
-✅ UserList no longer depends on how users are fetched. \
-✅ We can easily swap the API without changing UserList.
+ UserList no longer depends on how users are fetched. \
+ We can easily swap the API without changing UserList.
 
 ## Conclusion
 
 Applying SOLID principles in React and React Native improves:
 
-✔ **Maintainability** – Code is easier to update and debug. \
-✔ **Scalability** – Components are reusable and extendable. \
-✔ **Testability** – Logic is modular and isolated.
+ **Maintainability** – Code is easier to update and debug. \
+ **Scalability** – Components are reusable and extendable. \
+ **Testability** – Logic is modular and isolated.
 
-By structuring your components correctly, you ensure a cleaner, more efficient codebase. 🚀
+By structuring your components correctly, you ensure a cleaner, more efficient codebase.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)

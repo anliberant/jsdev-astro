@@ -11,9 +11,10 @@ category: javascript
 type: howto
 tags: ['instanceof']
 desc: Understand how JavaScript’s instanceof operator works, when to use it, and why it matters for safe object type checking across complex applications.
+subtitle: 'Understand how JavaScript’s instanceof operator works, when to use it, and why it matters for safe object type checking across complex applications.'
 ---
 
-## 👋 Introduction
+ Introduction
 
 When writing JavaScript, especially in large applications, understanding the type of your objects is crucial. While `typeof` works fine for primitives, it quickly falls short when working with classes, constructors, or complex data structures.
 
@@ -21,7 +22,7 @@ That’s where `instanceof` comes in. Think of it as JavaScript’s version of a
 
 Let’s explore how `instanceof` works, where it excels, its limitations, and how to use it correctly.
 
-## 🔍 What Does `instanceof` Do?
+ What Does `instanceof` Do?
 
 The `instanceof` operator checks if an object is an instance of a particular constructor function (i.e., if it appears somewhere in the prototype chain).
 
@@ -39,11 +40,11 @@ console.log(myVehicle instanceof Array);       // false
 
 **Explanation:**
 
-- ✅ `myVehicle` is an instance of `Vehicle`
-- ✅ It’s also an `Object`, since all objects inherit from `Object`
-- ❌ It’s not an `Array`
+- `myVehicle` is an instance of `Vehicle`
+- It’s also an `Object`, since all objects inherit from `Object`
+- It’s not an `Array`
 
-## ⚙️ How instanceof Works Internally
+ How instanceof Works Internally
 
 `instanceof` climbs the prototype chain to see if `constructor.prototype` appears anywhere.
 
@@ -61,7 +62,7 @@ console.log(sampleInstance instanceof BaseEntity);  // true
 
 Here, `SubEntity` inherits from `BaseEntity`, so `instances` of `SubEntity` are also `instances` of `BaseEntity`.
 
-## 📦 Real-World Use Case: API Response Validation
+ Real-World Use Case: API Response Validation
 
 `instanceof` is useful for verifying types, especially when working with multiple possible object shapes:
 
@@ -75,16 +76,16 @@ class ResponseWrapper {
 
 function processResponse(data) {
   if (data instanceof ResponseWrapper) {
-    console.log('✅ Valid response:', data.payload);
+    console.log(' Valid response:', data.payload);
   } else {
-    console.error('❌ Invalid response format');
+    console.error(' Invalid response format');
   }
 }
 ```
 
 This ensures the function only processes valid instances of `ResponseWrapper`.
 
-## 🎯 More Examples & Edge Cases
+ More Examples & Edge Cases
 
 ### Primitive vs Object Wrapper
 
@@ -104,7 +105,7 @@ console.log(externalObj instanceof SomeClass); // false (different JS realm)
 
 Objects from different browser contexts (like iframes) may fail even if they look identical.
 
-## 🆚 `typeof` vs `instanceof`
+ `typeof` vs `instanceof`
 
 <table class="table-bordered table-responsive">
   <thead>
@@ -117,18 +118,18 @@ Objects from different browser contexts (like iframes) may fail even if they loo
   <tbody>
     <tr>
       <td>Primitives</td>
-      <td>✅ Works well</td>
-      <td>❌ Doesn’t apply</td>
+      <td> Works well</td>
+      <td> Doesn’t apply</td>
     </tr>
     <tr>
       <td>Object Instances</td>
-      <td>❌ Too generic</td>
-      <td>✅ Ideal for constructors</td>
+      <td> Too generic</td>
+      <td> Ideal for constructors</td>
     </tr>
     <tr>
       <td>Cross-Realm Issues</td>
-      <td>✅ Safe</td>
-      <td>❌ Not reliable</td>
+      <td> Safe</td>
+      <td> Not reliable</td>
     </tr>
   </tbody>
 </table>
@@ -143,7 +144,7 @@ console.log(plainStr instanceof String);    // false
 console.log(wrappedStr instanceof String);  // true
 ```
 
-## ✍️ Custom Implementation of `instanceof`
+ Custom Implementation of `instanceof`
 
 Here’s how you can write your own version to better understand how it works:
 
@@ -168,7 +169,7 @@ console.log(customInstanceof(sampleUser, Object));  // true
 console.log(customInstanceof(sampleUser, Array));   // false
 ```
 
-## ⚠️ Caution: Changing Prototypes Can Break It
+ Caution: Changing Prototypes Can Break It
 
 ```js 
 function Tool() {}
@@ -182,7 +183,7 @@ console.log(hammer instanceof Tool); // false
 
 Reassigning the prototype after object creation breaks the relationship.
 
-## 🏛️ `instanceof` with ES6 Classes
+ `instanceof` with ES6 Classes
 
 ```js 
 class Manager {}
@@ -196,7 +197,7 @@ console.log(engineer instanceof Manager);   // true
 
 Class inheritance under ES6 still uses prototype chains, so `instanceof` works the same.
 
-## ✅ Conclusion
+ Conclusion
 
 The instanceof operator is a powerful and underused tool in JavaScript. With it, you can:
 
@@ -205,3 +206,9 @@ The instanceof operator is a powerful and underused tool in JavaScript. With it,
 - Validate runtime types more reliably
 
 Just remember its limitations, like cross-context behavior and sensitivity to prototype changes. Used thoughtfully, it helps make your JavaScript applications safer and more predictable.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

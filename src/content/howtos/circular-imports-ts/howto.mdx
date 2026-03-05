@@ -11,13 +11,14 @@ category: typescript
 type: howto
 tags: ['imports']
 desc: Learn how to detect, understand, and systematically fix circular imports in a React + TypeScript project. Practical examples, module structure diagrams...
+subtitle: 'Learn how to detect, understand, and systematically fix circular imports in a React + TypeScript project. Practical examples, module structure diagrams...'
 ---
 
-ircular (recursive) imports are one of those issues that look small at first — until they start breaking runtime behavior, tests, hot reload, or production builds.
+Circular (recursive) imports are one of those issues that look small at first — until they start breaking runtime behavior, tests, hot reload, or production builds.
 
 They rarely appear as a single obvious mistake. More often, they are a symptom of deeper architectural problems: unclear module boundaries, excessive barrel files, and uncontrolled cross-feature dependencies.
 
-In this article, we’ll walk through a practical approach to:
+In this guide, we’ll walk through a practical approach to:
 
 - Detect circular imports  
 - Understand why they happen  
@@ -236,3 +237,9 @@ A clean dependency graph:
 The real goal isn’t just “no circular imports”.
 
 It’s a clean, predictable module architecture.
+
+## Related articles
+
+- [Validate ENV Variables in TypeScript with Zod](/howto/env-ts-zod/)
+- [Resolving Missing flat, flatMap, and Flatten on any[] in TypeScript](/howto/flatmap-doesnt-exist/)
+- [Declaring and Managing Global Variables in TypeScript](/howto/global-vars-ts/)

@@ -11,9 +11,10 @@ category: javascript
 type: snippets
 tags: ['']
 desc: "A deep dive into prototype manipulation in JavaScript: build an object that’s both callable and instantiable, supports inheritance"
+subtitle: "A deep dive into prototype manipulation in JavaScript: build an object that’s both callable and instantiable, supports inheritance"
 ---
 
-👉 This code is a mind-bending exploration of JavaScript’s prototype system. It’s not recommended for everyday development but great for understanding how constructors, prototypes, and callable objects can interact in surprising ways.
+ This code is a mind-bending exploration of JavaScript’s prototype system. It’s not recommended for everyday development but great for understanding how constructors, prototypes, and callable objects can interact in surprising ways.
 
 ## Full Code Example
 
@@ -114,3 +115,9 @@ console.log('proto^2(value):', ogp(ogp(postItemItem)).value);
     Even if you subclass multiple times, the pattern still holds: objects can keep reconstructing themselves while preserving the prototype chain.
 4. Prototype checks
     The logging at the end shows how the prototype chain is preserved and how the `value` property is carried through inheritance.
+
+## Related content
+
+- [Check If a Value Is an Instance of a Class in JavaScript](/snippets/check-instance-js/)
+- [WebSocket Client JavaScript Implementation](/snippets/comprehensive-websocket-client/)
+- [Deeply Freeze a Nested Object](/snippets/deepfreeze-js/)

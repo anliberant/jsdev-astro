@@ -10,6 +10,7 @@ category: security
 type: post
 tags: ['ai-crawlers', 'web-security']
 desc: How site owners are using decomposition-based payloads and other tactics to defend against aggressive AI crawlers that create excessive load.
+subtitle: 'How site owners are using decomposition-based payloads and other tactics to defend against aggressive AI crawlers that create excessive load.'
 ---
 
 Some site owners are reporting huge traffic spikes caused by crawlers, especially crawlers targeting web content for LLMs and RAG (retrieval-augmented generation). Fastly's analytics indicate that scrapers and fetchers can create peaks of up to **40,000 requests per minute**. In 2025 scraper traffic rose roughly **87%**, driven mostly by RAG-style scrapers rather than primary model training.
@@ -145,3 +146,9 @@ Consider non‑destructive mitigations first: rate limits, traffic shaping, CAPT
 ## Conclusion
 
 AI crawlers and scrapers are imposing real costs on website operators. Defenders have options ranging from conventional rate limits and CAPTCHAs to more aggressive payloads like zip‑bombs and compute challenges. Each approach has trade‑offs — effectiveness, collateral risk, legal exposure, and environmental impact — so choose defensively and document decisions. If you need a hardened recipe for detection and response, I can draft a checklist and a sample `nginx` + `fail2ban` configuration tuned for AI‑heavy scraping.
+
+## Related articles
+
+- [Top 10 CSS Tips to Master in 2024](/10-css-tips/)
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [10 Free AI Tools You Can Use Without Registration](/10-free-ai-2025/)

@@ -11,6 +11,7 @@ category: react
 type: howto
 tags: ['react-query']
 desc: Learn how to prefetch data using React Query (TanStack Query) for faster navigation and improved perceived performance in your React apps.
+subtitle: 'Learn how to prefetch data using React Query (TanStack Query) for faster navigation and improved perceived performance in your React apps.'
 ---
 
 Prefetching data is one of the most powerful techniques in React Query. It helps you improve perceived performance by loading data **before** the user needs it — resulting in near-instant navigation.
@@ -25,7 +26,7 @@ Let’s explore the cleanest and most efficient way to prefetch in React apps us
 
 ---
 
-## 🧠 What is Prefetching?
+ What is Prefetching?
 
 Prefetching means fetching and caching data **ahead of time**, before the component that uses it is mounted.
 
@@ -36,7 +37,7 @@ You might trigger it when:
 
 ---
 
-## 🛠 Basic Example Using `prefetchQuery`
+ Basic Example Using `prefetchQuery`
 
 ```ts
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -67,7 +68,7 @@ This example will **prefetch** the post data when the user hovers the link.
 
 ---
 
-## ❗ Handling Errors in `prefetchQuery`
+ Handling Errors in `prefetchQuery`
 
 Because `prefetchQuery` is fire-and-forget by default, it won't throw on error unless you `await` it:
 
@@ -83,7 +84,7 @@ If you want error handling (e.g. logging, fallback), always `await` the result. 
 
 ---
 
-## 🔄 How it Works with `useQuery`
+ How it Works with `useQuery`
 
 When the user navigates to the post page:
 
@@ -97,7 +98,7 @@ No loading spinner. No delay. Just speed.
 
 ---
 
-## 📦 Prefetching in `useEffect` (on page load)
+ Prefetching in `useEffect` (on page load)
 
 You can also prefetch on mount:
 
@@ -111,7 +112,7 @@ Useful for dashboards, config pages, or background tasks.
 
 ---
 
-## 🤝 Combine with `ensureQueryData`
+ Combine with `ensureQueryData`
 
 TanStack Query 5+ provides `ensureQueryData`, which will **fetch or return cached**:
 
@@ -126,7 +127,7 @@ This is useful for layout-level data (e.g. user auth or settings).
 
 ---
 
-## ✅ Summary
+ Summary
 
 | Method                 | Use Case                           |
 |------------------------|-------------------------------------|
@@ -137,3 +138,9 @@ This is useful for layout-level data (e.g. user auth or settings).
 ---
 
 Prefetching in React Query isn’t just a trick — it’s a UX superpower. Use it to deliver blazing-fast transitions and real-time feeling apps without loading spinners.
+
+## Related articles
+
+- [Fixing React’s “Cannot Read Property createElement of Undefined”](/howto/createelement-react/)
+- [Theme Switcher with DaisyUI and TanStack Router](/howto/daisyui-theme-switcher/)
+- [Properly Configuring Jest for React and Next.js](/howto/jest-rtl-setup-react-nextjs/)

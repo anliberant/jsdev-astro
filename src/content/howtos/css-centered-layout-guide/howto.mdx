@@ -11,6 +11,7 @@ category: css
 type: howto
 tags: []
 desc: Learn how to center elements in CSS with text-align, margin auto, line-height, flexbox, grid, and more — from simple fixes to advanced solutions.
+subtitle: 'Learn how to center elements in CSS with text-align, margin auto, line-height, flexbox, grid, and more — from simple fixes to advanced solutions.'
 ---
 
 Centering layouts is one of the most common requirements in front-end development — and a favorite interview question. In this guide, we’ll walk through **horizontal centering, vertical centering, and combined centering**, explore the principles behind each method, and explain when to use them.
@@ -203,12 +204,12 @@ Equivalent:
 
 | Method            | Use Case                           | Compatibility | Flexibility |
 |-------------------|------------------------------------|---------------|-------------|
-| `text-align`      | Inline/inline-block content        | All           | ★★☆         |
-| Negative margins  | Known size elements                | IE6+          | ★☆☆         |
-| `transform`       | Unknown size elements              | IE10+         | ★★★         |
-| Flexbox           | Modern layouts, responsive design  | IE11+         | ★★★         |
-| Grid              | Complex 2D layouts                 | IE11+         | ★★★         |
-| Table-cell        | Legacy browser support             | IE8+          | ★★☆         |
+| `text-align`      | Inline/inline-block content        | All           | ☆         |
+| Negative margins  | Known size elements                | IE6+          | ☆☆         |
+| `transform`       | Unknown size elements              | IE10+         |          |
+| Flexbox           | Modern layouts, responsive design  | IE11+         |          |
+| Grid              | Complex 2D layouts                 | IE11+         |          |
+| Table-cell        | Legacy browser support             | IE8+          | ☆         |
 
 **Selection tips**:
 - **Known size** → `margin: auto` or negative margins  
@@ -226,4 +227,10 @@ The art of centering in CSS is about understanding **space distribution and posi
 - Absolute positioning requires a positioned parent  
 - Modern CSS simplifies centering with **transform**, **Flexbox**, and **Grid**  
 
-With these tools, you can confidently tackle interview questions and real-world projects alike.  
+With these tools, you can confidently tackle interview questions and real-world projects alike.
+
+## Related articles
+
+- [A Complete Guide to Using CSS @font-face for Web Typography](/howto/css-font-face/)
+- [Using currentcolor with Relative Color Syntax in CSS](/howto/currentcolor-css/)
+- [Creating Full‑Screen Particle Animations with CSS and JavaScript](/howto/full-screen-particle/)

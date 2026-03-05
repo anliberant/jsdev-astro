@@ -11,12 +11,13 @@ category: nestjs
 type: howto
 tags: ['Drizzle', 'orm', 'postgresql']
 desc: Learn how to integrate Drizzle ORM with NestJS, configure PostgreSQL connections, define schemas, and run migrations using Drizzle Kit.
+subtitle: 'Learn how to integrate Drizzle ORM with NestJS, configure PostgreSQL connections, define schemas, and run migrations using Drizzle Kit.'
 ---
 
-Drizzle ORM is a **lightweight and type-safe query builder** for TypeScript that integrates seamlessly with **NestJS**.  
+Drizzle ORM is a **lightweight and type-safe query builder** for TypeScript that integrates smoothly with **NestJS**.  
 This guide walks through how to install, configure, and use [Drizzle ORM](https://orm.drizzle.team) with PostgreSQL inside a NestJS application.
 
-## 📦 Dependency Installation
+ Dependency Installation
 
 Install required dependencies:
 
@@ -25,7 +26,7 @@ pnpm add drizzle-orm pg dotenv
 pnpm add -D drizzle-kit tsx @types/pg
 ```
 
-## 🧩 Prepare the Drizzle Module
+ Prepare the Drizzle Module
 
 Create a directory `src/drizzle` for ORM-related files.
 
@@ -79,7 +80,7 @@ import { DrizzleService } from './drizzle.service';
 export class DrizzleModule {}
 ```
 
-## 🧱 Define Database Schema
+ Define Database Schema
 
 ### user.entity.ts
 
@@ -115,7 +116,7 @@ export type SchemaName = keyof Schema;
 export type { SelectUser } from './user.entity';
 ```
 
-## ⚙️ Configure Drizzle ORM
+ Configure Drizzle ORM
 
 Create a file at the project root named `drizzle.config.ts`:
 
@@ -131,7 +132,7 @@ export default defineConfig({
 });
 ```
 
-## 📜 Add Scripts to package.json
+ Add Scripts to package.json
 
 ```json
 {
@@ -152,7 +153,7 @@ pnpm run db:migrate
 pnpm run db:studio
 ```
 
-## 🏗️ Import DrizzleModule in app.module.ts
+ Import DrizzleModule in app.module.ts
 
 ```ts
 @Module({
@@ -161,7 +162,7 @@ pnpm run db:studio
 export class AppModule {}
 ```
 
-## 🔧 Use Drizzle in a Service
+ Use Drizzle in a Service
 
 Example — `UserService`:
 
@@ -199,14 +200,14 @@ export class UserService {
 }
 ```
 
-## 🧠 Optional Enhancements
+ Optional Enhancements
 
 ### VS Code Plugin
 
 Install the [VSCode Drizzle ORM plugin](https://marketplace.visualstudio.com/items?itemName=lukeshay.vscode-drizzle-orm)  
 to visualize schema models and database relations directly from your code.
 
-## 🌱 Database Seeding
+ Database Seeding
 
 In `src/drizzle/db.ts`:
 
@@ -270,7 +271,13 @@ Run:
 pnpm run db:seed
 ```
 
-## ✅ Conclusion
+ Conclusion
 
 Drizzle ORM brings **type safety**, **minimalism**, and **developer ergonomics** to the NestJS ecosystem.  
 By combining **NestJS modules** with Drizzle’s schema-driven approach, developers can achieve efficient migrations, clear database logic, and fast iteration—all with strong typing and lightweight configuration.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Fixing Module Parse Errors Caused by Bad Escape Sequences in Next.js](/howto/bad-character-escape-nextjs/)

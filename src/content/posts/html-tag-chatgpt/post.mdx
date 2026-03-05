@@ -10,13 +10,14 @@ category: javascript
 type: post
 tags: ['html5', 'chatgpt']
 desc: Create custom HTML5 tags using ChatGPT for autocomplete, text replacement, or translation. Follow step-by-step examples to enhance your web development skills.
+subtitle: 'Create custom HTML5 tags using ChatGPT for autocomplete, text replacement, or translation. Follow step-by-step examples to enhance your web development skills.'
 ---
 
 Among the modern HTML standards and specifications, there’s something called
 [Custom Elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements).
 For those unfamiliar, it's a way to create your own tags, which the browser automatically
 initializes when it encounters them in the markup, executing the specific behavior logic you’ve
-defined. Additionally, there’s a way to modify the behavior of standard tags (though the nuances of
+defined. Also, there’s a way to modify the behavior of standard tags (though the nuances of
 this are beyond the scope of this discussion).
 
 In this tutorial, we will create a smart HTML tag—a text field that helps users format the text they
@@ -83,7 +84,7 @@ Now let's create a **HTML** file
 An important aspect here is the block with the import map. In our example, we will include the
 **SymbioteJS** library via CDN, which will allow us to efficiently and repeatedly share a common
 dependency among different independent components of the application, without the need for bulky
-solutions like Module Federation. Additionally, since we initially installed the dependency through
+solutions like Module Federation. Also, since we initially installed the dependency through
 **NPM**, we will have access to everything necessary for our development environment tools,
 including type declarations for TypeScript support, entity definitions, and more.
 
@@ -184,7 +185,7 @@ export const textStyles: string[] = [
 ];
 ```
 
-Additionally, in the code above, we can see examples of how to access the elements described in the
+Also, in the code above, we can see examples of how to access the elements described in the
 template using the **ref** interface, such as:
 
 ```js
@@ -434,3 +435,9 @@ site generator, in simple HTML files with forms, and so on.
 ### References
 
 [Docs](https://symbiotejs.org/2x/docs/Get_started/) [Habr](https://habr.com/ru/articles/842044/)
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

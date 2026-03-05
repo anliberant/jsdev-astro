@@ -11,13 +11,14 @@ category: nextjs
 type: howto
 tags: ['nextjs', 'webpack', 'windows']
 desc: "Fix “Module parse failed: Bad character escape sequence” in Next.js. Learn why it happens, how Windows paths break Webpack, and how to apply reliable fixes."
+subtitle: "Fix “Module parse failed: Bad character escape sequence” in Next.js. Learn why it happens, how Windows paths break Webpack, and how to apply reliable fixes."
 ---
 
 # Fixing “Module parse failed: Bad character escape sequence” in Next.js
 
 This error occurs frequently on **Windows**, especially in **Next.js 14–15**, and is caused by how Webpack parses file paths containing backslashes (`\\`). These backslashes get interpreted as escape sequences, leading to invalid JavaScript deep inside Next.js loaders.
 
-Below is an improved, expanded, and more complete guide with additional solutions and explanations.
+Here is an improved, expanded, and more complete guide with additional solutions and explanations.
 
 ## The Error
 
@@ -209,3 +210,9 @@ This ensures every backslash is escaped properly.
 | Corrupted or problematic favicon.ico | Remove or replace |
 | Cached metadata breaking build | Clear `.next` |
 | Misbehaving loader or plugin | Override with config |
+
+## Related articles
+
+- [Multithreading in Next.js: Pros and Implementation](/howto/multithreading-nextjs/)
+- [Understanding SSR and Client Hydration in Next.js](/howto/ssr-hydration-next/)
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)

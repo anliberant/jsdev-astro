@@ -10,13 +10,14 @@ category: javascript
 type: post
 tags: ['logical-assignment-operator']
 desc: Discover how JavaScript’s logical assignment operators (||=, &&=, ??=) simplify conditional logic, reduce boilerplate, and make your code easier to read.
+subtitle: 'Discover how JavaScript’s logical assignment operators (||=, &&=, ??=) simplify conditional logic, reduce boilerplate, and make your code easier to read.'
 ---
 
 When working with JavaScript, we often check whether a variable has a value before assigning something new. These repetitive checks — especially when dealing with props, configuration objects, or component state — can clutter your code.
 
 That’s where **logical assignment operators** come in. Introduced in **ES2021**, they allow you to perform conditional assignments in a concise and expressive way without changing the logic of your program.
 
-👉 If you want to learn more about safe assignment syntax in JavaScript, check out this related guide:  
+ If you want to learn more about safe assignment syntax in JavaScript, check out this related guide:  
 [Safe Assignment Operator in JavaScript →](https://jsdev.space/safe-assignment-operator/)
 
 ## What Are Logical Assignment Operators?
@@ -29,7 +30,7 @@ Logical assignment operators combine standard logical operators (||, &&, ??) wit
 
 They work similarly to normal logical expressions: the right-hand side is evaluated **only if needed**.
 
-> ⚠️ Note: The optional chaining operator (?.) cannot be used on the left side of logical assignment. Doing so will cause a SyntaxError.
+>  Note: The optional chaining operator (?.) cannot be used on the left side of logical assignment. Doing so will cause a SyntaxError.
 
 ## 1. OR Assignment (||=)
 
@@ -144,9 +145,9 @@ Explanation:
 
 ## Browser Support
 
-✅ Chrome 85+, Firefox 79+, Safari 14+, Edge 85+  
-✅ Node.js 15+  
-❌ Internet Explorer — not supported
+ Chrome 85+, Firefox 79+, Safari 14+, Edge 85+  
+ Node.js 15+  
+ Internet Explorer — not supported
 
 If you need compatibility with older environments, use a transpiler like Babel with @babel/preset-env targeting ES2021.
 
@@ -160,3 +161,9 @@ They’re especially useful when:
 - Writing **form validation or cleanup logic**
 
 Once you start using ||=, &&=, and ??=, you’ll wonder how you ever wrote code without them.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

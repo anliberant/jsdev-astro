@@ -10,6 +10,7 @@ category: gatsby
 type: post
 tags: ['shadcn', 'tailwind', 'mdx', 'toc']
 desc: Build a modern Table of Contents in Gatsby without DOM fetching or extra plugins. Improve site navigation with this efficient, plugin-free method.
+subtitle: 'Build a modern Table of Contents in Gatsby without DOM fetching or extra plugins. Improve site navigation with this efficient, plugin-free method.'
 ---
 
 Creating a table of contents **(TOC)** is a common feature in content-heavy websites like blogs,
@@ -34,7 +35,7 @@ fetching and additional plugins when creating a TOC:
 
 ### Overview of the Approach
 
-Our approach will leverage Gatsby’s powerful **GraphQL** data layer to fetch headings from markdown
+Our approach will use Gatsby’s powerful **GraphQL** data layer to fetch headings from markdown
 or **MDX** files at build time. We will then use this data to generate the TOC without the need to
 parse the DOM dynamically. The end result is a static, SEO-friendly **TOC** that can be styled and
 customized to match your site’s design.
@@ -231,7 +232,7 @@ desc:
 
 **Gatsby** is a popular static site generator built on React and GraphQL, offering developers a
 powerful framework for building fast, modern websites. While Gatsby has a lot to offer, it also
-comes with its own set of challenges. In this article, we’ll explore the key advantages and
+comes with its own set of challenges. In this guide, we'll explore the key advantages and
 disadvantages of using Gatsby, helping you decide whether it’s the right tool for your next web
 project.
 
@@ -247,13 +248,13 @@ experience and SEO, as fast-loading sites are favored by search engines and user
   that your site loads as quickly as possible. It lazy-loads images and uses techniques like code
   splitting and prefetching to further enhance performance.
 - **Progressive Web App (PWA) Features**: Gatsby comes with built-in PWA features, including service
-  workers and offline support, which help deliver a seamless user experience even in poor network
+  workers and offline support, which help deliver a smooth user experience even in poor network
   conditions.
 
 ### 2. SEO-Friendly
 
 Gatsby is designed with SEO in mind. Since Gatsby generates static HTML pages at build time, these
-pages are fully crawlable by search engines, improving your site’s visibility. Additionally, Gatsby
+pages are fully crawlable by search engines, improving your site’s visibility. Also, Gatsby
 makes it easy to manage metadata, URLs, and other SEO-related elements.
 
 - **Structured Data**: With Gatsby, you can easily implement structured data to enhance how your
@@ -267,7 +268,7 @@ Gatsby has a vast ecosystem of plugins that allow you to extend its functionalit
 effort. Whether you need to integrate with a CMS, optimize images, or add analytics, there’s likely
 a Gatsby plugin available to help.
 
-- **Content Integration**: Gatsby integrates seamlessly with a variety of CMS platforms, including
+- **Content Integration**: Gatsby integrates smoothly with a variety of CMS platforms, including
   WordPress, Contentful, and Sanity, allowing you to manage your content easily.
 - **Data Sources**: With Gatsby’s source plugins, you can pull data from multiple sources, including
   REST APIs, GraphQL endpoints, and markdown files, and combine them into a single GraphQL schema.
@@ -283,7 +284,7 @@ numerous tutorials, blog posts, and courses available online.
 
 ### 5. Modern Development Experience
 
-Gatsby leverages modern web development tools and practices, making it a great choice for developers
+Gatsby uses modern web development tools and practices, making it a great choice for developers
 who enjoy working with cutting-edge technologies.
 
 - **React**: Since Gatsby is built on React, you can use the latest features of React, such as hooks
@@ -323,7 +324,7 @@ API rate limits, managing external service outages, or facing unexpected costs.
 
 ### 4. Content Management Limitations
 
-While Gatsby can integrate with various CMS platforms, the experience is not as seamless as using a
+While Gatsby can integrate with various CMS platforms, the experience is not as smooth as using a
 traditional CMS. Content editors may find it difficult to preview changes or may require a more
 technical setup to manage content effectively.
 
@@ -793,7 +794,13 @@ Get the full code below on [github](https://github.com/jsdevspace/toc-gatsby/tre
 ## Conclusion
 
 By following this guide, you've learned how to build a modern **Table of Contents component in
-Gatsby** without relying on DOM fetching or additional plugins. This approach leverages Gatsby's
+Gatsby** without relying on DOM fetching or additional plugins. This approach uses Gatsby's
 GraphQL data layer to generate a TOC at build time, ensuring your site remains fast, SEO-friendly,
 and easy to maintain. You can now easily customize and expand upon this TOC component to fit the
 unique needs of your Gatsby site.
+
+## Related articles
+
+- [Integrate Algolia Search in Gatsby with React Hook Form](/gatsby-algolia/)
+- [Reusable Pagination in Gatsby Using GraphQL](/gatsby-pagination/)
+- [Building Related Posts for Your Gatsby Site](/related-posts-gatsby/)

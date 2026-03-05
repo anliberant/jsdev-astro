@@ -1,5 +1,5 @@
 ---
-title: 'Unlocking TypeScript Utility Types - A Guide to Parameters<Type>'
+title: 'TypeScript Utility Types: A Guide to Parameters<Type>'
 slug: typescript-utility-types
 heading: 'Mastering TypeScript Utility Types: Parameters<Type>'
 image: ./images/typescript-utility-types.png
@@ -9,12 +9,13 @@ author: anton liberant
 category: typescript
 type: post
 tags: ['typescript-types']
-desc: Learn how to use Parameters<Type> in TypeScript to extract function parameters and boost type safety. Includes practical examples and real-world use cases.
+desc: Learn how to use Parameters<Type> in TypeScript to extract function arguments and keep types consistent.
+subtitle: 'Learn how to use Parameters<Type> in TypeScript to extract function arguments and keep types consistent.'
 ---
 
 ## Introduction
 
-Duplicating function parameter types by hand is fragile — change the original function signature and you have to hunt down every copy. `Parameters<Type>` extracts function parameter types as a tuple so you can reuse them automatically. Below is how it works and where it's most useful.
+Duplicating function parameter types by hand is fragile — change the original function signature and you have to hunt down every copy. `Parameters<Type>` extracts function parameter types as a tuple so you can reuse them automatically. Here is how it works and where it's most useful.
 
 ### What is Parameters\<Type>?
 
@@ -141,3 +142,10 @@ type PersonInstance = InstanceType<typeof Person>; // Person
 ## Conclusion
 
 `Parameters<Type>` eliminates a common source of type drift — hardcoded parameter lists that fall out of sync with the functions they mirror. Combine it with `ReturnType` and `ConstructorParameters` and most wrapper / decorator patterns become type-safe without manual duplication.
+
+
+## Related articles
+
+- [TypeScript Typing Patterns](/typescript-typing-patterns/)
+- [TypeScript Error Handling Patterns](/ts-error-handling/)
+- [Advanced Types Without Overengineering](/typescript-advanced-types-balance/)

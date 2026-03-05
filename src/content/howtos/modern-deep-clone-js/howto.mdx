@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['structuredClone']
 desc: Stop using JSON.parse(JSON.stringify())! Learn how to use structuredClone for fast, native deep cloning with circular reference support in JavaScript.
+subtitle: 'Stop using JSON.parse(JSON.stringify())! Learn how to use structuredClone for fast, native deep cloning with circular reference support in JavaScript.'
 ---
 
 Deep copying objects in JavaScript has long been a challenge. Many developers default to `JSON.parse(JSON.stringify(obj))`—but that approach fails with circular references, functions, and complex data structures.
@@ -19,7 +20,7 @@ In this guide, you’ll learn how to safely and efficiently perform deep cloning
 
 ---
 
-## 🧨 The Problem with JSON.stringify()
+ The Problem with JSON.stringify()
 
 Let’s look at a common bug caused by circular references:
 
@@ -29,14 +30,14 @@ const b = { parent: a };
 a.child = b; // Circular reference
 
 const clone = JSON.parse(JSON.stringify(a));
-// ❌ Throws: Converting circular structure to JSON
+//  Throws: Converting circular structure to JSON
 ```
 
 The classic `JSON.parse(JSON.stringify(...))` trick fails here because JSON doesn't support circular references or special objects like `Date`, `RegExp`, `Map`, or `Set`.
 
 ---
 
-## 🔁 A Recursive Solution
+ A Recursive Solution
 
 A custom deep clone function can solve this:
 
@@ -61,14 +62,14 @@ const a = {};
 const b = { parent: a };
 a.child = b;
 const cloned = deepClone(a);
-console.log(cloned.child.parent === cloned); // ✅ true
+console.log(cloned.child.parent === cloned); //  true
 ```
 
 This works—but it’s verbose and easy to get wrong.
 
 ---
 
-## ✨ Introducing structuredClone()
+ Introducing structuredClone()
 
 Say hello to `structuredClone()`—a native API built into modern browsers and Node.js.
 
@@ -78,7 +79,7 @@ const clone = structuredClone(value);
 
 It deeply clones most types of values, including circular references, arrays, maps, sets, dates, and more.
 
-### ✅ Example
+ Example
 ```js
 const a = {};
 const b = { parent: a };
@@ -92,27 +93,27 @@ console.log(clone.child.parent === clone); // true
 
 ---
 
-## ✅ What structuredClone Supports
+ What structuredClone Supports
 
 | Type             | Supported |
 |------------------|-----------|
-| Object / Array   | ✔️        |
-| Map / Set        | ✔️        |
-| Date / RegExp    | ✔️        |
-| ArrayBuffer / TypedArray | ✔️ |
-| Blob / File / FileList | ✔️ |
-| ImageData / DOMException | ✔️ |
-| Circular Refs    | ✔️        |
-| BigInt / Symbol  | ✔️ (symbol references retained) |
+| Object / Array   |         |
+| Map / Set        |         |
+| Date / RegExp    |         |
+| ArrayBuffer / TypedArray |  |
+| Blob / File / FileList |  |
+| ImageData / DOMException |  |
+| Circular Refs    |         |
+| BigInt / Symbol  |  (symbol references retained) |
 
-### ❌ Not Supported:
+ Not Supported:
 - Functions
 - DOM Nodes
 - WeakMap / WeakSet
 
 ---
 
-## 💡 Real-World Examples
+ Real-World Examples
 
 ### 1. Clone Nested Object
 ```js
@@ -143,7 +144,7 @@ console.log(clone);
 
 ---
 
-## 🌍 Compatibility
+ Compatibility
 
 | Environment       | Version       |
 |-------------------|---------------|
@@ -156,7 +157,7 @@ If you're targeting modern environments—structuredClone is your best choice.
 
 ---
 
-## 🛠️ Fallback Options
+ Fallback Options
 
 For older browsers:
 - Use `lodash.cloneDeep()`
@@ -164,12 +165,18 @@ For older browsers:
 
 ---
 
-## 🧠 Final Thoughts
+ Final Thoughts
 
 `structuredClone()` is fast, reliable, and handles edge cases natively. It's now the go-to option for deep cloning in modern JavaScript.
 
-### ✅ Use it when:
+ Use it when:
 - You work in modern browsers or Node.js 17+
 - You want to handle complex or circular data structures
 
 Let go of brittle stringification hacks—embrace the modern way to deep clone!
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

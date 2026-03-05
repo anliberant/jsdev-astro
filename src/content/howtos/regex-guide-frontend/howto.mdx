@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['RegEx']
 desc: Learn how to use regular expressions to validate forms, extract data, and clean strings. Master regex from basics to advanced use cases with real examples.
+subtitle: 'Learn how to use regular expressions to validate forms, extract data, and clean strings. Master regex from basics to advanced use cases with real examples.'
 ---
 
 ## Introduction
@@ -21,7 +22,7 @@ This guide walks you through everything from beginner syntax to advanced techniq
 
 ## Why Regular Expressions Matter
 
-### ✅ Advantages
+ Advantages
 - **Concise logic**: A single regex pattern can replace loops and conditionals.
 - **Fast performance**: Optimized engines under the hood beat manual operations.
 - **Wide applicability**: From form validation to data parsing, regex fits everywhere.
@@ -44,7 +45,7 @@ console.log(match?.[1]); // "123"
 
 ## Creating Regular Expressions
 
-### 📌 Two Ways to Define Regex
+ Two Ways to Define Regex
 
 ```ts
 const regex1 = /\d{3}/g;
@@ -155,20 +156,20 @@ code
 ## Pitfalls to Avoid
 
 - **Greedy Match**  
-  ❌ `/div>.*<\/div>/`  
-  ✅ `/div>.*?<\/div>/g`
+   `/div>.*<\/div>/`  
+   `/div>.*?<\/div>/g`
 
 - **Escaping Errors**  
-  ❌ `new RegExp("a.b")`  
-  ✅ `new RegExp("a\\.b")`
+   `new RegExp("a.b")`  
+   `new RegExp("a\\.b")`
 
 - **Backtracking**  
-  ❌ `/(a+)+b/`  
-  ✅ `/a+b/`
+   `/(a+)+b/`  
+   `/a+b/`
 
 - **Unicode Matching**  
-  ❌ `/[一-龥]/`  
-  ✅ `/\p{Script=Han}/u`
+   `/[一-龥]/`  
+   `/\p{Script=Han}/u`
 
 ## Tools
 
@@ -178,3 +179,9 @@ code
 ## Final Thoughts
 
 Regular expressions are a frontend superpower. With this guide, you’ve covered everything from creation to debugging and common pitfalls. Practice often and bookmark this as your regex cheat sheet!
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

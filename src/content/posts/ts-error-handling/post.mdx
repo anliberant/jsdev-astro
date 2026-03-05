@@ -10,9 +10,10 @@ category: typescript
 type: post
 tags: ['error-handling']
 desc: Improve TypeScript error handling by using Result types instead of try/catch. Achieve clearer, safer code with explicit error cases and better type safety.
+subtitle: 'Improve TypeScript error handling by using Result types instead of try/catch. Achieve clearer, safer code with explicit error cases and better type safety.'
 ---
 
-Error handling is a crucial part of any application, but traditional `try/catch` blocks in TypeScript can be cumbersome and introduce unintended side effects. In this article, we explore a modern approach to error handling using a utility function that enhances code readability and robustness.
+Error handling is a crucial part of any application, but traditional `try/catch` blocks in TypeScript can be cumbersome and introduce unintended side effects. In this guide, we explore a modern approach to error handling using a utility function that enhances code readability and reliability.
 
 ## The Problem with Traditional Try/Catch
 
@@ -28,7 +29,7 @@ const fetchData = async (id: number): Promise<{ id: number; name: string }> => {
 
 try {
   const user = await fetchData(1);
-  console.log(usr.name); // ❌ Typo (usr instead of user)
+  console.log(usr.name); //  Typo (usr instead of user)
 } catch (error) {
   console.log('An error occurred');
 }
@@ -90,10 +91,16 @@ if (error) {
 
 Why This Approach Is Better
 
-✔ Explicit error handling – Forces developers to check errors before using values.
-✔ Prevents unintended mutations – user remains immutable.
-✔ Cleaner and more readable – Separates error handling from function execution.
+ Explicit error handling – Forces developers to check errors before using values.
+ Prevents unintended mutations – user remains immutable.
+ Cleaner and more readable – Separates error handling from function execution.
 
 ## Conclusion
 
-By replacing `try/catch` with a structured utility like `handleAsync`, we create a more maintainable, predictable, and readable approach to error handling in TypeScript. Would you adopt this method in your next project? Let’s discuss! 🚀
+By replacing `try/catch` with a structured utility like `handleAsync`, we create a more maintainable, predictable, and readable approach to error handling in TypeScript. Would you adopt this method in your next project? Let’s discuss!
+
+## Related articles
+
+- [20 Essential TypeScript Tips for 2024](/20-ts-tricks/)
+- [Navigating TypeScript's Type System: 24 Brilliant Advanced Techniques](/advanced-type-tricks/)
+- [Converting Object Keys to camelCase with TypeScript](/camelcase-ts/)
