@@ -11,13 +11,14 @@ category: javascript
 type: howto
 tags: ['reduce']
 desc: Learn how to use JavaScript’s reduce() method to transform, sum, and structure data efficiently with clear examples and real-world use cases.
+subtitle: 'Learn how to use JavaScript’s reduce() method to transform, sum, and structure data efficiently with clear examples and real-world use cases.'
 ---
 
 If you’ve ever written a loop to calculate totals or flatten arrays, there’s a good chance you could replace it with `Array.prototype.reduce()`. The `reduce()` method is one of the most powerful — yet often misunderstood — tools in modern JavaScript.
 
 Let’s explore how it works and what makes it so flexible.
 
-## 🧩 What Is `reduce()`?
+ What Is `reduce()`?
 
 `reduce()` takes an array and “reduces” it into a single value — whether that’s a number, object, string, or even another array.
 
@@ -33,7 +34,7 @@ array.reduce((accumulator, currentValue, index, array) => {
 - `currentValue` — the current item being processed
 - `initialValue` — optional; the starting value of the accumulator
 
-## 💰 Example 1: Summing Numbers
+ Example 1: Summing Numbers
 
 ```js 
 const numbers = [10, 20, 30, 40]
@@ -45,7 +46,7 @@ console.log(total) // 100
 
 Without `reduce()`, you’d probably write a for `loop`. This version is cleaner and expressive.
 
-## 🧠 Example 2: Counting Occurrences
+ Example 2: Counting Occurrences
 
 ```js 
 const fruits = ['apple', 'banana', 'apple', 'orange', 'banana', 'apple']
@@ -61,7 +62,7 @@ console.log(count)
 
 Here `reduce()` turns an array into an object — showing how flexible it is beyond numbers.
 
-## 🧱 Example 3: Flattening an Array
+ Example 3: Flattening an Array
 
 ```js 
 const nested = [[1, 2], [3, 4], [5, 6]]
@@ -74,7 +75,7 @@ console.log(flat)
 
 Modern JavaScript also has `flat()`, but understanding `reduce()` gives you the logic behind it.
 
-## 🧩 Example 4: Grouping by Property
+ Example 4: Grouping by Property
 
 ```js
 const users = [
@@ -94,7 +95,7 @@ console.log(grouped)
 
 This is a common pattern when dealing with large datasets or API responses.
 
-## ⚙️ Example 5: Building a Custom Pipeline
+ Example 5: Building a Custom Pipeline
 
 You can even chain multiple transformations:
 
@@ -110,14 +111,20 @@ console.log(result) // 12
 
 `reduce()` works beautifully alongside other array methods like `filter()` and `map()`.
 
-## 🧭 Tips and Common Mistakes
+ Tips and Common Mistakes
 
-✅ Always provide an initial value — otherwise the first array element is used as the starting accumulator, which can cause type issues.
-✅ Keep your reducer function pure — don’t mutate external variables.
-✅ Remember that `reduce()` can return any type — not just numbers.
+ Always provide an initial value — otherwise the first array element is used as the starting accumulator, which can cause type issues.
+ Keep your reducer function pure — don’t mutate external variables.
+ Remember that `reduce()` can return any type — not just numbers.
 
-## 🏁 Conclusion
+ Conclusion
 
 `reduce()` is one of the most versatile methods in JavaScript. Once you understand its structure, you can replace repetitive loops with elegant one-liners that summarize, transform, and reshape data efficiently.
 
 > Think of `reduce()` as a Swiss Army knife for arrays — it adapts to whatever shape of output you need.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

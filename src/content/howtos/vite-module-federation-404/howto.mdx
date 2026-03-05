@@ -11,6 +11,7 @@ category: nodejs
 type: howto
 tags: ['vite', 'module-federation', '404-error', 'setup']
 desc: Learn how to fix remoteEntry.js 404 errors when running Vite Module Federation apps separately. Covers setup, common pitfalls, and working solutions
+subtitle: 'Learn how to fix remoteEntry.js 404 errors when running Vite Module Federation apps separately. Covers setup, common pitfalls, and working solutions'
 ---
 
 ![Vite Module Federation 404 Errors](./images/vite-module-federation-error.png)
@@ -22,7 +23,7 @@ GET http://localhost:5001/assets/remoteEntry.js net::ERR_ABORTED 404
 Failed to fetch dynamically imported module…
 ```  
 
-This guide explains **why this happens** and provides **practical recipes** to fix it.  
+Here's **why this happens** and provides **practical recipes** to fix it.  
 
 ---
 
@@ -109,7 +110,7 @@ Timeline (separate start)
 Timeline (parallel start)
 
 [Host starts] ----------------------> request remoteEntry.js
-[Remote ready in time] --------------> serves remoteEntry.js ✔
+[Remote ready in time] --------------> serves remoteEntry.js 
 ```
 
 ---
@@ -138,11 +139,11 @@ Here are **working recipes** to eliminate the error:
 - Avoid mixing `host preview` with `remote dev`.  
 
 ```bash
-# ✅ good
+ good
 pnpm --filter "react-vite/remote" dev
 pnpm --filter "react-vite/host" dev
 
-# ✅ good
+ good
 pnpm --filter "react-vite/remote" preview
 pnpm --filter "react-vite/host" preview
 ```
@@ -210,10 +211,10 @@ This reduces the chance of race conditions.
 
 ## Quick Checklist  
 
-- ✅ Ports match (host expects 5001, remote serves 5001).  
-- ✅ Same mode: `dev ↔ dev`, `preview ↔ preview`.  
-- ✅ Remote really serves `remoteEntry.js` (open in browser).  
-- ✅ Startup order respected (remote first, host second).  
+- Ports match (host expects 5001, remote serves 5001).  
+- Same mode: `dev  dev`, `preview  preview`.  
+- Remote really serves `remoteEntry.js` (open in browser).  
+- Startup order respected (remote first, host second).  
 
 ---
 
@@ -228,4 +229,10 @@ If you see **404 on `remoteEntry.js`** when running Vite Module Federation apps 
   - Externalize the remote URL into env variables,  
   - Add retries or launch with a monorepo script.  
 
-Following these practices makes your setup **predictable and stable**, both locally and in CI/CD pipelines.  
+Following these practices makes your setup **predictable and stable**, both locally and in CI/CD pipelines.
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

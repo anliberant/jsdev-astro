@@ -17,5 +17,28 @@ import CategoriesList from '@/entities/categories/categories-list.astro';
       framework featured in our tutorials and guides.
     </p>
   </header>
+  <section class='categories-intro'>
+    <p>
+      Categories group long-form articles by technology so you can follow a learning path instead of
+      jumping between unrelated topics.
+    </p>
+    <p>
+      Open a category to browse curated posts, practical examples, and implementation notes for that
+      stack.
+    </p>
+  </section>
   <CategoriesList />
 </BaseLayout>
+
+<style>
+  .categories-intro {
+    margin: 0.75rem 0 1.5rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.75;
+  }
+
+  .categories-intro p {
+    margin: 0.5rem 0;
+  }
+</style>
+

@@ -9,7 +9,8 @@ author: anton liberant
 category: nodejs
 type: post
 tags: ['monorepo', 'npm', 'pnpm', 'yarn', 'bun']
-desc: In this guide, you'll learn how to create and manage a monorepo using popular package managers like npm, Yarn, pnpm, and Bun workspaces.
+desc: Learn how to set up a monorepo with npm, Yarn, pnpm, and Bun workspaces for a NestJS + React project.
+subtitle: 'Learn how to set up a monorepo with npm, Yarn, pnpm, and Bun workspaces for a NestJS + React project.'
 ---
 
 We’ll set up a monorepo with **NestJS** (server) and **ReactJS** (client) side by side, then configure workspaces for each of the four major package managers: **npm**, **yarn**, **pnpm**, and **bun**. Same project, four different setups — so you can pick the one that fits your team.
@@ -344,14 +345,10 @@ Now run
 
 ## Conclusion
 
-By setting up a monorepo with NestJS and ReactJs, you streamline your development process, making it
-easier to share code and manage dependencies. This setup can significantly enhance productivity,
-especially in larger projects. Explore further by integrating shared libraries or tools to maximize
-the benefits of your monorepo structure!
+A monorepo is most useful when your apps share code and release cadence. Start with one package manager, add shared contracts between server and client, and automate workspace scripts early.
 
-Creating a monorepo using npm, Yarn, pnpm, or Bun workspaces provides an efficient way to manage
-multiple projects within a single repository. By centralizing dependencies, simplifying code
-sharing, and enhancing collaboration across teams, monorepos streamline development workflows. Each
-package manager offers unique strengths, allowing you to choose the tool that best fits your project
-needs. Whether you’re working with small or large-scale applications, adopting a monorepo structure
-can improve productivity, consistency, and maintainability in your codebase.
+## Related articles
+
+- [Build NestJS CRUD with PostgreSQL](/nestjs-crud/)
+- [Next.js OAuth with Prisma and NextAuth](/next-oauth-prisma/)
+- [Build a SPA Router in Vanilla JavaScript](/spa-vanilla-js/)

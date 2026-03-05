@@ -11,6 +11,7 @@ category: nodejs
 type: howto
 tags: ['bun']
 desc: Discover the key differences between `bun install` and `bun add`, when to use each, and how they impact dependency management and performance.
+subtitle: 'Discover the key differences between `bun install` and `bun add`, when to use each, and how they impact dependency management and performance.'
 ---
 
 If you’ve switched to **Bun**, you’ve likely noticed two similar commands — `bun install` and `bun add`. They may look alike, but they serve different purposes depending on your workflow. Understanding their distinctions helps you manage dependencies efficiently and avoid confusion.
@@ -23,12 +24,12 @@ If you’ve switched to **Bun**, you’ve likely noticed two similar commands �
 bun install
 ```
 
-✅ **Use when:**
+ **Use when:**
 - You’ve cloned a project and want to install existing dependencies.  
 - You’ve deleted your `node_modules` folder.  
 - You’re syncing dependencies after a version update.
 
-⚙️ Bun optimizes installation using caching and parallel downloads, so it’s extremely fast compared to npm or yarn.
+ Bun optimizes installation using caching and parallel downloads, so it’s extremely fast compared to npm or yarn.
 
 ## 2. `bun add` — Installing New Packages
 
@@ -39,11 +40,11 @@ bun add react
 bun add -d typescript
 ```
 
-✅ **Use when:**
+ **Use when:**
 - You’re adding a new library.  
 - You want to save it as a dev dependency (`-d` flag).  
 
-💡 Example:
+ Example:
 ```bash
 bun add axios
 ```
@@ -54,8 +55,8 @@ This instantly installs Axios and saves it to your project dependencies — much
 | Feature | `bun install` | `bun add` |
 |----------|----------------|------------|
 | Purpose | Install all existing deps | Add a new dependency |
-| Updates `package.json` | ❌ No | ✅ Yes |
-| Reads from lockfile | ✅ Yes | ✅ Yes |
+| Updates `package.json` |  No |  Yes |
+| Reads from lockfile |  Yes |  Yes |
 | Common use | Setup or rebuild | Add libraries or dev tools |
 
 ## 4. Best Practices
@@ -70,3 +71,9 @@ This instantly installs Axios and saves it to your project dependencies — much
 - `bun add` → Adds and installs new dependencies.  
 
 By understanding when to use each, you’ll maintain a cleaner, faster, and more predictable Bun environment.
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Fix 'Cannot find package mem-fs' Import Error](/howto/cannot-find-mem-fs/)

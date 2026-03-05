@@ -11,6 +11,7 @@ category: nodejs
 type: howto
 tags: ['web-workers']
 desc: Learn how to use Web Workers to eliminate 90% of front-end
+subtitle: 'Learn how to use Web Workers to eliminate 90% of front-end'
   performance bottlenecks through parallel processing, offloading tasks,
   and smart data handling.
 ---
@@ -20,31 +21,31 @@ optional. When scrolling becomes choppy or the UI freezes, we often turn
 to complex frameworks or micro-optimizations. But there's an overlooked
 API that solves most of these problems elegantly: **Web Workers**.
 
-## 💡 Why Web Workers Are Underrated
+ Why Web Workers Are Underrated
 
 Introduced in 2009, Web Workers still don't get the attention they
 deserve. Common myths include:
 
--   **"Too complicated to use"** → It only takes a few lines of code.
--   **"Not widely supported"** → 98% of browsers support it today.
--   **"Hard to separate logic"** → The performance gain far outweighs
+- **"Too complicated to use"** → It only takes a few lines of code.
+- **"Not widely supported"** → 98% of browsers support it today.
+- **"Hard to separate logic"** → The performance gain far outweighs
     the refactor.
 
 Let's explore how this API transforms front-end performance.
 
-## 🧠 1. Freeing the Main Thread: Say Goodbye to Lag
+ 1. Freeing the Main Thread: Say Goodbye to Lag
 
 JavaScript runs on a single thread, so heavy computations block UI
 rendering. Web Workers move that work off the main thread.
 
 ``` js
-// ❌ Traditional approach — blocks UI
+//  Traditional approach — blocks UI
 function computeReport(data) {
   const result = performHeavyMath(data); // UI freezes!
   updateDashboard(result);
 }
 
-// ✅ With Web Worker — smooth interface
+//  With Web Worker — smooth interface
 const worker = new Worker("worker-calc.js");
 worker.postMessage(hugeDataset);
 worker.onmessage = (event) => updateDashboard(event.data);
@@ -52,7 +53,7 @@ worker.onmessage = (event) => updateDashboard(event.data);
 
 Now your UI stays responsive while computations happen in parallel.
 
-## ⚙️ 2. True Parallelism on Multi-Core Devices
+ 2. True Parallelism on Multi-Core Devices
 
 JavaScript typically uses only one CPU core. Web Workers finally allow
 true multi-core utilization.
@@ -75,7 +76,7 @@ function runParallel(tasks) {
 
 Each worker processes data independently, achieving **3--5× speedups**.
 
-## 🧩 3. Smarter Memory Usage
+ 3. Smarter Memory Usage
 
 Each worker runs in its own thread with a separate memory space,
 preventing main-thread memory spikes.
@@ -120,7 +121,7 @@ searchWorker.onmessage = (e) => {
 };
 ```
 
-## 🖼️ 4. Image and Video Processing Off the Main Thread
+ 4. Image and Video Processing Off the Main Thread
 
 Web Workers shine in real-time image manipulation, compression, or
 AI-powered filters.
@@ -151,7 +152,7 @@ fileInput.addEventListener("change", async (e) => {
 
 Users experience zero lag, even during computation-heavy tasks.
 
-## 📊 5. Real-Time Visualization with D3.js in Workers
+ 5. Real-Time Visualization with D3.js in Workers
 
 Rendering large datasets with D3 or Chart.js often blocks the UI --- but
 Web Workers fix that.
@@ -171,7 +172,7 @@ self.onmessage = (e) => {
 };
 ```
 
-## ⚡ Performance Results
+ Performance Results
 
   Scenario               Traditional          Web Worker      Gain
   ---------------------- -------------------- --------------- ------
@@ -179,7 +180,7 @@ self.onmessage = (e) => {
   4K Image Processing    2800ms               650ms           ×4.3
   Complex Chart Render   850ms                180ms           ×4.7
 
-## 🔧 Advanced Techniques
+ Advanced Techniques
 
 ### 1. Worker Pool Manager
 
@@ -222,18 +223,18 @@ worker.onerror = (err) => {
 };
 ```
 
-## 🧭 When to Use Web Workers
+ When to Use Web Workers
 
-✅ **Best suited for:** - Big data filtering & sorting
+ **Best suited for:** - Big data filtering & sorting
 - Image / video processing
 - Real-time analytics
 - Encryption or AI inference
 
-🚫 **Avoid for:** - Simple DOM manipulation
+ **Avoid for:** - Simple DOM manipulation
 - Small synchronous logic
 - Tasks needing frequent communication
 
-## 🏁 Conclusion
+ Conclusion
 
 Before rewriting your app or migrating frameworks, ask:
 **"Can I fix this with Web Workers?"**
@@ -245,3 +246,9 @@ give users a truly smooth experience.
 
 Web Workers embody the essence of smart optimization --- doing **less on
 the main thread** and **more in parallel**.
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

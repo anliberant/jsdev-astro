@@ -11,20 +11,21 @@ category: javascript
 type: howto
 tags: ['exif', 'metadata']
 desc: Build a JavaScript EXIF parser to extract image metadata like camera model, date, and orientation. Includes examples using DataView, ArrayBuffer, and FileReader.
+subtitle: 'Build a JavaScript EXIF parser to extract image metadata like camera model, date, and orientation. Includes examples using DataView, ArrayBuffer, and FileReader.'
 ---
 
 ![JavaScript EXIF Info Parser](./images/javascript-exif-parser.png)
 
 Reading EXIF metadata directly from image files in the browser is a powerful feature — whether you're building a photo uploader, a metadata inspector, or a tool to strip sensitive data before sharing. In this tutorial, you'll build a native JavaScript EXIF parser using no external libraries and organize your code cleanly into **HTML, CSS, and JS files**.
 
-## ✅ What You’ll Learn
+ What You’ll Learn
 
 - How to structure your project using separate files
 - How to parse EXIF metadata from JPEG files
 - How to use `FileReader`, `ArrayBuffer`, and `DataView`
 - How to extract fields like Camera Model, Date Taken, and Orientation
 
-## 📁 Step 1: Create the Project Structure
+ Step 1: Create the Project Structure
 
 Start by creating a new folder, e.g., `js-exif-parser`, and inside it, create the following files:
 
@@ -35,7 +36,7 @@ js-exif-parser/
 └── script.js
 ```
 
-## 📄 Step 2: Write the HTML (`index.html`)
+ Step 2: Write the HTML (`index.html`)
 
 This file provides the structure: a file input and a placeholder to show the EXIF results.
 
@@ -53,7 +54,7 @@ This file provides the structure: a file input and a placeholder to show the EXI
       <h1>EXIF Data Viewer</h1>
 
       <div class="drop-area" id="dropArea">
-        <div class="icon">📁</div>
+        <div class="icon"></div>
         <p>Drag & drop an image here</p>
         <p>or</p>
         <div class="file-input-wrapper">
@@ -90,7 +91,7 @@ This file provides the structure: a file input and a placeholder to show the EXI
 
 This HTML file sets up a user interface to upload or drag-and-drop an image, preview it, and then display its EXIF metadata using a separate JavaScript file (`script.js`).
 
-## 🎨 Step 3: Add Styling (`style.css`)
+ Step 3: Add Styling (`style.css`)
 
 ```css
 :root {
@@ -342,7 +343,7 @@ h1 {
 }
 ```
 
-## ⚙️ Step 4: Write the JavaScript (script.js)
+ Step 4: Write the JavaScript (script.js)
 
 ```js
 class ExifService {
@@ -1179,9 +1180,9 @@ The code handles several complex aspects of EXIF parsing:
 
 This implementation is entirely in JavaScript and runs in the browser, making it suitable for client-side image analysis without requiring server processing for the EXIF extraction.
 
-## 🧾 Full Code
+ Full Code
 
-Below is the complete code for your JavaScript-based EXIF metadata parser.
+Here is the complete code for your JavaScript-based EXIF metadata parser.
 
 ```html
 <!DOCTYPE html>
@@ -1445,7 +1446,7 @@ Below is the complete code for your JavaScript-based EXIF metadata parser.
       <h1>EXIF Data Viewer</h1>
 
       <div class="drop-area" id="dropArea">
-        <div class="icon">📁</div>
+        <div class="icon"></div>
         <p>Drag & drop an image here</p>
         <p>or</p>
         <div class="file-input-wrapper">
@@ -2277,6 +2278,12 @@ Below is the complete code for your JavaScript-based EXIF metadata parser.
 </html>
 ```
 
-## ✅ Conclusion
+ Conclusion
 
 You’ve now built a fully functional EXIF parser in JavaScript that works directly in the browser — with no external libraries. This lightweight approach is ideal for privacy-first apps, offline photo tools, and learning how image metadata works under the hood.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

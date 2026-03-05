@@ -11,6 +11,7 @@ category: sql
 type: howto
 tags: ['']
 desc: Learn how to generate a calendar table for any month using SQL in MySQL, PostgreSQL, SQL Server, and Oracle—no manual date input required. 
+subtitle: 'Learn how to generate a calendar table for any month using SQL in MySQL, PostgreSQL, SQL Server, and Oracle—no manual date input required.'
 ---
 
 Whether you're creating reports, analyzing trends, or just looking for days with zero activity, a dynamic calendar table can be a lifesaver. Instead of manually listing dates, use these SQL snippets to generate them on the fly based on the current month.
@@ -21,7 +22,7 @@ We’ll cover MySQL, PostgreSQL, SQL Server, and Oracle—so pick your database 
 
 ---
 
-## 🐬 MySQL (8.0+)
+ MySQL (8.0+)
 
 MySQL supports recursive CTEs which allow date series generation elegantly.
 
@@ -42,7 +43,7 @@ SELECT date_val AS calendar_date FROM calendar;
 
 ---
 
-## 🐘 PostgreSQL
+ PostgreSQL
 
 PostgreSQL has the most elegant solution using `generate_series()`:
 
@@ -61,7 +62,7 @@ SELECT GENERATE_SERIES(
 
 ---
 
-## 🪟 SQL Server (2022+)
+ SQL Server (2022+)
 
 SQL Server now has its own `GENERATE_SERIES()` (finally).
 
@@ -75,7 +76,7 @@ FROM GENERATE_SERIES(0, DAY(EOMONTH(GETDATE())) - 1) AS n;
 - Generate day offsets 0 to N-1.
 - Add those to the base date.
 
-### 🔁 For legacy SQL Server (pre-2022)
+ For legacy SQL Server (pre-2022)
 
 Use a recursive CTE:
 
@@ -93,7 +94,7 @@ OPTION (MAXRECURSION 366);
 
 ---
 
-## 🍊 Oracle
+ Oracle
 
 Oracle’s `CONNECT BY LEVEL` can easily generate date ranges.
 
@@ -109,8 +110,14 @@ CONNECT BY TRUNC(SYSDATE, 'MM') + LEVEL - 1 <= LAST_DAY(SYSDATE);
 
 ---
 
-## 🧠 Final Notes
+ Final Notes
 
 Calendar tables are a must-have for clean reporting, spotting missing data, and simplifying JOINs. Modern SQL engines make this easier than ever with native functions like `generate_series()` or recursion patterns.
 
 Choose the version that matches your DB engine—and stop hardcoding your dates.
+
+## Related articles
+
+- [Understanding EXISTS and NOT EXISTS in SQL](/howto/sql-exists-vs-not-exists/)
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)

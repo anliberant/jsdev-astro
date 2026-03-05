@@ -11,11 +11,12 @@ category: javascript
 type: howto
 tags: []
 desc: Learn the real difference between DOMContentLoaded and load events in JavaScript. Improve page performance and avoid flickering or timing bugs.
+subtitle: 'Learn the real difference between DOMContentLoaded and load events in JavaScript. Improve page performance and avoid flickering or timing bugs.'
 ---
 
 In web development, page load timing is everything. Whether you're animating a loader, interacting with the DOM, or measuring images — understanding when the browser is *ready* makes or breaks the user experience. Today we’ll explore two critical events: `DOMContentLoaded` and `load`, and how to use them correctly.
 
-## 🍜 A Real-World Analogy
+ A Real-World Analogy
 
 Imagine visiting a restaurant:
 
@@ -24,19 +25,19 @@ Imagine visiting a restaurant:
 
 Let’s see how this plays out in JavaScript.
 
-## 📊 DOMContentLoaded vs load: Comparison Table
+ DOMContentLoaded vs load: Comparison Table
 
 | Feature                     | `DOMContentLoaded`                              | `load`                                            |
 |----------------------------|--------------------------------------------------|---------------------------------------------------|
 | Trigger timing             | When the DOM is fully parsed                    | When all resources (images, styles, iframes) are loaded |
-| Can manipulate DOM?        | ✅ Yes                                           | ✅ Yes                                            |
-| Includes images/styles?    | ❌ No                                            | ✅ Yes                                            |
-| Speed                      | ⚡ Faster                                        | 🐢 Slower                                         |
+| Can manipulate DOM?        |  Yes                                           |  Yes                                            |
+| Includes images/styles?    |  No                                            |  Yes                                            |
+| Speed                      |  Faster                                        |  Slower                                         |
 | Usage                      | Early DOM manipulation                          | Post-image measurements or layout operations      |
 
-## 🧪 Practical Use Cases
+ Practical Use Cases
 
-### ✅ 1. Fast DOM Interactions with `DOMContentLoaded`
+ 1. Fast DOM Interactions with `DOMContentLoaded`
 
 ```js
 document.addEventListener('DOMContentLoaded', () => {
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-### ✅ 2. Working with Images and External Resources using `load`
+ 2. Working with Images and External Resources using `load`
 
 ```js
 window.addEventListener('load', () => {
@@ -57,7 +58,7 @@ window.addEventListener('load', () => {
 });
 ```
 
-## 🧠 Understanding `defer` and `async`
+ Understanding `defer` and `async`
 
 ```html
 <script src="init.js" defer></script>
@@ -66,12 +67,12 @@ window.addEventListener('load', () => {
 
 | Attribute | Behavior                                      | Impact                            |
 |-----------|-----------------------------------------------|-----------------------------------|
-| `defer`   | Loads in background, executes after parsing   | ✅ Safe with DOMContentLoaded     |
-| `async`   | Loads and executes immediately when ready     | ⚠️ Can block or delay DOM parsing |
+| `defer`   | Loads in background, executes after parsing   |  Safe with DOMContentLoaded     |
+| `async`   | Loads and executes immediately when ready     |  Can block or delay DOM parsing |
 
-## 🚀 Performance Optimization Tips
+ Performance Optimization Tips
 
-### ✅ Move Critical Code Earlier
+ Move Critical Code Earlier
 
 ```html
 <body>
@@ -85,7 +86,7 @@ window.addEventListener('load', () => {
 </body>
 ```
 
-### 💤 Lazy Load Non-Critical Resources
+ Lazy Load Non-Critical Resources
 
 ```js
 window.addEventListener('load', () => {
@@ -96,7 +97,7 @@ window.addEventListener('load', () => {
 });
 ```
 
-## 🔁 Fallback for Older Browsers
+ Fallback for Older Browsers
 
 ```js
 document.onreadystatechange = () => {
@@ -109,7 +110,7 @@ document.onreadystatechange = () => {
 };
 ```
 
-## 🧬 Modern Alternative: `readystatechange` for Granular Control
+ Modern Alternative: `readystatechange` for Granular Control
 
 ```js
 document.addEventListener('readystatechange', () => {
@@ -117,7 +118,7 @@ document.addEventListener('readystatechange', () => {
 });
 ```
 
-## 🧩 Tricky Question: Timer Inside DOMContentLoaded
+ Tricky Question: Timer Inside DOMContentLoaded
 
 ```js
 document.addEventListener('DOMContentLoaded', () => {
@@ -127,21 +128,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-## 🧭 Final Thoughts
+ Final Thoughts
 
-| ✅ Use `DOMContentLoaded` for:          |
+|  Use `DOMContentLoaded` for:          |
 |----------------------------------------|
 | Fast UI interactions                  |
 | DOM structure manipulation             |
 | Adding event listeners                 |
 
-| ✅ Use `load` for:                      |
+|  Use `load` for:                      |
 |----------------------------------------|
 | Measuring images, fonts, and media     |
 | Lazy loading background assets         |
 | Initiating analytics or tracking       |
 
-## 📌 Key Takeaways
+ Key Takeaways
 
 - **DOMContentLoaded** = DOM is ready, lightning fast.
 - **load** = All assets loaded, safer for layout-dependent work.
@@ -149,6 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
 - Use `readystate` for fine-grained control.
 - Always test for timing bugs when mixing images, JS, and animations.
 
-## 💬 What do you think?
+ What do you think?
 
 Have you ever hit a layout bug due to using `async` scripts or firing logic too early? Share your experience or questions below. In the next article, we’ll dig into real-world examples of lazy loading and script prioritization techniques.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

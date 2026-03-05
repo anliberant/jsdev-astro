@@ -11,13 +11,14 @@ category: javascript
 type: howto
 tags: []
 desc: Learn to add webpages to favorites with JavaScript. Discover browser methods, manual prompts, draggable bookmarks, and PWA features for all browsers.
+subtitle: 'Learn to add webpages to favorites with JavaScript. Discover browser methods, manual prompts, draggable bookmarks, and PWA features for all browsers.'
 ---
 
 ## Introduction
 
 Adding a webpage to a user’s favorites (bookmarks) directly via JavaScript is heavily restricted in modern browsers due to security and privacy concerns. However, there are several **workarounds** you can use—ranging from manual prompts to draggable bookmark links and PWA installation flows.
 
-Below is an improved and expanded guide covering **all modern techniques**, browser compatibility notes, and enhanced code examples.
+Here is an improved and expanded guide covering **all modern techniques**, browser compatibility notes, and enhanced code examples.
 
 ---
 
@@ -42,10 +43,10 @@ addToFavorites('https://example.com', 'Example Page');
 ```
 
 ### Modern Browser Status  
-- **Chrome**: ❌ Not supported  
-- **Firefox**: ❌ Removed in modern versions  
-- **Safari**: ❌ Not supported  
-- **Edge (Chromium)**: ❌ Not supported  
+- **Chrome**:  Not supported  
+- **Firefox**:  Removed in modern versions  
+- **Safari**:  Not supported  
+- **Edge (Chromium)**:  Not supported  
 
 Use this method only for **legacy enterprise environments.**
 
@@ -183,12 +184,12 @@ Modern browsers no longer allow JavaScript to directly create bookmarks, but you
 
 | Method | Works Today | Best For |
 |-------|-------------|----------|
-| `window.external.AddFavorite` | ❌ only IE | Legacy apps |
-| Manual “Ctrl+D” prompt | ✔ | All users |
-| Drag-and-drop bookmark link | ✔ | Desktop browsers |
-| Progressive Web App | ✔ | Mobile users + offline mode |
-| LocalStorage bookmarking | ✔ | Internal bookmarking |
-| Server-stored bookmarks | ✔ | User accounts |
+| `window.external.AddFavorite` |  only IE | Legacy apps |
+| Manual “Ctrl+D” prompt |  | All users |
+| Drag-and-drop bookmark link |  | Desktop browsers |
+| Progressive Web App |  | Mobile users + offline mode |
+| LocalStorage bookmarking |  | Internal bookmarking |
+| Server-stored bookmarks |  | User accounts |
 
 Choose the approach that matches your users and your platform requirements.
 
@@ -199,3 +200,9 @@ Choose the approach that matches your users and your platform requirements.
 Although the traditional programmatic “Add to Favorites” feature is no longer supported, combining modern alternatives—PWA install prompts, manual hotkeys, local storage, and account-based bookmarking—lets you recreate the functionality using secure and user-friendly methods.
 
 With these solutions, you can guide users to save your webpage effectively across all browsers and devices.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

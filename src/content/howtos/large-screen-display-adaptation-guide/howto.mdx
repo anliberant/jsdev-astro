@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: []
 desc: Complete guide to large screen adaptation using scale, rem, and vw/vh solutions. Learn viewport concepts, zoom modes, and solve common issues. (165 chars)
+subtitle: 'Complete guide to large screen adaptation using scale, rem, and vw/vh solutions. Learn viewport concepts, zoom modes, and solve common issues. (165 chars)'
 ---
 
 With the rise of big data visualization, digital twins, and smart city applications, large screen development has become an essential skill for front-end engineers. Unlike traditional web pages, large screen projects must display on various sizes and resolutions of display devices, creating significant adaptation challenges. This comprehensive guide covers fundamental concepts, proven solutions, and practical implementations to help developers choose the optimal adaptation strategy for their projects.
@@ -376,11 +377,11 @@ Large screen adaptation requires both implementation methods and scaling strateg
 
 | Scaling Mode | Maintains Proportions | Horizontal Scroll | Vertical Scroll | Content Distortion | Characteristics |
 |--------------|----------------------|-------------------|-----------------|-------------------|----------------|
-| Full Screen | ❌ | ❌ | ❌ | ✅ | Complete screen fill, possible distortion |
-| Width-First | ✅ | ❌ | ✅ | ❌ | Horizontal fill, proportional content |
-| Height-First | ✅ | ✅ | ❌ | ❌ | Vertical fill, centered content |
-| Height + Scroll | ✅ | ✅ | ❌ | ❌ | Vertical fill with horizontal scrolling |
-| No Scaling | ✅ | ✅ | ✅ | ❌ | Original size, pixel-perfect |
+| Full Screen |  |  |  |  | Complete screen fill, possible distortion |
+| Width-First |  |  |  |  | Horizontal fill, proportional content |
+| Height-First |  |  |  |  | Vertical fill, centered content |
+| Height + Scroll |  |  |  |  | Vertical fill with horizontal scrolling |
+| No Scaling |  |  |  |  | Original size, pixel-perfect |
 
 ### Advanced Scaling Mode Implementation
 
@@ -1740,13 +1741,13 @@ Large screen adaptation is a critical skill in modern front-end development, par
 
 1. **Scale Solution**: Uses CSS transforms for proportional scaling while maintaining original ratios
 2. **REM Solution**: Achieves responsive layout through dynamic root element font-size adjustment  
-3. **Viewport Units Solution**: Leverages vw/vh units for intuitive, native responsiveness
+3. **Viewport Units Solution**: uses vw/vh units for intuitive, native responsiveness
 
 Each solution has distinct advantages and optimal use cases. Fixed monitoring displays benefit from scale solutions, data visualization projects suit viewport units, and complex dashboards work well with REM adaptation.
 
 The guide also explored five scaling modes (full screen, proportional width/height, scrollable height, and no scaling), canvas editor scaling implementations, and solutions to common issues like high-DPR screen blur, font adaptation, and interaction accuracy.
 
-Selecting the appropriate adaptation solution requires careful consideration of design requirements, user experience goals, and technical constraints. Often, combining multiple approaches creates the most robust large screen experience. The unified adaptation system provided demonstrates how to intelligently switch between methods based on device capabilities and performance requirements.
+Selecting the appropriate adaptation solution requires careful consideration of design requirements, user experience goals, and technical constraints. Often, combining multiple approaches creates the most reliable large screen experience. The unified adaptation system provided demonstrates how to intelligently switch between methods based on device capabilities and performance requirements.
 
 Remember that large screen adaptation is not just about making content fit—it's about creating optimal user experiences across diverse display environments while maintaining design integrity and interaction accuracy.
 
@@ -1956,3 +1957,9 @@ if (!hasViewportUnits) {
 - Test thoroughly before deploying scaling updates
 
 This comprehensive guide provides everything needed to implement professional large screen adaptation solutions. Whether building data visualization dashboards, digital signage, or interactive kiosks, these techniques ensure optimal display across all target devices while maintaining design integrity and user experience quality.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

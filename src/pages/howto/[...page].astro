@@ -71,6 +71,16 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
         />
       : <h1 class='mt-10'>Howto Tutorials Page {page.currentPage}</h1>
     }
+    <section class='archive-intro'>
+      <p>
+        This section contains step-by-step how-to tutorials with concrete fixes for common JavaScript,
+        Node.js, CSS, and tooling issues.
+      </p>
+      <p>
+        Each guide is written as an actionable workflow: reproduce the problem, apply the fix, and
+        verify the result.
+      </p>
+    </section>
     <HowtoCategoriesList />
     <Howtos howtos={page.data} />
     {
@@ -84,3 +94,16 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
     }
   </main>
 </BaseLayout>
+
+<style>
+  .archive-intro {
+    margin: 0.75rem 0 1.5rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.75;
+  }
+
+  .archive-intro p {
+    margin: 0.5rem 0;
+  }
+</style>
+

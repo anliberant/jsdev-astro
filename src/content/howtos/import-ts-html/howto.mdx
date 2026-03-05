@@ -11,6 +11,7 @@ category: typescript
 type: howto
 tags: ['webpack']
 desc: Learn to integrate TypeScript with HTML using Webpack bundler. Step-by-step tutorial for configuration, compilation, and development setup with practical examples.
+subtitle: 'Learn to integrate TypeScript with HTML using Webpack bundler. Step-by-step tutorial for configuration, compilation, and development setup with practical examples.'
 ---
 
 TypeScript has become the de‑facto standard for writing reliable, well‑typed JavaScript applications. But using TypeScript directly inside a simple HTML page is not possible without a build tool. Modern browsers cannot execute `.ts` files natively, so a bundler must compile TypeScript into JavaScript.
@@ -242,7 +243,7 @@ Chrome/Firefox lets you debug `.ts` files directly:
 
 ## 9. Common Errors + Fixes
 
-### ❌ “Cannot use import statement outside a module”
+ “Cannot use import statement outside a module”
 Fix:  
 Ensure your script tag is NOT pointing to TypeScript:
 
@@ -258,14 +259,14 @@ Right:
 <script src="bundle.js"></script>
 ```
 
-### ❌ Module not found: Can't resolve './file'
+ Module not found: Can't resolve './file'
 Fix:
 
 - Paths must be relative  
 - File extensions must match  
 - Webpack `resolve.extensions` must include `.ts`
 
-### ❌ ts-loader slow in large projects
+ ts-loader slow in large projects
 Use:
 
 ```bash
@@ -307,3 +308,8 @@ This setup scales from small demos to large front‑end applications.
 
 Use this guide as a baseline for TypeScript projects that require clean, maintainable builds and a professional workflow.
 
+## Related articles
+
+- [Fixing Circular Imports in a Real Frontend Codebase](/howto/circular-imports-ts/)
+- [Validate ENV Variables in TypeScript with Zod](/howto/env-ts-zod/)
+- [Resolving Missing flat, flatMap, and Flatten on any[] in TypeScript](/howto/flatmap-doesnt-exist/)

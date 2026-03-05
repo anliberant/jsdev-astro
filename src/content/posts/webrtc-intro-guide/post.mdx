@@ -10,15 +10,16 @@ category: javascript
 type: post
 tags: ['WebRTC']
 desc: Learn how WebRTC enables real-time audio/video communication in browsers using peer-to-peer connections. Includes media capture, signaling, and streaming examples.
+subtitle: 'Learn how WebRTC enables real-time audio/video communication in browsers using peer-to-peer connections. Includes media capture, signaling, and streaming examples.'
 ---
 
-## 🚀 Introduction
+ Introduction
 
 WebRTC (Web Real-Time Communication) is a powerful technology that allows browsers and mobile apps to exchange audio, video, and data in real-time — all without needing an intermediary server. It’s the backbone of modern video calls, screen sharing tools, and real-time collaboration platforms.
 
 This article covers the full WebRTC pipeline: from accessing user media to establishing a secure peer-to-peer (P2P) connection, with practical TypeScript-flavored JavaScript examples.
 
-## 🎥 Capturing Media Streams
+ Capturing Media Streams
 
 ### What is a Media Stream?
 
@@ -39,7 +40,7 @@ navigator.mediaDevices
   });
 ```
 
-💡 The browser will ask for user permission before providing access.
+ The browser will ask for user permission before providing access.
 
 ### Displaying Video in a `<video>` Element
 
@@ -55,7 +56,7 @@ navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
 });
 ```
 
-## 🎛 Listing and Selecting Devices
+ Listing and Selecting Devices
 
 You can list all available input/output devices with:
 
@@ -67,7 +68,7 @@ navigator.mediaDevices.enumerateDevices().then((devices) => {
 });
 ```
 
-🛠 To react to newly connected devices:
+ To react to newly connected devices:
 
 ```ts 
 navigator.mediaDevices.addEventListener('devicechange', () => {
@@ -75,7 +76,7 @@ navigator.mediaDevices.addEventListener('devicechange', () => {
 });
 ```
 
-## 🧪 Using Media Constraints
+ Using Media Constraints
 
 Want to select specific cameras or set video resolution?
 
@@ -97,7 +98,7 @@ const constraints = {
 navigator.mediaDevices.getUserMedia(constraints);
 ```
 
-## 🖥 Capturing the Screen
+ Capturing the Screen
 
 ```ts 
 const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -106,9 +107,9 @@ const screenStream = await navigator.mediaDevices.getDisplayMedia({
 document.querySelector('video').srcObject = screenStream;
 ```
 
-📌 Note: Browsers may prompt users to select a window or screen.
+ Note: Browsers may prompt users to select a window or screen.
 
-## 🎚 Managing Media Tracks
+ Managing Media Tracks
 
 Each stream contains one or more tracks (audio/video). You can disable, stop, or access them individually:
 
@@ -123,7 +124,7 @@ tracks[0].enabled = false;
 tracks.forEach((track) => track.stop());
 ```
 
-## 🌐 Establishing a Peer Connection
+ Establishing a Peer Connection
 
 WebRTC’s `RTCPeerConnection` allows peers to connect directly:
 
@@ -135,7 +136,7 @@ const config = {
 const peerConnection = new RTCPeerConnection(config);
 ```
 
-## 📡 ICE, STUN, TURN Explained
+ ICE, STUN, TURN Explained
 
 - **ICE**: Helps find a working network path between peers.
 - **STUN**: Discovers public IP/port behind NAT.
@@ -156,7 +157,7 @@ const config = {
 };
 ```
 
-## 🔄 ICE Candidate Exchange
+ ICE Candidate Exchange
 
 ICE candidates must be exchanged manually via signaling (e.g., WebSocket):
 
@@ -178,7 +179,7 @@ signalingServer.on('ice-candidate', async (candidate) => {
 });
 ```
 
-## 🤝 Offer/Answer Exchange (SDP)
+ Offer/Answer Exchange (SDP)
 
 **Creating an offer:**
 
@@ -198,7 +199,7 @@ peerConnection.setRemoteDescription(offer).then(async () => {
 });
 ```
 
-## 🎤 Adding Local Media to the Connection
+ Adding Local Media to the Connection
 
 ```ts 
 const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -216,7 +217,7 @@ peerConnection.addEventListener('track', (event) => {
 });
 ```
 
-## 🔁 Dynamically Managing Tracks
+ Dynamically Managing Tracks
 
 **Toggle microphone:**
 
@@ -234,14 +235,14 @@ const newTrack = stream.getVideoTracks()[0];
 peerConnection.addTrack(newTrack, stream);
 ```
 
-## ❌ Closing a WebRTC Connection
+ Closing a WebRTC Connection
 
 ```ts 
 peerConnection.getSenders().forEach((sender) => sender.track.stop());
 peerConnection.close();
 ```
 
-## 👥 Group Calls: Mesh vs SFU vs MCU
+ Group Calls: Mesh vs SFU vs MCU
 
 ### Mesh
 
@@ -261,8 +262,14 @@ Popular options:
 
 Server decodes and mixes streams. Lowest load on client, but higher latency and server cost.
 
-## 🧩 Summary
+ Summary
 
 WebRTC empowers real-time video/audio/data streaming with just a few lines of JavaScript. While simple to get started with, it involves deep concepts like ICE, SDP, and signaling.
 
 Whether you're building a Zoom alternative or live coding interviews — understanding how to capture, send, and receive streams peer-to-peer is the first step.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

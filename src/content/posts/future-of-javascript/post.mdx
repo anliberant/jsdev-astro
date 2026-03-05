@@ -10,6 +10,7 @@ category: javascript
 type: post
 tags: []
 desc: Explore upcoming JavaScript proposals from TC39 — from resource management and async arrays to seeded randomness and immutable buffers.
+subtitle: 'Explore upcoming JavaScript proposals from TC39 — from resource management and async arrays to seeded randomness and immutable buffers.'
 ---
 
 JavaScript continues to evolve rapidly, driven by the work of TC39 and active contributors like the Deno team. At the recent **108th TC39 meeting**, nine proposals moved forward across stages — from early concepts (Stage 0) to fully standardized features (Stage 4).  
@@ -45,7 +46,7 @@ function readFile() {
 }
 ```
 
-✅ Already supported in Chrome 134, Firefox 134, and **Deno v2.3**.  
+ Already supported in Chrome 134, Firefox 134, and **Deno v2.3**.  
 
 In **Deno**, this applies to resources like `Deno.File` and `Deno.Conn`. Example:  
 
@@ -77,7 +78,7 @@ const nums = await Array.fromAsync(generate());
 console.log(nums); // [1, 2]
 ```
 
-✅ Supported in all browsers, **Deno v1.38**, and **Node.js v22**.  
+ Supported in all browsers, **Deno v1.38**, and **Node.js v22**.  
 
 ---
 
@@ -90,7 +91,7 @@ Error.isError(new TypeError("oops")); // true
 Error.isError({ name: "TypeError", message: "oops" }); // false
 ```
 
-✅ Supported in all browsers and **Deno v2.2**.  
+ Supported in all browsers and **Deno v2.2**.  
 
 ---
 
@@ -105,7 +106,7 @@ let buf = new ArrayBuffer(100);
 let imm = buf.transferToImmutable();
 
 console.log(buf.byteLength, imm.byteLength); // 0, 100
-imm[0] = 1; // ❌ TypeError
+imm[0] = 1; //  TypeError
 ```
 
 Useful for **multi-threading, workers, and binary APIs** like `Deno.writeFile()` without unnecessary copies.  
@@ -184,7 +185,13 @@ JavaScript’s evolution is far from slowing down. TC39 is shaping the language 
 
 ---
 
-🔗 Sources:  
+ Sources:  
 - [Deno Official Blog](https://deno.com/blog)  
 - [TC39 Proposals](https://github.com/tc39/proposals)  
-- [ECMAScript Draft](https://tc39.es/ecma262/)  
+- [ECMAScript Draft](https://tc39.es/ecma262/)
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

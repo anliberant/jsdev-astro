@@ -9,7 +9,8 @@ author: anton liberant
 category: react
 type: post
 tags: ['react-tips']
-desc: Learn 25 expert React optimization tips to enhance performance, improve code quality, and streamline your development process. Perfect for React developers!
+desc: Learn practical React optimization patterns to reduce re-renders, improve maintainability, and ship faster interfaces.
+subtitle: 'Learn practical React optimization patterns to reduce re-renders, improve maintainability, and ship faster interfaces.'
 ---
 
 25 concrete patterns I keep coming back to when reviewing React code — from render gotchas and state pitfalls to hooks that most teams underuse.
@@ -21,13 +22,13 @@ desc: Learn 25 expert React optimization tips to enhance performance, improve co
 Declaring components inside other components may seem convenient but can lead to unnecessary re-creations and performance issues. Extract nested components to maintain their state and avoid re-renders during parent updates.
 
 ```jsx
-// ❌ Incorrect
+//  Incorrect
 const UsersList = () => {
   const User = ({ user }) => <div>{user.name}</div>;
   return <User user={{ name: 'John' }} />;
 };
 
-// ✅ Correct
+//  Correct
 const User = ({ user }) => <div>{user.name}</div>;
 const UsersList = () => <User user={{ name: 'John' }} />;
 ```
@@ -87,7 +88,7 @@ return (
 );
 ```
 
-**7. Leverage Composite Components for Flexibility**
+**7. Use Composite Components for Flexible APIs**
 
 Build components that can be composed together for flexible UI construction.
 
@@ -152,7 +153,7 @@ const value = computeValue();
 
 ## Section 2: Code Practices and Best Practices
 
-**Use Error Boundaries for Robust Apps**
+**Use Error Boundaries for reliable Apps**
 
 Prevent crashes in production by wrapping components with error boundaries.
 
@@ -236,7 +237,7 @@ Prevent accidental rendering of unwanted values like `0` by using ternary operat
 
 **20. Use Context to Avoid Prop Drilling**
 
-Leverage Context to share global data like themes or user settings without deeply nested props.
+use Context to share global data like themes or user settings without deeply nested props.
 
 ```jsx
 const ThemeContext = React.createContext();
@@ -287,3 +288,10 @@ const [data, setData] = useState([]);
 ## Conclusion
 
 You don't need all 25 at once. Pick the 3–4 patterns that match your current pain points, apply them in a real PR, and measure the difference. That's worth more than memorizing the whole list.
+
+
+## Related articles
+
+- [Boost React Performance: Tips for Faster Applications](/react-performance-tips/)
+- [React State Management: A Practical Guide](/react-state-management/)
+- [Write Maintainable React Code](/maintainable-react-code/)

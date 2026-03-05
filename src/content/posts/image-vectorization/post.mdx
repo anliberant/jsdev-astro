@@ -9,7 +9,8 @@ author: anton liberant
 category: threejs
 type: post
 tags: ['vite']
-desc: Learn how to create a powerful image vectorization service combining Three.js and Vite. Step-by-step guide to build an efficient web-based vector graphics converter.
+desc: Learn how to build a browser image vectorization tool with Three.js and Vite, from setup to rendering pipeline.
+subtitle: 'Learn how to build a browser image vectorization tool with Three.js and Vite, from setup to rendering pipeline.'
 ---
 
 Raster images lose quality when you scale them up. Vector formats like SVG don’t. Here we’ll build a browser-based tool that converts raster images into stylized vector shapes using [Three.js](https://threejs.org/) and Vite — the finished result runs entirely client-side.
@@ -24,11 +25,11 @@ Three.js makes it easy to work with WebGL, enabling complex visualizations and i
 
 **Advantages of Using Three.js for Vectorization:**
 
-✅ WebGL support for fast rendering
+ WebGL support for fast rendering
 
-✅ Flexible image processing capabilities
+ Flexible image processing capabilities
 
-✅ Ability to use shaders and post-processing
+ Ability to use shaders and post-processing
 
 ## 1. Setting Up the Project
 
@@ -207,7 +208,7 @@ export function setupButton(
 - If `'upload'`, it creates a file upload input with a styled label.
 - Uses **Tailwind CSS** classes for styling and hover effects.
 
-This approach enhances reusability and maintains clean, structured code for different button types. 🚀
+This approach enhances reusability and maintains clean, structured code for different button types. 
 
 **Header component:**
 
@@ -586,7 +587,7 @@ downloadBtn.addEventListener('click', () => {
 - Creates a download link and triggers a click event.
 - Saves the image as `vectorized-image.png`.
 
-This implementation is a simple yet powerful way to transform raster images into vectorized 3D representations using Three.js! 🚀
+This implementation is a simple yet powerful way to transform raster images into vectorized 3D representations using Three.js! 
 
 ## 5. Combine all Component in `main.ts`
 
@@ -714,19 +715,7 @@ Safely initializes components if their elements exist:
 - `setupButton(downloadBtn, 'Download', '#', 'primary')` → Configures the download button.
 - `setupCanvas(content)` → Calls setupCanvas to initialize Three.js rendering.
 
-**Summary**
-
-🔹 What This Code Does
-
-✅ Dynamically builds an HTML structure inside #app.
-
-✅ Sets up key UI components like header, hero section, upload/download buttons.
-
-✅ Uses TypeScript for strong typing and safety.
-
-✅ Integrates Three.js rendering via `setupCanvas()`.
-
-✅ Uses modular functions (`setupButton`, `setupHeader`, `setupHero`) to keep code clean.
+This section wires the UI and renderer: the page layout is mounted, event handlers are attached, and `setupCanvas()` boots the Three.js scene.
 
 ## 6. Start the Project
 
@@ -740,22 +729,22 @@ Vite will launch the local server, and you can test your image vectorization ser
 
 ## 7. Explanation of Key Features
 
-✅ **Three.js Rendering**: Converts pixel data into 3D points and lines.
+ **Three.js Rendering**: Converts pixel data into 3D points and lines.
 
-✅ **OrbitControls**: Allows users to rotate and zoom the 3D view.
+ **OrbitControls**: Allows users to rotate and zoom the 3D view.
 
-✅ **File Upload**: Loads an image and extracts pixel color data.
+ **File Upload**: Loads an image and extracts pixel color data.
 
-✅ **Vectorization**: Transforms the image into a 3D point cloud representation.
+ **Vectorization**: Transforms the image into a 3D point cloud representation.
 
-✅ **Download Option**: Captures the rendered scene and saves it as a PNG.
+ **Download Option**: Captures the rendered scene and saves it as a PNG.
 
 ## 8. Conclusion
 
-Using Three.js and Vite, we created a simple image vectorization service that loads an image, processes its pixels, and displays it in 3D space. You can enhance this by adding:
+You now have a client-side baseline for image vectorization. Next improvements are mostly about quality and speed: better edge detection, smarter sampling, and lower memory usage during render.
 
-- **Different vectorization styles** (dots, edges, triangles)
-- **More color processing techniques**
-- **WebGL performance optimizations**
+## Related articles
 
-This is just a foundation—feel free to expand and experiment! 🚀
+- [Track User Activity in JavaScript](/tracking-points-js/)
+- [Canvas Grayscale Filter (How-to)](/howto/canvas-grayscale/)
+- [Build a SPA Router in Vanilla JavaScript](/spa-vanilla-js/)

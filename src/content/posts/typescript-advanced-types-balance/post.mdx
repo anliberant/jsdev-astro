@@ -10,6 +10,7 @@ category: typescript
 type: post
 tags: ['typescript-types']
 desc: Explore how far you should go with advanced TypeScript typing. Learn when complexity adds value and when it just adds confusion. Examples included.
+subtitle: 'Explore how far you should go with advanced TypeScript typing. Learn when complexity adds value and when it just adds confusion. Examples included.'
 ---
 
 TypeScript is often defined as “JavaScript with type syntax.” But in practice, it’s much more than that. You could describe it as a dual-layer language: one layer for runtime behavior (JavaScript), and another — incredibly powerful — layer for type-level computation.
@@ -20,7 +21,7 @@ This article is for developers already using TypeScript who want to go beyond th
 
 - Use types as a design tool — not just for catching errors;
 - Balance strictness and flexibility in your codebase;
-- Leverage advanced techniques like branded types and state machines.
+- use advanced techniques like branded types and state machines.
 
 Let’s start with what makes the type system so powerful — and where its limits lie.
 
@@ -80,8 +81,8 @@ function createUser(id: UserID) {
 }
 
 const id = 'abc123' as UserID;
-createUser(id); // ✅ OK
-createUser('abc123'); // ❌ Error
+createUser(id); //  OK
+createUser('abc123'); //  Error
 ```
 
 This prevents passing arbitrary strings as user IDs without any runtime checks.
@@ -118,13 +119,19 @@ In those cases, consider whether runtime validation (like with [Zod](https://zod
 
 ## Practical Guidelines
 
-- 💡 Use simple types by default. Add complexity only when it pays off.
-- 🧪 Test types like you test code. You can use `@ts-expect-error` and `dtslint`.
-- 🧰 Prefer utility types over DIY solutions. TypeScript ships with many (`Partial`, `Record`, `Pick`, etc.).
-- 🏷️ Use branded types when primitive types aren't distinct enough.
-- 🔀 Don’t be afraid to mix runtime validation (e.g., Zod, io-ts) with static typing.
+- Use simple types by default. Add complexity only when it pays off.
+- Test types like you test code. You can use `@ts-expect-error` and `dtslint`.
+- Prefer utility types over DIY solutions. TypeScript ships with many (`Partial`, `Record`, `Pick`, etc.).
+- Use branded types when primitive types aren't distinct enough.
+- Don’t be afraid to mix runtime validation (e.g., Zod, io-ts) with static typing.
 
 ## Conclusion
 TypeScript is more than just annotations — it's a full-fledged design language. But like any tool, it should serve the problem, not become the problem. Use the Turing-complete powers of the type system wisely, and you’ll write safer, cleaner, and more expressive code.
 
 Type gymnastics might impress your peers, but thoughtful, balanced type design will make you a better engineer.
+
+## Related articles
+
+- [20 Essential TypeScript Tips for 2024](/20-ts-tricks/)
+- [Navigating TypeScript's Type System: 24 Brilliant Advanced Techniques](/advanced-type-tricks/)
+- [Converting Object Keys to camelCase with TypeScript](/camelcase-ts/)

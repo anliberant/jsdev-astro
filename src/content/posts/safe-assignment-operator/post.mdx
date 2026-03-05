@@ -10,9 +10,10 @@ category: javascript
 type: post
 tags: ['safe-assignment-operator', 'ecmascript']
 desc: Learn how JavaScript’s new safe assignment operator (?=) simplifies error handling and enhances code readability. Explore its features and benefits for developers.
+subtitle: 'Learn how JavaScript’s new safe assignment operator (?=) simplifies error handling and enhances code readability. Explore its features and benefits for developers.'
 ---
 
-Modern JavaScript development often encounters tasks involving asynchronous operations and error handling. Typically, `try-catch` and `async-await` constructs are used for these purposes. However, they can bloat the code and make it harder to read. To address this issue, a new safe assignment operator ?= has been proposed, which significantly simplifies error handling and improves code readability. In this article, we’ll explore how this operator works, its features, and the benefits it offers developers.
+Modern JavaScript development often encounters tasks involving asynchronous operations and error handling. Typically, `try-catch` and `async-await` constructs are used for these purposes. However, they can bloat the code and make it harder to read. To address this issue, a new safe assignment operator ?= has been proposed, which significantly simplifies error handling and improves code readability. In this guide, we’ll explore how this operator works, its features, and the benefits it offers developers.
 
 ## Key Features of the ?= Operator:
 
@@ -29,7 +30,7 @@ if (error) {
 }
 ```
 
-### 2. Seamless Integration with Async Functions and Promises
+### 2. smooth Integration with Async Functions and Promises
 
 The `?=` operator is fully compatible with promises and asynchronous functions, making it ideal for error management in async operations. Whether you’re working with API requests, file handling, or other processes that may fail, this operator simplifies error detection and handling.
 
@@ -111,16 +112,22 @@ By supporting `Symbol.result`, developers can tailor how objects and functions b
 
 This mechanism is especially advantageous in libraries or frameworks that require a unified method for error handling. For example, an API request or response object can implement `Symbol.result` to return errors or successful data in a consistent format.
 
-With such integration, the `?=` operator enhances not only code readability and structure but also facilitates the development of robust and flexible error-handling solutions.
+With such integration, the `?=` operator enhances not only code readability and structure but also facilitates the development of reliable and flexible error-handling solutions.
 
 ## What is the Purpose of the New Operator?
 
 The main reason for introducing the safe assignment operator is to simplify error handling and enhance code readability. With its streamlined syntax and versatility, the `?=` operator allows for effective management of function execution and asynchronous operations, minimizing the chances of errors and making the code more predictable.
 
-Moreover, using this operator removes the necessity of repeatedly implementing try-catch blocks, which can complicate code, especially in scenarios where a single error might occur at multiple points during program execution. For instance, a data fetch might fail due to network issues (fetch error), during JSON parsing, or while validating the received data. The `?=` operator facilitates handling all these scenarios in a consistent format, thereby simplifying the program structure.
+Also, using this operator removes the necessity of repeatedly implementing try-catch blocks, which can complicate code, especially in scenarios where a single error might occur at multiple points during program execution. For instance, a data fetch might fail due to network issues (fetch error), during JSON parsing, or while validating the received data. The `?=` operator facilitates handling all these scenarios in a consistent format, thereby simplifying the program structure.
 
 ### Conclusion
 
 The safe assignment operator `?=` offers developers a novel approach to managing results and errors in JavaScript, making asynchronous processes easier to handle and improving code readability and maintainability. This innovation is especially beneficial for working with promises, APIs, and complex operations where errors may arise at different execution stages.
 
 For detailed information about the proposal and usage examples, check out the [GitHub repository](https://github.com/arthurfiorette/proposal-safe-assignment-operator).
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

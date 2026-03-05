@@ -10,6 +10,7 @@ category: javascript
 type: post
 tags: ['nexus']
 desc: Deep technical overview of Nexus State, a minimal atomic state manager with async atoms, middleware, persistence, and built-in DevTools.
+subtitle: 'Deep technical overview of Nexus State, a minimal atomic state manager with async atoms, middleware, persistence, and built-in DevTools.'
 ---
 
 State management remains one of the most complex areas in frontend engineering. Over the years, we’ve seen Redux, MobX, Zustand, and Jotai attempt to balance structure, performance, and developer experience.
@@ -91,7 +92,7 @@ Only components depending on changed atoms re-render.
 
 ---
 
-# Async Atoms
+## Async Atoms
 
 ```ts
 import { asyncAtom } from '@nexus-state/async'
@@ -108,7 +109,7 @@ Async atoms encapsulate loading, error, and resolved states.
 
 ---
 
-# Persistence Example
+## Persistence Example
 
 ```ts
 import { persist, localStorageStorage } from '@nexus-state/persist'
@@ -123,7 +124,7 @@ State is automatically restored on reload.
 
 ---
 
-# Middleware Example
+## Middleware Example
 
 ```ts
 import { middleware } from '@nexus-state/middleware'
@@ -141,7 +142,7 @@ const auditMiddleware = middleware(progressAtom, {
 
 ---
 
-# Performance Characteristics
+## Performance Characteristics
 
 Nexus State optimizes:
 
@@ -152,7 +153,7 @@ Nexus State optimizes:
 
 ---
 
-# Comparison Snapshot
+## Comparison Snapshot
 
 Compared to Redux:
 
@@ -178,7 +179,7 @@ Compared to Jotai:
 
 ---
 
-# When Nexus State Makes Sense
+## When Nexus State Makes Sense
 
 Use it when:
 
@@ -190,11 +191,16 @@ Use it when:
 
 ---
 
-# Resources
+## Resources
 
-Documentation: https://nexus-state.website.yandexcloud.net
+Documentation: [https://nexus-state.website.yandexcloud.net](nexus-state.website.yandexcloud.net)
 
-Source Code: https://sourcecraft.dev/astashkin-a/nexus-state
+Source Code: [https://sourcecraft.dev/astashkin-a/nexus-state](sourcecraft.dev/astashkin-a/nexus-state)
 
-Demo Applications: https://codesandbox.io/p/sandbox/nryqsj  
+Demo Applications: [https://codesandbox.io/p/sandbox/nryqsj](codesandbox.io/p/sandbox/nryqsj)
 
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

@@ -17,33 +17,20 @@ import { formatDate } from '@/shared/utils/index';
 export const getStaticPaths = (async () => {
   const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);
   return allPosts.map(p => ({
-    params: {
-      slug: p.data.slug,
-    },
-    props: {
-      post: p,
-    },
+    params: { slug: p.data.slug },
+    props: { post: p },
   }));
 }) satisfies GetStaticPaths;
-
-const { slug } = Astro.params;
 
 type Props = {
   post: CollectionEntry<'posts'>;
 };
 
 const { post } = Astro.props;
-
 const { Content, remarkPluginFrontmatter, headings } = await render(post);
 
-const categorySlug =
-  post.data.category ? post.data.category.toLowerCase().replace(/\s+/g, '-') : '';
-const breadcrumbItems = generatePostBreadcrumbs(
-  post.data.category ?? '',
-  categorySlug,
-  post.data.title
-);
-
+const categorySlug = post.data.category ? post.data.category.toLowerCase().replace(/\s+/g, '-') : '';
+const breadcrumbItems = generatePostBreadcrumbs(post.data.category ?? '', categorySlug, post.data.title);
 const newDate = formatDate(post.data.date);
 ---
 
@@ -53,32 +40,44 @@ const newDate = formatDate(post.data.date);
   image={post.data.image.src}
   type='article'>
   <main class='main'>
-    <section
-      ><Breadcrumbs
+    <section aria-label='Breadcrumbs'>
+      <Breadcrumbs
         items={breadcrumbItems}
         class='mt-10'
-      /></section
-    >
+      />
+    </section>
+
     <article class='post-article'>
-      <h1 class='post-title'>{post.data.heading}</h1>
-      <span class='read-meta'>
-        <span>{newDate}</span>
-        <span class='read-time'>
-          <svg
-            width='15'
-            height='13'
-            viewBox='0 0 15 13'
-            fill='none'
-            xmlns='http://www.w3.org/2000/svg'>
-            <path
-              d='M7.5 2.38804V12.138M7.5 2.38804C7.5 2.38804 4.25 -0.397677 1 1.92375V12.138C4.25 9.81661 7.5 12.138 7.5 12.138C7.5 12.138 10.75 9.81661 14 12.138V1.92375C10.75 -0.397677 7.5 2.38804 7.5 2.38804Z'
-            ></path>
-          </svg>
-          {remarkPluginFrontmatter.minutesRead}
-        </span>
-      </span>
-      <Toc items={headings} />
-      <div class='post-image-wrapper'>
+      <header class='post-header'>
+        <h1 class='post-title'>{post.data.heading}</h1>
+        <p class='post-subtitle'>{post.data.subtitle}</p>
+        <p class='read-meta'>
+          <time datetime={post.data.date.toISOString()}>{newDate}</time>
+          <span
+            class='read-time'
+            aria-label='Estimated reading time'>
+            <svg
+              width='15'
+              height='13'
+              viewBox='0 0 15 13'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'>
+              <path
+                d='M7.5 2.38804V12.138M7.5 2.38804C7.5 2.38804 4.25 -0.397677 1 1.92375V12.138C4.25 9.81661 7.5 12.138 7.5 12.138C7.5 12.138 10.75 9.81661 14 12.138V1.92375C10.75 -0.397677 7.5 2.38804 7.5 2.38804Z'
+              ></path>
+            </svg>
+            {remarkPluginFrontmatter?.minutesRead ?? ''}
+          </span>
+        </p>
+      </header>
+
+      <aside
+        class='post-toc'
+        aria-label='Table of contents'>
+        <Toc items={headings} />
+      </aside>
+
+      <figure class='post-image-wrapper'>
         <Image
           src={post.data.image}
           alt={post.data.title}
@@ -86,11 +85,13 @@ const newDate = formatDate(post.data.date);
           width={800}
           class='post-image'
         />
-      </div>
+      </figure>
 
-      <div class='post-content'>
+      <section
+        class='post-content'
+        aria-label='Article content'>
         <Content components={mdxComponents} />
-      </div>
+      </section>
 
       <footer class='post-footer'>
         <Separator />

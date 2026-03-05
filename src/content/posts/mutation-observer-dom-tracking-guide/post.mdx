@@ -10,6 +10,7 @@ category: javascript
 type: post
 tags: ['MutationObserver']
 desc: Learn advanced DOM monitoring with MutationObserver. Explore implementation tips, performance tuning, and real-world use cases for dynamic content tracking.
+subtitle: 'Learn advanced DOM monitoring with MutationObserver. Explore implementation tips, performance tuning, and real-world use cases for dynamic content tracking.'
 ---
 
 When optimizing dynamic web pages, especially those that render content asynchronously, traditional monitoring tools fall short. This guide shows how to harness the power of `MutationObserver` to detect dynamic DOM changes—like lazy-loaded images—and track custom performance metrics such as total load time and image bandwidth usage.
@@ -30,7 +31,7 @@ Front-end frameworks often update the DOM dynamically. You might want to:
 
 ---
 
-## 📦 Basic Setup: Watching for New Elements
+ Basic Setup: Watching for New Elements
 
 Let’s start by observing when new `.action-button` elements are added to the DOM.
 
@@ -56,7 +57,7 @@ This sets up an observer on the entire document body to log a message every time
 
 ---
 
-## 🎯 Best Practice: Narrow Down the Target
+ Best Practice: Narrow Down the Target
 
 Instead of observing the whole document, focus on a specific container.
 
@@ -71,7 +72,7 @@ This improves performance and avoids tracking irrelevant parts of the page.
 
 ---
 
-## 🧠 Custom Behavior on Button Injection
+ Custom Behavior on Button Injection
 
 Let’s automatically bind a click handler to any new button.
 
@@ -100,7 +101,7 @@ Every new `.action-button` automatically becomes interactive.
 
 ---
 
-## 🧼 Disconnect When Done
+ Disconnect When Done
 
 Observers can be memory-heavy. Disconnect once the task is complete:
 
@@ -118,7 +119,7 @@ if (document.querySelectorAll('.action-button').length >= 5) {
 
 ---
 
-## 🔄 Advanced: Watching Text Updates
+ Advanced: Watching Text Updates
 
 You can also monitor text changes (e.g., chat messages updating):
 
@@ -143,7 +144,7 @@ Track live updates in a chat feed or log when content is edited.
 
 ---
 
-## 🧪 Debug Tip: Log Mutation Info
+ Debug Tip: Log Mutation Info
 
 Want to see what’s changing? Log the mutation records.
 
@@ -158,12 +159,12 @@ You’re unsure what exactly is changing in the DOM.
 
 ---
 
-## ✅ Summary
+ Summary
 
-- ✅ Use `MutationObserver` for efficient DOM change detection
-- ✅ Prefer specific containers over `document.body`
-- ✅ Always disconnect when you're done
-- ✅ Combine with custom logic for powerful dynamic behavior
+- Use `MutationObserver` for efficient DOM change detection
+- Prefer specific containers over `document.body`
+- Always disconnect when you're done
+- Combine with custom logic for powerful dynamic behavior
 
 ---
 
@@ -173,3 +174,9 @@ You’re unsure what exactly is changing in the DOM.
 - Monitor when a third-party chat widget finishes rendering
 - Detect and auto-focus on new form inputs
 - Log when content blocks are added/removed from a list
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

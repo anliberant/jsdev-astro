@@ -10,13 +10,14 @@ category: docker
 type: post
 tags: ['Cheatsheet']
 desc: Forget the DevOps-only myth — Docker is your everyday dev toolkit. Learn essential commands for images, containers, volumes, networks, and more.
+subtitle: 'Forget the DevOps-only myth — Docker is your everyday dev toolkit. Learn essential commands for images, containers, volumes, networks, and more.'
 ---
 
 Forget the myth that Docker is only for DevOps. Today, it’s a must-have tool for any developer — as essential as Git or VS Code. Docker lets your code run consistently on every machine — local, staging, or production. No more “works on my machine” nightmares.
 
 This article is a practical cheatsheet of commands — not theory. Whether you’re just getting into containerization or looking for a solid reference, this is your fast track.
 
-## 🧱 Images
+ Images
 
 Images are templates that contain your app and everything it needs to run.
 
@@ -38,7 +39,7 @@ Images are templates that contain your app and everything it needs to run.
 - **Inspect full image info (JSON):**  
   `docker inspect <image>`
 
-## 📦 Containers
+ Containers
 
 Containers are running instances of images — isolated environments where your app runs.
 
@@ -87,7 +88,7 @@ Key flags:
 - **Inspect container info:**  
   `docker inspect <container>`
 
-## 🏗️ Build with Dockerfile
+ Build with Dockerfile
 
 ```bash
 docker build -t my_app:1.0 .
@@ -101,7 +102,7 @@ Useful flags:
 - `--no-cache`: Disable layer caching
 - `--build-arg`: Pass build-time variables
 
-## 🧩 Docker Compose
+ Docker Compose
 
 Define multi-container setups in `docker-compose.yml`.
 
@@ -124,7 +125,7 @@ Define multi-container setups in `docker-compose.yml`.
   - `docker-compose restart`
   - `docker-compose stop/start`
 
-## 🌐 Networks
+ Networks
 
 Docker lets containers communicate over custom networks.
 
@@ -136,7 +137,7 @@ docker network connect my_net my_container
 docker network disconnect my_net my_container
 ```
 
-## 💾 Volumes
+ Volumes
 
 Volumes persist data across container restarts.
 
@@ -148,7 +149,7 @@ docker volume rm data_store
 docker volume prune
 ```
 
-## ✅ Best Practices for Devs
+ Best Practices for Devs
 
 - Use `.dockerignore` to reduce image size and cache misses.
 - Optimize layer order in Dockerfile for caching.
@@ -159,8 +160,14 @@ docker volume prune
   `alias dps='docker ps -a'`  
   `alias dlogs='docker-compose logs -f'`
 
-## 📌 Summary
+ Summary
 
 This cheatsheet gives you everything you need to start using Docker like a pro — no fluff, just the commands that matter.
 
 Start small. Build habits. And soon these will be second nature.
+
+## Related articles
+
+- [Docker 24+ in Action: Compose v2, Buildx, and Contexts Explained](/docker-24-plus-guide/)
+- [Master Dockerfile Validation with Docker Build Checks](/docker-build-checks/)
+- [Top 10 CSS Tips to Master in 2024](/10-css-tips/)

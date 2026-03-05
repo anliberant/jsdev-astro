@@ -1,35 +1,30 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { Image } from 'astro:assets';
 import { CollectionEntry, getCollection, render } from 'astro:content';
 
 import BaseLayout from '@/app/layouts/base-layout.astro';
-import { generateSnippetsBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import RelatedPosts from '@/shared/ui/base/related-posts/related-posts.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
+import { formatDate } from '@/shared/utils';
 
 export const getStaticPaths = (async () => {
   const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
   return allSnippets.map(snippet => ({
-    params: {
-      slug: snippet.data.slug,
-    },
-    props: {
-      snippet,
-    },
+    params: { slug: snippet.data.slug },
+    props: { snippet },
   }));
 }) satisfies GetStaticPaths;
-
-const { slug } = Astro.params;
 
 type Props = {
   snippet: CollectionEntry<'snippets'>;
 };
-const { snippet } = Astro.props;
 
-const { Content } = await render(snippet);
+const { snippet } = Astro.props;
+const { Content, remarkPluginFrontmatter } = await render(snippet);
 
 const breadcrumbItems = [{ label: 'Snippets', href: '/snippets/' }, { label: snippet.data.title }];
+const newDate = formatDate(snippet.data.date);
 ---
 
 <BaseLayout
@@ -39,13 +34,39 @@ const breadcrumbItems = [{ label: 'Snippets', href: '/snippets/' }, { label: sni
   contentType={snippet.data.type}
   slug={snippet.data.slug}>
   <main class='main'>
-    <Breadcrumbs
-      items={breadcrumbItems}
-      class='mt-10'
-    />
+    <section aria-label='Breadcrumbs'>
+      <Breadcrumbs
+        items={breadcrumbItems}
+        class='mt-10'
+      />
+    </section>
+
     <article class='post-article'>
-      <h1 class='post-title'>{snippet.data.heading}</h1>
-      <Content components={mdxComponents} />
+      <header class='post-header'>
+        <h1 class='post-title'>{snippet.data.heading}</h1>
+        <p class='post-subtitle'>{snippet.data.subtitle}</p>
+        <p class='read-meta'>
+          <time datetime={snippet.data.date.toISOString()}>{newDate}</time>
+          <span
+            class='read-time'
+            aria-label='Estimated reading time'>
+            {remarkPluginFrontmatter?.minutesRead ?? ''}
+          </span>
+        </p>
+      </header>
+
+      <section
+        class='post-content'
+        aria-label='Snippet content'>
+        <Content components={mdxComponents} />
+      </section>
+
+      <footer class='post-footer'>
+        <RelatedPosts
+          collection='snippets'
+          slug={snippet.data.slug}
+        />
+      </footer>
     </article>
   </main>
 </BaseLayout>

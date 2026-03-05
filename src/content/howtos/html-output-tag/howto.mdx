@@ -11,6 +11,7 @@ category: html
 type: howto
 tags: []
 desc: Learn how to use the HTML <output> tag to display dynamic results with built-in accessibility and zero ARIA hacks. Includes modern React and HTML examples.
+subtitle: 'Learn how to use the HTML <output> tag to display dynamic results with built-in accessibility and zero ARIA hacks. Includes modern React and HTML examples.'
 ---
 
 Everyone knows `<input>` — the workhorse of the web.  
@@ -50,7 +51,7 @@ This connection helps assistive technologies understand that the result depends 
 
 ## Real-World Examples
 
-### 🧮 Simple Calculator
+ Simple Calculator
 ```html
 <form oninput="result.value = Number(a.value) + Number(b.value)">
   <input id="a" type="number" value="2"> +
@@ -63,7 +64,7 @@ Accessible, automatic, and minimal — everything just works.
 
 ---
 
-### ⚙️ React Example: Range Slider
+ React Example: Range Slider
 ```jsx
 export function MileageSlider() {
   const [miles, setMiles] = useState(10000);
@@ -88,7 +89,7 @@ Screen readers announce the new mileage automatically.
 
 ---
 
-### 🔒 Password Strength Indicator
+ Password Strength Indicator
 ```html
 <label for="password">Password</label>
 <input type="password" id="password" 
@@ -100,7 +101,7 @@ Perfect for live validation feedback — and fully semantic.
 
 ---
 
-### 🚚 API-Powered Example: Shipping Cost Calculator
+ API-Powered Example: Shipping Cost Calculator
 ```jsx
 export function ShippingCalculator() {
   const [weight, setWeight] = useState("");
@@ -145,3 +146,9 @@ export function ShippingCalculator() {
 The `<output>` tag is one of HTML’s best-kept secrets — a lightweight, semantic way to display dynamic results **without accessibility compromises**.
 
 Sometimes the most powerful tools are those hiding in plain sight.
+
+## Related articles
+
+- [Mastering Custom Elements in HTML5](/howto/custom-html-tag/)
+- [Building Accessible UI with WAI-ARIA Patterns](/howto/wai-aria-accessible-ui/)
+- [Checking Web Pages for WCAG Compliance](/howto/wcag-compliance/)

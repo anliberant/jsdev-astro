@@ -11,6 +11,7 @@ category: react
 type: howto
 tags: ['animation', 'framer-motion', 'react-spring']
 desc: Compare CSS animations, Framer Motion, and React Spring for smooth, performant React animations. Includes code examples, pros and cons, and performance insights.
+subtitle: 'Compare CSS animations, Framer Motion, and React Spring for smooth, performant React animations. Includes code examples, pros and cons, and performance insights.'
 ---
 
 Animations add life to user interfaces — they make transitions feel natural and interactions more intuitive.  
@@ -19,7 +20,7 @@ This guide compares them in-depth, with code examples, performance metrics, and 
 
 ---
 
-## 🎨 CSS Animations
+ CSS Animations
 
 CSS animations are browser-native, lightweight, and ideal for simple, performant transitions.
 
@@ -80,7 +81,7 @@ export default function FadeInComponent() {
 
 ---
 
-## ⚡ Framer Motion
+ Framer Motion
 
 [Framer Motion](https://www.framer.com/motion/) provides a **declarative, physics-aware** animation system with extensive React integration.
 
@@ -176,7 +177,7 @@ export function AnimatedRoutes() {
 
 ---
 
-## 🌿 React Spring
+ React Spring
 
 [React Spring](https://react-spring.dev/) is a **physics-based animation library** focused on realism and fluid motion.
 
@@ -246,7 +247,7 @@ export function ScrollFade() {
 **Pros**
 - Natural physical animations (spring, damping, inertia)  
 - Lightweight (~8 KB gzipped)  
-- Works seamlessly with 3D (Three.js)  
+- Works smoothly with 3D (Three.js)  
 
 **Cons**
 - Requires understanding of physics configs  
@@ -255,13 +256,13 @@ export function ScrollFade() {
 
 ---
 
-## ⚖️ Performance & Use-Case Comparison
+ Performance & Use-Case Comparison
 
 | Library | Size (gzipped) | Simple Animations | Complex Interactions |
 |----------|----------------|------------------|----------------------|
-| CSS Animations | 0 KB | ✅✅✅ | ❌ |
-| Framer Motion | ~14 KB | ✅✅ | ✅✅✅ |
-| React Spring | ~8 KB | ✅✅ | ✅✅✅ |
+| CSS Animations | 0 KB |  |  |
+| Framer Motion | ~14 KB |  |  |
+| React Spring | ~8 KB |  |  |
 
 **Best Use Cases**
 
@@ -271,7 +272,7 @@ export function ScrollFade() {
 
 ---
 
-## 🧩 Modal Animation Example
+ Modal Animation Example
 
 ### CSS Version
 
@@ -368,7 +369,7 @@ export function SpringModal({ open, onClose, children }) {
 
 ---
 
-## 🧠 Summary
+ Summary
 
 Animation enhances usability and adds emotional value to interfaces.  
 The right library depends on your **project size**, **interaction complexity**, and **performance goals**.
@@ -378,3 +379,9 @@ The right library depends on your **project size**, **interaction complexity**, 
 - **React Spring:** Ideal for smooth, physics-driven animations.  
 
 For most modern React apps, **Framer Motion** strikes the best balance between expressiveness and developer ergonomics.
+
+## Related articles
+
+- [Fixing React’s “Cannot Read Property createElement of Undefined”](/howto/createelement-react/)
+- [Theme Switcher with DaisyUI and TanStack Router](/howto/daisyui-theme-switcher/)
+- [Properly Configuring Jest for React and Next.js](/howto/jest-rtl-setup-react-nextjs/)

@@ -11,11 +11,12 @@ category: typescript
 type: howto
 tags: ['never', 'utility-types']
 desc: Unlock TypeScript’s power with the never type! Improve type safety, validate exhaustiveness, build advanced utility types, and prevent unreachable logic.
+subtitle: 'Unlock TypeScript’s power with the never type! Improve type safety, validate exhaustiveness, build advanced utility types, and prevent unreachable logic.'
 ---
 
 TypeScript’s `never` type is one of the language’s most misunderstood but most powerful tools. It helps you enforce exhaustive checks, catch impossible states, eliminate unreachable logic, and build advanced type utilities.
 
-This guide explains what `never` is, when to use it, and how to combine it with TypeScript’s type system to write safer, more predictable code.
+Here's what `never` is, when to use it, and how to combine it with TypeScript’s type system to write safer, more predictable code.
 
 ---
 
@@ -186,6 +187,12 @@ const getMessageByKey = (key: TExtractAllKeys<typeof messages>): string =>
 
 ## Conclusion
 
-The `never` type is a powerful ally when writing robust TypeScript. Whether you’re validating exhaustive logic, cleaning up unreachable code, or building advanced type utilities, `never` ensures your code stays safe, predictable, and future-proof.
+The `never` type is a powerful ally when writing reliable TypeScript. Whether you’re validating exhaustive logic, cleaning up unreachable code, or building advanced type utilities, `never` ensures your code stays safe, predictable, and future-proof.
 
 Mastering `never` means mastering TypeScript’s type system. With the patterns in this guide, you're ready to use it like a pro.
+
+## Related articles
+
+- [Fixing Circular Imports in a Real Frontend Codebase](/howto/circular-imports-ts/)
+- [Validate ENV Variables in TypeScript with Zod](/howto/env-ts-zod/)
+- [Resolving Missing flat, flatMap, and Flatten on any[] in TypeScript](/howto/flatmap-doesnt-exist/)

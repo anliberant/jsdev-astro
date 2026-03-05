@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: []
 desc: Learn how to implement a chainable JavaScript add() function using closures and currying. Supports multi-argument calls and auto-return with valueOf.
+subtitle: 'Learn how to implement a chainable JavaScript add() function using closures and currying. Supports multi-argument calls and auto-return with valueOf.'
 ---
 
 JavaScript allows some clever tricks with functions—and one of the most impressive is building a function like `add(1)(2)(3)()` that returns the sum of all inputs. This is more than just currying—this is functional wizardry.
@@ -22,7 +23,7 @@ In this guide, you'll learn to build a flexible, chainable `add()` function that
 - Optional empty-call to return the result
 - Auto-conversion to primitive values (`+`, `console.log`, etc.)
 
-## 🧪 Expected Behavior
+ Expected Behavior
 
 Before we dive in, here's what we want:
 
@@ -34,7 +35,7 @@ add(1)(2)(3) + 4;         // 10
 console.log(add(5)(10));  // 15
 ```
 
-## 🛠 Step 1: Basic Single-Arg Chain
+ Step 1: Basic Single-Arg Chain
 
 We start with a version that only supports one number per call and requires `()` to get the result:
 
@@ -54,13 +55,13 @@ function add(num) {
 console.log(add(1)(2)(3)()); // 6
 ```
 
-### 🔍 How it works:
+ How it works:
 
 - `add()` creates a local `sum`
 - `inner()` accumulates values or returns the final result if called with no argument
 - Closure preserves the `sum` across chained calls
 
-## ⚡ Step 2: Multi-Argument Support
+ Step 2: Multi-Argument Support
 
 Let’s upgrade it to allow `add(1, 2, 3)(4)()`:
 
@@ -80,7 +81,7 @@ function add(...args) {
 console.log(add(1, 2)(3, 4)()); // 10
 ```
 
-## 🚀 Step 3: Implicit Return with valueOf & toString
+ Step 3: Implicit Return with valueOf & toString
 
 We now add implicit conversion so `add(1)(2) + 3` just works:
 
@@ -105,9 +106,9 @@ console.log(add(1)(2)(3) + 4);   // 10
 console.log(`${add(10)(5)}`);    // "15"
 ```
 
-> 💡 `valueOf()` and `toString()` let JS convert the object to a number or string automatically—useful for logs and arithmetic.
+>  `valueOf()` and `toString()` let JS convert the object to a number or string automatically—useful for logs and arithmetic.
 
-## 🔬 Deep Dive: What Makes This Work?
+ Deep Dive: What Makes This Work?
 
 This approach combines four advanced JavaScript concepts:
 
@@ -116,7 +117,7 @@ This approach combines four advanced JavaScript concepts:
 3. Rest parameters: `(...args)` lets us accept any number of values.
 4. Object-to-primitive conversion: JS automatically calls `valueOf()` or `toString()` when needed.
 
-## 🧩 Advanced Use Case: Chainable Calculator
+ Advanced Use Case: Chainable Calculator
 
 Let’s go further—what if you wanted a mini arithmetic library?
 
@@ -157,13 +158,13 @@ const result = calc(10)
 console.log(result); // 13
 ```
 
-## 📚 Best Practices & Warnings
+ Best Practices & Warnings
 
-- ✅ Use for utility libraries or FP-based interfaces
-- ⚠️ Avoid overusing this in production code—it may confuse team members unfamiliar with JS quirks
-- 🔒 Wrap your function with types in TypeScript for better DX
+- Use for utility libraries or FP-based interfaces
+- Avoid overusing this in production code—it may confuse team members unfamiliar with JS quirks
+- Wrap your function with types in TypeScript for better DX
 
-## 🧠 Bonus: TypeScript Version
+ Bonus: TypeScript Version
 
 Here’s a typed version for safer usage:
 
@@ -183,7 +184,7 @@ function add(...args: number[]) {
 }
 ```
 
-## ✅ Summary
+ Summary
 
 To implement a chainable `add()` in JavaScript:
 
@@ -193,3 +194,9 @@ To implement a chainable `add()` in JavaScript:
 - Optionally extend to full arithmetic support
 
 This technique is great for learning advanced JavaScript patterns and impressing interviewers—but always favor clarity in production.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

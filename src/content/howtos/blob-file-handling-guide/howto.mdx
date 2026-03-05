@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['blob']
 desc: Learn how to use Blob objects to handle files, stream large uploads, compress images, export data, and avoid memory leaks in modern front-end apps.
+subtitle: 'Learn how to use Blob objects to handle files, stream large uploads, compress images, export data, and avoid memory leaks in modern front-end apps.'
 ---
 
 In modern front-end apps, file handling is everywhere: image uploads, CSV exports, previews, and rich editors. But once files get big or numerous, things start to break: the UI freezes, memory usage spikes, and the browser occasionally dies.
@@ -20,7 +21,7 @@ This guide walks through **six practical Blob techniques** that help handle file
 - Creating Blobs correctly
 - Chunking large files
 - Compressing and converting images
-- Implementing robust file previews
+- Implementing reliable file previews
 - Exporting data as downloadable files
 - Managing memory to avoid Blob URL leaks
 
@@ -39,7 +40,7 @@ Many developers start by manipulating giant strings or base64 data URLs, which:
 - Slow down the UI
 
 ```js
-// ❌ Bad: huge string + data URL = double memory usage
+//  Bad: huge string + data URL = double memory usage
 const hugeText = 'Very long text...'.repeat(100_000);
 const dataUrl =
   'data:text/plain;charset=utf-8,' + encodeURIComponent(hugeText);
@@ -120,7 +121,7 @@ Reading a 2 GB log file with `FileReader.readAsText()` in one go is a great way 
 - Crash the browser
 
 ```js
-// ❌ Bad: read entire file into memory
+//  Bad: read entire file into memory
 const processLargeFile = (file: File) => {
   const reader = new FileReader();
 
@@ -283,7 +284,7 @@ Uploading raw 8 MB photos directly from phones or cameras:
 - Hurts perceived performance
 
 ```js
-// ❌ No compression: heavy uploads, slow UX
+//  No compression: heavy uploads, slow UX
 const uploadOriginalImage = (file: File) => {
   const body = new FormData();
   body.append('image', file);
@@ -803,7 +804,7 @@ class ManagedImagePreview {
 - Need safe **download/export** flows for big datasets
 - Care about **long-running apps and memory leaks**
 
-Blobs, used together with File APIs and `URL.createObjectURL`, are the backbone of robust front-end file handling. Once you get comfortable with them, large uploads, previews, and exports stop being scary and start feeling like just another part of your toolkit.
+Blobs, used together with File APIs and `URL.createObjectURL`, are the backbone of reliable front-end file handling. Once you get comfortable with them, large uploads, previews, and exports stop being scary and start feeling like just another part of your toolkit.
 
 ---
 
@@ -813,3 +814,9 @@ Blobs, used together with File APIs and `URL.createObjectURL`, are the backbone 
 - File API – W3C Specification
 - URL.createObjectURL() – MDN Documentation
 - Canvas API – MDN Documentation
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

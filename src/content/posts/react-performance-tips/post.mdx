@@ -9,7 +9,8 @@ author: anton liberant
 category: react
 type: post
 tags: ['react-tips']
-desc: Boost your React app’s performance with proven optimization techniques. Learn code splitting, lazy loading, and efficient state management for smoother development.
+desc: Improve React app speed with practical optimization techniques for rendering, code splitting, and state management.
+subtitle: 'Improve React app speed with practical optimization techniques for rendering, code splitting, and state management.'
 ---
 
 Most React apps start fast and slow down over time. Extra re-renders pile up, bundles grow, and large lists block the main thread. Here are the techniques that actually move the needle — from render control and virtualization to code splitting and SSR.
@@ -225,8 +226,6 @@ export default Page;
 ```jsx
 import Image from 'next/image';
 
-import Image from 'next/image';
-
 const OptimizedImage = () => (
   <Image
     src='/path/to/image.jpg'
@@ -262,3 +261,10 @@ const LazyImage = () => (
 ## 7. Conclusion
 
 Start with the React DevTools profiler — find the components that re-render most, then apply `React.memo`, `useMemo`, or virtualization where the profiler shows the biggest wins. Code splitting and SSR are next once the render path is clean.
+
+
+## Related articles
+
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [React State Management: A Practical Guide](/react-state-management/)
+- [React Reactivity Guide](/react-reactivity-guide/)

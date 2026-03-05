@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['URLSearchParams']
 desc: Stop parsing URLs with regex! Learn how to use URL and URLSearchParams to handle query strings and URL parts safely, cleanly, and professionally.
+subtitle: 'Stop parsing URLs with regex! Learn how to use URL and URLSearchParams to handle query strings and URL parts safely, cleanly, and professionally.'
 ---
 
 One of the scariest sights in a code review? A handwritten regular expression trying to extract URL parameters.  
@@ -34,7 +35,7 @@ const paramsStr = url.split('?')[1];
 At first glance, it works. But does it handle URL encoding, repeated parameters, or parameters after `#` fragments?  
 The answer: **no**.
 
-Luckily, browsers already provide **URL** and **URLSearchParams**, two robust APIs designed specifically for this.
+Luckily, browsers already provide **URL** and **URLSearchParams**, two reliable APIs designed specifically for this.
 
 ---
 
@@ -155,7 +156,7 @@ No string concatenation, no regex — just clear, maintainable logic.
 
 ## Why This Matters
 
-As a rule in code reviews: **choose clarity and robustness** over clever but brittle tricks.
+As a rule in code reviews: **choose clarity and reliability** over clever but brittle tricks.
 
 Writing regular expressions to parse URLs might look “smart,” but it’s fragile and unreadable.  
 Using `URL` and `URLSearchParams` is not just modern — it’s **professional**.
@@ -165,6 +166,12 @@ Use the tools the web platform gives you: `new URL()` and `new URLSearchParams()
 
 ---
 
-✅ Clean.  
-✅ Safe.  
-✅ Built for humans and browsers alike.
+ Clean.  
+ Safe.  
+ Built for humans and browsers alike.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

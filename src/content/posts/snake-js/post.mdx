@@ -10,9 +10,10 @@ category: javascript
 type: post
 tags: ['snake', 'canvas']
 desc: Build a classic Snake game from scratch with pure JavaScript. This step-by-step guide covers setup, game logic, and customization tips for a fun coding project.
+subtitle: 'Build a classic Snake game from scratch with pure JavaScript. This step-by-step guide covers setup, game logic, and customization tips for a fun coding project.'
 ---
 
-In this article, we will develop the classic Snake game using pure JavaScript. Snake is a simple game where a snake moves around a board, eating apples. As the snake eats apples, it grows longer. Additionally, we'll introduce a new feature: bombs. If the snake touches a bomb, it will die.
+In this guide, you'll develop the classic Snake game using pure JavaScript. Snake is a simple game where a snake moves around a board, eating apples. As the snake eats apples, it grows longer. Also, we'll introduce a new feature: bombs. If the snake touches a bomb, it will die.
 
 Experience the classic Snake game in action! Watch as the snake navigates the board, collects food, and grows longer. Test your skills and see how high you can score in this engaging [demo](https://jsdevspace.github.io/snake-js/). Dive in and enjoy the nostalgic gameplay!
 
@@ -242,7 +243,7 @@ async preloadImage(path, x, y) {
 }
 ```
 
-We added a standard Promise and handled errors by incorporating an 'error' event listener. Additionally, we included the `async` keyword before the function name. Now, we need to modify the `preloadImages()` function by also adding `async`, which will allow us to use the await operator. This way, we can retrieve the image path string just like we did before. If we omit await, the `preloadImage()` method will return a Promise instead.
+We added a standard Promise and handled errors by incorporating an 'error' event listener. Also, we included the `async` keyword before the function name. Now, we need to modify the `preloadImages()` function by also adding `async`, which will allow us to use the await operator. This way, we can retrieve the image path string just like we did before. If we omit await, the `preloadImage()` method will return a Promise instead.
 
 ```js
 async preloadImages() {
@@ -832,7 +833,7 @@ getNextCell() {
 }
 ```
 
-We will call the `move()` method from our Game class at an interval of 150 milliseconds. Additionally, before each canvas rendering, we need to clear it, redraw the background, then the board, and finally render the snake in its new coordinates. To accomplish this, we will create two new methods in the Game class: `start()` and `update()`. We will call the start method in the `create()` function after initializing all the necessary entities.
+We will call the `move()` method from our Game class at an interval of 150 milliseconds. Also, before each canvas rendering, we need to clear it, redraw the background, then the board, and finally render the snake in its new coordinates. To accomplish this, we will create two new methods in the Game class: `start()` and `update()`. We will call the start method in the `create()` function after initializing all the necessary entities.
 
 ```js
 this.start();
@@ -1645,7 +1646,7 @@ async preloadSounds() {
 
 We set the loop property to `true` for our main sound, which will play continuously.
 
-Additionally, we'll modify our `preload()` method to wait for all assets asynchronously before calling the `create()` function.
+Also, we'll modify our `preload()` method to wait for all assets asynchronously before calling the `create()` function.
 
 ```js
 async preload() {
@@ -1810,7 +1811,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-Now it's all done! 😊 Congratulations on creating your first game using pure JavaScript!
+Now it's all done!  Congratulations on creating your first game using pure JavaScript!
 
 You can find the complete code and assets on our GitHub [git](https://github.com/jsdevspace/snake-js).
 
@@ -1823,3 +1824,9 @@ By implementing features like food generation, score tracking, and game-over con
 Feel free to experiment with your game by adding new features, enhancing graphics, or even creating unique gameplay elements. The skills you've acquired here can serve as a springboard for your future projects.
 
 Thank you for following along, and we hope you enjoyed the journey of creating your very own Snake game!
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

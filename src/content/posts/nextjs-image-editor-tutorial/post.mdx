@@ -10,6 +10,7 @@ category: nextjs
 type: post
 tags: ['image-editor', 'glfx', 'tailwindcss', 'shadcn']
 desc: Build a professional image editor in Next.js with glfx.js. Learn setup, filters, UI design, and optimization for a smooth, high-quality user experience.
+subtitle: 'Build a professional image editor in Next.js with glfx.js. Learn setup, filters, UI design, and optimization for a smooth, high-quality user experience.'
 ---
 
 Modern web applications often require real-time image processing capabilities. With Next.js for performance and glfx.js for GPU-accelerated image effects, we can create a fast and responsive image editor with various filters and transformations.
@@ -846,9 +847,9 @@ Your Next.js image editor depends on external JavaScript libraries like:
 
 However, these libraries:
 
-✅ Are not built into Next.js and must be loaded dynamically. \
-✅ Use browser-specific features (like WebGL and the DOM), which won’t work on the server. \
-✅ May fail to load in certain environments, requiring a fallback solution.
+ Are not built into Next.js and must be loaded dynamically. \
+ Use browser-specific features (like WebGL and the DOM), which won’t work on the server. \
+ May fail to load in certain environments, requiring a fallback solution.
 
 ### How ScriptLoader Solves These Problems
 
@@ -869,9 +870,9 @@ However, these libraries:
 
 ### What Happens Without `ScriptLoader`?
 
-❌ The app might crash in browsers without WebGL. \
-❌ html2canvas could be undefined if used before loading. \
-❌ Users would see blank screens instead of a graceful fallback.
+ The app might crash in browsers without WebGL. \
+ html2canvas could be undefined if used before loading. \
+ Users would see blank screens instead of a graceful fallback.
 
 ## Step 6: Add a Debug Canvas
 
@@ -984,7 +985,7 @@ This component is useful for debugging image loading and manipulation in the bro
 
 ## Step 7: Adding Layout to the Article:
 
-Below is a refined breakdown of your code and how it fits into your article. This layout acts as a global structure around your app, so every page or component rendered as `children` will inherit the layout style:
+Here is a refined breakdown of your code and how it fits into your article. This layout acts as a global structure around your app, so every page or component rendered as `children` will inherit the layout style:
 
 ```tsx
 import type React from 'react';
@@ -1211,8 +1212,14 @@ This setup efficiently manages dynamic loading, browser-specific behavior, and i
 
 ## Conclusion
 
-The **Image Editor with glfx.js** provides a powerful, browser-based solution for image manipulation, combining the simplicity of standard image editing with the advanced capabilities of WebGL. By leveraging the power of `glfx.js` for GPU-accelerated filters and effects, users can create stunning edits in real-time. With a smooth and user-friendly interface built using **Next.js** and **TailwindCSS**, this application ensures a seamless experience for both novice and advanced users.
+The **Image Editor with glfx.js** provides a powerful, browser-based solution for image manipulation, combining the simplicity of standard image editing with the advanced capabilities of WebGL. By leveraging the power of `glfx.js` for GPU-accelerated filters and effects, users can create stunning edits in real-time. With a smooth and user-friendly interface built using **Next.js** and **TailwindCSS**, this application ensures a smooth experience for both novice and advanced users.
 
-Whether you're working on basic image enhancements or experimenting with creative WebGL-powered filters, this editor offers flexibility and performance. Additionally, the fallback editor ensures compatibility across a wide range of devices, ensuring your image editing experience remains robust and reliable.
+Whether you're working on basic image enhancements or experimenting with creative WebGL-powered filters, this editor offers flexibility and performance. Also, the fallback editor ensures compatibility across a wide range of devices, ensuring your image editing experience remains reliable and reliable.
 
 Try it out today, and explore the endless possibilities for image manipulation directly in your browser!
+
+## Related articles
+
+- [Tailwind CSS Dark Mode Integration in Next.js 14](/dark-mode-react/)
+- [Master Progressive Image Loading in Next.js](/image-loading-next/)
+- [Implement Google & GitHub Login in Next.js with NextAuth](/next-oauth-prisma/)

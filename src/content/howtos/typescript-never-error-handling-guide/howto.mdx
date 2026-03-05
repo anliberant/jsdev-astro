@@ -11,6 +11,7 @@ category: typescript
 type: howto
 tags: ['error-handling', 'never-type']
 desc: Learn how to use TypeScript’s never type to model impossible states, enforce exhaustive checks, and catch missing error cases before they reach production.
+subtitle: 'Learn how to use TypeScript’s never type to model impossible states, enforce exhaustive checks, and catch missing error cases before they reach production.'
 ---
 
 The `never` type in TypeScript is often explained as “a function that never returns”.
@@ -20,7 +21,7 @@ In practice, `never` becomes powerful when you want the compiler to fail loudly 
 application evolves — especially when handling errors, exhaustive checks, and states
 that should be impossible but tend to appear over time.
 
-In this article, we’ll look at how `never` behaves in production code, why it is easy
+In this guide, we’ll look at how `never` behaves in production code, why it is easy
 to misuse, and how it helps catch entire classes of bugs before they reach runtime.
 
 ---
@@ -191,9 +192,9 @@ Argument of type 'TriangleShape' is not assignable to parameter of type 'never'.
 ```
 
 This is exactly how `never` should be used:  
-✔ catching missing branches  
-✔ preventing silent logic failures  
-✔ enforcing total coverage of all cases  
+ catching missing branches  
+ preventing silent logic failures  
+ enforcing total coverage of all cases  
 
 ---
 
@@ -326,3 +327,8 @@ It is a compiler tool used to ensure correctness and detect unreachable or inval
 
 When used properly, `never` becomes one of the strongest static‑analysis tools in the TypeScript type system.
 
+## Related articles
+
+- [Fixing Circular Imports in a Real Frontend Codebase](/howto/circular-imports-ts/)
+- [Validate ENV Variables in TypeScript with Zod](/howto/env-ts-zod/)
+- [Resolving Missing flat, flatMap, and Flatten on any[] in TypeScript](/howto/flatmap-doesnt-exist/)

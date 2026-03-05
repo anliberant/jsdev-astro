@@ -11,11 +11,12 @@ category: javascript
 type: howto
 tags: []
 desc: Solve the getBoundingClientRect is not a function error by validating DOM elements, checking refs, and ensuring correct script execution.
+subtitle: 'Solve the getBoundingClientRect is not a function error by validating DOM elements, checking refs, and ensuring correct script execution.'
 ---
 
 When JavaScript throws the error **“getBoundingClientRect is not a function”**, it means the value you are calling this method on is **not a DOM element**. The method exists only on valid DOM nodes. If the reference is `null`, undefined, or an object that is not part of the document, the browser cannot compute layout information.
 
-This guide explains why the error appears, how to diagnose the cause, and how to fix it across plain JavaScript, React, and more dynamic environments. The explanations are written in a practical, human‑oriented manner, focusing on how developers actually run into this issue in real projects.
+Here's why the error appears, how to diagnose the cause, and how to fix it across plain JavaScript, React, and more dynamic environments. The explanations are written in a practical, human‑oriented manner, focusing on how developers actually run into this issue in real projects.
 
 ---
 
@@ -196,3 +197,8 @@ This error indicates your code is trying to measure an object that is not part o
 
 Understanding when elements are available is essential for reliable UI code. With proper checks in place, you can safely handle layout measurements across all environments.
 
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

@@ -11,9 +11,10 @@ category: javascript
 type: post
 tags: ['error-handling']
 desc: Create a sentence-by-sentence voice reader with JavaScript and HTML. Includes highlighting, playback controls, voice selection, and progress tracking.
+subtitle: 'Create a sentence-by-sentence voice reader with JavaScript and HTML. Includes highlighting, playback controls, voice selection, and progress tracking.'
 ---
 
-In this article, we'll build a simple web tool to explore how **Text-to-Speech (TTS)** works in JavaScript. We'll also dive into the logic of **sentence-level highlighting**. These two features are often combined to create accessible, dynamic reading experiences in the browser.
+In this guide, you'll build a simple web tool to explore how **Text-to-Speech (TTS)** works in JavaScript. We'll also dive into the logic of **sentence-level highlighting**. These two features are often combined to create accessible, dynamic reading experiences in the browser.
 
 We’ll go step-by-step:
 1. Learn how TTS works in the browser
@@ -22,7 +23,7 @@ We’ll go step-by-step:
 
 ---
 
-## 📢 What is TTS in the browser?
+ What is TTS in the browser?
 
 JavaScript provides built-in support for speech synthesis using the [`SpeechSynthesis`](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis) API. It allows us to speak text out loud using voices available in the system.
 
@@ -30,13 +31,13 @@ JavaScript provides built-in support for speech synthesis using the [`SpeechSynt
 - `speechSynthesis` — controller to play, pause, stop, and resume speech
 - `SpeechSynthesisUtterance` — represents the text that will be spoken
 
-### ✨ Simple example:
+ Simple example:
 ```js
 const msg = new SpeechSynthesisUtterance("Hello, world!");
 window.speechSynthesis.speak(msg);
 ```
 
-### ⚙️ Add voice and settings:
+ Add voice and settings:
 ```js
 const utter = new SpeechSynthesisUtterance("This is a test");
 const voices = window.speechSynthesis.getVoices();
@@ -54,7 +55,7 @@ utter.onend = () => console.log('Finished speaking');
 
 ---
 
-## ✍️ Sentence-level Highlighting
+ Sentence-level Highlighting
 
 To show which sentence is currently being read, we’ll highlight that sentence using CSS and JavaScript.
 
@@ -85,7 +86,7 @@ function highlight(index) {
 
 ---
 
-## 🚀 Project: Reader with TTS and Highlighting
+ Project: Reader with TTS and Highlighting
 
 Our tool will:
 - Read sentences one-by-one
@@ -95,7 +96,7 @@ Our tool will:
 
 ---
 
-## 📄 HTML Structure
+ HTML Structure
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -132,7 +133,7 @@ Our tool will:
 
 ---
 
-## 🎨 CSS Styling
+ CSS Styling
 ```css
 body {
   font-family: sans-serif;
@@ -208,7 +209,7 @@ h1 {
 
 ---
 
-## 💡 JavaScript Logic
+ JavaScript Logic
 ```js
 const lines = document.querySelectorAll('.line');
 const playBtn = document.getElementById('start');
@@ -331,7 +332,7 @@ updateUI();
 
 ---
 
-## ✅ How it All Works Together
+ How it All Works Together
 - Each sentence is a `<span class="sentence">`
 - We iterate over them and use `SpeechSynthesisUtterance` to read aloud
 - While speaking, we highlight the current sentence and scroll to it
@@ -339,7 +340,7 @@ updateUI();
 
 ---
 
-## 🔚 Conclusion
+ Conclusion
 
 Now you understand:
 - How browser TTS works
@@ -350,3 +351,9 @@ You can extend this project by:
 - Saving progress to localStorage
 - Adding a visual progress bar
 - Loading external articles or user input
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

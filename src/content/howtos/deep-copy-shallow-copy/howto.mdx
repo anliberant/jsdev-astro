@@ -11,9 +11,10 @@ category: javascript
 type: howto
 tags: ['deep-copy', 'shallow-copy']
 desc: Learn the differences between deep and shallow copying in JavaScript, including JSON cloning, recursion, structuredClone, and Lodash techniques.
+subtitle: 'Learn the differences between deep and shallow copying in JavaScript, including JSON cloning, recursion, structuredClone, and Lodash techniques.'
 ---
 
-Copying objects and arrays is a core skill in JavaScript development, especially when dealing with immutable patterns, state management, and nested data structures. This guide explains the difference between **shallow copy** and **deep copy**, shows how to implement both, and provides practical examples and best‑use cases.
+Copying objects and arrays is a core skill in JavaScript development, especially when dealing with immutable patterns, state management, and nested data structures. Here's the difference between **shallow copy** and **deep copy**, shows how to implement both, and provides practical examples and best‑use cases.
 
 Read also: [How to Clone Complex JavaScript Objects with structuredClone()](https://jsdev.space/howto/js-object-clone-structuredclone/)
 
@@ -43,8 +44,8 @@ function deepClone(obj) {
 }
 ```
 
-✔ Simple  
-✔ Good for plain objects  
+ Simple  
+ Good for plain objects  
 ✘ Breaks on `Date`, `Map`, `Set`, `RegExp`, functions  
 ✘ Fails on circular references
 
@@ -67,8 +68,8 @@ function deepClone(obj) {
 }
 ```
 
-✔ Flexible  
-✔ Can support circular references with extra logic  
+ Flexible  
+ Can support circular references with extra logic  
 ✘ More code  
 ✘ Requires manual handling of special types
 
@@ -80,8 +81,8 @@ function deepClone(obj) {
 const cloned = structuredClone(original);
 ```
 
-✔ Supports many built‑in types (Date, Map, Set, File, Blob)  
-✔ Fast and native  
+ Supports many built‑in types (Date, Map, Set, File, Blob)  
+ Fast and native  
 ✘ Not available in old browsers
 
 ---
@@ -94,8 +95,8 @@ import cloneDeep from 'lodash/cloneDeep';
 const result = cloneDeep(data);
 ```
 
-✔ Battle‑tested  
-✔ Handles edge cases and circular structures  
+ Battle‑tested  
+ Handles edge cases and circular structures  
 ✘ Adds dependency
 
 ---
@@ -128,7 +129,7 @@ const copy2 = originalArray.concat();
 const copy = Array.from(originalArray);
 ```
 
-⚠ Nested objects remain linked to the original.
+ Nested objects remain linked to the original.
 
 ---
 
@@ -172,7 +173,12 @@ Deep cloning large objects can be expensive. Benchmark before using in hot code 
 | JSON clone | Deep | Simple | Breaks on many types |
 | Recursion | Deep | Flexible | Complex, slower |
 | structuredClone | Deep | Fast, native | Browser support varies |
-| Lodash cloneDeep | Deep | Robust | Extra dependency |
+| Lodash cloneDeep | Deep | reliable | Extra dependency |
 
 Rule of thumb: if the object is flat, spread it. If it has nesting and you mutate the clone, use `structuredClone`. Reach for Lodash only when you need circular reference support.
 
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

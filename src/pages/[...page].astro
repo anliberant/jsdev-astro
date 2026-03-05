@@ -45,13 +45,31 @@ const description =
 <BaseLayout
   title={title}
   description={description}>
-  <main class='main'>
+  <section class='main'>
     {
       page.currentPage === 1 ?
-        <HeadingBlock title={siteConfig.mainHeadTitle} />
-      : <h1 class='page-heading'>
-          {siteConfig.shortTitle} Page {page.currentPage}
-        </h1>
+        <HeadingBlock
+          title={siteConfig.mainHeadTitle}
+          description={
+            'JSDev.Space publishes practical JavaScript and TypeScript tutorials focused on real implementation details, not theory-only overviews. Most articles include working code, architecture notes, and trade-offs you can apply in production.'
+          }
+          headingTwo={
+            'Use categories and tags to filter by stack (React, Node.js, TypeScript, Web APIs), or open the latest posts below and follow the pagination for the full archive.'
+          }
+        />
+      : <>
+          <h1 class='page-heading'>
+            {siteConfig.shortTitle} Page {page.currentPage}
+          </h1>
+          <p>
+            Archive page {page.currentPage} collects older JavaScript and TypeScript posts that are
+            still relevant for day-to-day development.
+          </p>
+          <p>
+            Continue browsing to find implementation patterns, debugging guides, and
+            framework-specific tutorials from previous releases.
+          </p>
+        </>
     }
     {page.currentPage === 1 && <FeaturedPosts posts={featuredPosts} />}
     {recentPosts && <Posts posts={page.currentPage === 1 ? recentPosts : page.data} />}
@@ -64,5 +82,17 @@ const description =
         />
       )
     }
-  </main>
+  </section>
+
+  <style>
+    .archive-intro {
+      margin: 0.75rem 0 1.5rem;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.75;
+    }
+
+    .archive-intro p {
+      margin: 0.5rem 0;
+    }
+  </style>
 </BaseLayout>

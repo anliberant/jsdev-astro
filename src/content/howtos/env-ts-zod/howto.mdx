@@ -11,6 +11,7 @@ category: typescript
 type: howto
 tags: ['env', 'validation', 'zod']
 desc: Validate ENV variables in TypeScript using Zod. Learn schema setup, integration, and error prevention for safe, predictable configuration handling.
+subtitle: 'Validate ENV variables in TypeScript using Zod. Learn schema setup, integration, and error prevention for safe, predictable configuration handling.'
 ---
 
 Validating environment variables in TypeScript is essential for preventing runtime failures caused by missing or misconfigured values. Zod offers a clean, type‑safe way to verify all required variables before your app starts.
@@ -75,7 +76,7 @@ export const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("❌ Invalid ENV configuration:");
+  console.error(" Invalid ENV configuration:");
   console.error(parsed.error.flatten().fieldErrors);
   process.exit(1);
 }
@@ -168,3 +169,8 @@ Validating environment variables with Zod brings:
 
 This small setup prevents major runtime bugs and ensures your configuration stays clean and reliable.
 
+## Related articles
+
+- [Fixing Circular Imports in a Real Frontend Codebase](/howto/circular-imports-ts/)
+- [Resolving Missing flat, flatMap, and Flatten on any[] in TypeScript](/howto/flatmap-doesnt-exist/)
+- [Declaring and Managing Global Variables in TypeScript](/howto/global-vars-ts/)

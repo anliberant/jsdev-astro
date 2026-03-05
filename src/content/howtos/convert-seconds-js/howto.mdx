@@ -11,11 +11,12 @@ category: javascript
 type: howto
 tags: []
 desc: "Convert seconds into readable time formats like HH:MM:SS or full text using clean, reusable JavaScript utilities with examples for timers and video players."
+subtitle: "Convert seconds into readable time formats like HH:MM:SS or full text using clean, reusable JavaScript utilities with examples for timers and video players."
 ---
 
 Back-end services often return durations as raw seconds—numbers like `45000` that are not meaningful to users. To present readable timestamps such as `12:30:00` or `12 hours 30 minutes 00 seconds`, we need utility functions that convert seconds into friendly formats. These are essential for video players, timers, task durations, logs, and any UI that displays elapsed or remaining time.
 
-This guide explains how to convert seconds into multiple display formats using JavaScript. It also refines the logic into one universal function that is easier to maintain.
+Here's how to convert seconds into multiple display formats using JavaScript. It also refines the logic into one universal function that is easier to maintain.
 
 ## 1. Convert Seconds to “HH hours MM minutes SS seconds”
 
@@ -168,3 +169,9 @@ console.log("Task completed in:", convertTime(372));
 ## Conclusion
 
 Time values in raw seconds are rarely user‑friendly. By converting them to readable formats, you improve both clarity and usability across your application. Whether you prefer `HH:MM:SS` or a descriptive text format, the examples above give you practical tools for transforming seconds into meaningful output. A universal conversion function also ensures your codebase remains clean and maintainable as your project grows.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

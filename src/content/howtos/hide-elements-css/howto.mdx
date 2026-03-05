@@ -11,6 +11,7 @@ category: css
 type: howto
 tags: ['html-to-image']
 desc: Learn 5 accessible ways to hide CSS elements while keeping content available to screen readers. Compare visibility, display, and position methods for accessibility.
+subtitle: 'Learn 5 accessible ways to hide CSS elements while keeping content available to screen readers. Compare visibility, display, and position methods for accessibility.'
 ---
 
 ## Understanding the Accessibility Tree
@@ -30,7 +31,7 @@ If it shows as **Ignored**, screen readers will not read it aloud.
 
 ## CSS Methods for Hiding Elements and Their Effects on Screen Readers
 
-### ❌ Methods That Block Screen Readers
+ Methods That Block Screen Readers
 
 ### 1. `display: none;`
 - Removes the element entirely from layout.
@@ -54,7 +55,7 @@ If it shows as **Ignored**, screen readers will not read it aloud.
 
 ---
 
-## ✅ Methods That Keep Elements Visible to Screen Readers
+ Methods That Keep Elements Visible to Screen Readers
 
 ### 1. `opacity: 0;`
 - Fully transparent but part of DOM.
@@ -88,7 +89,7 @@ If it shows as **Ignored**, screen readers will not read it aloud.
 
 ## Summary
 
-### ❌ Methods that prevent screen readers from reading:
+ Methods that prevent screen readers from reading:
 
 - `display: none;`
 - `visibility: hidden;`
@@ -96,7 +97,7 @@ If it shows as **Ignored**, screen readers will not read it aloud.
 - `aria-hidden="true"`
 - Removing DOM elements via JS
 
-### ✅ Methods that keep content accessible:
+ Methods that keep content accessible:
 
 - `opacity: 0;`
 - `position: absolute;` (off-screen)
@@ -106,3 +107,9 @@ If it shows as **Ignored**, screen readers will not read it aloud.
 - Negative `z-index`
 
 Choosing the correct hiding strategy helps maintain accessibility, improves UX, and ensures compliance with WCAG guidelines.
+
+## Related articles
+
+- [The Complete Guide to Centering in CSS](/howto/css-centered-layout-guide/)
+- [A Complete Guide to Using CSS @font-face for Web Typography](/howto/css-font-face/)
+- [Using currentcolor with Relative Color Syntax in CSS](/howto/currentcolor-css/)

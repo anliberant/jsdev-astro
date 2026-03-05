@@ -11,6 +11,7 @@ category: nextjs
 type: howto
 tags: ['multithreading']
 desc: Learn how to implement multithreading in Next.js using Worker Threads. Improve performance for CPU-heavy tasks and decide when this approach is appropriate.
+subtitle: 'Learn how to implement multithreading in Next.js using Worker Threads. Improve performance for CPU-heavy tasks and decide when this approach is appropriate.'
 ---
 
 Next.js runs on top of Node.js, which uses a single-threaded event loop. This works well for most web applications but becomes a bottleneck when CPU-heavy operations block the main thread. While JavaScript itself is single-threaded, modern Node.js gives you access to **Worker Threads**, allowing true multithreading for compute‑intensive tasks.
@@ -35,13 +36,13 @@ Next.js doesn’t add any threading features of its own; it depends entirely on 
 
 Use worker threads when:
 
-### ✔ CPU-bound tasks  
+ CPU-bound tasks  
 Examples: Compression, hashing, data parsing, image processing.
 
-### ✔ Running expensive calculations  
+ Running expensive calculations  
 Workers keep the main server thread free for incoming requests.
 
-### ✔ High-concurrency APIs  
+ High-concurrency APIs  
 Multiple long-running tasks can run in parallel instead of blocking each other.
 
 ---
@@ -67,7 +68,7 @@ You can use worker threads inside:
 - **Route handlers** (`app/api/.../route.js`)  
 - **Server Actions** (Next.js 14+)
 
-Below is a clean and production‑ready implementation.
+Here is a clean and production‑ready implementation.
 
 ---
 
@@ -192,3 +193,9 @@ Use multithreading only where it makes a measurable impact—otherwise, Next.js�
 ---
 
 If you want, I can also generate an optimized version with a **worker pool**, **benchmark examples**, or **TypeScript support**.
+
+## Related articles
+
+- [Fixing Module Parse Errors Caused by Bad Escape Sequences in Next.js](/howto/bad-character-escape-nextjs/)
+- [Understanding SSR and Client Hydration in Next.js](/howto/ssr-hydration-next/)
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)

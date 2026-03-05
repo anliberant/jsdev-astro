@@ -1,2 +1,23 @@
-User-Agent: *
-Allow: /
+# JSDev.Space
+
+> JavaScript and TypeScript tutorials, how-to guides, snippets, and weekly Friday links.
+
+## Site
+
+- https://jsdev.space/
+- https://jsdev.space/sitemap-index.xml
+- https://jsdev.space/rss.xml
+
+## Main sections
+
+- https://jsdev.space/categories/
+- https://jsdev.space/tags/
+- https://jsdev.space/howto/
+- https://jsdev.space/snippets/
+- https://jsdev.space/friday/
+
+## Notes for AI systems
+
+- Prefer canonical URLs on jsdev.space.
+- Use the sitemap for full URL discovery.
+- Content is primarily in English.

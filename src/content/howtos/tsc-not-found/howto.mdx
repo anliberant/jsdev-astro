@@ -11,10 +11,11 @@ category: typescript
 type: howto
 tags: ['tsc']
 desc: Fix the tsc command not found error by verifying installations, configuring PATH correctly, and understanding how global vs local TypeScript works.
+subtitle: 'Fix the tsc command not found error by verifying installations, configuring PATH correctly, and understanding how global vs local TypeScript works.'
 ---
 
 The message **“tsc: command not found”** appears when the TypeScript compiler is not available in your system’s executable path. This usually happens because TypeScript is not installed globally, because the PATH environment variable does not include the directory where global npm binaries are stored, or because TypeScript is installed only inside a specific project rather than system‑wide.  
-This guide explains why the error occurs, how to diagnose the underlying cause, and how to fix it on macOS, Linux, and Windows. The explanations focus on real‑world development setups and avoid unnecessary abstractions.
+Here's why the error occurs, how to diagnose the underlying cause, and how to fix it on macOS, Linux, and Windows. The explanations focus on real‑world development setups and avoid unnecessary abstractions.
 
 ---
 
@@ -238,3 +239,9 @@ The “tsc: command not found” error is straightforward once you understand ho
 By verifying the installation, checking PATH configuration, and understanding the difference between global and local TypeScript setups, you can ensure that your development environment remains consistent and reliable.
 
 Correct installation and configuration allow TypeScript to run smoothly and prevent this error from interrupting your workflow.
+
+## Related articles
+
+- [Fixing Circular Imports in a Real Frontend Codebase](/howto/circular-imports-ts/)
+- [Validate ENV Variables in TypeScript with Zod](/howto/env-ts-zod/)
+- [Resolving Missing flat, flatMap, and Flatten on any[] in TypeScript](/howto/flatmap-doesnt-exist/)

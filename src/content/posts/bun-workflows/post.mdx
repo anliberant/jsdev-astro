@@ -10,6 +10,7 @@ category: nodejs
 type: post
 tags: ['bun']
 desc: Discover seven Bun workflows to speed up your full-stack development — from workspaces and testing to fast builds and environment setup.
+subtitle: 'Discover seven Bun workflows to speed up your full-stack development — from workspaces and testing to fast builds and environment setup.'
 ---
 
 When someone types `npm install`, laptop fans roar like a jet engine.
@@ -186,16 +187,16 @@ export const env = {
 This lightweight approach eliminates extra dependencies while enforcing
 safer configuration management.
 
-## ⚠️ Pitfalls to Watch For
+ Pitfalls to Watch For
 
--   **Node.js module compatibility:** Not all Node APIs or native C++
+- **Node.js module compatibility:** Not all Node APIs or native C++
     modules are supported.\
--   **CJS imports:** Some legacy packages require
+- **CJS imports:** Some legacy packages require
     `import pkg from 'old-lib'` and then using `pkg.default`.\
--   **Binary lockfiles:** `bun.lockb` merges can't be resolved manually;
+- **Binary lockfiles:** `bun.lockb` merges can't be resolved manually;
     rerun `bun install` after conflicts.
 
-## 🧠 Takeaway
+ Takeaway
 
 Bun is about **integration** --- bundler, test runner, package manager,
 and runtime unified into one tool.\
@@ -204,3 +205,9 @@ project setup dramatically.
 
 Start with [**ServBay**](https://www.servbay.com/) to manage your Node and Bun versions easily, then
 dive into these workflows to experience true full-stack acceleration.
+
+## Related articles
+
+- [Mastering Modern Monorepo Development with pnpm, Workspaces](/complete-monorepo-guide/)
+- [Get All Files and Folders in Node.js Directories](/files-dirs-nodejs/)
+- [Master Code Testing Quality with F.I.R.S.T Methodology](/first-principles-testing/)

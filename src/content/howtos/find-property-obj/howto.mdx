@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['object']
 desc: Learn reliable techniques for finding values in nested JavaScript objects using optional chaining, recursion, dynamic search, and utility libraries.
+subtitle: 'Learn reliable techniques for finding values in nested JavaScript objects using optional chaining, recursion, dynamic search, and utility libraries.'
 ---
 
 Working with nested objects is one of the most common tasks in JavaScript, especially when dealing with API responses, configuration files, or complex data models. While accessing a property in a simple object is straightforward, structure depth and irregularity can complicate the process. This article explains practical ways to retrieve deeply nested values, from direct access to safe traversal techniques and full recursive search.
@@ -60,7 +61,7 @@ console.log(user.address.geo.lat);  // 40.7128
 However, dot notation is fragile. Any missing property breaks the chain:
 
 ```js
-console.log(user.profile.bio); // ❌ throws TypeError
+console.log(user.profile.bio); //  throws TypeError
 ```
 
 Because of this, dot notation is mainly suitable for controlled environments where missing data is not a concern.
@@ -235,3 +236,8 @@ Optional chaining and strict type checking work together to eliminate many error
 
 Finding and retrieving properties in nested JavaScript objects can be straightforward or complex, depending on structure and requirements. With options ranging from dot notation to recursion and utility libraries, JavaScript provides flexible tools for every scenario. The key is choosing the right technique for reliability, readability, and long‑term maintainability.
 
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

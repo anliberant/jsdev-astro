@@ -11,6 +11,7 @@ type: post
 tags:
   ['architecture', 'patterns', 'hoc', 'decorators']
 desc: A deep dive into type-safe polymorphic decorators (HOCs) in React.
+subtitle: 'A deep dive into type-safe polymorphic decorators (HOCs) in React.'
   Learn clean logic composition, reusable routing, and
   advanced TypeScript patterns.
 ---
@@ -32,28 +33,28 @@ Components (HOCs).**
 
 The objectives:
 
--   Separate logic from rendering
--   Preserve strict TypeScript safety
--   Enable reusable composition
--   Avoid JSX nesting hell
--   Scale across large React applications
+- Separate logic from rendering
+- Preserve strict TypeScript safety
+- Enable reusable composition
+- Avoid JSX nesting hell
+- Scale across large React applications
 
-This is not theory. Everything below is practical and
+This is not theory. Everything Here is practical and
 production-oriented.
 
 ------------------------------------------------------------------------
 
-# The Core Problem: JSX Nesting Explosion
+## The Core Problem: JSX Nesting Explosion
 
 Imagine a simple requirement.
 
 A button must:
 
-1.  Generate an href from `/product/:id`
-2.  Inject route parameters
-3.  Send analytics on click
-4.  Stay polymorphic
-5.  Remain fully type-safe
+. Generate an href from `/product/:id`
+. Inject route parameters
+. Send analytics on click
+. Stay polymorphic
+. Remain fully type-safe
 
 The typical JSX composition quickly becomes unreadable:
 
@@ -106,7 +107,7 @@ Flat. Predictable. Maintainable.
 
 ------------------------------------------------------------------------
 
-# Turning Polymorphic Components into Decorators
+## Turning Polymorphic Components into Decorators
 
 Classic polymorphic component:
 
@@ -158,7 +159,7 @@ That converts polymorphic behavior into a reusable decorator.
 
 ------------------------------------------------------------------------
 
-# Analytics Decorator (Production-Ready)
+## Analytics Decorator (Production-Ready)
 
 ``` tsx
 import { ComponentType, MouseEventHandler } from "react"
@@ -205,14 +206,14 @@ export function withAnalyticsTracking<
 
 This decorator:
 
--   Preserves original props
--   Injects analytics
--   Keeps type inference intact
--   Works with any compatible component
+- Preserves original props
+- Injects analytics
+- Keeps type inference intact
+- Works with any compatible component
 
 ------------------------------------------------------------------------
 
-# Route Resolver Decorator
+## Route Resolver Decorator
 
 Centralized routing logic prevents chaos.
 
@@ -248,15 +249,15 @@ export function withRouteResolver<
 
 This enables:
 
--   Template validation
--   Central formatting
--   Localization integration
--   Analytics chaining
--   Strict parameter control
+- Template validation
+- Central formatting
+- Localization integration
+- Analytics chaining
+- Strict parameter control
 
 ------------------------------------------------------------------------
 
-# Composing Decorators Safely
+## Composing Decorators Safely
 
 ``` tsx
 const EnhancedButton = withRouteResolver(
@@ -266,13 +267,13 @@ const EnhancedButton = withRouteResolver(
 
 Composition remains predictable because:
 
--   Each decorator isolates logic
--   Rendering remains untouched
--   TypeScript enforces compatibility
+- Each decorator isolates logic
+- Rendering remains untouched
+- TypeScript enforces compatibility
 
 ------------------------------------------------------------------------
 
-# Building a Decoratable Card System
+## Building a Decoratable Card System
 
 Base card:
 
@@ -345,7 +346,7 @@ export const Card = compose(
 
 ------------------------------------------------------------------------
 
-# TypeScript Limitation: Generic Collisions
+## TypeScript Limitation: Generic Collisions
 
 Decorators work perfectly --- until multiple introduce computed
 generics.
@@ -360,9 +361,9 @@ return function WithRoute<TTemplate extends string>(
 
 Stacking several generic-heavy decorators may:
 
--   Collapse inference
--   Override template literal types
--   Reduce safety guarantees
+- Collapse inference
+- Override template literal types
+- Reduce safety guarantees
 
 Practical rule:
 
@@ -370,49 +371,55 @@ Use only one computed-generic decorator per chain.
 
 ------------------------------------------------------------------------
 
-# Where This Pattern Excels
+## Where This Pattern Excels
 
 Ideal for:
 
--   Analytics
--   Logging
--   Permission layers
--   Feature flags
--   Centralized routing
--   Business rule injection
--   UI library extensions
+- Analytics
+- Logging
+- Permission layers
+- Feature flags
+- Centralized routing
+- Business rule injection
+- UI library extensions
 
 Less ideal for:
 
--   Highly dynamic render patterns (FACC is stronger there)
+- Highly dynamic render patterns (FACC is stronger there)
 
 ------------------------------------------------------------------------
 
-# Architectural Impact
+## Architectural Impact
 
 In large React + TypeScript applications:
 
--   Components are not always under your control
--   Consistency is critical
--   Logic duplication becomes expensive
--   Routing must be standardized
--   Analytics must be predictable
+- Components are not always under your control
+- Consistency is critical
+- Logic duplication becomes expensive
+- Routing must be standardized
+- Analytics must be predictable
 
 Polymorphic decorators solve all of these problems cleanly.
 
 ------------------------------------------------------------------------
 
-# Final Conclusion
+## Final Conclusion
 
 Polymorphic HOCs:
 
--   Remove JSX nesting
--   Preserve strict typing
--   Enable reusable cross-cutting logic
--   Scale in complex applications
--   Allow decorating third-party components
+- Remove JSX nesting
+- Preserve strict typing
+- Enable reusable cross-cutting logic
+- Scale in complex applications
+- Allow decorating third-party components
 
 They are not a silver bullet --- TypeScript inference has limits.
 
 But when applied thoughtfully, they provide one of the cleanest and most
 scalable architectural patterns available in modern React.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)

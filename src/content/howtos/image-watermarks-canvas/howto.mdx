@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['canvas', 'watermark']
 desc: Learn how to add text and image watermarks using HTML5 Canvas with full control over opacity, position, styling, and export options.
+subtitle: 'Learn how to add text and image watermarks using HTML5 Canvas with full control over opacity, position, styling, and export options.'
 ---
 
 Adding watermarks to images using **HTML5 Canvas** is a practical way to protect your content, brand your images, or automate batch watermarking in web applications. With Canvas, you can draw, layer, style, and export watermarked images entirely on the client side—no servers needed.
@@ -59,7 +60,7 @@ img.onload = function () {
   ctx.textAlign = 'right';
   ctx.textBaseline = 'bottom';
 
-  ctx.fillText('© Your Brand', canvas.width - 20, canvas.height - 20);
+  ctx.fillText(' Your Brand', canvas.width - 20, canvas.height - 20);
 };
 ```
 
@@ -157,20 +158,20 @@ link.click();
 
 ## Customization Ideas
 
-✔ Control opacity using `globalAlpha`  
-✔ Add drop shadows:  
+ Control opacity using `globalAlpha`  
+ Add drop shadows:  
 ```js
 ctx.shadowColor = 'rgba(0,0,0,0.4)';
 ctx.shadowBlur = 6;
 ```
 
-✔ Position presets:
+ Position presets:
 - top-left: `(20, 40)`
 - top-right: `(canvas.width - 20, 40)`
 - bottom-left: `(20, canvas.height - 20)`
 - bottom-right: `(canvas.width - 20, canvas.height - 20)`
 
-✔ Scale logos dynamically:
+ Scale logos dynamically:
 ```js
 const scale = 0.25;
 const w = logo.width * scale;
@@ -191,3 +192,8 @@ HTML5 Canvas gives you complete control over watermark generation using only bro
 
 You can easily extend this setup with sliders, opacity controls, presets, and batch processing.
 
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

@@ -290,6 +290,20 @@ hr {
   line-height: 1.7;
   margin-top: 1rem;
 }
+.post-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.post-subtitle {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.6;
+  font-size: 1rem;
+}
 .post-title {
   font-family: 'PT Serif', serif;
   font-size: 2.5rem;
@@ -647,3 +661,4 @@ blockquote {
     margin-left: 0;
   }
 }
+

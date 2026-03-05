@@ -11,6 +11,7 @@ category: typescript
 type: howto
 tags: ['object', 'ValidPath']
 desc: Learn to ensure type safety for object properties in TypeScript using the ValidPath utility type. Validate nested paths while excluding functions and arrays.
+subtitle: 'Learn to ensure type safety for object properties in TypeScript using the ValidPath utility type. Validate nested paths while excluding functions and arrays.'
 ---
 
 When working with functions or methods that accept an object and its property as a string, it can be challenging to maintain type safety as objects evolve. Here's how to create a utility type in TypeScript to ensure that property names are type-checked at compile time.
@@ -109,3 +110,9 @@ floatHandler<(typeof data)['user']>('42', data.user, 'details.age', 'age');
 ```
 
 This approach ensures type safety and prevents runtime errors caused by invalid property names.
+
+## Related articles
+
+- [Fixing Circular Imports in a Real Frontend Codebase](/howto/circular-imports-ts/)
+- [Validate ENV Variables in TypeScript with Zod](/howto/env-ts-zod/)
+- [Resolving Missing flat, flatMap, and Flatten on any[] in TypeScript](/howto/flatmap-doesnt-exist/)

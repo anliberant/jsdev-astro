@@ -11,9 +11,10 @@ category: javascript
 type: howto
 tags: []
 desc: Ensure reliable file uploads by accounting for MIME type inconsistencies of ZIP and RAR files across browsers and operating systems.
+subtitle: 'Ensure reliable file uploads by accounting for MIME type inconsistencies of ZIP and RAR files across browsers and operating systems.'
 ---
 
-Uploading files in web applications sounds simple—until it isn’t. While common formats like `.pdf`, `.png`, or `.txt` behave consistently, compressed archives such as `.zip` and `.rar` introduce unexpected variability. This article explains how to robustly handle these file uploads, explores MIME type inconsistencies across systems, and provides best practices to avoid pitfalls.
+Uploading files in web applications sounds simple—until it isn’t. While common formats like `.pdf`, `.png`, or `.txt` behave consistently, compressed archives such as `.zip` and `.rar` introduce unexpected variability. This article explains how to reliably handle these file uploads, explores MIME type inconsistencies across systems, and provides best practices to avoid pitfalls.
 
 ## The Problem: ZIP and RAR MIME Type Inconsistency
 
@@ -123,7 +124,7 @@ export const checkMaxSize = (size: number, maxSizeMB: number): boolean => {
 };
 ```
 
-## Robust Upload Validation
+## reliable Upload Validation
 
 ```ts 
 export const asyncBeforeUpload = async (file: File, config: {
@@ -199,10 +200,16 @@ const handleUpload = async (event: Event) => {
 
 ## Conclusion
 
-File uploads are deceptively tricky. While file extensions seem universal, MIME type detection varies wildly depending on browser and OS. To create robust file validation:
+File uploads are deceptively tricky. While file extensions seem universal, MIME type detection varies wildly depending on browser and OS. To create reliable file validation:
 
 - Accept multiple MIME types for ZIP and RAR.
 - Fallback to file extensions when MIME type is missing or wrong.
 - Don’t rely solely on `file.type`.
 
 With these techniques, you can build a user-friendly upload interface that just works—regardless of the quirks underneath.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

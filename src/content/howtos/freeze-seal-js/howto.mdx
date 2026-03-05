@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: ['immutability']
 desc: Learn the difference between Object.freeze() and Object.seal(), how they affect object mutability, and when to use each for safer, more predictable JavaScript code.
+subtitle: 'Learn the difference between Object.freeze() and Object.seal(), how they affect object mutability, and when to use each for safer, more predictable JavaScript code.'
 ---
 
 When building modern JavaScript applications, it's surprisingly easy to mutate objects without noticing — and those unintended changes often lead to difficult, time‑consuming bugs. That’s why JavaScript provides two powerful tools for controlling mutability: **Object.freeze()** and **Object.seal()**.
@@ -37,8 +38,8 @@ const profile = { name: 'Alice', age: 30 };
 
 Object.freeze(profile);
 
-profile.age = 25;       // ❌ ignored
-profile.city = 'Paris'; // ❌ ignored
+profile.age = 25;       //  ignored
+profile.city = 'Paris'; //  ignored
 
 console.log(profile); 
 // { name: "Alice", age: 30 }
@@ -56,7 +57,7 @@ const user = {
 
 Object.freeze(user);
 
-user.address.city = 'Berlin'; // ✅ still allowed
+user.address.city = 'Berlin'; //  still allowed
 ```
 
 To freeze everything deeply, you must recursively freeze nested objects.
@@ -69,10 +70,10 @@ To freeze everything deeply, you must recursively freeze nested objects.
 
 A sealed object:
 
-- ❌ cannot gain new properties  
-- ❌ cannot delete existing properties  
-- ❌ cannot reconfigure properties  
-- ✅ *can* modify existing values  
+- cannot gain new properties  
+- cannot delete existing properties  
+- cannot reconfigure properties  
+- *can* modify existing values  
 
 ### Example
 
@@ -81,8 +82,8 @@ const car = { make: 'Chevrolet', model: 'Spark' };
 
 Object.seal(car);
 
-car.model = 'Camaro'; // ✅ allowed
-car.year = 2020;      // ❌ ignored
+car.model = 'Camaro'; //  allowed
+car.year = 2020;      //  ignored
 
 console.log(car);
 // { make: "Chevrolet", model: "Camaro" }
@@ -117,7 +118,7 @@ const config = Object.freeze({
   timeout: 5000
 });
 
-config.timeout = 2000; // ❌ ignored
+config.timeout = 2000; //  ignored
 ```
 
 This ensures config remains stable throughout the app.
@@ -177,11 +178,11 @@ A reliable way to ensure constants stay constant.
 
 | Feature | `Object.freeze()` | `Object.seal()` |
 |--------|-------------------|-----------------|
-| Modify existing values | ❌ No | ✅ Yes |
-| Add properties | ❌ No | ❌ No |
-| Remove properties | ❌ No | ❌ No |
-| Reconfigure descriptors | ❌ No | ❌ No |
-| Freezes nested objects | ❌ No | ❌ No |
+| Modify existing values |  No |  Yes |
+| Add properties |  No |  No |
+| Remove properties |  No |  No |
+| Reconfigure descriptors |  No |  No |
+| Freezes nested objects |  No |  No |
 | Use case | Full immutability | Lock structure but allow value changes |
 
 Both are excellent tools — you just need the right one for the job.
@@ -199,3 +200,9 @@ If you want, I can also generate:
 - MDX with CodeHike syntax blocks  
 
 Just tell me!
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

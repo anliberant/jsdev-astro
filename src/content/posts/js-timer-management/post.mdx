@@ -10,6 +10,7 @@ category: javascript
 type: post
 tags: ['timer', 'setTimeout', 'setInterval']
 desc: Learn how to clear and manage JavaScript’s setTimeout and setInterval to prevent memory leaks and improve timer handling in your web applications.
+subtitle: 'Learn how to clear and manage JavaScript’s setTimeout and setInterval to prevent memory leaks and improve timer handling in your web applications.'
 ---
 
 In JavaScript, timers help execute code after a delay or at regular intervals. The most common timers are `setTimeout` and `setInterval`. However, improperly managed timers can lead to memory leaks or unintended behavior. This guide covers different methods to clear timers efficiently.
@@ -131,3 +132,9 @@ clearAllTimers(); // Clears all active timeouts
 ## Summary
 
 Clearing timers is essential for efficient resource management. Use `clearTimeout` to cancel a delayed execution and `clearInterval` to stop repeated executions. When dealing with multiple timers, store their IDs in an array and clear them in a loop. In React, ensure timers are cleaned up when components unmount to prevent memory leaks. Using Promises and `AbortController` provides better control over timer execution. If necessary, implement a function to clear all active timers dynamically. Proper timer management helps improve performance and prevents unintended behavior in JavaScript applications.
+
+## Related articles
+
+- [Understanding Big O Notation with JavaScript](/algorithm-complexity-big-o/)
+- [Mastering Web Animations with Anime.js](/animejs-animation-guide/)
+- [Optimizing await fetch(): Why It Slows Down and How to Speed It Up](/await-fetch-slow/)

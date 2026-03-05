@@ -11,11 +11,12 @@ category: react
 type: howto
 tags: []
 desc: Ditch redux-saga for simple queries? Learn how RTK Query from Redux Toolkit can drastically reduce boilerplate in your React apps.
+subtitle: 'Ditch redux-saga for simple queries? Learn how RTK Query from Redux Toolkit can drastically reduce boilerplate in your React apps.'
 ---
 
 Managing data in React with Redux has traditionally required a lot of boilerplate — slice creation, sagas, selectors, and loading states. But what if your data needs are simple? Enter **RTK Query**, a tool built into Redux Toolkit that makes fetching and caching data a breeze.
 
-## 🔁 Classic Redux + Saga Example
+ Classic Redux + Saga Example
 
 Let’s revisit the standard approach using `createSlice`, saga, and selectors:
 
@@ -55,7 +56,7 @@ function* getItemsSaga() {
 
 To use this in a component, you also need selectors, hooks, and conditionals.
 
-## ⚡ Refactoring with RTK Query
+ Refactoring with RTK Query
 
 RTK Query reduces this entire setup to just a few lines:
 
@@ -93,7 +94,7 @@ const Component = () => {
 
 This gives you built-in loading states, error handling, caching, and revalidation.
 
-## 🔄 Lazy Queries
+ Lazy Queries
 
 Need to trigger the query manually? Use a lazy query:
 
@@ -114,7 +115,7 @@ const Component = () => {
 
 Lazy queries are ideal when your argument isn’t available immediately.
 
-## ✏️ Updating with Mutations
+ Updating with Mutations
 
 You can also use `build.mutation` to POST, PUT, or PATCH data:
 
@@ -137,7 +138,7 @@ updateItems: build.mutation<IItem[], { param: string }>({
 
 This also lets you optimistically update cache using `updateQueryData`.
 
-## 🤔 When NOT to Use RTK Query
+ When NOT to Use RTK Query
 
 RTK Query is amazing for **simple** requests and component-based loading. But for advanced patterns like:
 
@@ -147,7 +148,7 @@ RTK Query is amazing for **simple** requests and component-based loading. But fo
 
 …it may be better to stick with **redux-saga** or custom middleware.
 
-## ✅ Final Thoughts
+ Final Thoughts
 
 RTK Query removes much of Redux's boilerplate for API requests. If you're just fetching and displaying data, it's a game changer.
 
@@ -159,3 +160,9 @@ Use it for:
 - Auto invalidation with tags
 
 Skip it when your logic goes beyond component boundaries and starts requiring global state orchestration.
+
+## Related articles
+
+- [Fixing React’s “Cannot Read Property createElement of Undefined”](/howto/createelement-react/)
+- [Theme Switcher with DaisyUI and TanStack Router](/howto/daisyui-theme-switcher/)
+- [Properly Configuring Jest for React and Next.js](/howto/jest-rtl-setup-react-nextjs/)

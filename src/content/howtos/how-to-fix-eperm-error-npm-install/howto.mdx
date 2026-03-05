@@ -11,11 +11,12 @@ category: nodejs
 type: howto
 tags: ['npm']
 desc: "Resolve the 'EPERM: operation not permitted' error in npm install with fixes for Windows, permissions, antivirus issues, and a clean Docker-based setup."
+subtitle: "Resolve the 'EPERM: operation not permitted' error in npm install with fixes for Windows, permissions, antivirus issues, and a clean Docker-based setup."
 ---
 
 If you've encountered the dreaded `EPERM: operation not permitted` error while running `npm install`, you're not alone. This issue—often intermittent and frustrating—usually stems from permission conflicts, file locks, or security tools interfering with Node.js on your system. In this guide, we’ll walk through the most common causes and proven fixes for resolving the `EPERM` error effectively on Windows, macOS, and Linux.
 
-## ✅ What Is the 'EPERM' Error?
+ What Is the 'EPERM' Error?
 
 The full error message typically looks like this:
 
@@ -25,7 +26,7 @@ EPERM: operation not permitted, unlink 'C:\path\to\project\node_modules\.bin\xyz
 
 The `EPERM` code stands for "Error: PERMission denied" and usually indicates your OS is preventing `npm` from performing file operations—like deleting, writing, or linking—within your project.
 
-## 🛠️ Common Causes and Fixes
+ Common Causes and Fixes
 
 ### 1. Antivirus or Security Software Interference (Windows)
 
@@ -87,7 +88,7 @@ Windows can struggle with long paths or symbolic links in `node_modules`.
 npm install --no-bin-links
 ```
 
-## 🐳 Bonus: Fixing 'EPERM' Using Docker
+ Bonus: Fixing 'EPERM' Using Docker
 
 If you’re still running into permission issues or want an isolated, repeatable setup, Docker can help. By running your Node.js app in a container, you avoid local system conflicts entirely.
 
@@ -119,8 +120,14 @@ docker run -p 3000:3000 -v ${PWD}:/app my-node-app
 
 > This mounts your current project into the container, useful for real-time development.
 
-## ✅ Conclusion
+ Conclusion
 
 The `'EPERM: operation not permitted'` error during `npm install` is a symptom of underlying permission, locking, or system issues. By isolating the cause—whether it's antivirus, file locks, or incorrect ownership—you can fix it permanently without risky workarounds.
 
 **Pro Tip:** Use version managers like `nvm` or Docker for cleaner, reproducible development environments.
+
+## Related articles
+
+- [Basic Webpack 5 Project with CSS: Step-by-Step](/howto/basic-webpack-project/)
+- [Complete Beginner's Guide to Creating AI Applications with OpenAI](/howto/build-first-ai-app-openai-api/)
+- [Bun Install vs Bun Add: Choosing the Right Command](/howto/bun-install-vs-bun-add/)

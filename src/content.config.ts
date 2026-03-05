@@ -11,6 +11,9 @@ const posts = defineCollection({
       desc: z.string().max(165, {
         message: 'Description cannot be longer than 165 characters',
       }),
+      subtitle: z
+        .string()
+        .max(180, { message: 'Subtitle cannot be longer than 180 characters' }),
       heading: z
         .string()
         .max(115, { message: 'Heading cannot be longer than 115 characters' }),
@@ -38,6 +41,9 @@ const howtos = defineCollection({
         .max(165, {
           message: 'Description cannot be longer than 165 characters',
         }),
+      subtitle: z
+        .string()
+        .max(180, { message: 'Subtitle cannot be longer than 180 characters' }),
       heading: z
         .string()
         .max(115, { message: 'Heading cannot be longer than 115 characters' }),
@@ -67,6 +73,9 @@ const fridays = defineCollection({
         .max(165, {
           message: 'Description cannot be longer than 165 characters',
         }),
+      subtitle: z
+        .string()
+        .max(180, { message: 'Subtitle cannot be longer than 180 characters' }),
       heading: z
         .string()
         .max(115, { message: 'Heading cannot be longer than 115 characters' }),
@@ -92,6 +101,9 @@ const snippets = defineCollection({
       .max(165, {
         message: 'Description cannot be longer than 165 characters',
       }),
+      subtitle: z
+        .string()
+        .max(180, { message: 'Subtitle cannot be longer than 180 characters' }),
     heading: z
       .string()
       .max(115, { message: 'Heading cannot be longer than 115 characters' }),

@@ -11,6 +11,7 @@ category: javascript
 type: howto
 tags: []
 desc: Learn how to create a lightweight text editor with a floating formatting toolbar using pure JavaScript. Includes bold, italic, highlight, color, copy, and undo/redo.
+subtitle: 'Learn how to create a lightweight text editor with a floating formatting toolbar using pure JavaScript. Includes bold, italic, highlight, color, copy, and undo/redo.'
 ---
 
 In this guide, we’ll build a lightweight, browser-based text editor with a toolbar that appears when users select text. No frameworks, just HTML, CSS, and JavaScript.
@@ -38,9 +39,9 @@ We need an editor container, a contenteditable surface, and a hidden toolbar:
     <button id="btnBold">B</button>
     <button id="btnItalic">I</button>
     <button id="btnUnderline">U</button>
-    <button id="btnHighlight">🖍️</button>
+    <button id="btnHighlight"></button>
     <input type="color" id="btnColor" value="#ff9900" />
-    <button id="btnCopy">📋</button>
+    <button id="btnCopy"></button>
     <button id="btnUndo">↶</button>
     <button id="btnRedo">↷</button>
   </div>
@@ -294,12 +295,12 @@ document.addEventListener("mousedown", (e) => {
 
     <section class="editor" id="editorBox">
       <div class="toolbar" id="selectionBar" role="toolbar" aria-label="Formatting">
-        <button class="tool" id="tBold" title="Bold (Ctrl/Cmd+B)">🅱️</button>
+        <button class="tool" id="tBold" title="Bold (Ctrl/Cmd+B)"></button>
         <button class="tool" id="tItalic" title="Italic (Ctrl/Cmd+I)"><span style="font-style:italic">I</span></button>
         <button class="tool" id="tUnderline" title="Underline (Ctrl/Cmd+U)"><span style="text-decoration:underline">U</span></button>
-        <button class="tool warn" id="tHighlight" title="Toggle highlight">🖍️</button>
+        <button class="tool warn" id="tHighlight" title="Toggle highlight"></button>
         <input class="color" id="tColor" type="color" value="#ffd166" title="Text color" />
-        <button class="tool" id="tCopy" title="Copy selection">📋</button>
+        <button class="tool" id="tCopy" title="Copy selection"></button>
         <button class="tool" id="tUndo" title="Undo (Ctrl/Cmd+Z)">↶</button>
         <button class="tool" id="tRedo" title="Redo (Ctrl/Cmd+Y)">↷</button>
       </div>
@@ -308,7 +309,7 @@ document.addEventListener("mousedown", (e) => {
         <h2>Write, select, format.</h2>
         <p>Start typing here. When you <strong>select</strong> text, a floating toolbar pops up right near your selection.</p>
         <p>Try bold, italic, underline, highlight, change color, copy, or use undo/redo. The toolbar stays within the editor bounds and repositions on resize.</p>
-        <p>Tip: this demo uses the browser’s formatting commands for simplicity. For production, consider a more robust rich-text approach.</p>
+        <p>Tip: this demo uses the browser’s formatting commands for simplicity. For production, consider a more reliable rich-text approach.</p>
       </div>
     </section>
   </div>
@@ -400,11 +401,11 @@ document.addEventListener("mousedown", (e) => {
         const text = String(window.getSelection());
         if (!text) return;
         navigator.clipboard.writeText(text).then(() => {
-          btnCopy.textContent = "✅";
-          setTimeout(() => (btnCopy.textContent = "📋"), 1200);
+          btnCopy.textContent = "";
+          setTimeout(() => (btnCopy.textContent = ""), 1200);
         }).catch(() => {
-          btnCopy.textContent = "⚠️";
-          setTimeout(() => (btnCopy.textContent = "📋"), 1200);
+          btnCopy.textContent = "";
+          setTimeout(() => (btnCopy.textContent = ""), 1200);
         });
         surface.focus();
       }
@@ -455,7 +456,7 @@ document.addEventListener("mousedown", (e) => {
 - Apply bold, italic, underline, highlight, or color
 - Copy selection
 - Undo/redo with history
-- Lightweight, responsive, and pure JavaScript ✨
+- Lightweight, responsive, and pure JavaScript 
 
 ## Conclusion
 
@@ -468,3 +469,9 @@ You’ve just built a mini text editor with smart selection behavior:
 - Manual stack → undo/redo
 
 This pattern is excellent for lightweight note apps, comment editors, or prototypes without needing a heavy library.
+
+## Related articles
+
+- [Practical Month Arithmetic and Calendar Logic in JavaScript](/howto/add-months-to-date-js/)
+- [Mastering Array Flattening in JavaScript](/howto/array-flatten/)
+- [Mastering Advanced Binary Operations in JavaScript](/howto/binary-operations-js/)

@@ -10,6 +10,7 @@ category: react
 type: post
 tags: ['useTransition', 'async', 'useDeferredValue']
 desc: "Learn React 19’s async transitions with useTransition: build non-blocking forms, optimistic updates, and responsive search."
+subtitle: "Learn React 19’s async transitions with useTransition: build non-blocking forms, optimistic updates, and responsive search."
 ---
 
 React 19 sharpens the idea of **asynchronous transitions**—updates that feel instant for users while heavier work proceeds in the background. In practice, this means form submits, remote fetches, and derived calculations no longer make your inputs feel sticky. This article rewrites and expands the original piece with cleaner code, renamed variables/functions, and production-grade patterns, so you can ship *buttery* UX without adding complexity.
@@ -532,7 +533,7 @@ export function RichAccountEditor() {
     queueTransition(async () => {
       try {
         await persistProfile(parsed.data);
-        setBanner("Saved! ✅");
+        setBanner("Saved! ");
       } catch {
         setBanner(revertBanner ?? null);
         setErrors((e) => ({ ...e, form: "Could not save your changes. Try again." }));
@@ -596,3 +597,9 @@ Async transitions in React 19 keep your app responsive by prioritizing what user
 - Keep feedback accessible and local.
 
 Ship it smooth.
+
+## Related articles
+
+- [10 Must-Know Custom React Hooks for Your Projects](/10-custom-react-hooks/)
+- [25 React Tips to Boost Performance and Quality](/25-react-tips/)
+- [Build React UIs Faster with Chakra UI](/chakra-ui-guide/)
