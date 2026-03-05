@@ -43,7 +43,7 @@ Traditional defenses include rate limiting, CAPTCHAs, user‑agent filtering, IP
 
 ## Proof-of-work challenges (client puzzles)
 
-Some systems force clients to perform small computational puzzles, similar to [Hashcash](http://hashcash.org/). The server issues a challenge; the client must return a value whose hash matches a difficulty rule (leading zeroes, for example). A Go‑style pseudo example:
+Some systems force clients to perform small computational puzzles, similar to Hashcash. The server issues a challenge; the client must return a value whose hash matches a difficulty rule (leading zeroes, for example). A Go‑style pseudo example:
 
 ```go
 calcString := fmt.Sprintf("%s%d", challenge, nonce)
@@ -115,7 +115,7 @@ Some administrators create HTML bombs by streaming repeated tags; this can be do
 
 **Important:** these payloads can also break normal browsers and tools, so they must be placed carefully and never linked from public pages where real users might reach them by accident.
 
-Although such protection methods can [harm the overall health of the web](https://mstdn.social/@jschauma/115055997570719010), some webmasters still use them when bots generate more than **50% of total server load**.
+Although such protection methods can harm the overall health of the web, some webmasters still use them when bots generate more than **50% of total server load**.
 
 While older search engine crawlers typically respect `robots.txt` directives, newer **AI crawlers** often act far more destructively. For instance, one webmaster shared analytics charts showing how **[GPTBot](https://openai.com/gptbot)** from OpenAI [consumed over 30 TB of traffic](https://www.reddit.com/r/CloudFlare/comments/1jp8mv8/do_turn_on_block_ai_bots_or_make_a_robotstxt_if/) within a single month — meaning his entire website, totaling about **600 MB**, was downloaded nearly **50,000 times**.
 

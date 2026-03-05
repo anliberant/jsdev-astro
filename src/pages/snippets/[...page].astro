@@ -58,18 +58,13 @@ const numberOfPages = Math.ceil(sortedSnippets.length / siteConfig.postsPerPage)
 
     {
       page.currentPage === 1 ?
-        <HeadingBlock title={siteConfig.snippetsHeadTitle} />
+        <HeadingBlock
+          title={siteConfig.snippetsHeadTitle}
+          description='Snippets are concise, reusable code solutions for daily development tasks in JavaScript, TypeScript, React, and Node.js.'
+          headingTwo='Use this archive to quickly copy proven patterns, then adapt them to your project structure.'
+        />
       : <h1 class='page-heading'>JavaScript Snippets Page {page.currentPage}</h1>
     }
-    <section class='archive-intro'>
-      <p>
-        Snippets are concise, reusable code solutions for daily development tasks in JavaScript,
-        TypeScript, React, and Node.js.
-      </p>
-      <p>
-        Use this archive to quickly copy proven patterns, then adapt them to your project structure.
-      </p>
-    </section>
     <Howtos howtos={page.data} />
     {
       numberOfPages > 1 && (
@@ -94,4 +89,3 @@ const numberOfPages = Math.ceil(sortedSnippets.length / siteConfig.postsPerPage)
     margin: 0.5rem 0;
   }
 </style>
-

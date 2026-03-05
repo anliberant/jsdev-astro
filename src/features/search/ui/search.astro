@@ -4,7 +4,7 @@ export interface Props {
   className?: string;
 }
 
-const { placeholder, className } = Astro.props;
+const { placeholder = 'Search...', className } = Astro.props;
 ---
 
 <div class={`search ${className || ''}`}>
@@ -29,12 +29,12 @@ const { placeholder, className } = Astro.props;
       <path d='m21 21-4.35-4.35'></path>
     </svg>
 
-    <span class='search-trigger__text'>Search...</span>
+    <span class='search-trigger__text'>{placeholder}</span>
 
     <kbd
       class='search-trigger__shortcut'
-      aria-label='Press Cmd+K to search'
-      >⌘K</kbd
+      aria-label='Press Ctrl+K to search'
+      >Ctrl+K</kbd
     >
   </button>
 
@@ -70,13 +70,13 @@ const { placeholder, className } = Astro.props;
           </svg>
           <input
             type='search'
-            placeholder='Search posts, tutorials, and guides...'
+            placeholder={placeholder}
             class='search-input'
             id='searchInput'
             autocomplete='off'
             aria-label='Search'
           />
-          <div class='search-shortcut'>⌘K</div>
+          <div class='search-shortcut'>Ctrl+K</div>
         </div>
 
         <button
@@ -785,7 +785,6 @@ const { placeholder, className } = Astro.props;
 
     bindEvents() {
       const trigger = document.getElementById('searchTrigger');
-      const modal = document.getElementById('searchModal');
       const overlay = document.getElementById('searchOverlay');
       const closeBtn = document.getElementById('searchClose');
       const input = document.getElementById('searchInput');
@@ -806,6 +805,13 @@ const { placeholder, className } = Astro.props;
       this.keyboardManager.addShortcut({
         key: 'k',
         metaKey: true,
+        preventDefault: true,
+        action: () => this.openModal(),
+      });
+
+      this.keyboardManager.addShortcut({
+        key: 'k',
+        ctrlKey: true,
         preventDefault: true,
         action: () => this.openModal(),
       });
@@ -930,7 +936,60 @@ const { placeholder, className } = Astro.props;
     }
   }
 
+  let searchController = null;
+
+  const ensureSearchController = () => {
+    if (!searchController) {
+      searchController = new SearchController();
+      window.searchController = searchController;
+    }
+
+    return searchController;
+  };
+
+  const openSearchWithLazyInit = () => {
+    ensureSearchController().openModal();
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
-    window.searchController = new SearchController();
+    const trigger = document.getElementById('searchTrigger');
+
+    trigger?.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+        openSearchWithLazyInit();
+      },
+      { once: true }
+    );
+
+    const initialKeyboardHandler = event => {
+      const isCmdOrCtrlK =
+        event.key === 'k' && (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey;
+      const isSlash =
+        event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
+
+      if (!isCmdOrCtrlK && !isSlash) {
+        return;
+      }
+
+      event.preventDefault();
+      openSearchWithLazyInit();
+      document.removeEventListener('keydown', initialKeyboardHandler);
+    };
+
+    document.addEventListener('keydown', initialKeyboardHandler);
+
+    const warmupSearch = () => {
+      ensureSearchController();
+      document.removeEventListener('keydown', initialKeyboardHandler);
+    };
+
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(warmupSearch, { timeout: 2500 });
+    } else {
+      setTimeout(warmupSearch, 2500);
+    }
   });
 </script>
+

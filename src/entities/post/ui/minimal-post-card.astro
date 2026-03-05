@@ -12,7 +12,7 @@ const { post } = Astro.props;
 
 const formattedDate = formatDate(post.data.date);
 const truncatedDesc =
-  post.data.desc.length > 130 ? post.data.desc.substring(0, 130) + '...' : post.data.desc;
+  post.data.desc.length > 130 ? `${post.data.desc.substring(0, 130)}...` : post.data.desc;
 ---
 
 <article class='card'>
@@ -26,7 +26,7 @@ const truncatedDesc =
       title={post.data.title}
       href={`/${post.data.permalink}/`}
       class='title-link'>
-      <h3 class='title'>{post.data.title}</h3>
+      <h2 class='title'>{post.data.title}</h2>
     </a>
     <p class='description'>{truncatedDesc}</p>
   </div>
@@ -124,3 +124,4 @@ const truncatedDesc =
     }
   }
 </style>
+

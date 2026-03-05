@@ -2,7 +2,6 @@
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 
-import Card from '@/shared/ui/base/card.astro';
 
 export interface Props {
   howto: CollectionEntry<'howtos'>;
@@ -43,7 +42,7 @@ const icon = howto.data.icon;
         title={howto.data.title}
         href={`/${howto.data.permalink}/`}
         class='howto-card-link'>
-        <h3 class='howto-card-title'>{howto.data.title}</h3>
+        <h2 class='howto-card-title'>{howto.data.title}</h2>
       </a>
     </div>
   </div>
@@ -117,3 +116,4 @@ const icon = howto.data.icon;
     color: inherit;
   }
 </style>
+
