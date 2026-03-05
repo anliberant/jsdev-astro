@@ -26,7 +26,6 @@ const {
 } = Astro.props;
 
 const fullTitle = title || siteConfig.title;
-const hasImage = typeof image === 'string' && image.trim() !== '';
 const shouldUseGeneratedOG = ['howto', 'snippets'].includes(contentType.toLowerCase());
 
 const fullImageUrl =
@@ -63,27 +62,6 @@ const fullImageUrl =
     />
     <title>{fullTitle}</title>
 
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src='https://www.googletagmanager.com/gtag/js?id=G-EBMN7Y4V1E'
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-
-      gtag('config', 'G-EBMN7Y4V1E');
-    </script>
-
-    <!-- Umami Analytics -->
-    <script
-      defer
-      src='https://cloud.umami.is/script.js'
-      data-website-id='97be30e6-d00d-41c8-9353-a900d0f96dc7'
-    ></script>
     <!-- Fonts -->
     <link
       href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
@@ -103,6 +81,7 @@ const fullImageUrl =
       title={siteConfig.title}
       href={new URL('rss.xml', Astro.site)}
     />
+
     <!-- SEO Meta Tags -->
     <meta
       property='og:title'
@@ -164,7 +143,6 @@ const fullImageUrl =
       rel='sitemap'
       href='/sitemap-index.xml'
     />
-    <!-- Additional head content slot -->
     <slot name='head' />
   </head>
   <body>
@@ -174,5 +152,70 @@ const fullImageUrl =
       <Footer />
       <ScrollToTop />
     </div>
+
+    <script is:inline>
+      (() => {
+        const GA_MEASUREMENT_ID = 'G-EBMN7Y4V1E';
+        const UMAMI_WEBSITE_ID = '97be30e6-d00d-41c8-9353-a900d0f96dc7';
+        let hasLoadedAnalytics = false;
+
+        const appendScript = (src, attributes = {}) => {
+          const script = document.createElement('script');
+          script.src = src;
+
+          Object.entries(attributes).forEach(([key, value]) => {
+            script.setAttribute(key, value);
+          });
+
+          document.head.appendChild(script);
+        };
+
+        const loadAnalytics = () => {
+          if (hasLoadedAnalytics) return;
+          hasLoadedAnalytics = true;
+
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function gtag() {
+            window.dataLayer.push(arguments);
+          };
+          window.gtag('js', new Date());
+          window.gtag('config', GA_MEASUREMENT_ID);
+
+          appendScript(`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`, {
+            async: '',
+          });
+
+          appendScript('https://cloud.umami.is/script.js', {
+            defer: '',
+            'data-website-id': UMAMI_WEBSITE_ID,
+          });
+        };
+
+        const onFirstInteraction = () => {
+          loadAnalytics();
+          window.removeEventListener('pointerdown', onFirstInteraction);
+          window.removeEventListener('keydown', onFirstInteraction);
+          window.removeEventListener('scroll', onFirstInteraction);
+          window.removeEventListener('touchstart', onFirstInteraction);
+        };
+
+        window.addEventListener('pointerdown', onFirstInteraction, { passive: true });
+        window.addEventListener('keydown', onFirstInteraction);
+        window.addEventListener('scroll', onFirstInteraction, { passive: true });
+        window.addEventListener('touchstart', onFirstInteraction, { passive: true });
+
+        window.addEventListener(
+          'load',
+          () => {
+            if ('requestIdleCallback' in window) {
+              window.requestIdleCallback(loadAnalytics, { timeout: 8000 });
+            } else {
+              setTimeout(loadAnalytics, 8000);
+            }
+          },
+          { once: true }
+        );
+      })();
+    </script>
   </body>
 </html>

@@ -67,20 +67,14 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
       page.currentPage === 1 ?
         <HeadingBlock
           title={siteConfig.howtoHeadTitle}
+          description={
+            'This section contains step-by-step how-to tutorials with concrete fixes for common JavaScript, Node.js, CSS, and tooling issues.'
+          }
+          headingTwo='Each guide is written as an actionable workflow: reproduce the problem, apply the fix, and verify the result.'
           class='mt-10'
         />
       : <h1 class='mt-10'>Howto Tutorials Page {page.currentPage}</h1>
     }
-    <section class='archive-intro'>
-      <p>
-        This section contains step-by-step how-to tutorials with concrete fixes for common JavaScript,
-        Node.js, CSS, and tooling issues.
-      </p>
-      <p>
-        Each guide is written as an actionable workflow: reproduce the problem, apply the fix, and
-        verify the result.
-      </p>
-    </section>
     <HowtoCategoriesList />
     <Howtos howtos={page.data} />
     {
@@ -106,4 +100,3 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
     margin: 0.5rem 0;
   }
 </style>
-

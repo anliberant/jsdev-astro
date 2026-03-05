@@ -554,6 +554,8 @@ blockquote {
   align-items: center;
   justify-content: flex-start;
   gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 300;
 }
 
 .read-meta span {
@@ -661,4 +663,3 @@ blockquote {
     margin-left: 0;
   }
 }
-

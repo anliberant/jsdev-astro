@@ -1,21 +1,16 @@
 ---
 import { Picture } from 'astro:assets';
-import type { CollectionEntry } from 'astro:content';
 import { Fragment } from 'astro/jsx-runtime';
 
 import Badge from '@/shared/ui/base/badge.astro';
 import Card from '@/shared/ui/base/card.astro';
 import { formatDate } from '@/shared/utils/time';
 
-type Props = {
-  post: CollectionEntry<'posts'>;
-  class?: string;
-};
 
 const { post } = Astro.props;
 
 const truncatedDesc =
-  post.data.desc.length > 120 ? post.data.desc.substring(0, 120) + '...' : post.data.desc;
+  post.data.desc.length > 120 ? `${post.data.desc.substring(0, 120)}...` : post.data.desc;
 ---
 
 <Card class='post-card'>
@@ -52,9 +47,9 @@ const truncatedDesc =
       href={`/${post.data.permalink}/`}
       title={post.data.title}
       class='post-title-link'>
-      <h3 class='post-title'>
+      <h2 class='post-title'>
         {post.data.title}
-      </h3>
+      </h2>
     </a>
     <p class='post-description'>
       {truncatedDesc}
@@ -161,3 +156,4 @@ const truncatedDesc =
     margin-bottom: 0;
   }
 </style>
+

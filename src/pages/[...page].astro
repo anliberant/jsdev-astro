@@ -57,19 +57,14 @@ const description =
             'Use categories and tags to filter by stack (React, Node.js, TypeScript, Web APIs), or open the latest posts below and follow the pagination for the full archive.'
           }
         />
-      : <>
-          <h1 class='page-heading'>
-            {siteConfig.shortTitle} Page {page.currentPage}
-          </h1>
-          <p>
-            Archive page {page.currentPage} collects older JavaScript and TypeScript posts that are
-            still relevant for day-to-day development.
-          </p>
-          <p>
-            Continue browsing to find implementation patterns, debugging guides, and
-            framework-specific tutorials from previous releases.
-          </p>
-        </>
+      : <HeadingBlock
+          title={siteConfig.shortTitle + ' - Page ' + page.currentPage}
+          description={`Archive page ${page.currentPage} collects older JavaScript and TypeScript posts that are
+            still relevant for day-to-day development.`}
+          headingTwo={
+            'Continue browsing to find implementation patterns, debugging guides, and framework-specific tutorials from previous releases.'
+          }
+        />
     }
     {page.currentPage === 1 && <FeaturedPosts posts={featuredPosts} />}
     {recentPosts && <Posts posts={page.currentPage === 1 ? recentPosts : page.data} />}
