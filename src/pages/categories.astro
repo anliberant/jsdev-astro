@@ -7,27 +7,29 @@ import CategoriesList from '@/entities/categories/categories-list.astro';
   title="All Categories"
   description="Browse through all the categories of posts on the site."
 >
-  <header class='heading-header'>
-    <h1 class='heading-title'>
-      Explore our awesome
-      <span class='heading-highlight'>JavaScript Categories</span>
-    </h1>
-    <p class='heading-description'>
-      Browse articles by topic. Each category represents a specific technology, concept, or
-      framework featured in our tutorials and guides.
-    </p>
-  </header>
-  <section class='categories-intro'>
-    <p>
-      Categories group long-form articles by technology so you can follow a learning path instead of
-      jumping between unrelated topics.
-    </p>
-    <p>
-      Open a category to browse curated posts, practical examples, and implementation notes for that
-      stack.
-    </p>
-  </section>
-  <CategoriesList />
+  <main class='main'>
+    <header class='heading-header'>
+      <h1 class='heading-title'>
+        Explore our awesome
+        <span class='heading-highlight'>JavaScript Categories</span>
+      </h1>
+      <p class='heading-description'>
+        Browse articles by topic. Each category represents a specific technology, concept, or
+        framework featured in our tutorials and guides.
+      </p>
+    </header>
+    <section class='categories-intro'>
+      <p>
+        Categories group long-form articles by technology so you can follow a learning path instead
+        of jumping between unrelated topics.
+      </p>
+      <p>
+        Open a category to browse curated posts, practical examples, and implementation notes for
+        that stack.
+      </p>
+    </section>
+    <CategoriesList />
+  </main>
 </BaseLayout>
 
 <style>
@@ -41,4 +43,3 @@ import CategoriesList from '@/entities/categories/categories-list.astro';
     margin: 0.5rem 0;
   }
 </style>
-

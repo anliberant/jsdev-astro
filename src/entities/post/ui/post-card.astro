@@ -7,7 +7,7 @@ import Card from '@/shared/ui/base/card.astro';
 import { formatDate } from '@/shared/utils/time';
 
 
-const { post } = Astro.props;
+const { post, isLcp = false } = Astro.props;
 
 const truncatedDesc =
   post.data.desc.length > 120 ? `${post.data.desc.substring(0, 120)}...` : post.data.desc;
@@ -25,10 +25,11 @@ const truncatedDesc =
             class='post-image'
             width={400}
             height={250}
-            loading='lazy'
-            decoding='async'
+            loading={isLcp ? 'eager' : 'lazy'}
+            decoding={isLcp ? 'sync' : 'async'}
             formats={['avif', 'webp']}
-            quality={80}
+            quality={68}
+            fetchpriority={isLcp ? 'high' : 'auto'}
             sizes='(max-width: 768px) 100vw, 400px'
           />
         )
@@ -156,4 +157,5 @@ const truncatedDesc =
     margin-bottom: 0;
   }
 </style>
+
 

@@ -759,153 +759,167 @@ const { placeholder = 'Search...', className } = Astro.props;
 </style>
 
 <script>
-  import { KeyboardManager } from '../lib/keyboard.js';
-  import { debounce, getCategoryDisplayName, getCategoryIcon } from '../lib/utils.js';
-  import { SearchStore } from '../model/store.js';
+  const searchModulesPromise = Promise.all([
+    import('../lib/keyboard.js'),
+    import('../lib/utils.js'),
+    import('../model/store.js')
+  ])
 
-  class SearchController {
-    constructor() {
-      this.searchStore = new SearchStore();
-      this.keyboardManager = new KeyboardManager();
-      this.debouncedSearch = debounce(this.handleSearch.bind(this), 300);
-      this.init();
+  let SearchControllerClass = null
+
+  const loadSearchControllerClass = async () => {
+    if (SearchControllerClass) {
+      return SearchControllerClass
     }
 
-    async init() {
-      await this.loadSearchData();
-      this.bindEvents();
-      this.setupKeyboardShortcuts();
-    }
+    const [keyboardModule, utilsModule, storeModule] = await searchModulesPromise
+    const { KeyboardManager } = keyboardModule
+    const { debounce, getCategoryDisplayName, getCategoryIcon } = utilsModule
+    const { SearchStore } = storeModule
 
-    async loadSearchData() {
-      if (window.searchData) {
-        this.searchStore.updateData(window.searchData);
-      }
-    }
-
-    bindEvents() {
-      const trigger = document.getElementById('searchTrigger');
-      const overlay = document.getElementById('searchOverlay');
-      const closeBtn = document.getElementById('searchClose');
-      const input = document.getElementById('searchInput');
-
-      trigger?.addEventListener('click', () => this.openModal());
-      closeBtn?.addEventListener('click', () => this.closeModal());
-      overlay?.addEventListener('click', () => this.closeModal());
-      input?.addEventListener('input', e => this.debouncedSearch(e.target.value));
-    }
-
-    setupKeyboardShortcuts() {
-      this.keyboardManager.addShortcut({
-        key: '/',
-        preventDefault: true,
-        action: () => this.openModal(),
-      });
-
-      this.keyboardManager.addShortcut({
-        key: 'k',
-        metaKey: true,
-        preventDefault: true,
-        action: () => this.openModal(),
-      });
-
-      this.keyboardManager.addShortcut({
-        key: 'k',
-        ctrlKey: true,
-        preventDefault: true,
-        action: () => this.openModal(),
-      });
-
-      this.keyboardManager.addShortcut({
-        key: 'Escape',
-        action: () => this.closeModal(),
-      });
-
-      this.keyboardManager.startListening();
-    }
-
-    openModal() {
-      const modal = document.getElementById('searchModal');
-      const input = document.getElementById('searchInput');
-
-      modal?.classList.add('open');
-      document.body.style.overflow = 'hidden';
-
-      setTimeout(() => {
-        input?.focus();
-      }, 100);
-    }
-
-    closeModal() {
-      const modal = document.getElementById('searchModal');
-      const input = document.getElementById('searchInput');
-
-      modal?.classList.remove('open');
-      document.body.style.overflow = '';
-
-      if (input) {
-        input.value = '';
-        this.showDefaultState();
-      }
-    }
-
-    handleSearch(query) {
-      const startTime = performance.now();
-
-      if (!query || query.length < 2) {
-        this.showDefaultState();
-        return;
+    class SearchController {
+      constructor() {
+        this.searchStore = new SearchStore()
+        this.keyboardManager = new KeyboardManager()
+        this.debouncedSearch = debounce(this.handleSearch.bind(this), 300)
+        this.init()
       }
 
-      const results = this.searchStore.search(query);
-      const groupedResults = this.searchStore.groupByCategory(results);
-
-      const endTime = performance.now();
-      const searchTime = endTime - startTime;
-
-      if (window.searchMetrics) {
-        window.searchMetrics.recordSearch(query, results.length, searchTime);
+      async init() {
+        await this.loadSearchData()
+        this.bindEvents()
+        this.setupKeyboardShortcuts()
       }
 
-      if (Object.keys(groupedResults).length === 0) {
-        this.showEmptyState();
-      } else {
-        this.showResults(groupedResults);
+      async loadSearchData() {
+        if (window.searchData) {
+          this.searchStore.updateData(window.searchData)
+        }
       }
-    }
 
-    showDefaultState() {
-      document.getElementById('searchDefault')?.classList.remove('hidden');
-      document.getElementById('searchResults')?.classList.add('hidden');
-      document.getElementById('searchEmpty')?.classList.add('hidden');
-    }
+      bindEvents() {
+        const trigger = document.getElementById('searchTrigger')
+        const overlay = document.getElementById('searchOverlay')
+        const closeBtn = document.getElementById('searchClose')
+        const input = document.getElementById('searchInput')
 
-    showEmptyState() {
-      document.getElementById('searchDefault')?.classList.add('hidden');
-      document.getElementById('searchResults')?.classList.add('hidden');
-      document.getElementById('searchEmpty')?.classList.remove('hidden');
-    }
-
-    showResults(groupedResults) {
-      document.getElementById('searchDefault')?.classList.add('hidden');
-      document.getElementById('searchEmpty')?.classList.add('hidden');
-      document.getElementById('searchResults')?.classList.remove('hidden');
-
-      const resultsContent = document.getElementById('searchResultsContent');
-      if (resultsContent) {
-        resultsContent.innerHTML = this.renderResults(groupedResults);
+        trigger?.addEventListener('click', () => this.openModal())
+        closeBtn?.addEventListener('click', () => this.closeModal())
+        overlay?.addEventListener('click', () => this.closeModal())
+        input?.addEventListener('input', e => this.debouncedSearch(e.target.value))
       }
-    }
 
-    renderResults(groupedResults) {
-      let html = '';
+      setupKeyboardShortcuts() {
+        this.keyboardManager.addShortcut({
+          key: '/',
+          preventDefault: true,
+          action: () => this.openModal(),
+        })
 
-      Object.entries(groupedResults).forEach(([category, items]) => {
-        const displayName = getCategoryDisplayName(category);
-        const icon = getCategoryIcon(category);
-        const count = items.length;
+        this.keyboardManager.addShortcut({
+          key: 'k',
+          metaKey: true,
+          preventDefault: true,
+          action: () => this.openModal(),
+        })
 
-        html += `
+        this.keyboardManager.addShortcut({
+          key: 'k',
+          ctrlKey: true,
+          preventDefault: true,
+          action: () => this.openModal(),
+        })
+
+        this.keyboardManager.addShortcut({
+          key: 'Escape',
+          action: () => this.closeModal(),
+        })
+
+        this.keyboardManager.startListening()
+      }
+
+      openModal() {
+        const modal = document.getElementById('searchModal')
+        const input = document.getElementById('searchInput')
+
+        modal?.classList.add('open')
+        document.body.style.overflow = 'hidden'
+
+        setTimeout(() => {
+          input?.focus()
+        }, 100)
+      }
+
+      closeModal() {
+        const modal = document.getElementById('searchModal')
+        const input = document.getElementById('searchInput')
+
+        modal?.classList.remove('open')
+        document.body.style.overflow = ''
+
+        if (input) {
+          input.value = ''
+          this.showDefaultState()
+        }
+      }
+
+      handleSearch(query) {
+        const startTime = performance.now()
+
+        if (!query || query.length < 2) {
+          this.showDefaultState()
+          return
+        }
+
+        const results = this.searchStore.search(query)
+        const groupedResults = this.searchStore.groupByCategory(results)
+
+        const endTime = performance.now()
+        const searchTime = endTime - startTime
+
+        if (window.searchMetrics) {
+          window.searchMetrics.recordSearch(query, results.length, searchTime)
+        }
+
+        if (Object.keys(groupedResults).length === 0) {
+          this.showEmptyState()
+        } else {
+          this.showResults(groupedResults)
+        }
+      }
+
+      showDefaultState() {
+        document.getElementById('searchDefault')?.classList.remove('hidden')
+        document.getElementById('searchResults')?.classList.add('hidden')
+        document.getElementById('searchEmpty')?.classList.add('hidden')
+      }
+
+      showEmptyState() {
+        document.getElementById('searchDefault')?.classList.add('hidden')
+        document.getElementById('searchResults')?.classList.add('hidden')
+        document.getElementById('searchEmpty')?.classList.remove('hidden')
+      }
+
+      showResults(groupedResults) {
+        document.getElementById('searchDefault')?.classList.add('hidden')
+        document.getElementById('searchEmpty')?.classList.add('hidden')
+        document.getElementById('searchResults')?.classList.remove('hidden')
+
+        const resultsContent = document.getElementById('searchResultsContent')
+        if (resultsContent) {
+          resultsContent.innerHTML = this.renderResults(groupedResults)
+        }
+      }
+
+      renderResults(groupedResults) {
+        let html = ''
+
+        Object.entries(groupedResults).forEach(([category, items]) => {
+          const displayName = getCategoryDisplayName(category)
+          const icon = getCategoryIcon(category)
+          const count = items.length
+
+          html += `
           <div class="search-category" data-category="${category}">
             <div class="category-header">
               <svg class="category-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -918,78 +932,85 @@ const { placeholder = 'Search...', className } = Astro.props;
               ${items.map(item => this.renderSearchItem(item)).join('')}
             </div>
           </div>
-        `;
-      });
+        `
+        })
 
-      return html;
-    }
+        return html
+      }
 
-    renderSearchItem(item) {
-      const excerpt = item.excerpt ? `<div class="search-item-excerpt">${item.excerpt}</div>` : '';
+      renderSearchItem(item) {
+        const excerpt = item.excerpt ? `<div class="search-item-excerpt">${item.excerpt}</div>` : ''
 
-      return `
+        return `
         <a href="${item.href}" class="search-item">
           <div class="search-item-title">${item.highlightedTitle}</div>
           ${excerpt}
         </a>
-      `;
+      `
+      }
     }
+
+    SearchControllerClass = SearchController
+    return SearchControllerClass
   }
 
-  let searchController = null;
+  let searchController = null
+  let searchControllerPromise = null
 
-  const ensureSearchController = () => {
-    if (!searchController) {
-      searchController = new SearchController();
-      window.searchController = searchController;
+  const ensureSearchController = async () => {
+    if (searchController) {
+      return searchController
     }
 
-    return searchController;
-  };
+    if (!searchControllerPromise) {
+      searchControllerPromise = loadSearchControllerClass()
+        .then(SearchController => {
+          searchController = new SearchController()
+          window.searchController = searchController
+          return searchController
+        })
+        .finally(() => {
+          searchControllerPromise = null
+        })
+    }
 
-  const openSearchWithLazyInit = () => {
-    ensureSearchController().openModal();
-  };
+    return searchControllerPromise
+  }
+
+  const openSearchWithLazyInit = async () => {
+    const controller = await ensureSearchController()
+    controller.openModal()
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
-    const trigger = document.getElementById('searchTrigger');
+    const trigger = document.getElementById('searchTrigger')
 
     trigger?.addEventListener(
       'click',
-      event => {
-        event.preventDefault();
-        openSearchWithLazyInit();
+      async event => {
+        event.preventDefault()
+        await openSearchWithLazyInit()
       },
       { once: true }
-    );
+    )
 
-    const initialKeyboardHandler = event => {
+    const initialKeyboardHandler = async event => {
       const isCmdOrCtrlK =
-        event.key === 'k' && (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey;
+        event.key === 'k' && (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey
       const isSlash =
-        event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
+        event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey
 
       if (!isCmdOrCtrlK && !isSlash) {
-        return;
+        return
       }
 
-      event.preventDefault();
-      openSearchWithLazyInit();
-      document.removeEventListener('keydown', initialKeyboardHandler);
-    };
-
-    document.addEventListener('keydown', initialKeyboardHandler);
-
-    const warmupSearch = () => {
-      ensureSearchController();
-      document.removeEventListener('keydown', initialKeyboardHandler);
-    };
-
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(warmupSearch, { timeout: 2500 });
-    } else {
-      setTimeout(warmupSearch, 2500);
+      event.preventDefault()
+      document.removeEventListener('keydown', initialKeyboardHandler)
+      await openSearchWithLazyInit()
     }
-  });
+
+    document.addEventListener('keydown', initialKeyboardHandler)
+  })
 </script>
+
 
