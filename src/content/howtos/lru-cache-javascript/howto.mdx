@@ -1,0 +1,428 @@
+---
+title: 'How to Build an LRU Cache from Scratch in JavaScript'
+slug: lru-cache-javascript
+heading: 'Designing an Efficient LRU Cache Step by Step'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/lru-cache-javascript
+date: 2026-03-06
+author: anton liberant
+category: javascript
+type: howto
+tags: ['lru-cache']
+desc: Learn how to implement an LRU cache in JavaScript from scratch using a Map and doubly linked list with O(1) operations. Includes step-by-step explanations and code.
+subtitle: 'Understanding cache eviction strategies and implementing a high-performance LRU cache using a Map and a doubly linked list.'
+---
+
+Caching is a fundamental optimization technique used across nearly every modern software system. Whether you're building a web API, a database engine, or a frontend application, caching can dramatically improve performance by storing frequently accessed data in memory.
+
+One of the most common cache eviction strategies is LRU (Least Recently Used). You’ll encounter it in systems like Redis, operating systems, browser caches, and backend frameworks. It also appears frequently in technical interviews because implementing it correctly requires understanding both data structures and time complexity.
+
+Many developers initially find LRU confusing, especially because interview questions usually require O(1) time complexity for both retrieval and insertion operations. However, once you understand the right combination of data structures, the implementation becomes surprisingly elegant.
+
+In this guide, we’ll build an LRU cache from scratch, following a clear progression:
+
+1. Understanding what LRU actually means
+2. Defining the required operations
+3. Choosing the right data structures
+4. Implementing the cache step by step
+5. Testing the implementation
+6. Avoiding common mistakes
+
+By the end, you'll have a production-ready LRU cache implementation in JavaScript.
+
+## What Is an LRU Cache?
+
+LRU stands for **Least Recently Used**.
+
+The idea is simple:
+
+> When the cache reaches its capacity, remove the item that hasn't been used for the longest time.
+
+Every time an item is accessed or inserted, it becomes the **most recently used** entry.
+
+## A Simple Real-World Analogy
+
+Imagine a small bookshelf that can only hold three books.
+
+Capacity = 3
+
+### Step 1
+
+```
+Add Algorithms
+```
+
+### Step 2
+
+Add Java
+
+```
+[Algorithms, Java]
+```
+
+### Step 3
+
+Add Python
+
+```
+[Algorithms, Java, Python]
+```
+
+The shelf is now full.
+
+### Step 4 – Access "Algorithms"
+
+Because you used it recently, it moves to the end:
+
+```
+[Java, Python, Algorithms]
+```
+
+### Step 5 – Add "JavaScript"
+
+Since the shelf is full, remove the least recently used item (**Java**):
+
+```
+[Python, Algorithms, JavaScript]
+```
+
+This behavior is exactly how an **LRU cache works**.
+
+## Core Requirements of an LRU Cache
+
+In most implementations (and interviews), the cache supports two operations.
+
+| Operation         | Description                                                                                    | Required Complexity |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ------------------- |
+| `get(key)`        | Return the value associated with the key, or `-1` if not found. Also mark it as recently used. | O(1)                |
+| `put(key, value)` | Insert or update a value. If capacity is exceeded, remove the least recently used item.        | O(1)                |
+
+The **O(1)** requirement is critical.
+
+If operations become **O(n)**, the implementation is no longer optimal.
+
+## Why Arrays Won’t Work
+
+A naive solution might store items in an array.
+
+But arrays cause problems:
+
+### Finding an item
+
+Requires scanning → **O(n)**
+
+### Moving an item
+
+Requires shifting elements → **O(n)**
+
+### Removing the least used item
+
+Also **O(n)**
+
+This violates the **O(1)** requirement.
+
+So we need a better approach.
+
+## The Key Insight: Combine Two Data Structures
+
+To achieve constant time operations, we combine:
+
+### 1. Hash Map (Map)
+
+Provides:
+
+```
+key → node
+```
+
+Benefits:
+
+- Instant lookup
+- O(1) access
+
+But a Map cannot track usage order.
+
+### 2. Doubly Linked List
+
+Maintains item order:
+
+```
+Least used  ←→  Most used
+```
+
+Benefits:
+
+- Fast removal
+- Fast insertion
+- Fast reordering
+
+Operations on linked lists can be **O(1)** if you already have the node reference.
+
+## Final Architecture
+
+We combine both structures:
+
+```
+Map:
+key → linked list node
+
+Doubly Linked List:
+[Least Recently Used ... Most Recently Used]
+```
+
+### Rules
+
+- Head = least recently used
+- Tail = most recently used
+
+### Step 1: Create a Linked List Node
+
+Each node stores:
+
+- key
+- value
+- previous pointer
+- next pointer
+
+```js 
+class CacheNode {
+  constructor(key, value) {
+    this.key = key
+    this.value = value
+    this.prev = null
+    this.next = null
+  }
+}
+```
+
+Important detail:
+
+We store the key inside the node so we can remove it from the Map during eviction.
+
+### Step 2: Implement a Doubly Linked List
+
+We’ll use sentinel (dummy) nodes for easier boundary handling.
+
+```js 
+class DoublyLinkedList {
+  constructor() {
+    this.head = new CacheNode(null, null)
+    this.tail = new CacheNode(null, null)
+
+    this.head.next = this.tail
+    this.tail.prev = this.head
+
+    this.length = 0
+  }
+
+  remove(node) {
+    node.prev.next = node.next
+    node.next.prev = node.prev
+
+    node.prev = null
+    node.next = null
+
+    this.length--
+  }
+
+  addToEnd(node) {
+    const prevLast = this.tail.prev
+
+    prevLast.next = node
+    node.prev = prevLast
+    node.next = this.tail
+    this.tail.prev = node
+
+    this.length++
+  }
+
+  removeFirst() {
+    if (this.length === 0) return null
+
+    const first = this.head.next
+    this.remove(first)
+
+    return first
+  }
+
+  size() {
+    return this.length
+  }
+}
+```
+
+### Step 3: Build the LRU Cache
+
+Now we combine the Map and linked list.
+
+```js 
+class LRUCache {
+  constructor(capacity) {
+    if (capacity <= 0) {
+      throw new Error("Capacity must be greater than zero")
+    }
+
+    this.capacity = capacity
+    this.cache = new Map()
+    this.list = new DoublyLinkedList()
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) {
+      return -1
+    }
+
+    const node = this.cache.get(key)
+
+    this.list.remove(node)
+    this.list.addToEnd(node)
+
+    return node.value
+  }
+
+  put(key, value) {
+    if (this.cache.has(key)) {
+      const node = this.cache.get(key)
+
+      node.value = value
+
+      this.list.remove(node)
+      this.list.addToEnd(node)
+
+      return
+    }
+
+    if (this.list.size() === this.capacity) {
+      const removed = this.list.removeFirst()
+
+      if (removed) {
+        this.cache.delete(removed.key)
+      }
+    }
+
+    const newNode = new CacheNode(key, value)
+
+    this.list.addToEnd(newNode)
+    this.cache.set(key, newNode)
+  }
+}
+```
+
+### Testing the Implementation
+
+Let's verify the behavior.
+
+```js 
+function testLRUCache() {
+  const cache = new LRUCache(3)
+
+  cache.put("Algorithms", 1)
+  cache.put("Java", 2)
+  cache.put("Python", 3)
+
+  console.log(cache.get("Algorithms"))
+  // 1
+
+  cache.put("JavaScript", 4)
+
+  console.log(cache.get("Java"))
+  // -1 (evicted)
+
+  console.log(cache.get("JavaScript"))
+  // 4
+
+  cache.put("Python", 33)
+
+  console.log(cache.get("Python"))
+  // 33
+}
+
+testLRUCache()
+```
+
+If the output matches expectations, the cache works correctly.
+
+## Common Mistakes Developers Make
+
+### 1. Forgetting to store the key in nodes
+
+Without the key, eviction cannot remove the Map entry.
+
+### 2. Using a singly linked list
+
+Deleting nodes becomes **O(n)** because the previous node must be searched.
+
+### 3. Not using sentinel nodes
+
+This causes many edge cases when inserting or deleting.
+
+### 4. Forgetting to update the size counter
+
+This breaks capacity checks.
+
+### 5. Updating value without updating position
+
+Accessing an item should move it to the most recent position.
+
+### 6. Using Map size instead of list size
+
+Map and list sizes must stay synchronized.
+
+## LRU vs LFU (Important Difference)
+
+These two strategies are often confused.
+
+### LRU
+
+Evicts the least recently used item.
+
+Focus:
+
+```
+last access time
+```
+
+### LFU
+
+Evicts the least frequently used item.
+
+Focus:
+
+```
+access count
+```
+
+### Example
+
+A cache item used frequently last week but unused today:
+
+- LRU → likely removed
+- LFU → likely kept
+
+## Final Thoughts
+
+Implementing an LRU cache is less about writing code and more about choosing the correct data structures.
+
+The winning combination is:
+
+```
+Map + Doubly Linked List
+```
+
+This architecture provides:
+
+- O(1) lookups
+- O(1) insertions
+- O(1) deletions
+- deterministic eviction
+
+It is widely used in real systems, backend services, and interview problems.
+
+If you want to truly understand the algorithm, try:
+
+1. Rewriting the code yourself
+2. Drawing the linked list movements
+3. Testing edge cases
+
+Once the logic clicks, you’ll find LRU implementations straightforward and elegant.
