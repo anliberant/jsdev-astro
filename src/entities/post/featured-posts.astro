@@ -18,7 +18,7 @@ const sectionClasses = cn('featured-posts', className);
 <section class={sectionClasses}>
   {
     posts.map((post, idx) => {
-      return <PostCard post={post} isLcp={idx === 0} />;
+      return <PostCard post={post} isLcp={idx < 3} />;
     })
   }
 </section>
@@ -45,4 +45,5 @@ const sectionClasses = cn('featured-posts', className);
     }
   }
 </style>
+
 
