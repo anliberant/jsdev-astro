@@ -47,3 +47,4 @@ coverage/
 
 # Local development
 .local/
+.vs/
