@@ -1,0 +1,906 @@
+---
+title: How to Build a Safe JSON Parser for Node.js APIs
+slug: safe-json-parser-nodejs
+heading: Building a Production-Ready Safe JSON Parser for Node.js APIs
+icon: /icons/typescript.png
+image: /icon.png
+permalink: howto/safe-json-parser-nodejs
+date: 2026-03-06
+author: anton liberant
+category: typescript
+type: howto
+tags: ['json']
+desc: Learn how to build a safe JSON parser wrapper for Node.js APIs with payload limits, schema validation, dangerous key filtering, and production-ready error handling.
+subtitle: 'A practical guide to wrapping JSON.parse() with size limits, schema validation, and better error handling for real-world backend services.'
+---
+
+Parsing JSON in Node.js looks trivial at first glance.
+
+Most developers start with something like this:
+
+```js 
+const data = JSON.parse(rawBody)
+```
+
+And for a while, that feels good enough.
+
+Then real traffic arrives.
+
+A client sends malformed JSON. A webhook includes fields you did not expect. A bot posts a giant payload. A malicious user tries to poison object prototypes. Suddenly, one innocent-looking `JSON.parse()` call turns into a source of crashes, broken validation, or security issues.
+
+That is why production APIs should not parse JSON blindly.
+
+A safer approach is to build a JSON parser wrapper that handles the boring but critical work for you:
+
+- reject oversized payloads
+- block dangerous keys
+- validate structure at runtime
+- return consistent errors
+- integrate cleanly with Express, Fastify, Hono, or custom Node.js servers
+
+In this article, we will build a reusable safe JSON parser wrapper for Node.js APIs, explain the design decisions behind it, and finish with production-ready examples you can adapt to your own backend.
+
+## Why a Wrapper Is Better Than Plain JSON.parse()
+
+`JSON.parse()` is not bad. It is fast, built-in, and perfectly fine when the input is trusted.
+
+The real problem is this:
+
+> In APIs, input is often untrusted.
+
+That includes:
+
+- request bodies
+- webhooks
+- uploaded JSON files
+- queue messages
+- Redis payloads
+- database JSON blobs
+- third-party callbacks
+
+When raw input comes from outside your system, parsing should do more than just convert a string into an object.
+
+A proper parser layer should answer these questions:
+
+- Is the payload too large?
+- Is the JSON valid?
+- Does it contain suspicious keys?
+- Does it match the shape the API expects?
+- Can the application return a clean error instead of crashing?
+
+That is exactly what a wrapper solves.
+
+## What a Safe JSON Parser Should Do
+
+A strong implementation should provide five protections.
+
+### 1. Type checks
+
+Only strings or buffers should be accepted as raw JSON input.
+
+### 2. Payload size limits
+
+This helps reduce DoS risk and prevents huge request bodies from consuming memory.
+
+### 3. Dangerous key filtering
+
+Keys like `__proto__`, `constructor`, and `prototype` can become a problem in unsafe merge flows.
+
+### 4. Runtime validation
+
+Even valid JSON is not necessarily valid application data.
+
+### 5. Consistent error handling
+
+The API should return predictable, human-readable errors instead of generic crashes.
+
+## The Core Design
+
+We will build the wrapper in layers.
+
+First, a small custom error class.
+Then a secure parser with size checks and key filtering.
+Then a schema-aware parser using Zod.
+Finally, an Express middleware example.
+
+This approach keeps the code modular and easy to test.
+
+### Step 1: Create Custom Error Types
+
+A parser wrapper becomes much easier to integrate when it throws structured errors instead of generic `Error` objects.
+
+```ts 
+export class JsonParseError extends Error {
+  public readonly statusCode: number
+  public readonly code: string
+  public readonly details?: unknown
+
+  constructor(message: string, options?: {
+    statusCode?: number
+    code?: string
+    details?: unknown
+  }) {
+    super(message)
+    this.name = "JsonParseError"
+    this.statusCode = options?.statusCode ?? 400
+    this.code = options?.code ?? "INVALID_JSON"
+    this.details = options?.details
+  }
+}
+```
+
+This gives the rest of the application useful metadata:
+
+- `statusCode` for HTTP responses
+- `code` for machine-readable error handling
+- `details` for debugging or validation reports
+
+### Step 2: Define Safe Defaults
+
+Now define the parser configuration.
+
+```ts 
+export type SafeJsonParserOptions = {
+  maxBytes?: number
+  forbiddenKeys?: string[]
+}
+
+const DEFAULT_FORBIDDEN_KEYS = ["__proto__", "constructor", "prototype"]
+
+const DEFAULT_OPTIONS: Required<SafeJsonParserOptions> = {
+  maxBytes: 100 * 1024,
+  forbiddenKeys: DEFAULT_FORBIDDEN_KEYS,
+}
+```
+
+These defaults are intentionally conservative.
+
+A `100KB` default is reasonable for many APIs, but you can raise or lower it depending on your use case.
+
+For example:
+
+- small JSON commands: 10KB
+- standard API forms: 50KB to 200KB
+- large content payloads: 500KB to 1MB
+- file uploads: do not parse with raw `JSON.parse()` at all
+
+### Step 3: Normalize Raw Input
+
+In Node.js, raw request data may arrive as a string or a buffer.
+
+A wrapper should handle both cleanly.
+
+```ts
+function normalizeInput(raw: string | Buffer): string {
+  if (typeof raw === "string") {
+    return raw
+  }
+
+  if (Buffer.isBuffer(raw)) {
+    return raw.toString("utf8")
+  }
+
+  throw new JsonParseError("Unsupported input type", {
+    code: "INVALID_INPUT_TYPE",
+  })
+}
+```
+
+This prevents accidental misuse and keeps the main parser logic simpler.
+
+### Step 4: Enforce a Payload Size Limit
+
+Before calling `JSON.parse()`, check size first.
+
+This is one of the easiest and most effective hardening steps.
+
+```ts 
+function assertPayloadSize(raw: string, maxBytes: number): void {
+  const byteLength = Buffer.byteLength(raw, "utf8")
+
+  if (byteLength > maxBytes) {
+    throw new JsonParseError(
+      `JSON payload exceeds the ${maxBytes} byte limit`,
+      {
+        statusCode: 413,
+        code: "PAYLOAD_TOO_LARGE",
+        details: { maxBytes, actualBytes: byteLength },
+      }
+    )
+  }
+}
+```
+
+Why check bytes instead of `string.length`?
+
+Because network payloads are measured in bytes, not characters. UTF-8 characters can take more than one byte, so `Buffer.byteLength()` is the safer choice.
+
+### Step 5: Reject Dangerous Keys During Parsing
+
+The `reviver` argument of `JSON.parse()` lets you inspect every key-value pair during parsing.
+
+That makes it a good place to block suspicious keys.
+
+```ts 
+function createSecureReviver(forbiddenKeys: string[]) {
+  const blocked = new Set(forbiddenKeys)
+
+  return function secureReviver(key: string, value: unknown) {
+    if (blocked.has(key)) {
+      throw new JsonParseError(`Forbidden key found in JSON: ${key}`, {
+        code: "FORBIDDEN_JSON_KEY",
+        details: { key },
+      })
+    }
+
+    return value
+  }
+}
+```
+
+This does not magically solve all object safety issues across your application, but it reduces risk significantly when dealing with untrusted payloads.
+
+### Step 6: Build the Base Safe Parser
+
+Now combine the pieces into one reusable function.
+
+```ts 
+import { JsonParseError } from "./json-parse-error"
+
+export type SafeJsonParserOptions = {
+  maxBytes?: number
+  forbiddenKeys?: string[]
+}
+
+const DEFAULT_FORBIDDEN_KEYS = ["__proto__", "constructor", "prototype"]
+
+const DEFAULT_OPTIONS: Required<SafeJsonParserOptions> = {
+  maxBytes: 100 * 1024,
+  forbiddenKeys: DEFAULT_FORBIDDEN_KEYS,
+}
+
+function normalizeInput(raw: string | Buffer): string {
+  if (typeof raw === "string") {
+    return raw
+  }
+
+  if (Buffer.isBuffer(raw)) {
+    return raw.toString("utf8")
+  }
+
+  throw new JsonParseError("Unsupported input type", {
+    code: "INVALID_INPUT_TYPE",
+  })
+}
+
+function assertPayloadSize(raw: string, maxBytes: number): void {
+  const byteLength = Buffer.byteLength(raw, "utf8")
+
+  if (byteLength > maxBytes) {
+    throw new JsonParseError(
+      `JSON payload exceeds the ${maxBytes} byte limit`,
+      {
+        statusCode: 413,
+        code: "PAYLOAD_TOO_LARGE",
+        details: { maxBytes, actualBytes: byteLength },
+      }
+    )
+  }
+}
+
+function createSecureReviver(forbiddenKeys: string[]) {
+  const blocked = new Set(forbiddenKeys)
+
+  return function secureReviver(key: string, value: unknown) {
+    if (blocked.has(key)) {
+      throw new JsonParseError(`Forbidden key found in JSON: ${key}`, {
+        code: "FORBIDDEN_JSON_KEY",
+        details: { key },
+      })
+    }
+
+    return value
+  }
+}
+
+export function safeJsonParse<T = unknown>(
+  raw: string | Buffer,
+  options?: SafeJsonParserOptions
+): T {
+  const finalOptions = {
+    ...DEFAULT_OPTIONS,
+    ...options,
+  }
+
+  const jsonString = normalizeInput(raw)
+
+  assertPayloadSize(jsonString, finalOptions.maxBytes)
+
+  try {
+    return JSON.parse(
+      jsonString,
+      createSecureReviver(finalOptions.forbiddenKeys)
+    ) as T
+  } catch (error) {
+    if (error instanceof JsonParseError) {
+      throw error
+    }
+
+    throw new JsonParseError("Invalid JSON payload", {
+      code: "INVALID_JSON",
+      details: error instanceof Error ? error.message : error,
+    })
+  }
+}
+```
+
+This version already gives you:
+
+- size limiting
+- dangerous key filtering
+- predictable parse errors
+- support for strings and buffers
+
+For some small internal tools, this may already be enough.
+
+For public APIs, though, one more layer is worth adding.
+
+### Step 7: Add Runtime Schema Validation with Zod
+
+Parsing JSON only tells you that the string is syntactically valid.
+
+It does not tell you that the payload matches what your route expects.
+
+For example, this is valid JSON:
+
+```json
+{
+  "userId": "banana",
+  "email": 123,
+  "isAdmin": "yes"
+}
+```
+
+Your API may need:
+
+- `userId` as a number
+- `email` as a valid email string
+- `isAdmin` as an optional boolean
+
+That is where schema validation helps.
+
+Let’s build a wrapper around the base parser using Zod.
+
+```ts 
+import { ZodSchema, ZodError } from "zod"
+import { safeJsonParse, SafeJsonParserOptions } from "./safe-json-parse"
+import { JsonParseError } from "./json-parse-error"
+
+export function safeJsonParseWithSchema<T>(
+  raw: string | Buffer,
+  schema: ZodSchema<T>,
+  options?: SafeJsonParserOptions
+): T {
+  const parsed = safeJsonParse<unknown>(raw, options)
+
+  try {
+    return schema.parse(parsed)
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new JsonParseError("JSON payload failed schema validation", {
+        code: "SCHEMA_VALIDATION_FAILED",
+        details: error.flatten(),
+      })
+    }
+
+    throw error
+  }
+}
+```
+
+Now the parser handles both syntax and structure.
+
+That is much closer to what real APIs need.
+
+### Step 8: Define a Real API Schema
+
+Here is a typical Zod schema for a signup endpoint.
+
+```ts 
+import { z } from "zod"
+
+export const CreateAccountSchema = z.object({
+  name: z.string().min(2).max(80),
+  email: z.string().email(),
+  password: z.string().min(8).max(128),
+  marketingOptIn: z.boolean().optional(),
+})
+
+export type CreateAccountInput = z.infer<typeof CreateAccountSchema>
+```
+
+This immediately gives you:
+
+- runtime validation
+- clean constraints
+- TypeScript inference
+- a single source of truth for input shape
+
+And when paired with `safeJsonParseWithSchema()`, the whole flow becomes much safer.
+
+### Step 9: Use the Wrapper in an Express Route
+
+Now let’s wire it into a real Express endpoint.
+
+To keep full control, this example reads the raw body manually instead of depending on automatic JSON parsing middleware.
+
+```ts 
+import express from "express"
+import { CreateAccountSchema } from "./schemas"
+import { safeJsonParseWithSchema } from "./safe-json-parse-with-schema"
+import { JsonParseError } from "./json-parse-error"
+
+const app = express()
+
+function collectRawBody(req: express.Request): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = ""
+
+    req.setEncoding("utf8")
+
+    req.on("data", (chunk) => {
+      body += chunk
+    })
+
+    req.on("end", () => {
+      resolve(body)
+    })
+
+    req.on("error", reject)
+  })
+}
+
+app.post("/accounts", async (req, res) => {
+  try {
+    const rawBody = await collectRawBody(req)
+
+    const input = safeJsonParseWithSchema(
+      rawBody,
+      CreateAccountSchema,
+      { maxBytes: 50 * 1024 }
+    )
+
+    const account = {
+      id: crypto.randomUUID(),
+      name: input.name,
+      email: input.email,
+      marketingOptIn: input.marketingOptIn ?? false,
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: account,
+    })
+  } catch (error) {
+    if (error instanceof JsonParseError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        },
+      })
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Something went wrong",
+      },
+    })
+  }
+})
+```
+
+This route now behaves much better than a plain `JSON.parse()` approach.
+
+It can reject:
+
+- malformed JSON
+- oversized bodies
+- forbidden keys
+- schema mismatches
+
+And it returns structured responses instead of leaking internal errors.
+
+## A Cleaner Middleware Approach
+
+If you want to reuse the same parsing logic across many routes, move it into middleware.
+
+Here is a reusable Express middleware factory.
+
+```ts 
+import { Request, Response, NextFunction } from "express"
+import { ZodSchema } from "zod"
+import { safeJsonParseWithSchema } from "./safe-json-parse-with-schema"
+import { SafeJsonParserOptions } from "./safe-json-parse"
+
+declare module "express-serve-static-core" {
+  interface Request {
+    safeJsonBody?: unknown
+  }
+}
+
+function collectRawBody(req: Request): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = ""
+
+    req.setEncoding("utf8")
+
+    req.on("data", (chunk) => {
+      body += chunk
+    })
+
+    req.on("end", () => {
+      resolve(body)
+    })
+
+    req.on("error", reject)
+  })
+}
+
+export function safeJsonBodyMiddleware<T>(
+  schema: ZodSchema<T>,
+  options?: SafeJsonParserOptions
+) {
+  return async function safeJsonBodyHandler(
+    req: Request,
+    _res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const rawBody = await collectRawBody(req)
+      req.safeJsonBody = safeJsonParseWithSchema(rawBody, schema, options)
+      next()
+    } catch (error) {
+      next(error)
+    }
+  }
+}
+```
+
+And then use it like this:
+
+```ts 
+import express from "express"
+import { CreateAccountSchema } from "./schemas"
+import { safeJsonBodyMiddleware } from "./safe-json-body-middleware"
+
+const app = express()
+
+app.post(
+  "/accounts",
+  safeJsonBodyMiddleware(CreateAccountSchema, { maxBytes: 50 * 1024 }),
+  (req, res) => {
+    const input = req.safeJsonBody as {
+      name: string
+      email: string
+      password: string
+      marketingOptIn?: boolean
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: crypto.randomUUID(),
+        name: input.name,
+        email: input.email,
+      },
+    })
+  }
+)
+```
+
+This pattern scales nicely for larger APIs.
+
+### Add a Centralized Error Handler
+
+A middleware-based design becomes much cleaner when paired with one global error handler.
+
+```ts 
+import { Request, Response, NextFunction } from "express"
+import { JsonParseError } from "./json-parse-error"
+
+export function apiErrorHandler(
+  error: unknown,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+) {
+  if (error instanceof JsonParseError) {
+    return res.status(error.statusCode).json({
+      success: false,
+      error: {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      },
+    })
+  }
+
+  console.error(error)
+
+  return res.status(500).json({
+    success: false,
+    error: {
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Unexpected server error",
+    },
+  })
+}
+```
+
+Then mount it after your routes:
+
+```ts 
+app.use(apiErrorHandler)
+```
+
+This keeps route handlers focused on business logic.
+
+## Full Example: A Small Reusable Utility
+
+If you prefer a compact single-file version for smaller projects, here is a practical combined implementation.
+
+```ts 
+import { z, ZodError, ZodSchema } from "zod"
+
+class JsonParseError extends Error {
+  public readonly statusCode: number
+  public readonly code: string
+  public readonly details?: unknown
+
+  constructor(message: string, options?: {
+    statusCode?: number
+    code?: string
+    details?: unknown
+  }) {
+    super(message)
+    this.name = "JsonParseError"
+    this.statusCode = options?.statusCode ?? 400
+    this.code = options?.code ?? "INVALID_JSON"
+    this.details = options?.details
+  }
+}
+
+type SafeJsonParserOptions = {
+  maxBytes?: number
+  forbiddenKeys?: string[]
+}
+
+const DEFAULT_OPTIONS: Required<SafeJsonParserOptions> = {
+  maxBytes: 100 * 1024,
+  forbiddenKeys: ["__proto__", "constructor", "prototype"],
+}
+
+function normalizeInput(raw: string | Buffer): string {
+  if (typeof raw === "string") return raw
+  if (Buffer.isBuffer(raw)) return raw.toString("utf8")
+
+  throw new JsonParseError("Unsupported input type", {
+    code: "INVALID_INPUT_TYPE",
+  })
+}
+
+function assertPayloadSize(raw: string, maxBytes: number): void {
+  const actualBytes = Buffer.byteLength(raw, "utf8")
+
+  if (actualBytes > maxBytes) {
+    throw new JsonParseError("JSON payload too large", {
+      statusCode: 413,
+      code: "PAYLOAD_TOO_LARGE",
+      details: { maxBytes, actualBytes },
+    })
+  }
+}
+
+function createReviver(forbiddenKeys: string[]) {
+  const blocked = new Set(forbiddenKeys)
+
+  return (key: string, value: unknown) => {
+    if (blocked.has(key)) {
+      throw new JsonParseError(`Forbidden key found: ${key}`, {
+        code: "FORBIDDEN_JSON_KEY",
+        details: { key },
+      })
+    }
+
+    return value
+  }
+}
+
+export function safeJsonParse<T = unknown>(
+  raw: string | Buffer,
+  options?: SafeJsonParserOptions
+): T {
+  const finalOptions = { ...DEFAULT_OPTIONS, ...options }
+  const source = normalizeInput(raw)
+
+  assertPayloadSize(source, finalOptions.maxBytes)
+
+  try {
+    return JSON.parse(source, createReviver(finalOptions.forbiddenKeys)) as T
+  } catch (error) {
+    if (error instanceof JsonParseError) {
+      throw error
+    }
+
+    throw new JsonParseError("Invalid JSON syntax", {
+      code: "INVALID_JSON",
+      details: error instanceof Error ? error.message : error,
+    })
+  }
+}
+
+export function safeJsonParseWithSchema<T>(
+  raw: string | Buffer,
+  schema: ZodSchema<T>,
+  options?: SafeJsonParserOptions
+): T {
+  const parsed = safeJsonParse(raw, options)
+
+  try {
+    return schema.parse(parsed)
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new JsonParseError("Schema validation failed", {
+        code: "SCHEMA_VALIDATION_FAILED",
+        details: error.flatten(),
+      })
+    }
+
+    throw error
+  }
+}
+
+const WebhookSchema = z.object({
+  event: z.string(),
+  timestamp: z.number(),
+  data: z.record(z.string(), z.unknown()),
+})
+
+const rawPayload = JSON.stringify({
+  event: "user.created",
+  timestamp: Date.now(),
+  data: {
+    id: "usr_123",
+    email: "hello@example.com",
+  },
+})
+
+const webhook = safeJsonParseWithSchema(rawPayload, WebhookSchema)
+
+console.log(webhook.event)
+```
+
+This single file is enough to bootstrap a safer parsing workflow in many Node.js projects.
+
+### Why This Pattern Performs Well in Real APIs
+
+This design is not just about security. It also improves maintainability.
+
+A wrapper like this helps teams by making JSON handling:
+
+**More predictable**
+
+Every route behaves the same way when parsing fails.
+
+**Easier to debug**
+
+Structured error codes are better than vague stack traces.
+
+**Easier to test**
+
+You can unit-test the parser independently of the route.
+
+**More scalable**
+
+Once parsing and validation are centralized, adding new endpoints becomes simpler.
+
+**Better for TypeScript**
+
+Schema validation libraries like Zod create a clean bridge between runtime safety and static types.
+
+That combination is especially useful in larger Node.js services.
+
+### Common Mistakes to Avoid
+
+There are a few mistakes developers still make even after adding validation.
+
+**Trusting `req.body` too early**
+
+If middleware parses JSON before your safety checks, your wrapper may never get a chance to reject large or malformed payloads.
+
+**Only checking syntax**
+
+Valid JSON is not the same as valid business input.
+
+**Ignoring payload size**
+
+A payload can be syntactically valid and still be too big for your application.
+
+**Merging parsed objects carelessly**
+
+Even after filtering keys, avoid deep merges with untrusted objects unless you fully understand the merge behavior.
+
+**Returning raw parser errors to clients**
+
+Keep error messages helpful but controlled. Do not expose internal implementation details unnecessarily.
+
+### A Good Folder Structure for This Utility
+
+For a clean backend codebase, something like this works well:
+
+```
+src/
+  lib/
+    json/
+      json-parse-error.ts
+      safe-json-parse.ts
+      safe-json-parse-with-schema.ts
+      safe-json-body-middleware.ts
+  schemas/
+    account.schema.ts
+    webhook.schema.ts
+  middleware/
+    api-error-handler.ts
+  routes/
+    account.routes.ts
+    webhook.routes.ts
+```
+
+This keeps parsing, validation, and business logic separate.
+
+### When You Might Not Need a Custom Wrapper
+
+There are cases where a full wrapper may be unnecessary.
+
+For example:
+
+- internal scripts with trusted JSON files
+- one-off CLI tools
+- test fixtures under your control
+
+But for public APIs, webhook endpoints, admin dashboards, multi-tenant systems, or any service that handles external input, the wrapper pays for itself very quickly.
+
+## Final Thoughts
+
+A safe JSON parser wrapper is one of those small backend improvements that has an outsized impact.
+
+At first, it seems like extra code around a built-in function. In practice, it becomes a core safety layer for your API.
+
+Instead of writing this everywhere:
+
+```ts 
+const body = JSON.parse(rawInput)
+```
+
+you move to something more intentional:
+
+```ts 
+const body = safeJsonParseWithSchema(rawInput, SomeSchema, {
+  maxBytes: 50 * 1024,
+})
+```
+
+That one shift gives you:
+
+- safer parsing
+- cleaner route handlers
+- better validation
+- more consistent API errors
+- stronger production defaults
+
+For modern Node.js backends, that is a very good trade.

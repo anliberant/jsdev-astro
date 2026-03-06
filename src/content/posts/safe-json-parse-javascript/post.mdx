@@ -1,0 +1,327 @@
+---
+title: "Why Blindly Using JSON.parse() Can Be Dangerous"
+slug: safe-json-parse-javascript
+heading: "How to Safely Parse JSON in JavaScript"
+image: ./images/safe-json-parse-javascript.png
+permalink: safe-json-parse-javascript
+date: 2026-03-06
+author: anton liberant
+category: javascript
+type: post
+tags: ['json']
+desc: Learn why blindly using JSON.parse() can introduce security risks like prototype pollution and DoS attacks, and how to safely parse JSON in modern JavaScript.
+subtitle: 'Why blindly using JSON.parse() can expose your application to security risks—and how modern validation tools help prevent them.'
+---
+
+If you write JavaScript for long enough—whether in the browser or on a Node.js server—you’ll almost certainly use `JSON.parse()` countless times.
+
+It’s one of the most common APIs in the ecosystem.
+
+Developers rely on it for everything from reading configuration files to handling API requests:
+
+```js 
+const user = JSON.parse(localStorage.getItem("user"))
+
+const payload = JSON.parse(req.body.payload)
+
+const config = JSON.parse(fs.readFileSync("config.json", "utf-8"))
+```
+
+It’s simple, fast, and built directly into the language.
+
+But here’s the problem:
+
+> Many developers treat `JSON.parse()` as a harmless utility, when in reality it can become a security risk if used carelessly.
+
+The function itself isn’t dangerous—but blindly parsing untrusted input can expose your application to attacks such as:
+
+- Prototype pollution
+- Denial of Service (DoS)
+- Data injection attacks
+- Unexpected runtime crashes
+
+In this article, we’ll explore why this happens and **how to implement secure JSON parsing strategies in modern JavaScript applications**.
+
+## Understanding What JSON.parse() Actually Does
+
+`JSON.parse()` converts a JSON string into a JavaScript object.
+
+Example:
+
+```js 
+const json = '{"name": "Alice", "role": "admin"}'
+
+const user = JSON.parse(json)
+
+console.log(user.name)
+// Alice
+```
+
+The function faithfully reconstructs the **entire object structure** contained in the JSON string.
+
+That includes every property name provided by the input.
+
+And that’s where the problems start.
+
+## Security Risk #1: Prototype Pollution
+
+One of the most common vulnerabilities related to unsafe JSON handling is prototype pollution.
+
+Prototype pollution occurs when attackers manipulate an object's prototype to inject properties into every object in the application.
+
+If your code merges or copies parsed objects without validation, an attacker can inject special keys like:
+
+```
+__proto__
+constructor
+prototype
+```
+
+These keys can modify global object behavior.
+
+### Example of a Prototype Pollution Payload
+
+```js
+const payload = '{"__proto__": {"isAdmin": true}}'
+```
+
+Now imagine parsing it and merging the object into your system:
+
+```js 
+const data = JSON.parse(payload)
+
+Object.assign({}, data)
+
+console.log({}.isAdmin)
+// true
+```
+
+Suddenly every object in your application has a new property.
+
+This can lead to severe consequences:
+
+- Authentication bypass
+- Privilege escalation
+- Corrupted application logic
+- Security policy violations
+
+Many well-known vulnerabilities in JavaScript ecosystems have involved prototype pollution through unvalidated input.
+
+### Why This Happens
+
+JavaScript objects inherit from `Object.prototype`.
+
+If attackers manage to inject properties into the prototype chain, the impact becomes global.
+
+For example:
+
+```js 
+console.log({}.toString)
+```
+
+This works because every object inherits from `Object.prototype`.
+
+If attackers add properties there, every object in your system changes behavior.
+
+## Security Risk #2: Denial of Service (DoS)
+
+Another common attack vector is resource exhaustion.
+
+Attackers can send extremely large or deeply nested JSON strings that consume huge amounts of CPU or memory during parsing.
+
+### Example: Deep Nesting Attack
+
+```js 
+const evil = '{"a":{"a":{"a":{"a":{"a":{"a":{}}}}}}}'
+```
+
+Even small nested objects can cause heavy recursion.
+
+With enough depth, parsing can freeze the event loop.
+
+### Example: Huge Array Attack
+
+```js 
+const payload = `[${"1,".repeat(10000000)}1]`
+```
+
+A JSON string representing ten million elements can:
+
+- Allocate gigabytes of memory
+- Freeze Node.js for seconds
+- Crash the process with an Out Of Memory error
+
+For public APIs, this effectively becomes a remote kill switch.
+
+## Secure JSON Parsing Strategy
+
+The safest approach combines three defensive layers:
+
+1. Input size limits
+2. Key filtering
+3. Schema validation
+
+Let’s look at each one.
+
+### Step 1: Limit Input Size
+
+Before parsing JSON, always check the size of the input.
+
+```js 
+function safeParse(jsonString, maxSize = 100 * 1024) {
+  if (typeof jsonString !== "string") {
+    throw new Error("Invalid input type")
+  }
+
+  if (jsonString.length > maxSize) {
+    throw new Error("JSON payload too large")
+  }
+
+  return JSON.parse(jsonString)
+}
+```
+
+This prevents attackers from sending extremely large payloads.
+
+In production APIs, limits are often set between **50KB and 1MB**, depending on use case.
+
+### Step 2: Block Dangerous Keys
+
+JavaScript allows a reviver function when parsing JSON.
+
+This lets you inspect every property during parsing.
+
+You can use it to reject suspicious keys.
+
+```js 
+function secureParse(jsonString) {
+  return JSON.parse(jsonString, (key, value) => {
+    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+      throw new Error("Forbidden key detected")
+    }
+
+    return value
+  })
+}
+```
+
+This simple check prevents prototype pollution payloads.
+
+### Step 3 (Best Practice): Runtime Schema Validation
+
+Modern JavaScript applications rarely trust raw data.
+
+Instead, they validate data structures using schema validation libraries like:
+
+- Zod
+- Joi
+- Yup
+- Ajv
+
+These tools ensure the parsed data matches an expected structure.
+
+### Example Using Zod
+
+```js 
+import { z } from "zod"
+
+const UserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+  isAdmin: z.boolean().optional()
+})
+
+function parseUser(json) {
+  const parsed = secureParse(json)
+
+  return UserSchema.parse(parsed)
+}
+```
+
+Benefits:
+
+- Automatic runtime validation
+- Clear error messages
+- Type inference for TypeScript
+- Protection against unexpected fields
+
+Schema validation is considered modern best practice in production systems.
+
+## Additional Risks in Node.js
+
+Server environments are especially vulnerable because JSON often comes from external sources.
+
+Common risky inputs include:
+
+### HTTP Requests
+
+```js 
+req.body
+```
+
+### Uploaded Configuration Files
+
+Users may upload JSON configuration files.
+
+If parsed blindly, they can trigger crashes.
+
+### Database Data
+
+Stored JSON may contain unexpected fields or corrupted structures.
+
+### Third-Party Webhooks
+
+External services send JSON payloads that should never be trusted blindly.
+
+## Recommended Defensive Checklist
+
+Before parsing JSON in production systems, verify:
+
+- The data source is trusted
+- The payload size is limited
+- Dangerous keys are filtered
+- The structure matches a schema
+
+This layered approach dramatically reduces attack surfaces.
+
+## Is `JSON.parse()` Actually Unsafe?
+
+Not exactly.
+
+`JSON.parse()` itself does not execute JavaScript code.
+
+Unlike `eval()`, it only reconstructs objects.
+
+However:
+
+> Using it without validating input is equivalent to trusting user data blindly.
+
+And trusting user input is one of the most common sources of security vulnerabilities.
+
+## Final Thoughts
+
+`JSON.parse()` is not a bad API.
+
+But using it without safeguards is like handling a powerful tool without protective equipment.
+
+Modern JavaScript development should treat all external data as potentially hostile.
+
+Before writing code like this:
+
+```js 
+JSON.parse(userInput)
+```
+
+Ask yourself two simple questions:
+
+1. Do I trust the source of this data?
+2. Have I validated its structure?
+
+If the answer is no, add validation immediately.
+
+Combining size limits, key filtering, and schema validation ensures that JSON parsing remains safe and predictable.
+
+Read also:
+
+> [How to Build a Safe JSON Parser for Node.js APIs](/howto/safe-json-parser-nodejs/)
