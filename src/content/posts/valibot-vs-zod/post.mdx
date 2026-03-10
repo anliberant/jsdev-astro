@@ -1,0 +1,307 @@
+
+---
+title: "Valibot vs Zod: A Lightweight Validation Alternative"
+desc: Compare Valibot and Zod in JavaScript and TypeScript apps. Explore bundle size, performance benchmarks, and real validation examples.
+heading: Valibot vs Zod — Can a 1KB Validator Replace Zod?
+author: anton liberant
+date: 2026-03-10
+category: javascript
+subtitle: "A practical comparison of two modern TypeScript validation libraries"
+tags: ["validation","valibot","zod"]
+image: ./images/valibot-vs-zod.png
+permalink: valibot-vs-zod
+slug: valibot-vs-zod
+---
+
+# Valibot vs Zod — Can a 1KB Validator Replace Zod?
+
+Modern JavaScript applications rely heavily on external data sources. APIs, forms, query parameters, cookies, and configuration files all deliver data that your application must trust and process.
+
+But in practice, external data **cannot be trusted**.
+
+Fields disappear. Types change. Backends evolve. A simple typo in a property name can break an entire page.
+
+Schema validation libraries solve this problem by adding a **runtime validation layer** between your application and external data.
+
+Two libraries dominate this space today:
+
+- [Zod](https://zod.dev/)
+- [Valibot](https://valibot.dev/)
+
+Zod has been the standard for years. Valibot, however, is a newer library designed with a different philosophy: **smaller bundles and faster validation**.
+
+---
+
+# Why Validation Libraries Matter
+
+TypeScript provides compile‑time guarantees, but it cannot guarantee runtime correctness.
+
+Example:
+
+```ts
+const response = await fetch("/api/user/1")
+const user = await response.json()
+```
+
+Runtime data might not match expectations.
+
+Validation libraries ensure data integrity before it reaches business logic.
+
+---
+
+# Validating API Responses with Valibot
+
+```ts
+import * as v from "valibot"
+
+const ProductSchema = v.object({
+  id: v.number(),
+  title: v.string(),
+  price: v.number(),
+  rating: v.number(),
+  images: v.array(v.string())
+})
+
+type Product = v.InferOutput<typeof ProductSchema>
+
+export async function loadProduct(id:number):Promise<Product>{
+
+  const res = await fetch(`https://dummyjson.com/products/${id}`)
+  const data = await res.json()
+
+  try{
+    return v.parse(ProductSchema,data)
+  }
+  catch(error){
+    console.error("Invalid API response",error)
+    throw new Error("Product validation failed")
+  }
+
+}
+```
+
+---
+
+# Validating Form Input
+
+```ts
+import * as v from "valibot"
+
+const RegistrationSchema = v.object({
+
+  username:v.pipe(
+    v.string(),
+    v.minLength(3)
+  ),
+
+  email:v.pipe(
+    v.string(),
+    v.email()
+  ),
+
+  age:v.pipe(
+    v.string(),
+    v.digits(),
+    v.transform(Number)
+  ),
+
+  password:v.pipe(
+    v.string(),
+    v.minLength(6)
+  )
+
+})
+
+type RegistrationData = v.InferOutput<typeof RegistrationSchema>
+```
+
+---
+
+# Cross‑Field Validation
+
+```ts
+const RegistrationSchema = v.pipe(
+
+  v.object({
+
+    email:v.pipe(
+      v.string("Email must be text"),
+      v.email("Enter a valid email")
+    ),
+
+    age:v.pipe(
+      v.string(),
+      v.digits("Age must contain digits"),
+      v.transform(Number),
+      v.minValue(18,"You must be at least 18")
+    ),
+
+    password:v.pipe(
+      v.string(),
+      v.minLength(6,"Password must contain at least 6 characters")
+    ),
+
+    confirmPassword:v.string()
+
+  }),
+
+  v.forward(
+    v.partialCheck(
+      [["password"],["confirmPassword"]],
+      ({password,confirmPassword}) => password === confirmPassword,
+      "Passwords do not match"
+    ),
+    ["confirmPassword"]
+  )
+
+)
+```
+
+---
+
+# Code Comparison
+
+### Valibot
+
+```ts
+import * as v from "valibot"
+
+const BookSchema = v.object({
+  title:v.string(),
+  price:v.number()
+})
+
+v.parse(BookSchema,{title:"JavaScript Guide",price:30})
+```
+
+### Zod
+
+```ts
+import {z} from "zod"
+
+const BookSchema = z.object({
+  title:z.string(),
+  price:z.number()
+})
+
+BookSchema.parse({title:"JavaScript Guide",price:30})
+```
+
+---
+
+# Benchmark Scripts
+
+### Valibot
+
+```ts
+import * as v from "valibot"
+
+const schema = v.object({
+ id:v.number(),
+ name:v.string(),
+ price:v.number(),
+ rating:v.number(),
+ tags:v.array(v.string())
+})
+
+const sample = {
+ id:1,
+ name:"Laptop",
+ price:1500,
+ rating:4.8,
+ tags:["tech","computer"]
+}
+
+function benchmarkValibot(iterations:number){
+
+ const start = performance.now()
+
+ for(let i=0;i<iterations;i++){
+  v.parse(schema,sample)
+ }
+
+ return performance.now() - start
+
+}
+
+console.log("Valibot:",benchmarkValibot(10000),"ms")
+```
+
+### Zod
+
+```ts
+import {z} from "zod"
+
+const schema = z.object({
+ id:z.number(),
+ name:z.string(),
+ price:z.number(),
+ rating:z.number(),
+ tags:z.array(z.string())
+})
+
+const sample = {
+ id:1,
+ name:"Laptop",
+ price:1500,
+ rating:4.8,
+ tags:["tech","computer"]
+}
+
+function benchmarkZod(iterations:number){
+
+ const start = performance.now()
+
+ for(let i=0;i<iterations;i++){
+  schema.parse(sample)
+ }
+
+ return performance.now() - start
+
+}
+
+console.log("Zod:",benchmarkZod(10000),"ms")
+```
+
+---
+
+# Benchmark Results
+
+### Valid data
+
+| Library | min (ms) | max (ms) |
+|--------|---------|---------|
+| Valibot | 26.58 | 27.31 |
+| Zod | 67.02 | 70.25 |
+
+### Invalid data
+
+| Library | min (ms) | max (ms) |
+|--------|---------|---------|
+| Valibot | 48.63 | 54.70 |
+| Zod | 143.63 | 147.79 |
+
+---
+
+# Bundle Size
+
+Replacing Zod with Valibot reduced bundle size by **~11.4 KB (gzip)** in a medium project.
+
+---
+
+# Popularity
+
+| Library | Weekly downloads |
+|--------|-----------------|
+| Valibot | ~1.2M |
+| Zod | ~89.5M |
+
+---
+
+# Conclusion
+
+Validation libraries protect applications from unreliable external data.
+
+Valibot proves that validation can be **fast, lightweight, and developer‑friendly**.
+
+For new projects, Valibot is definitely worth considering.
