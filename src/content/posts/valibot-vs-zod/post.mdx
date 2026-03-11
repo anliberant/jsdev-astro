@@ -13,7 +13,7 @@ permalink: valibot-vs-zod
 slug: valibot-vs-zod
 ---
 
-# Valibot vs Zod — Can a 1KB Validator Replace Zod?
+## Valibot vs Zod — Can a 1KB Validator Replace Zod?
 
 Modern JavaScript applications rely heavily on external data sources. APIs, forms, query parameters, cookies, and configuration files all deliver data that your application must trust and process.
 
@@ -32,7 +32,7 @@ Zod has been the standard for years. Valibot, however, is a newer library design
 
 ---
 
-# Why Validation Libraries Matter
+## Why Validation Libraries Matter
 
 TypeScript provides compile‑time guarantees, but it cannot guarantee runtime correctness.
 
@@ -49,7 +49,7 @@ Validation libraries ensure data integrity before it reaches business logic.
 
 ---
 
-# Validating API Responses with Valibot
+## Validating API Responses with Valibot
 
 ```ts
 import * as v from "valibot"
@@ -82,7 +82,7 @@ export async function loadProduct(id:number):Promise<Product>{
 
 ---
 
-# Validating Form Input
+## Validating Form Input
 
 ```ts
 import * as v from "valibot"
@@ -117,7 +117,7 @@ type RegistrationData = v.InferOutput<typeof RegistrationSchema>
 
 ---
 
-# Cross‑Field Validation
+## Cross‑Field Validation
 
 ```ts
 const RegistrationSchema = v.pipe(
@@ -159,7 +159,7 @@ const RegistrationSchema = v.pipe(
 
 ---
 
-# Code Comparison
+## Code Comparison
 
 ### Valibot
 
@@ -189,7 +189,7 @@ BookSchema.parse({title:"JavaScript Guide",price:30})
 
 ---
 
-# Benchmark Scripts
+## Benchmark Scripts
 
 ### Valibot
 
@@ -265,7 +265,7 @@ console.log("Zod:",benchmarkZod(10000),"ms")
 
 ---
 
-# Benchmark Results
+## Benchmark Results
 
 ### Valid data
 
@@ -283,13 +283,13 @@ console.log("Zod:",benchmarkZod(10000),"ms")
 
 ---
 
-# Bundle Size
+## Bundle Size
 
 Replacing Zod with Valibot reduced bundle size by **~11.4 KB (gzip)** in a medium project.
 
 ---
 
-# Popularity
+## Popularity
 
 | Library | Weekly downloads |
 |--------|-----------------|
@@ -298,7 +298,7 @@ Replacing Zod with Valibot reduced bundle size by **~11.4 KB (gzip)** in a mediu
 
 ---
 
-# Conclusion
+## Conclusion
 
 Validation libraries protect applications from unreliable external data.
 
