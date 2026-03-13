@@ -1,0 +1,227 @@
+---
+title: 'Friday Links #36 — JavaScript Ecosystem Weekly'
+slug: friday-36
+heading: "Friday Links #36 — Major JavaScript Updates"
+image: ./images/friday-36.png
+permalink: friday/friday-36
+date: 2026-03-13
+author: anton liberant
+type: friday
+isDraft: false
+desc: "A curated roundup of JavaScript ecosystem news: TypeScript, Node.js, Deno, AI developer tools, security discoveries, and new libraries from the past two weeks."
+subtitle: 'Major updates across JavaScript runtimes, AI developer tools, security research, and next-generation tooling.'
+---
+
+![Friday Links #36](./images/friday-36.png)
+
+The JavaScript ecosystem never slows down.  
+Over the past two weeks we’ve seen **major updates across runtimes, frameworks, tooling, and security**.
+
+In this issue of **Friday Links**, we highlight the most interesting developments across the JavaScript world — from infrastructure changes and new tools to security research and ecosystem trends.
+
+## 🧠 Ecosystem Highlights
+
+### TypeScript 6 Prepares the Path to TS7
+
+The TypeScript team [released](https://devblogs.microsoft.com/typescript/announcing-typescript-6-0-rc/) an early preview of **TypeScript 6**.
+
+This release is mainly about **internal changes preparing for the future Go-based compiler planned for TypeScript 7**.
+
+Key goals:
+
+- faster compilation
+- reduced memory usage
+- better incremental builds
+- improved large project performance
+
+Large monorepos could see **dramatic speed improvements** once the Go compiler lands.
+
+### Deno 2.7 Improves Node Compatibility
+
+The latest [**Deno runtime release**](https://deno.com/blog/v2.7) continues improving Node compatibility.
+
+Highlights:
+
+- improved npm integration
+- Node API compatibility
+- Temporal API stabilization
+
+Example:
+
+```ts
+const now = Temporal.Now.instant()
+console.log(now.toString())
+```
+
+---
+
+## 📜 Articles & Tutorials
+
+[Under the hood: Security architecture of GitHub Agentic Workflows](https://github.blog/ai-and-ml/generative-ai/under-the-hood-security-architecture-of-github-agentic-workflows/)
+
+[Beating JavaScript Performance Limits With Rust and N-API: Building a Faster Image Diff Tool](https://hackernoon.com/beating-javascript-performance-limits-with-rust-and-n-api-building-a-faster-image-diff-tool)
+
+[The Different Ways to Select `<html>` in CSS](https://css-tricks.com/the-different-ways-to-select-html-in-css/)
+
+[The Big Gotcha of Anchor Positioning](https://frontendmasters.com/blog/the-big-gotcha-of-anchor-positioning/)
+
+[How to steal npm publish tokens by opening GitHub issues](https://neciudan.dev/cline-ci-got-compromised-here-is-how)
+
+[How to Decode a VIN in JavaScript](https://cardog.app/blog/vin-decoder-javascript)
+
+[Making a Flappy Bird clone using pure HTML and CSS, no JavaScript](https://blog.scottlogic.com/2026/03/09/noJS-3-flappy-bird.html)
+
+[How to build a pnpm monorepo, the right way](https://www.ishchhabra.com/writing/pnpm-monorepo)
+
+[React is changing the game for streaming apps with the Activity component](https://www.mux.com/blog/react-is-changing-the-game-for-streaming-apps-with-the-activity-component)
+
+[Using CSS animations as state machines to remember focus and hover states with CSS only](https://patrickbrosset.com/articles/2026-03-09-using-css-animations-as-state-machines-to-remember-focus-and-hover-states-with-css-only/)
+
+[You Don’t Know HTML Tables](https://blog.frankmtaylor.com/2026/03/05/you-dont-know-html-tables/)
+
+[5 React Hooks Techniques to Improve Component Performance](https://reactdevelopment.substack.com/p/5-react-hooks-techniques-to-improve)
+
+## ⚒️ Tools
+
+### Repomix — Turn Any Repo Into a Single AI-Readable File
+
+![Repomix](./images/repomix.png)
+
+[Repomix](https://github.com/yamadashy/repomix) packs an entire repository into a single AI-friendly document.
+
+[Cursor Cloud Telegram Connector](https://github.com/tb5z035i/cursor-tg)
+
+[npmx](https://npmx.dev/) is an experimental tool designed to improve npm package exploration.
+
+[Wely](https://litepacks.github.io/welyjs/) — Lightweight Web Component Framework
+
+[Ink](https://github.com/vadimdemedes/ink) allows developers to build CLI tools using React components.
+
+[Cron Expression Generator](https://sojinantony01.github.io/react-cron-generator/)
+
+## 📚 Libs
+
+[Node File Trace](https://github.com/vercel/nft) - determines exactly which files a Node application needs to run.
+
+[JavaScript Minification Benchmarks](https://github.com/privatenumber/minification-benchmarks): SWC Still Leads
+
+[RevoGrid](https://rv-grid.com/) - High-Performance Data Grid Component
+
+[VMPrint](https://github.com/cosmiciron/vmprint) - A pure-JS, tiny typesetting engine with bit-perfect PDF output on everything—from Cloudflare Workers to the browser.
+
+[markdown-to-jsx](https://github.com/quantizor/markdown-to-jsx) -  A very fast and versatile markdown toolchain. Output to AST, React, React Native, SolidJS, Vue, HTML, and more! 
+
+[clipboardy](https://github.com/sindresorhus/clipboardy) -  Access the system clipboard (copy/paste) 
+
+## ⌚ Releases
+
+[Solid v2.0.0 Beta: The `<Suspense>` Era Comes to an End](https://github.com/solidjs/solid/releases/tag/v2.0.0-beta.0)
+
+After a long experimental phase, Solid 2.0 has released its first beta, introducing native asynchronous reactivity as a core feature of the framework.
+
+In this new model, reactive computations can directly return Promises or async iterables, and Solid’s reactive graph will automatically suspend and resume around those async operations. This removes much of the complexity developers previously had to manage when dealing with asynchronous state.
+
+One notable change is that `<Suspense>` has been retired. For initial renders, it is now replaced by a simpler component called `<Loading>`.
+
+[Astro 6 is here!](https://astro.build/blog/astro-6/)
+
+[Node.js 25.8.0 (Current)](https://nodejs.org/en/blog/release/v25.8.0)
+
+[ESLint v10.0.3 released](https://eslint.org/blog/2026/03/eslint-v10.0.3-released/)
+
+[Ember 6.11 Released](https://blog.emberjs.com/ember-released-6-11/)
+
+[Ionic Framework 8.8](https://ionic.io/blog/announcing-ionic-framework-8-8)
+
+[React Native 0.85 RC.0](https://github.com/facebook/react-native/releases/tag/v0.85.0-rc.0), [pnpm 10.32](https://github.com/pnpm/pnpm/releases/tag/v10.32.0), [Jest 30.3](https://github.com/jestjs/jest/releases/tag/v30.3.0), [Recharts 3.8](https://github.com/recharts/recharts/releases/tag/v3.8.0), 
+[OpenPlayer.js 3.0.2](https://github.com/openplayerjs/openplayerjs/releases/tag/v3.0.2), [Prisma 7.5](https://github.com/prisma/prisma/releases/tag/7.5.0), [SQLite JS 1.3](https://github.com/sqliteai/sqlite-js), [React Helmet Async 3.0](https://github.com/staylor/react-helmet-async/pull/260), [Preact 10.29.0](https://github.com/preactjs/preact/releases/tag/10.29.0)
+
+## 📺 Videos
+
+[Build Your Own Video Sharing App – Loom Clone with Next.js and Mux JavaScript Tutorial](https://www.youtube.com/watch?v=IBTx5aGj-6U)
+
+[You Can Just Ship Agents: Architecting for the Agentic Era | Dom Sipowicz, Vercel](https://www.youtube.com/watch?v=_TRV6fPUMJw)
+
+[The Future of TypeScript](https://www.youtube.com/watch?v=wvt5JNUXXLM)
+
+[Build Your Own Video Sharing App – Loom Clone with Next.js and Mux JavaScript Tutorial](https://www.youtube.com/watch?v=IBTx5aGj-6U)
+
+[Cloudflare just slop forked Next.js…](https://www.youtube.com/watch?v=abbeIUOCzmw)
+
+[7 new open source AI tools you need right now…](https://www.youtube.com/watch?v=Xn-gtHDsaPY)
+
+[NEW Tanstack Hotkeys Library is Amazing](https://www.youtube.com/watch?v=S26VdcWQzRQ)
+
+## 🎤 Talks & Podcasts
+
+[Why are we building CodePen v2? — CodePen Radio 419](https://www.youtube.com/watch?v=S_wCMc_iNk4)
+
+[Stop putting secrets in .env](https://www.youtube.com/watch?v=M5IkdUunf8g)
+
+## 🗞️ News & Updates
+
+### The web industry is gradually shortening the maximum lifespan of TLS certificates.
+
+Starting March 15, 2026, the limit will drop from 398 days to 200 days. The timeline continues with further reductions: 100 days in 2027, and by 2029 the maximum validity period will shrink to just 47 days.
+
+Because of these changes, [Heroku recommends enabling automatic certificate renewal](https://www.heroku.com/blog/preparing-for-shorter-ssl-tls-certificate-lifetimes/) to avoid unexpected expirations and potential service disruptions.
+
+[Eleventy is now Build Awesome](https://www.11ty.dev/blog/build-awesome/)
+
+## 🔐 Security
+
+### Supply-Chain Attacks Target Developers
+
+Researchers recently discovered malicious GitHub repositories disguised as job assignments.
+
+When opened in VS Code they may execute scripts automatically.
+
+Developers should always review:
+
+```
+.vscode/tasks.json
+.vscode/settings.json
+package.json
+```
+
+🔗 [thehackernews](https://thehackernews.com/2026/02/fake-nextjs-repos-target-developers.html)
+
+### vm2 Sandbox Escape Vulnerability
+
+A critical vulnerability was discovered in vm2, a sandbox library used for executing untrusted JavaScript.
+
+This vulnerability allows escaping the sandbox and executing arbitrary code.
+
+🔗 [github.com/patriksimek/vm2](https://github.com/patriksimek/vm2)
+
+### Researchers at Brave discovered that web agents often leak user information — even when explicitly instructed not to.
+
+In a [study involving 1,080 runs](https://brave.com/blog/agentic-oversharing/) on Amazon and eBay, agents powered by GPT-4o, O3, and O4-mini repeatedly exposed data to third-party services that had nothing to do with the task they were performing.
+
+Examples included:
+
+- inserting conversation history into search fields
+- revealing personal details through interaction patterns
+- unintentionally sending contextual data to external services
+
+The findings highlight a growing concern: AI web agents may unintentionally expose sensitive user information through their behavior, even when privacy safeguards are in place.
+
+The **Anthropic team** recently analyzed the Firefox codebase using Claude and uncovered [14 critical vulnerabilities](https://blog.mozilla.org/en/firefox/hardening-firefox-anthropic-red-team/) that had gone unnoticed for years.
+
+In total, the investigation led to the discovery of 22 security issues, all of which were assigned CVE identifiers and addressed in Firefox 148.
+
+Some of these vulnerabilities had reportedly been present in the codebase for over a decade, highlighting how AI-assisted analysis can help uncover deeply hidden security flaws in large, mature software projects.
+
+[How we got hit by Shai-Hulud: A complete post-mortem](https://trigger.dev/blog/shai-hulud-postmortem)
+
+---
+
+The JavaScript ecosystem is entering an interesting phase.
+
+Tooling is increasingly written in Rust and Go, runtimes are competing to deliver faster developer workflows, and AI is beginning to influence everything from code editors to vulnerability research.
+
+At the same time, security and supply-chain awareness are becoming central concerns for modern development.
+
+Whether you're working with Node, Deno, Bun, or the browser, keeping up with these shifts helps you understand where the ecosystem is heading next.
+
+See you in the next issue of **Friday Links**, where we track the most interesting developments across the JavaScript universe.

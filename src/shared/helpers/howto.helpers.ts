@@ -71,6 +71,11 @@ export const getHowtoCategoryInfo = (category: string): HowtoCategoryInfo => {
     description =
       'Dive into the world of React with our comprehensive how-to guides designed for developers of all skill levels. Whether you’re just starting or looking to refine your skills, our tutorials cover everything from setting up your development environment to building complex, interactive user interfaces. Explore key concepts like components, state management, hooks, and routing, along with best practices for optimizing performance and enhancing user experience. With clear, step-by-step instructions and practical examples, our resources will empower you to create dynamic web applications using React effectively.';
   }
+  if (category === 'ai') {
+    name = 'AI How-To Guides';
+    description =
+      'Unlock the potential of artificial intelligence with our comprehensive AI how-to guides designed for developers of all skill levels. From understanding the basics of machine learning and neural networks to implementing advanced AI models and algorithms, our tutorials cover everything you need to know. Learn how to leverage popular AI frameworks, preprocess data, and deploy AI solutions in real-world applications. With clear, step-by-step instructions and practical examples, our resources will empower you to harness the power of AI and drive innovation in your projects.';
+  }
 
   return {
     name,

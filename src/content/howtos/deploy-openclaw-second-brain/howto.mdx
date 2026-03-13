@@ -1,0 +1,324 @@
+---
+title: "Howto Deploy OpenClaw and Build Your Personal AI Second Brain"
+slug: deploy-openclaw-second-brain
+heading: "Deploying OpenClaw from Scratch: Building Your Personal AI
+  Second Brain"
+icon: /icons/ai.png
+image: /icon.png
+permalink: howto/deploy-openclaw-second-brain
+date: 2026-03-13
+author: anton liberant
+category: ai
+type: howto
+tags: ['openclaw', 'automation', 'self-hosting']
+desc: Learn how to deploy OpenClaw from scratch on Windows, macOS, or
+  Linux and build a private AI assistant with memory, tool integrations,
+  and automation.
+subtitle: 'Practical guide to installing, configuring, and running OpenClaw locally to create a powerful AI assistant that remembers your work and
+integrates your tools.'
+---
+
+Most AI assistants today are little more than chat interfaces. They
+answer questions but cannot access your tools, remember your
+preferences, or perform real work. [OpenClaw](https://openclaw.ai/) takes a different approach.
+
+Instead of functioning purely as a chatbot, OpenClaw acts as a
+**programmable cognitive partner**. It can:
+
+-   remember long‑term context
+-   connect to external tools
+-   automate workflows
+-   run entirely on infrastructure you control
+
+This guide explains how to deploy OpenClaw from scratch and configure it
+on **Windows, macOS, or Linux**.
+
+By the end of this tutorial you will have a working OpenClaw instance
+running locally.
+
+------------------------------------------------------------------------
+
+## Why Use OpenClaw
+
+### Private Deployment
+
+All conversations and memory stay on your own machine or server.
+
+### Tool Integration
+
+OpenClaw can interact with tools such as:
+
+-   GitHub
+-   calendars
+-   APIs
+-   automation workflows
+
+### Persistent Memory
+
+OpenClaw includes both **short‑term and long‑term memory**, allowing it
+to remember:
+
+-   user preferences
+-   project details
+-   conversation context
+
+### Open Source
+
+OpenClaw is released under the MIT license, meaning the entire system is
+fully auditable and customizable.
+
+------------------------------------------------------------------------
+
+## System Requirements
+
+Minimum environment:
+
+```
+Node.js 18+
+npm or pnpm
+8 GB RAM recommended
+2 GB disk space
+```
+
+Supported platforms:
+
+-   macOS
+-   Linux
+-   Windows (PowerShell or WSL2)
+
+------------------------------------------------------------------------
+
+## Verify Your Environment
+
+### macOS / Linux
+
+```bash
+node --version
+npm --version
+```
+
+If Node is missing, install it from:
+
+https://nodejs.org
+
+------------------------------------------------------------------------
+
+## Installation Method 1: One‑Step Installer
+
+### macOS / Linux
+
+`curl -fsSL https://docs.openclaw.ai/install.sh | bash`
+
+After installation open:
+
+`http://localhost:18789`
+
+### Windows (PowerShell)
+
+Clone the repository and start the gateway manually:
+
+```bash
+git clone https://github.com/openclawai/openclaw.git
+cd openclaw
+npm install
+npm run start:gateway
+```
+
+### Windows with WSL2 (Recommended)
+
+Install WSL:
+
+`wsl --install`
+
+Then inside WSL:
+
+`curl -fsSL https://docs.openclaw.ai/install.sh | bash`
+
+Access the interface via:
+
+`http://localhost:18789`
+
+------------------------------------------------------------------------
+
+## Installation Method 2: Manual Installation
+
+### Clone Repository
+
+```bash
+git clone https://github.com/openclawai/openclaw.git
+cd openclaw
+```
+
+### Install Dependencies
+
+```bash
+npm install -g pnpm
+pnpm install
+```
+
+or
+
+`npm install`
+
+### Configure Workspace
+
+macOS / Linux
+
+```
+export OPENCLAW_WORKSPACE=~/.openclaw/workspace
+mkdir -p $OPENCLAW_WORKSPACE
+```
+
+Windows PowerShell
+
+```
+setx OPENCLAW_WORKSPACE "%USERPROFILE%\.openclaw\workspace"
+mkdir %USERPROFILE%\.openclaw\workspace
+```
+
+### Copy Configuration
+
+`cp config.example.yaml config.yaml`
+
+Windows
+
+`copy config.example.yaml config.yaml`
+
+### Start Gateway
+
+`pnpm start:gateway`
+
+------------------------------------------------------------------------
+
+## Docker Deployment
+
+Create `docker-compose.yml`
+
+```yaml
+    version: "3.8"
+
+    services:
+      openclaw:
+        image: ghcr.io/openclaw/openclaw:latest
+        container_name: openclaw
+        ports:
+          - "18789:18789"
+          - "18792:18792"
+        environment:
+          - OPENCLAW_WORKSPACE=/workspace
+          - NODE_ENV=production
+        volumes:
+          - ./workspace:/workspace
+          - ./config.yaml:/app/config.yaml
+          - ./logs:/var/log/openclaw
+        restart: unless-stopped
+```
+Start the container:
+
+`docker-compose up -d`
+
+View logs:
+
+`docker-compose logs -f`
+
+------------------------------------------------------------------------
+
+## Configuring AI Models
+
+Example configuration in `config.yaml`:
+
+```yaml
+    agents:
+      defaults:
+        model: "siliconflow/deepseek-ai/DeepSeek-V3.2"
+```
+
+Alternative models:
+
+```
+openai/gpt-4
+anthropic/claude-3-opus
+google/gemini-2.0
+```
+
+
+## Enabling Skills
+
+Skills allow OpenClaw to interact with external services.
+
+Example configuration:
+
+```
+    skills:
+      enabled:
+        - github
+        - weather
+```
+
+Install additional skills:
+
+`openclaw skills install github`
+
+------------------------------------------------------------------------
+
+## Creating Your First Custom Skill
+
+Create directory:
+
+`mkdir ~/.openclaw/workspace/skills/my-skill`
+
+Create `SKILL.md`:
+
+```md
+# Custom Skill
+
+## Description
+Automation skill for internal APIs.
+
+## Usage
+/my-skill [arguments]
+
+## Capabilities
+- API access
+- file reading
+- workflow automation
+```
+------------------------------------------------------------------------
+
+# Troubleshooting
+
+### Port Already In Use
+
+macOS / Linux
+
+`lsof -i :18789`
+
+Windows
+
+`netstat -ano | findstr 18789`
+
+Kill process:
+
+Linux/macOS
+
+`pkill -f openclaw`
+
+Windows
+
+`taskkill /PID <pid> /F`
+
+------------------------------------------------------------------------
+
+## Conclusion
+
+OpenClaw is more than a chatbot. It is a programmable AI platform
+capable of integrating with real workflows, remembering context, and
+evolving through custom skills.
+
+Once deployed, it can become a powerful **personal AI infrastructure
+layer** that helps automate tasks, analyze code, and manage complex
+workflows.
+
+For developers interested in building their own AI ecosystem, OpenClaw
+provides a strong foundation for creating a true **digital second
+brain**.

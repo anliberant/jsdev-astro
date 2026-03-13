@@ -214,6 +214,24 @@ export const getCategoryInfo = (
     }
   }
 
+  if (cat === 'ai') {
+    if (type === 'howto') {
+      name = 'Optimizing AI Performance';
+      heading = 'AI How‑To: Models, Data, and Efficiency';
+      description =
+        'Choose the right model, clean your data, and optimize inference. Smarter AI with less compute.';
+      metaDescription =
+        'AI how‑to: model selection, data prep, and inference optimization for smarter, efficient AI.';
+    } else {
+      name = 'AI Models';
+      heading = 'AI: Practical Machine Learning for Developers';
+      description =
+        'Guides on model types, training, and deployment. Add AI features that users love.';
+      metaDescription =
+        'AI tutorials on model types, training, and deployment. Build AI features that users enjoy.';
+    }
+  }
+
   if (cat === 'electron') {
     if (type === 'howto') {
       name = 'Optimizing ElectronJS Apps';
