@@ -1,0 +1,403 @@
+---
+title: Howto Use IMask.js for Input Masking in JavaScript Forms
+slug: imaskjs-input-masking
+heading: How to Implement Input Masking with IMask.js in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/imaskjs-input-masking
+date: 2026-03-17
+author: anton liberant
+category: javascript
+type: howto
+tags: ['immutable', 'object']
+desc: Learn how to implement input masking for cards, dates, currency, and more using IMask.js with real-world examples and best practices.
+subtitle: 'Build cleaner, safer, and user-friendly forms with real-time input masking.'
+---
+
+## Introduction
+
+Form handling is one of the most underestimated parts of frontend development.
+
+It looks simple: just a few inputs, maybe a submit button. But in reality, forms are where most user frustration happens. Incorrect formats, unclear validation rules, and inconsistent input behavior all lead to errors, abandoned flows, and bad data.
+
+Input masking solves this at the source.
+
+Instead of reacting to bad input after submission, you guide the user while they type.
+
+In this article, we’ll go deep into IMask.js — a lightweight, flexible library that allows you to control input formatting in real time. This is not just a basic tutorial. You’ll learn patterns, edge cases, and production-ready practices.
+
+---
+
+## Why Input Masking Is a Core UX Layer
+
+Without masking:
+
+- users guess formats
+- validation fails often
+- error messages increase friction
+- backend receives inconsistent data
+
+With masking:
+
+- input is guided instantly
+- errors are prevented early
+- formatting becomes predictable
+- UX feels faster and more professional
+
+Masking is not just visual formatting — it's a **data normalization layer at the UI level**.
+
+---
+
+## What Makes IMask.js Different
+
+IMask.js stands out because it combines flexibility with performance.
+
+Key characteristics:
+
+- no dependencies
+- small bundle (~15kb gzipped)
+- works with plain JS and frameworks
+- supports multiple mask types
+- allows custom logic via functions
+- handles mobile input well
+
+Unlike many libraries, IMask doesn’t lock you into one approach. It gives you primitives to build your own behavior.
+
+---
+
+## Installation
+
+```bash
+pnpm add imask
+```
+
+```js
+import MaskCore from "imask"
+```
+
+---
+
+## Mental Model of IMask
+
+Before writing code, understand how IMask works internally.
+
+There are three key concepts:
+
+1. **Input Element** – the DOM node
+2. **Mask Configuration** – rules defining formatting
+3. **Mask Instance** – runtime controller
+
+```js
+const inputNode = document.querySelector("#phone")
+
+const maskController = MaskCore(inputNode, {
+  mask: "+{1} (000) 000-0000"
+})
+```
+
+The instance acts as a bridge between raw input and formatted output.
+
+---
+
+## Basic Example: Phone Input
+
+```html
+<input id="contact-phone" placeholder="+1 (___) ___-____" />
+```
+
+```js
+const phoneNode = document.querySelector("#contact-phone")
+
+const phoneController = MaskCore(phoneNode, {
+  mask: "+{1} (000) 000-0000"
+})
+```
+
+As the user types, formatting is applied automatically.
+
+---
+
+## Static Masks (Fixed Structure)
+
+Use static masks when format is strictly defined.
+
+```js
+const cardNode = document.querySelector("#card")
+
+const cardController = MaskCore(cardNode, {
+  mask: "0000 0000 0000 0000"
+})
+```
+
+Best for:
+
+- credit cards
+- IDs
+- formatted codes
+
+---
+
+## Dynamic Masks (Multiple Formats)
+
+```js
+const phoneDynamic = MaskCore(document.querySelector("#phone"), {
+  mask: [
+    { mask: "+{1} (000) 000-0000" },
+    { mask: "+{44} 0000 000000" }
+  ]
+})
+```
+
+IMask automatically selects the correct pattern based on input.
+
+---
+
+## Number Mask (Currency & Prices)
+
+```js
+const amountNode = document.querySelector("#amount")
+
+const currencyController = MaskCore(amountNode, {
+  mask: Number,
+  min: 0,
+  max: 1000000,
+  thousandsSeparator: ",",
+  radix: ".",
+  precision: 2,
+  prefix: "$ "
+})
+```
+
+This handles:
+
+- formatting
+- decimal precision
+- limits
+- separators
+
+---
+
+## Date Mask
+
+```js
+const dateNode = document.querySelector("#date")
+
+const dateController = MaskCore(dateNode, {
+  mask: Date,
+  pattern: "yyyy-mm-dd",
+  lazy: false
+})
+```
+
+This prevents invalid formats like `2026-99-99`.
+
+---
+
+## Regex Mask
+
+```js
+const emailNode = document.querySelector("#email")
+
+const emailController = MaskCore(emailNode, {
+  mask: /^\S+@\S+\.\S+$/
+})
+```
+
+Good for:
+
+- simple validation rules
+- constrained input
+
+---
+
+## Function Mask (Full Control)
+
+```js
+const evenNode = document.querySelector("#even")
+
+const evenController = MaskCore(evenNode, {
+  mask: (value) => {
+    const parsed = Number(value)
+    return parsed % 2 === 0 ? value : value.slice(0, -1)
+  }
+})
+```
+
+This approach is powerful but should be used carefully.
+
+---
+
+## Real-World Example: Credit Card Detection
+
+```js
+const ccNode = document.querySelector("#cc")
+
+const ccController = MaskCore(ccNode, {
+  mask: "0000 0000 0000 0000"
+})
+
+ccController.on("accept", () => {
+  const raw = ccController.unmaskedValue
+
+  let type = "unknown"
+
+  if (/^4/.test(raw)) type = "visa"
+  else if (/^5[1-5]/.test(raw)) type = "mastercard"
+  else if (/^3[47]/.test(raw)) type = "amex"
+
+  console.log(type)
+})
+```
+
+---
+
+## Events System
+
+IMask exposes lifecycle hooks:
+
+```js
+maskController.on("accept", () => {
+  console.log(maskController.value)
+})
+
+maskController.on("complete", () => {
+  console.log("complete")
+})
+
+maskController.on("reject", (input) => {
+  console.log("rejected", input)
+})
+```
+
+These allow integration with UI state, validation, and analytics.
+
+---
+
+## Advanced Configuration
+
+```js
+MaskCore(inputNode, {
+  mask: "0000-00-00",
+  lazy: true,
+  nullable: false,
+  unmask: true,
+  placeholderChar: "_",
+  prepare: (val) => val.toUpperCase(),
+  validate: (val) => val.length === 10
+})
+```
+
+Important options:
+
+- `lazy` → allow partial input
+- `unmask` → return raw value
+- `prepare` → transform input
+- `validate` → enforce rules
+
+---
+
+## React Integration
+
+```tsx
+import { useEffect, useRef } from "react"
+import MaskCore from "imask"
+
+export function MaskedInput() {
+  const nodeRef = useRef(null)
+
+  useEffect(() => {
+    const instance = MaskCore(nodeRef.current, {
+      mask: "+{1} (000) 000-0000"
+    })
+
+    return () => instance.destroy()
+  }, [])
+
+  return <input ref={nodeRef} />
+}
+```
+
+---
+
+## Common Pitfalls
+
+### 1. Changing Value Directly
+
+Wrong:
+
+```js
+inputNode.value = "123"
+```
+
+Correct:
+
+```js
+maskController.value = "123"
+```
+
+---
+
+### 2. Autofill Conflicts
+
+```html
+<input autocomplete="off" />
+```
+
+Or sync manually:
+
+```js
+inputNode.addEventListener("change", () => {
+  maskController.updateValue()
+})
+```
+
+---
+
+### 3. Mobile Input Issues
+
+Use:
+
+```js
+lazy: true
+```
+
+to reduce input jitter.
+
+---
+
+## Best Practices
+
+- keep masks readable
+- avoid over-engineering regex
+- always use unmaskedValue for backend
+- keep commits atomic (if integrating with forms logic)
+- test on mobile devices
+
+---
+
+## When NOT to Use Masking
+
+Avoid masking when:
+
+- input is free text
+- validation is business-driven (not format-driven)
+- accessibility would suffer
+
+---
+
+## Conclusion
+
+IMask.js is not just a utility — it's a UX upgrade.
+
+It allows you to:
+
+- enforce structure at input level
+- reduce validation complexity
+- improve perceived performance
+- create predictable user flows
+
+Once integrated properly, your forms stop being fragile.
+
+They become reliable systems.
+
+And in modern frontend development, that’s a huge advantage.
