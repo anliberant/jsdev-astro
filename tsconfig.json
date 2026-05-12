@@ -3,10 +3,9 @@
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "astro",
-    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     },
     "types": [
