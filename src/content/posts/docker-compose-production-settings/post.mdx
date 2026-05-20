@@ -1,0 +1,469 @@
+---
+title: "5 Docker Compose Settings Missing From Most Production Setups"
+heading: "Your docker-compose.yml Works Locally. Production Is Different."
+subtitle: "The Compose file that survives local development can still collapse on a real server."
+slug: docker-compose-production-settings
+permalink: docker-compose-production-settings
+desc: "Your docker-compose.yml may work locally, but production exposes missing limits, restart policies, log rotation, healthchecks, and backup gaps."
+tags: ["docker-compose", "devops", "linux", "production", "containers"]
+author: "Anton Liberant"
+date: 2026-05-21
+category: docker
+image: "./images/docker-compose-production-settings.png"
+type: post
+---
+
+You wrote a `docker-compose.yml`, started everything locally, and it worked perfectly.
+
+You deployed it to a server.
+
+Then you ran:
+
+```bash
+docker compose up -d
+```
+
+Everything looked fine for a week.
+
+Then Postgres quietly consumed all available memory, Linux triggered the OOM killer, and your application died instead of the database.
+
+Or your service crashed at 2 AM and stayed offline because Docker's default restart policy is effectively:
+
+```yaml
+restart: no
+```
+
+Or container logs silently grew to 40 GB and filled the disk.
+
+None of these problems are exotic. They are common production failures caused by Compose files that were written for local development and then promoted to servers without production guardrails.
+
+The uncomfortable part is that most of these failures are fixed with a few lines of configuration.
+
+The problem is that local development rarely forces you to care. Your laptop has enough RAM, plenty of disk space, and you are usually sitting next to the terminal when something breaks. A production server is different. It runs unattended. It accumulates logs. It handles traffic spikes. It restarts after failures. It stores data that should not disappear because someone used the wrong flag.
+
+This article covers five Docker Compose settings that are easy to forget but painful to miss.
+
+## 1. Set Memory and CPU Limits
+
+By default, a container can use as much CPU and memory as the host allows.
+
+That sounds convenient locally. In production, it is a risk.
+
+Imagine a small server running three services:
+
+- your application
+- Postgres
+- Redis
+
+Without limits, any of them can consume enough resources to destabilize the whole machine. In many real systems, the database is the first service to grow aggressively. Postgres sees available memory and uses it. Redis may do the same if its dataset grows. Your application may spike during traffic bursts, image processing, queue jobs, or bad queries.
+
+When the host runs out of memory, Linux does not politely ask Docker which container should stop. The OOM killer chooses a process. Sometimes it kills the database. Sometimes it kills your application while it is handling hundreds of requests.
+
+Add explicit resource boundaries:
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+
+  postgres:
+    image: postgres:16-alpine
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+```
+
+`limits` are the hard ceiling. If the container exceeds the memory limit, Docker isolates the failure to that container instead of letting it consume the entire host.
+
+`reservations` describe the amount of resources the service expects to have available. They are useful when Compose is used with orchestration features, but the most important part for a simple server is still the hard memory limit.
+
+You can check whether a container was killed because of memory pressure:
+
+```bash
+docker inspect myapp --format='{{.State.OOMKilled}}'
+```
+
+If the result is:
+
+```txt
+true
+```
+
+then the container was killed after exceeding its memory allowance.
+
+For Postgres, memory limits should also influence database configuration. If you limit the container to `1G`, setting `shared_buffers` somewhere around `256MB` is a reasonable starting point. The exact value depends on workload, but the important idea is simple: database tuning should match the container's actual memory budget, not the host's total memory.
+
+## 2. Add a Restart Policy
+
+Docker does not automatically restart failed containers unless you tell it to.
+
+That surprises many people.
+
+The default behavior is essentially:
+
+```yaml
+restart: no
+```
+
+If your application crashes, it stays down.
+
+That may be fine during development. It is not fine at 2 AM.
+
+For long-running services, use:
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    restart: unless-stopped
+```
+
+`unless-stopped` is usually the safest default for application services.
+
+It means Docker will restart the container after crashes, daemon restarts, and machine reboots. But if you intentionally stop the service, Docker respects that and does not immediately bring it back.
+
+That makes it more practical than `always` for many small production setups. `always` can be annoying during maintenance because Docker may restart containers you intentionally stopped.
+
+One-off jobs are different.
+
+Migrations, seed scripts, and maintenance tasks should not restart forever:
+
+```yaml
+services:
+  migrator:
+    image: myapp:latest
+    command: ["python", "manage.py", "migrate"]
+    restart: "no"
+
+  app:
+    image: myapp:latest
+    restart: unless-stopped
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+```
+
+This pattern avoids a common production mistake: starting the application before the schema is ready.
+
+If the migration fails, the application should not boot and pretend everything is fine. It should fail early, loudly, and predictably.
+
+## 3. Rotate Container Logs
+
+Docker's default `json-file` logging driver writes logs to disk.
+
+If you do not configure rotation, those files can grow without a practical limit.
+
+A service logging every request at 100 requests per second can generate a surprising amount of data. Over weeks or months, logs can quietly consume tens of gigabytes.
+
+When the disk fills up, the failure is ugly:
+
+- containers may stop
+- writes may fail
+- Docker itself may become unstable
+- recovery may require manual cleanup on the host
+
+Add log rotation directly in Compose:
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+This means each log file can grow to 10 MB, and Docker keeps up to three files per container.
+
+So the container uses roughly 30 MB for logs before old files are rotated out.
+
+For many services, that is enough for quick diagnostics. If you need more history on the host, increase the limits:
+
+```yaml
+logging:
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "10"
+```
+
+That gives you up to 500 MB per container.
+
+You can also define global defaults in `/etc/docker/daemon.json`:
+
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "5"
+  }
+}
+```
+
+After changing daemon settings, restart Docker so new containers use the configuration.
+
+To inspect current log usage:
+
+```bash
+du -sh /var/lib/docker/containers/*/*-json.log | sort -h
+```
+
+If you see multi-gigabyte JSON log files, log rotation was missed.
+
+That is not a logging strategy. It is a delayed outage.
+
+## 4. Add Healthchecks
+
+Docker knows whether a process is running.
+
+It does not automatically know whether your application is useful.
+
+A container can be in a `running` state while the actual service is broken. The process may exist, but the app may be stuck, overloaded, disconnected from the database, or unable to respond to HTTP requests.
+
+Add a healthcheck:
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+```
+
+The `test` command should check something meaningful.
+
+For a web service, a `/health` endpoint is common. It should return a successful status only when the app can actually serve traffic.
+
+`interval` controls how often Docker checks the service.
+
+`timeout` defines how long Docker waits before treating the check as failed.
+
+`retries` defines how many failures are allowed before the container becomes unhealthy.
+
+`start_period` gives the service time to boot before failed checks count. This matters because many applications need time to load configuration, connect to databases, warm caches, or run startup logic.
+
+For Postgres:
+
+```yaml
+services:
+  postgres:
+    image: postgres:16-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+```
+
+Then wire service startup to health status:
+
+```yaml
+services:
+  app:
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+```
+
+This prevents the application from starting before its dependencies are actually ready.
+
+You should still write retry logic in the application. Networks fail. Databases restart. Dependencies can disappear after startup.
+
+But Compose healthchecks reduce pointless boot races and make the system easier to diagnose.
+
+If your image does not include `curl`, use `wget` instead:
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 1"]
+```
+
+Alpine-based images often omit tools you assume are present, so always verify the command exists inside the container.
+
+## 5. Treat Volumes Like Data, Not Magic
+
+Named volumes are useful:
+
+```yaml
+volumes:
+  pgdata:
+```
+
+They persist data across container restarts and rebuilds.
+
+But persistence is not the same as backup.
+
+A named volume still lives on the host. If the host dies, the data is gone. If someone runs:
+
+```bash
+docker compose down -v
+```
+
+Docker removes the volumes too.
+
+For a database, that can mean total data loss.
+
+At minimum, add an automated backup process.
+
+For Postgres, a simple starting point is a scheduled `pg_dump` container:
+
+```yaml
+services:
+  backup:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backups:/backups
+    entrypoint: >
+      sh -c "while true; do
+        PGPASSWORD=$$POSTGRES_PASSWORD pg_dump -h postgres -U postgres mydb |
+        gzip > /backups/backup_$$(date +%Y%m%d_%H%M%S).sql.gz;
+        find /backups -mtime +7 -delete;
+        sleep 86400;
+      done"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
+```
+
+This creates a compressed dump every 24 hours and deletes dumps older than seven days.
+
+But backups stored on the same host are only a partial solution.
+
+They can protect you from accidental volume deletion. They do not protect you from disk failure, server loss, or corrupted storage.
+
+Sync the backup directory to another machine or object storage such as S3-compatible storage.
+
+For Redis, the decision depends on usage.
+
+If Redis is just a cache, backups are usually unnecessary. If Redis stores important data, enable persistence:
+
+```yaml
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1000 --appendonly yes
+    volumes:
+      - redisdata:/data
+
+volumes:
+  redisdata:
+```
+
+Again, persistence is not backup. It only makes Redis survive container restarts.
+
+## A More Production-Ready Compose Example
+
+Here is a compact example combining the main ideas:
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: mydb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save 60 1000 --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
+```
+
+This is not a full production platform. It does not replace monitoring, external backups, secrets management, deployment automation, or proper orchestration.
+
+But it is much safer than a local-only Compose file copied directly to a server.
+
+## Final Thoughts
+
+The settings in this article are not exciting.
+
+That is exactly why people forget them.
+
+Nobody notices missing memory limits during a small local test. Nobody cares about log rotation when the service has been running for five minutes. Nobody worries about volume backups until data disappears.
+
+Production punishes that kind of optimism.
+
+A safer Docker Compose setup should include:
+
+- resource limits so one container cannot starve the host
+- restart policies so services recover after crashes
+- log rotation so disk usage stays bounded
+- healthchecks so Docker can detect broken services
+- backup plans so persistent data is not tied to one fragile host
+
+Your `docker-compose.yml` may look fine on a laptop.
+
+The real test begins when it runs for weeks on a server you are not watching.
