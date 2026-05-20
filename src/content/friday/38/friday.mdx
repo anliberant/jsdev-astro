@@ -1,0 +1,154 @@
+---
+title: 'Friday Links #38 — JavaScript Trends, AI Dev Tools & Releases'
+slug: friday-38
+heading: "What Happened This Week in JavaScript, AI Tooling, and the Modern Web"
+image: ./images/friday-38.png
+permalink: friday/friday-38
+date: 2026-05-22
+author: anton liberant
+type: friday
+isDraft: true
+desc: "A curated roundup of JavaScript news, AI developer tools, framework releases, browser updates, and standout projects from the modern web ecosystem."
+subtitle: 'The latest from the JavaScript ecosystem: framework updates, AI tooling, browser changes, developer experiments, and interesting open-source releases.'
+---
+
+![Friday Links #38](./images/friday-38.png)
+
+Another busy week in the JavaScript world.
+
+Framework releases kept shipping, browser vendors continued experimenting, AI development tools evolved at an uncomfortable speed, and open-source maintainers somehow still found time to launch new libraries, runtimes, and developer utilities.
+
+This edition collects the updates, experiments, technical discussions, and releases worth paying attention to — from frontend frameworks and tooling changes to AI coding workflows, browser platform news, and interesting projects from across the developer ecosystem.
+
+Whether you are following React, TypeScript, Bun, Node.js, AI-assisted development, or simply looking for useful tools to explore, here are the links that stood out this week.
+
+## 🧠 Language & Runtime Updates
+
+### TypeScript 6.0 Is Official — And It’s Preparing the Road to TypeScript 7
+
+One of the biggest ecosystem updates remains [TypeScript 6.0](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html).
+
+This release is not just another incremental version bump. It acts as a transition layer between the current JavaScript-based compiler and the upcoming native TypeScript 7 compiler. According to the TypeScript team, 6.0 is effectively the bridge release that prepares projects for the future architecture.
+
+Some notable changes include:
+
+- alignment with future TS 7 behavior
+- deprecations aimed at modern ESM workflows
+- simplified DOM library behavior
+- stricter compiler rules
+- migration tooling for upcoming changes
+
+The broader direction is clear: TypeScript is increasingly optimizing for modern evergreen runtimes, ESM tooling, and native performance improvements.
+
+### Bun’s Rust Rewrite Has Been Merged
+
+The Bun story continues.
+
+One of the more talked-about updates recently: [Bun’s experimental Rust rewrite effort has now been merged](https://github.com/oven-sh/bun/pull/30412), generating substantial discussion across developer communities. Questions quickly emerged around maintainability, AI-assisted code generation quality, and long-term runtime strategy.
+
+At the same time, Bun keeps strengthening its position inside the TypeScript ecosystem.
+
+Developers increasingly evaluate Bun not just as a runtime, but as a broader replacement for parts of the traditional Node toolchain:
+
+- package manager
+- bundler
+- test runner
+- TypeScript execution environment
+- server runtime
+
+The “Should new TypeScript projects start with Bun?” conversation is becoming more common.
+
+## 📜 Articles & Tutorials
+
+[Prompts are advisory. Structure is binding.](https://www.linkedin.com/pulse/prompts-advisory-structure-binding-daniel-meyer-cpxce/)
+
+## ⚒️ Tools
+
+Open-source Discord alternative [GoofCord](https://github.com/Milkshiift/GoofCord) has been released, promising a faster, cleaner, and far more customizable experience than the official client.
+
+According to the project, GoofCord:
+
+- runs noticeably faster than the standard Discord client, with fewer slowdowns and UI hiccups;
+- blocks built-in telemetry and user data collection;
+- supports password-encrypted conversations;
+- allows screen sharing at any resolution and frame rate;
+- lets users choose which application audio gets streamed;
+- automatically updates your status based on games, music, or videos;
+- supports Vencord, Equicord, and Shelter customization plugins out of the box;
+- includes global hotkeys that keep working even when the app is minimized;
+- supports audio streaming on Linux, while also running on Windows and macOS.
+
+[Awesome CUDA Books](https://github.com/alternbits/awesome-cuda-books) is a new curated list of resources for learning CUDA programming, covering everything from beginner-friendly introductions to advanced optimization techniques.
+
+An open-source project called [tokenspeed](https://github.com/MikeVeerman/tokenspeed) (including an [online version](https://mikeveerman.github.io/tokenspeed/?rate=30&mode=code)) has been released to make LLM token throughput easier to understand visually.
+
+Most local LLM benchmarks report raw generation speed:
+
+- 47 tokens/sec on an M3
+- 180 tokens/sec on an RTX 4090
+- 500 tokens/sec on Groq
+
+But unless you've actually watched tokens stream at those speeds, those numbers can feel pretty abstract.
+
+tokenspeed solves that problem.
+
+It’s a terminal utility that simulates token streaming at any speed you choose, allowing you to see what different throughput numbers actually look like in practice.
+
+Instead of reading benchmark figures in isolation, you can visually compare generation speeds and better understand the real-world difference between various hardware setups, runtimes, and inference environments.
+
+## 📚 Libs
+
+[A repository featuring 10,000+ ready-to-use APIs](https://github.com/cporter202/API-mega-list) has been released, covering everything from automation and web scraping to AI integrations and market intelligence.
+
+![API Mega List](./images/api-mega-list.png "API Mega List")
+
+The collection includes APIs for:
+
+- **automation** — handling repetitive workflows, recurring tasks, and everyday operational processes;
+- **data extraction** — scraping websites, parsing pages, and pulling structured information from across the web;
+- **analytics** — gathering market, competitor, and business intelligence data;
+- **e-commerce** — tracking products, monitoring prices, and analyzing market trends;
+- **social media** — collecting posts, measuring audience engagement, and identifying emerging trends;
+- **AI integrations** — connecting to language models, processing content, and generating structured outputs;
+- **job market analysis** — tracking vacancies, salary trends, and new career opportunities;
+- **real estate** — searching, monitoring, and analyzing property listings for personal use or investment research.
+
+## ⌚ Releases
+
+## 📺 Videos
+
+## 🗞️ News & Updates
+
+### The End of an Era: Iconic Ask.com Domain Hits the Auction Block
+
+![Ask.com Domain Auction](./images/askcom.png "Ask.com Domain Auction")
+
+The digital landscape is losing another piece of its foundation. Ask.com, one of the web's original search heavyweights, has officially put its domain name up for sale.
+
+According to reports from [Domain Incite](https://domainincite.com/31709-ask-com-hits-the-market-as-jeeves-breathes-his-last), the high-stakes sale is being spearheaded by domain brokers Andrew Miller (ATM Holdings) and Larry Fisher (LPL Financial). Miller didn't mince words about the magnitude of the listing, calling it "one of the most valuable domain assets to ever hit the market."
+
+### Creator of C++ Criticizes Vibe Coding
+
+<div style="position:relative;width:100%;max-width:360px;aspect-ratio:9/16;">
+  <iframe
+    src="https://www.youtube.com/embed/WQABdV2p2fA"
+    title="YouTube Shorts video"
+    style="position:absolute;inset:0;width:100%;height:100%;border:0;"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+  ></iframe>
+</div>
+
+Bjarne Stroustrup, the creator of C++, delivered a sharp critique of vibe coding in a recent interview. His argument: AI-generated code may look convincing in demos, but in real systems it often creates bugs, bloated codebases, security issues, and maintenance problems. The burden usually lands on senior engineers, who end up reviewing, debugging, and rewriting prompt-generated code instead of moving faster.
+
+---
+
+That wraps up Friday Links #38.
+
+The JavaScript ecosystem never really slows down — frameworks evolve, tooling shifts, AI keeps changing development workflows, and new ideas appear faster than most developers can test them.
+
+As always, the goal of this roundup is simple: filter the noise and surface the releases, discussions, tools, and experiments actually worth opening in another tab.
+
+If something interesting launched this week and did not make the list, there is a good chance it will appear in the next edition.
+
+See you in Friday Links #39.
