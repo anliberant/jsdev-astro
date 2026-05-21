@@ -24,6 +24,7 @@ const categoriesWithDescriptionArr = [
   'docker',
   'web3',
   'security',
+  'astro', 
 ];
 
 const categoriesWithDescription = new Set(categoriesWithDescriptionArr);
@@ -50,6 +51,7 @@ const howtoCategoriesWithColors: Record<string, [string, string]> = {
   css: ['#2862E9', '#1f4dd6'],
   react: ['#0096c0', '#03779b'],
   security: ['#ff5555', '#cc1a1a'],
+  astro: ['#ff5d05', '#bc2f00'], 
 };
 
 const DEFAULT_COLORS: [string, string] = ['#0f172a', '#334155'];
@@ -85,6 +87,24 @@ export const getCategoryInfo = (
         'Articles on modern JS, from ES6+ basics to app structure and performance. Learn faster, ship better UI.';
       metaDescription =
         'Learn modern JavaScript: ES6+, performance, and app structure. Build fast, interactive interfaces.';
+    }
+  }
+
+  if (cat === 'astro') {
+    if (type === 'howto') {
+      name = 'Mastering Astro: Island Architecture and Optimization';
+      heading = 'Astro How‑To: Components, Islands, and Performance';
+      description =
+        'Step‑by‑step guides on Astro components, partial hydration, integration with UI frameworks, and zero-JS builds.';
+      metaDescription =
+        'Astro how‑to: islands architecture, hybrid routing, content collections, and deployment recipes for fast static sites.';
+    } else {
+      name = 'Astro';
+      heading = 'Astro: The Content‑Driven Web Framework';
+      description =
+        'Explore how to build lightning‑fast websites using content collections, server‑side rendering, and customizable themes.';
+      metaDescription =
+        'Learn Astro framework: optimal performance, minimal JavaScript overhead, and flexible asset pipelines for content‑heavy sites.';
     }
   }
 

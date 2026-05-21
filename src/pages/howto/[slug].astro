@@ -5,7 +5,7 @@ import { CollectionEntry, getCollection, render } from 'astro:content';
 import BaseLayout from '@/app/layouts/base-layout.astro';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import RelatedPosts from '@/shared/ui/base/related-posts/related-posts.astro';
-import Toc from '@/shared/ui/layout/toc.astro';
+import TableOfContents from '@/shared/ui/layout/table-of-contents.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
 import { formatDate } from '@/shared/utils';
 
@@ -74,7 +74,7 @@ const newDate = formatDate(howto.data.date);
       <aside
         class='post-toc'
         aria-label='Table of contents'>
-        <Toc items={headings} />
+        <TableOfContents contentSelector='.post-content' />
       </aside>
 
       <section

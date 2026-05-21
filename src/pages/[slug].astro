@@ -9,8 +9,8 @@ import Badge from '@/shared/ui/base/badge.astro';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import RelatedPosts from '@/shared/ui/base/related-posts/related-posts.astro';
 import Separator from '@/shared/ui/base/separator.astro';
+import TableOfContents from '@/shared/ui/layout/table-of-contents.astro';
 import Tags from '@/shared/ui/layout/tags.astro';
-import Toc from '@/shared/ui/layout/toc.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
 import { formatDate } from '@/shared/utils/index';
 
@@ -29,8 +29,13 @@ type Props = {
 const { post } = Astro.props;
 const { Content, remarkPluginFrontmatter, headings } = await render(post);
 
-const categorySlug = post.data.category ? post.data.category.toLowerCase().replace(/\s+/g, '-') : '';
-const breadcrumbItems = generatePostBreadcrumbs(post.data.category ?? '', categorySlug, post.data.title);
+const categorySlug =
+  post.data.category ? post.data.category.toLowerCase().replace(/\s+/g, '-') : '';
+const breadcrumbItems = generatePostBreadcrumbs(
+  post.data.category ?? '',
+  categorySlug,
+  post.data.title
+);
 const newDate = formatDate(post.data.date);
 ---
 
@@ -74,7 +79,7 @@ const newDate = formatDate(post.data.date);
       <aside
         class='post-toc'
         aria-label='Table of contents'>
-        <Toc items={headings} />
+        <TableOfContents contentSelector='.post-content' />
       </aside>
 
       <figure class='post-image-wrapper'>
@@ -116,4 +121,3 @@ const newDate = formatDate(post.data.date);
     </article>
   </main>
 </BaseLayout>
-
