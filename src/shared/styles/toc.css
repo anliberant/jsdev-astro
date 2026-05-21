@@ -1,0 +1,223 @@
+.hidden {
+  display: none !important;
+}
+
+.post-toc {
+  position: fixed;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  width: 320px;
+
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+}
+
+.toc-ruler {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 20px 0;
+  position: relative;
+  width: 100%;
+
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.toc-ruler::-webkit-scrollbar {
+  display: none;
+}
+
+.toc-ruler::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-right: 1.5px dashed oklch(0.85 0.01 255);
+  z-index: 1;
+}
+
+#toc-ticks-container::before {
+  display: none !important;
+}
+
+.toc-tick-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.toc-tick {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  height: 20px;
+  text-decoration: none;
+  color: var(--color-muted-foreground, #64748b);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.toc-tick-line {
+  display: block;
+  height: 1.5px;
+  background: oklch(0.85 0.01 255);
+  border-radius: 2px;
+  margin-left: 12px;
+  transition:
+    width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 220ms ease,
+    height 220ms ease;
+}
+
+.toc-tick[data-level='2'] .toc-tick-line {
+  width: 24px;
+}
+.toc-tick[data-level='3'] .toc-tick-line {
+  width: 16px;
+}
+.toc-tick[data-level='4'] .toc-tick-line {
+  width: 10px;
+}
+
+.toc-subticks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding-right: 0;
+  margin: 4px 0;
+  width: 100%;
+}
+.toc-subticks span {
+  display: block;
+  height: 1px;
+  width: 6px;
+  background: oklch(0.92 0.005 255);
+  transition: background 220ms ease;
+}
+
+.toc-tick-wrapper.is-read .toc-subticks span {
+  background: oklch(0.88 0.005 255);
+}
+
+.toc-tick[data-dist='0'] .toc-tick-line {
+  height: 2px;
+  background: var(--color-foreground, #0f172a);
+}
+.toc-tick[data-dist='0'][data-level='2'] .toc-tick-line {
+  width: 42px;
+}
+.toc-tick[data-dist='0'][data-level='3'] .toc-tick-line {
+  width: 34px;
+}
+.toc-tick[data-dist='0'][data-level='4'] .toc-tick-line {
+  width: 26px;
+}
+
+.toc-tick[data-dist='1'] .toc-tick-line {
+  width: 28px;
+}
+.toc-tick[data-dist='2'] .toc-tick-line {
+  width: 20px;
+}
+
+.toc-tick.is-read .toc-tick-line {
+  background: oklch(0.78 0.01 255);
+}
+
+.toc-tick-label {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.125rem;
+  line-height: 1;
+  color: var(--color-muted-foreground, #64748b);
+  opacity: 0;
+  transform: translateX(8px);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    color 220ms ease;
+  pointer-events: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 240px;
+}
+
+.toc-tick.is-active .toc-tick-label {
+  /* opacity: 1; */
+  transform: translateX(0);
+  color: var(--color-foreground, #0f172a);
+  animation: fadeOutLabel 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.toc-tick:hover .toc-tick-label {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  color: var(--color-foreground, #0f172a) !important;
+}
+
+.toc-tick:hover .toc-tick-line {
+  background: var(--color-foreground, #0f172a) !important;
+  height: 2px;
+}
+.toc-tick:hover[data-level='2'] .toc-tick-line {
+  width: 42px !important;
+}
+.toc-tick:hover[data-level='3'] .toc-tick-line {
+  width: 34px !important;
+}
+.toc-tick:hover[data-level='4'] .toc-tick-line {
+  width: 26px !important;
+}
+
+.toc-ruler:hover .toc-tick-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.toc-ruler:hover .toc-tick .toc-tick-label,
+.toc-tick:hover .toc-tick-label {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+}
+@keyframes fadeOutLabel {
+  0% {
+    opacity: 0;
+    transform: translateX(8px);
+    color: var(--color-foreground, #0f172a);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--color-foreground, #0f172a);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(4px);
+    color: var(--color-muted-foreground, #64748b);
+  }
+}

@@ -1,0 +1,230 @@
+---
+interface Props {
+  contentSelector: string;
+  maxItems?: number;
+}
+
+const { contentSelector, maxItems = 40 } = Astro.props;
+---
+
+<nav
+  class='toc-ruler hidden'
+  id='astro-toc'
+  aria-label='Table of contents'
+  data-selector={contentSelector}
+  data-max={maxItems}>
+  <div id='toc-ticks-container'></div>
+</nav>
+
+<script>
+  interface Block {
+    id: string;
+    startY: number;
+    endY: number;
+  }
+
+  interface TocHeading {
+    id: string;
+    text: string;
+    level: number;
+  }
+
+  const FOCUS_TOP_RATIO = 0.3;
+  const FOCUS_BOTTOM_RATIO = 0.7;
+
+  const initToc = () => {
+    const navContainer = document.getElementById('astro-toc');
+    const ticksContainer = document.getElementById('toc-ticks-container');
+
+    if (!navContainer || !ticksContainer) return;
+
+    const contentSelector = navContainer.getAttribute('data-selector') || '';
+    const articleContainer = document.querySelector(contentSelector);
+
+    if (!articleContainer) {
+      setTimeout(initToc, 15);
+      return;
+    }
+
+    const maxItems = parseInt(navContainer.getAttribute('data-max') || '10', 10);
+
+    const nodes = Array.from(articleContainer.querySelectorAll<HTMLElement>('h2, h3, h4'));
+    const slug = (s: string) =>
+      s
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-');
+
+    const collected: TocHeading[] = nodes.map(n => {
+      if (!n.id) n.id = slug(n.textContent || '');
+      return {
+        id: n.id,
+        text: n.textContent || '',
+        level: parseInt(n.tagName.substring(1), 10),
+      };
+    });
+
+    const filtered: TocHeading[] = [];
+    for (let i = 0; i < collected.length; i++) {
+      const h = collected[i];
+      const prev = filtered[filtered.length - 1];
+      if (prev && h.level > prev.level) {
+        const prevEl = document.getElementById(prev.id);
+        const curEl = document.getElementById(h.id);
+        if (prevEl && curEl) {
+          const between = curEl.getBoundingClientRect().top - prevEl.getBoundingClientRect().bottom;
+          if (between < 80) continue;
+        }
+      }
+      filtered.push(h);
+    }
+
+    const headings = filtered.slice(0, maxItems);
+    if (headings.length === 0) return;
+
+    navContainer.classList.remove('hidden');
+
+    ticksContainer.innerHTML = headings
+      .map(
+        h => `
+      <div class="toc-tick-wrapper">
+        <a href="#${h.id}" class="toc-tick" data-id="${h.id}" data-level="${h.level}">
+          <span class="toc-tick-label">${h.text}</span>
+          <span class="toc-tick-line" aria-hidden="true"></span>
+        </a>
+        <div class="toc-subticks" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    `
+      )
+      .join('');
+
+    const tickElements = Array.from(
+      ticksContainer.querySelectorAll<HTMLAnchorElement>('.toc-tick')
+    );
+
+    tickElements.forEach(tick => {
+      tick.addEventListener('click', e => {
+        e.preventDefault();
+        const id = tick.getAttribute('data-id') || '';
+        const el = document.getElementById(id);
+        if (!el) return;
+        const y = el.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        history.replaceState(null, '', `#${id}`);
+      });
+    });
+
+    let blocks: Block[] = [];
+    let activeId: string | null = null;
+    let lastScrollY = window.scrollY;
+    let scrollDir: 'down' | 'up' = 'down';
+    let debounceTimer: number | undefined;
+
+    const recomputeBlocks = () => {
+      const els = headings
+        .map(h => document.getElementById(h.id))
+        .filter((el): el is HTMLElement => !!el);
+
+      blocks = els.map((el, i) => {
+        const startY = el.getBoundingClientRect().top + window.scrollY;
+        const next = els[i + 1];
+        const endY =
+          next ?
+            next.getBoundingClientRect().top + window.scrollY
+          : document.documentElement.scrollHeight;
+        return { id: el.id, startY, endY };
+      });
+    };
+
+    recomputeBlocks();
+
+    const ro = new ResizeObserver(recomputeBlocks);
+    ro.observe(document.body);
+    window.addEventListener('load', recomputeBlocks);
+
+    const updateDOMState = () => {
+      const activeIndex = headings.findIndex(h => h.id === activeId);
+
+      tickElements.forEach((tick, i) => {
+        const id = tick.getAttribute('data-id');
+        const isActive = id === activeId;
+        const isRead = activeIndex > -1 && i < activeIndex;
+        const dist = activeIndex >= 0 ? Math.abs(i - activeIndex) : 99;
+
+        tick.classList.toggle('is-active', isActive);
+        tick.classList.toggle('is-read', isRead);
+        tick.setAttribute('data-dist', isActive ? '0' : Math.min(dist, 3).toString());
+
+        const wrapper = tick.closest('.toc-tick-wrapper');
+        if (wrapper) {
+          wrapper.classList.toggle('is-read', isRead);
+          wrapper.classList.toggle('is-active', isActive);
+
+          if (isActive) {
+            wrapper.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }
+        }
+      });
+    };
+
+    const computeActive = () => {
+      const viewportTop = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const focusTop = viewportTop + viewportHeight * FOCUS_TOP_RATIO;
+      const focusBottom = viewportTop + viewportHeight * FOCUS_BOTTOM_RATIO;
+      const focusHeight = focusBottom - focusTop;
+
+      let best: { id: string; coverage: number } | null = null;
+
+      for (const block of blocks) {
+        const iTop = Math.max(block.startY, focusTop);
+        const iBot = Math.min(block.endY, focusBottom);
+        const iH = Math.max(0, iBot - iTop);
+        const cov = iH / focusHeight;
+
+        if (!best || cov > best.coverage + 0.02) {
+          best = { id: block.id, coverage: cov };
+        } else if (best && Math.abs(cov - best.coverage) <= 0.02) {
+          best = scrollDir === 'down' ? { id: block.id, coverage: cov } : best;
+        }
+      }
+
+      if (best && best.coverage > 0) {
+        activeId = best.id;
+      }
+      updateDOMState();
+    };
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      scrollDir = y > lastScrollY ? 'down' : 'up';
+      lastScrollY = y;
+
+      window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(computeActive, 50);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    computeActive();
+
+    document.addEventListener(
+      'astro:before-preparation',
+      () => {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('load', recomputeBlocks);
+        ro.disconnect();
+        window.clearTimeout(debounceTimer);
+      },
+      { once: true }
+    );
+  };
+
+  document.addEventListener('DOMContentLoaded', initToc);
+  document.addEventListener('astro:page-load', initToc);
+</script>

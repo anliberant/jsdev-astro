@@ -4,6 +4,7 @@ import { CollectionEntry, getCollection, render } from 'astro:content';
 
 import BaseLayout from '@/app/layouts/base-layout.astro';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
+import TableOfContents from '@/shared/ui/layout/table-of-contents.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
 import { formatDate } from '@/shared/utils';
 
@@ -22,10 +23,7 @@ type Props = {
 const { friday } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(friday);
 
-const breadcrumbItems = [
-  { label: 'Fridays', href: '/friday/' },
-  { label: friday.data.title },
-];
+const breadcrumbItems = [{ label: 'Fridays', href: '/friday/' }, { label: friday.data.title }];
 
 const newDate = formatDate(friday.data.date);
 ---
@@ -56,6 +54,11 @@ const newDate = formatDate(friday.data.date);
           </span>
         </p>
       </header>
+      <aside
+        class='post-toc'
+        aria-label='Table of contents'>
+        <TableOfContents contentSelector='.post-content' />
+      </aside>
 
       <section
         class='post-content'
