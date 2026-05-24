@@ -1,0 +1,727 @@
+---
+title: 'Howto Catch Risky JavaScript Bugs with eslint-plugin-security'
+slug: eslint-plugin-security
+heading: "Using eslint-plugin-security in Real JavaScript Projects"
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/eslint-plugin-security
+date: 2026-05-25
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['eslint-plugin-security']
+desc: Learn how to use eslint-plugin-security to detect dangerous JavaScript patterns, unsafe Node.js code, dynamic execution, and hidden security mistakes.
+subtitle: 'A practical guide to adding security linting to JavaScript, TypeScript, Node.js, and modern frontend projects.'
+---
+
+Most developers already use ESLint.
+
+You probably have rules for:
+
+- unused variables
+- import sorting
+- React hooks
+- formatting
+- TypeScript correctness
+
+But many projects still miss an entirely different category of bugs:
+
+security mistakes hiding inside valid JavaScript.
+
+The code compiles.
+
+Tests pass.
+
+TypeScript is happy.
+
+Production deploys successfully.
+
+Then somebody discovers an unsafe regex freezing your API server, a dynamic `require()` loading unexpected modules, or a command injection vulnerability hiding inside a small utility function nobody questioned during review.
+
+That is exactly where [eslint-plugin-security](https://github.com/eslint-community/eslint-plugin-security) becomes useful.
+
+It does not replace penetration testing.
+
+It does not magically secure your application.
+
+But it can catch dangerous patterns early — directly inside your editor and CI pipeline.
+
+In this article we'll look at:
+
+- what eslint-plugin-security actually does
+- how to install it
+- how to configure ESLint v9 Flat Config
+- real security problems it can detect
+- common false positives
+- how to use it in production projects
+
+## Why Normal ESLint Rules Are Not Enough
+
+Standard ESLint focuses on code quality.
+
+It helps prevent problems like:
+
+```js
+const username = "Alex";
+
+console.log(userName);
+```
+
+or:
+
+```js
+const data = await fetchProfile()
+```
+
+without handling the Promise properly.
+
+Useful?
+
+Absolutely.
+
+Security-focused?
+
+Not really.
+
+Security bugs usually look perfectly legal to JavaScript.
+
+Example:
+
+```js
+const query = req.query.script;
+
+eval(query);
+```
+
+ESLint sees valid syntax.
+
+JavaScript sees valid syntax.
+
+Your attacker sees opportunity.
+
+Security linting exists because many dangerous patterns are still syntactically correct code.
+
+## Installing eslint-plugin-security
+
+Installation is straightforward.
+
+```bash
+npm install -D eslint-plugin-security
+```
+
+## ESLint v9 Flat Config Setup
+
+Modern ESLint projects typically use Flat Config.
+
+Create or update:
+
+`eslint.config.js`
+
+Configuration example:
+
+```js
+import security from "eslint-plugin-security";
+
+export default [
+  {
+    plugins: {
+      security,
+    },
+
+    rules: {
+      ...security.configs.recommended.rules,
+    },
+  },
+];
+```
+
+That is enough to enable the recommended ruleset.
+
+You can now run:
+
+```bash
+npx eslint . --ext .js,.ts
+```
+
+## Legacy .eslintrc Configuration
+
+Older projects may still use .eslintrc.
+
+Example:
+
+```json
+{
+  "plugins": ["security"],
+  "extends": ["plugin:security/recommended"]
+}
+```
+
+Simple.
+
+Done.
+
+## Dangerous Pattern #1 — Dynamic `eval()`
+
+Let's start with the obvious one.
+
+JavaScript's infamous `eval()`.
+
+Bad example:
+
+```js
+const sourceCode = req.body.expression;
+
+const output = eval(sourceCode);
+```
+
+If external input reaches this function, your application can execute arbitrary JavaScript.
+
+That is rarely what you want.
+
+The plugin flags patterns like this immediately.
+
+Safer alternatives often exist.
+
+Instead of dynamic execution:
+
+```js
+eval("5 + 10");
+```
+
+prefer explicit logic:
+
+```js
+const operations = {
+  add: (x: number, y: number) => x + y,
+  subtract: (x: number, y: number) => x - y,
+};
+
+const result = operations.add(5, 10);
+```
+
+Less magical.
+
+Much safer.
+
+## Dangerous Pattern #2 — Non-Literal require()
+
+This rule surprises many developers.
+
+Consider:
+
+```js
+const packageName = req.query.library;
+
+const dependency = require(packageName);
+```
+
+Looks flexible.
+
+Also potentially dangerous.
+
+Because attackers might control what module gets loaded.
+
+Security plugins dislike dynamic imports for good reason.
+
+Prefer explicit allowlists.
+
+Example:
+
+```js
+const allowedLibraries = {
+  csv: require("./parsers/csv"),
+  json: require("./parsers/json"),
+};
+
+const parser = allowedLibraries[userFormat];
+```
+
+Now the input selects from known modules instead of arbitrary paths.
+
+## Dangerous Pattern #3 — Unsafe Child Process Execution
+
+Node.js applications often interact with shell commands.
+
+Example:
+
+```js
+import { exec } from "node:child_process";
+
+exec(`ping ${hostname}`);
+```
+
+Looks innocent.
+
+Until somebody submits:
+
+`localhost && rm -rf /`
+
+Welcome to command injection.
+
+This is one of the oldest backend vulnerabilities.
+
+Safer approach:
+
+```js
+import { execFile } from "node:child_process";
+
+execFile(
+  "ping",
+  [hostname],
+  (error, stdout) => {
+    console.log(stdout);
+  }
+);
+```
+
+Arguments stay separated from the command itself.
+
+Much safer.
+
+## Dangerous Pattern #4 — Object Injection
+
+One of the more controversial rules.
+
+Example:
+
+```js
+const fieldName = req.query.sort;
+
+database[fieldName] = value;
+```
+
+Why does the plugin care?
+
+Because user-controlled property access can sometimes lead to:
+
+- prototype pollution
+- unsafe mutation
+- unexpected behavior
+
+Example:
+
+```js
+payload["__proto__"] = {
+  compromised: true,
+};
+```
+
+Depending on the environment and codebase, this can become dangerous.
+
+Safer approach:
+
+```js
+const allowedFields = [
+  "email",
+  "username",
+  "createdAt",
+];
+
+if (allowedFields.includes(fieldName)) {
+  database[fieldName] = value;
+}
+```
+
+Explicit validation dramatically reduces risk.
+
+## Dangerous Pattern #5 — Unsafe Regular Expressions
+
+Regex performance issues are underrated.
+
+A poorly designed regex can lock an application thread.
+
+Example:
+
+```js
+const pattern =
+  /(a+)+$/;
+
+pattern.test(userInput);
+```
+
+Certain inputs can trigger catastrophic backtracking.
+
+Your server CPU spikes.
+
+Requests hang.
+
+Users complain.
+
+This category is often called ReDoS — Regular Expression Denial of Service.
+
+The security plugin warns about suspicious constructions.
+
+Even better: test regex performance intentionally.
+
+Example safer pattern:
+
+```js
+const emailMatcher =
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+```
+
+Simple patterns usually behave more predictably.
+
+## Dangerous Pattern #6 — Timing Attack Risks
+
+Some rules target insecure comparisons.
+
+Example:
+
+```js
+if (
+  suppliedSecret === process.env.API_SECRET
+) {
+  authenticate();
+}
+```
+
+Looks harmless.
+
+But direct string comparison may leak timing information.
+
+In sensitive environments, use dedicated cryptographic helpers.
+
+Node.js provides:
+
+```js
+import crypto from "node:crypto";
+
+const verified =
+  crypto.timingSafeEqual(
+    Buffer.from(inputSecret),
+    Buffer.from(secretValue)
+  );
+```
+
+Do most applications need this?
+
+No.
+
+Do authentication systems care?
+
+Yes.
+
+## False Positives: When the Plugin Gets Noisy
+
+This is important.
+
+`eslint-plugin-security` is not perfect.
+
+Some rules intentionally behave aggressively.
+
+You may see warnings like:
+
+```js
+config[key] = value;
+```
+
+even when your code is completely safe.
+
+That does not automatically mean the plugin is wrong.
+
+Security tooling often prefers better safe than sorry.
+
+Still, developers need practical workflows.
+
+You have several options.
+
+## Option 1 — Add Validation
+
+Instead of suppressing the warning:
+
+```js
+settings[userInput] = value;
+```
+
+validate first.
+
+```js
+const permittedOptions = [
+  "theme",
+  "language",
+];
+
+if (
+  permittedOptions.includes(userInput)
+) {
+  settings[userInput] = value;
+}
+```
+
+This improves both code clarity and security.
+
+## Option 2 — Disable a Specific Rule
+
+Sometimes you genuinely know better.
+
+Example:
+
+```js
+rules: {
+  "security/detect-object-injection": "off"
+}
+```
+
+Do this intentionally.
+
+Not automatically.
+
+## Option 3 — Inline Suppression
+
+Occasionally acceptable.
+
+Example:
+
+```js
+// eslint-disable-next-line security/detect-object-injection
+settings[internalKey] = computedValue;
+```
+
+Use sparingly.
+
+Future maintainers should understand why suppression exists.
+
+## Using eslint-plugin-security with TypeScript
+
+Good news:
+
+the plugin works fine in TypeScript projects.
+
+Example configuration:
+
+```js
+import tseslint from "typescript-eslint";
+import security from "eslint-plugin-security";
+
+export default [
+  ...tseslint.configs.recommended,
+
+  {
+    plugins: {
+      security,
+    },
+
+    rules: {
+      ...security.configs.recommended.rules,
+    },
+  },
+];
+```
+
+];
+
+TypeScript catches type problems.
+
+Security linting catches dangerous patterns.
+
+They solve different problems.
+
+You want both.
+
+## Next.js, SSR, and Backend Projects
+
+Security linting becomes more valuable when your code touches:
+
+- servers
+- APIs
+- authentication
+- file systems
+- shell commands
+- SSR rendering
+
+Frontend-only UI code may trigger fewer findings.
+
+Backend applications usually trigger more.
+
+Typical candidates:
+
+```js
+app.post("/upload");
+```
+
+`server actions`
+
+`Next.js route handlers`
+
+`cron workers`
+
+`CLI utilities`
+
+Anywhere external input meets executable logic.
+
+## Adding Security Linting to CI
+
+Editor warnings are useful.
+
+CI enforcement is better.
+
+GitHub Actions example:
+
+```yaml
+name: lint
+
+on:
+  push:
+  pull_request:
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install
+      - run: pnpm eslint .
+```
+
+Now dangerous patterns fail pull requests before reaching production.
+
+That is exactly where linting provides maximum value.
+
+## Security Plugin vs npm audit vs SAST Tools
+
+These tools solve different layers.
+
+### `eslint-plugin-security`
+
+Finds:
+
+- unsafe code patterns
+- dangerous APIs
+- suspicious JavaScript constructs
+
+### npm audit
+
+Finds:
+
+- vulnerable dependencies
+- compromised packages
+- outdated transitive libraries
+
+### Full SAST Tools
+
+Examples include enterprise scanners.
+
+They analyze:
+
+- tainted data flow
+- injection chains
+- authentication logic
+- complex attack paths
+
+Heavier.
+
+More powerful.
+
+Often slower.
+
+For most teams:
+
+eslint-plugin-security + npm audit is already a solid baseline.
+
+## Practical Production Recommendations
+
+After using this plugin across multiple Node.js projects, a reasonable setup looks like this:
+
+### Keep Recommended Rules Enabled
+
+Start here:
+
+```js
+security.configs.recommended
+```
+
+Avoid premature customization.
+
+### Review Warnings Manually
+
+Do not blindly disable noisy rules.
+
+Some warnings reveal real architectural issues.
+
+### Combine with Validation Libraries
+
+Use:
+
+- Zod
+- Valibot
+- Yup
+- runtime schema validation
+
+Input validation reduces many security risks before they reach business logic.
+
+### Audit Dangerous APIs
+
+Pay attention whenever code uses:
+
+`eval()`
+
+`new Function()`
+
+`exec()`
+
+`spawn()`
+
+`require(dynamicValue)`
+
+Those APIs deserve scrutiny.
+
+### Treat User Input as Hostile
+
+Even internal dashboards.
+
+Even admin panels.
+
+Even "temporary tools."
+
+Many production incidents start with trusted assumptions.
+
+## When You Should Probably Use This Plugin
+
+Good fit:
+
+- Node.js APIs
+- Express servers
+- NestJS services
+- Next.js backend code
+- CLI utilities
+- SSR applications
+- monorepos with backend packages
+
+Lower impact:
+
+- purely static websites
+- isolated UI component libraries
+- tiny prototypes
+
+Although even frontend projects can still benefit from the extra safety layer.
+
+## Final Thoughts
+
+`eslint-plugin-security` is not a silver bullet.
+
+It will not transform unsafe architecture into secure software.
+
+It will not replace audits, threat modeling, validation, or careful engineering.
+
+What it does provide is much simpler — and still valuable.
+
+A lightweight way to catch dangerous JavaScript patterns before deployment.
+
+Many security problems begin with small decisions:
+
+a dynamic require,
+
+an unchecked property access,
+
+an unsafe shell command,
+
+a regex nobody reviewed.
+
+Security linting helps surface those decisions earlier.
+
+And earlier is usually cheaper than production incident response.
+
+If your project already uses ESLint, adding one more plugin is easy.
+
+Cleaning up a security incident rarely is.
