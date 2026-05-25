@@ -97,6 +97,8 @@ const modalController = new ModalController(myModal);
 openButton.addEventListener('click', () => modalController.open());
 ```
 
+Read more: [Understanding and Fixing getBoundingClientRect Errors](https://jsdev.space/howto/getboundingclientrect-error/)
+
 ### Code Analysis:
 
 - `dialog.showModal()`: This is the most crucial method. The browser automatically places the `<dialog>` element on top of all other page content, handles the default overlay, and makes the page background "inert."

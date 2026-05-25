@@ -1,0 +1,1753 @@
+---
+title: 'TypeScript Security From Backend to Browser'
+slug: typescript-security-guide
+heading: 'TypeScript Is Not a Security Boundary'
+image: ./images/typescript-security-guide.png
+permalink: typescript-security-guide
+date: 2026-05-25
+author: anton liberant
+category: typescript
+type: post
+tags: []
+desc: A deep practical guide to securing TypeScript applications across Node.js, React, Next.js, APIs, databases, SSR, and modern web infrastructure.
+subtitle: 'Why types improve correctness but still leave entire classes of vulnerabilities untouched.'
+---
+
+## TypeScript Is Not a Security Boundary
+
+TypeScript has quietly become the default language of modern JavaScript engineering.
+
+React applications.
+
+Next.js platforms.
+
+NestJS APIs.
+
+GraphQL services.
+
+CLI tooling.
+
+Infrastructure scripts.
+
+Entire SaaS companies run on TypeScript stacks.
+
+And somewhere along the way, many developers start developing a subtle — and understandable — misconception:
+
+“We use TypeScript, so a large chunk of security problems are probably handled already.”
+
+Not explicitly.
+
+Not consciously.
+
+But indirectly.
+
+Strong types feel safe.
+
+Strict mode feels safe.
+
+Interfaces feel safe.
+
+DTOs, generics, discriminated unions, branded types — they create an environment that looks disciplined.
+
+And that discipline genuinely reduces bugs.
+
+But security vulnerabilities live in a different universe.
+
+A SQL injection payload is still a valid string.
+
+An XSS payload is still a valid string.
+
+A malicious JWT is still a valid string.
+
+A poisoned npm dependency still compiles perfectly.
+
+The TypeScript compiler is not failing.
+
+It is doing exactly what it was designed to do.
+
+This distinction matters.
+
+Because many production incidents happen precisely at the border where developers confuse type safety with security guarantees.
+
+In this article, we'll walk through the major security concerns affecting modern TypeScript applications:
+
+- backend attacks
+- database injections
+- SSR vulnerabilities
+- React and browser security
+- JWT mistakes
+- prototype pollution
+- GraphQL abuse
+- SSRF
+- supply-chain attacks
+- runtime validation
+- modern tooling strategies
+
+And most importantly:
+
+how to build a security model that works with TypeScript instead of expecting TypeScript to do security's job.
+
+## Backend Reality: HTTP Requests Arrive Before Type
+
+TypeScript creates contracts between layers.
+
+Controllers expect DTOs.
+
+Services expect interfaces.
+
+Repositories expect known shapes.
+
+The internet ignores all of them.
+
+Your backend does not receive:
+
+```ts
+type LoginRequest = {
+  email: string;
+  password: string;
+}
+```
+
+It receives:
+
+```
+raw bytes
+```
+
+Those bytes might become JSON.
+
+Or malformed JSON.
+
+Or intentionally malicious JSON.
+
+Or oversized payloads.
+
+Or nested objects designed to break assumptions.
+
+Before your beautiful TypeScript types even exist, untrusted data already crossed your trust boundary.
+
+That is why runtime validation matters.
+
+Not optional validation.
+
+Not “we validate most routes.”
+
+Boundary validation.
+
+Every request.
+
+Every external payload.
+
+Every webhook.
+
+Every environment variable.
+
+Every file import.
+
+Without this mindset, types become documentation — not protection.
+
+## SQL Injection Still Exists Inside ORM Code
+
+Many developers associate SQL injection with early PHP tutorials.
+
+String concatenation.
+
+Handwritten SQL.
+
+Obvious mistakes.
+
+Modern ORMs supposedly solved that problem.
+
+Mostly true.
+
+Mostly.
+
+Because ORMs reduce risk until developers partially bypass them.
+
+Consider this seemingly harmless endpoint:
+
+```ts
+app.get("/users", async (req, res) => {
+  const { sortColumn, order } = req.query;
+
+  const users = await connection.query(
+    `SELECT * FROM users
+     ORDER BY ${sortColumn} ${order}`
+  );
+
+  res.json(users);
+});
+```
+
+From TypeScript's perspective:
+
+```ts
+sortColumn: string
+order: string
+```
+
+Everything typechecks.
+
+The database sees something different.
+
+Suppose an attacker sends:
+
+```
+/users?sortColumn=name&order=ASC;DROP TABLE users;--
+```
+
+The database does not care that your IDE showed no errors.
+
+The query parser now receives executable SQL.
+
+This is where many teams misunderstand what ORMs actually guarantee.
+
+An ORM reduces accidental SQL construction.
+
+It does not automatically sanitize arbitrary string interpolation.
+
+Safer approach:
+
+```ts
+const allowedColumns = [
+  "name",
+  "email",
+  "createdAt"
+] as const;
+
+const allowedDirections = [
+  "ASC",
+  "DESC"
+] as const;
+```
+
+Validate.
+
+Allowlist.
+
+Then build controlled queries.
+
+Or better:
+
+use query APIs that parameterize values automatically.
+
+## The Hidden ORM Trap: `QueryBuilder` and Raw()
+
+This is where real-world codebases become interesting.
+
+Developers often say:
+
+> “We already use QueryBuilder.”
+
+Good.
+
+That alone changes nothing.
+
+Unsafe `QueryBuilder` code still exists everywhere.
+
+Example:
+
+```ts
+const qb = userRepository.createQueryBuilder("user");
+
+qb.where(
+  `user.role='${filter}'`
+);
+```
+
+Looks sophisticated.
+
+Still injection-prone.
+
+Same vulnerability.
+
+New abstraction layer.
+
+TypeORM's `Raw()` helper is another common footgun.
+
+Unsafe:
+
+```ts
+where: {
+  name: Raw(
+    alias => `${alias} LIKE '%${query}%'`
+  )
+}
+```
+
+Here, user input becomes part of executable SQL again.
+
+Safe alternative:
+
+```ts
+where: {
+  name: Raw(
+    alias => `${alias} ILIKE :query`,
+    {
+      query: `%${query}%`
+    }
+  )
+}
+```
+
+Parameterized placeholders exist for a reason.
+
+Use them.
+
+## NoSQL Injection Is Still Injection
+
+MongoDB developers sometimes assume they escaped SQL problems entirely.
+
+Not quite.
+
+You traded syntax.
+
+Not threat models.
+
+Classic vulnerable login handler:
+
+```ts
+app.post("/login", async (req, res) => {
+    const { username,password } = req.body;
+    const user =
+      await User.findOne({
+        username,
+        password
+      });
+    if (user) {
+      return res.sendStatus(200);
+    }
+    res.sendStatus(401);
+});
+```
+
+Now imagine this payload:
+
+```json
+{
+  "username": {
+    "$ne": null
+  },
+  "password": {
+    "$ne": null
+  }
+}
+```
+
+The resulting query becomes:
+
+```ts
+{
+  username: {
+    $ne: null
+  },
+
+  password: {
+    $ne: null
+  }
+}
+```
+
+Congratulations.
+
+You may have just authenticated the first matching user.
+
+The compiler did not fail.
+
+Because objects are valid objects.
+
+Runtime validation solves this.
+
+Not interfaces.
+
+Runtime.
+
+Zod example:
+
+```ts
+const LoginSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});
+```
+
+Only parsed data enters business logic.
+
+Everything else dies at the boundary.
+
+## Runtime Validation Is Not Optional Infrastructure
+
+This deserves its own section.
+
+Many TypeScript codebases validate inside handlers.
+
+After logic begins.
+
+After database calls.
+
+After assumptions already spread through the request pipeline.
+
+Validation belongs at the trust boundary.
+
+Modern stack:
+
+- Zod
+- class-validator
+- Valibot
+- io-ts
+- custom parsers
+
+The specific library matters less than the architectural rule:
+
+external data is untrusted until runtime validation succeeds.
+
+This includes:
+
+- API requests
+- webhook payloads
+- Kafka events
+- Redis messages
+- JSON imports
+- environment variables
+- browser localStorage
+- server actions
+- SSR hydration data
+
+TypeScript cannot validate any of those at runtime.
+
+That is not a limitation.
+
+That is literally outside its job description.
+
+## Prototype Pollution: The JavaScript Attack That Refuses to Die
+
+Prototype pollution is one of those vulnerabilities that sounds academic until you see what it can actually do inside a production Node.js application.
+
+JavaScript objects inherit behavior through prototypes.
+
+That flexibility powers huge parts of the language.
+
+It also creates dangerous edge cases when applications merge untrusted objects.
+
+Consider a naïve deep merge helper:
+
+```ts
+function deepMerge(target: any, source: any) {
+  for (const key in source) {
+    if (
+      typeof source[key] === "object" &&
+      source[key] !== null
+    ) {
+      if (!target[key]) {
+        target[key] = {};
+      }
+
+      deepMerge(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+}
+```
+
+Looks innocent.
+
+Many teams have written something similar.
+
+Now imagine:
+
+```json
+{
+  "__proto__": {
+    "isAdmin": true
+  }
+}
+```
+
+After merging:
+
+```ts
+const session = {};
+
+session.isAdmin;
+```
+
+Possible result:
+
+```
+true
+```   
+
+Not because your authentication logic approved it.
+
+Because your prototype chain changed underneath you.
+
+This category of bug has historically appeared in:
+
+- merge libraries
+- config parsers
+- query parsers
+- serialization tools
+- utility helpers
+- dependency ecosystems
+
+Safe approach?
+
+Avoid recursive merging of user-controlled objects.
+
+Prefer explicit schemas.
+
+Example:
+
+```ts
+const SettingsSchema =
+  z.object({
+    theme:
+      z.enum([
+        "light",
+        "dark"
+      ]),
+
+    notifications:
+      z.boolean()
+  });
+```
+
+Parse.
+
+Validate.
+
+Discard unknown structure.
+
+Trust schemas more than dynamic object merging.
+
+## JWT Security: The Most Popular Misused Standard in Web Development
+
+JWTs are everywhere.
+
+Auth systems.
+
+Microservices.
+
+Next.js sessions.
+
+OAuth flows.
+
+Mobile APIs.
+
+Internal tooling.
+
+And yet JWT misuse remains extremely common.
+
+A frequent mistake:
+
+```ts
+jwt.verify(
+  token,
+  publicKey
+);
+```
+
+Looks reasonable.
+
+Problem:
+
+many implementations historically supported algorithm confusion attacks.
+
+If algorithm expectations are loose, attackers may abuse:
+
+- none
+- HS256 confusion
+- symmetric vs asymmetric mismatch
+- incorrect verification defaults
+
+Safer configuration:
+
+```ts
+jwt.verify(
+  token,
+  publicKey,
+  {
+    algorithms: [
+      "RS256"
+    ]
+  }
+);
+```
+
+Be explicit.
+
+Cryptographic defaults deserve suspicion.
+
+Another dangerous pattern:
+
+```ts
+jwt.decode(token)
+```
+
+Some developers accidentally use decode() for trust decisions.
+
+Important distinction:
+
+```
+decode()
+≠
+verify()
+```
+
+Decoding parses structure.
+
+Verification proves authenticity.
+
+Never mix those concepts.
+
+## Secrets Management: The Vulnerability Nobody Notices Until GitHub Does
+
+Hardcoded secrets remain absurdly common.
+
+Examples:
+
+```ts
+const JWT_SECRET = "super-secret";
+const apiKey = "sk-prod-123456";
+const DATABASE_URL = "postgres://admin:password";
+```
+
+TypeScript sees: `string`
+
+GitHub scanners see:
+
+production credential leak.
+
+Proper configuration belongs outside source control.
+
+Environment variables help.
+
+But environment variables alone are not enough.
+
+Validate configuration at startup.
+
+Zod example:
+
+```ts
+const EnvSchema = z.object({
+  DATABASE_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32),
+  NODE_ENV: z.enum(["development", "production"]),
+});
+```
+
+Then:
+
+```ts
+const env = EnvSchema.parse(process.env);
+```
+
+Startup failure beats silent misconfiguration.
+
+Every time.
+
+## Timing Attacks: When `===` Becomes a Security Bug
+
+Most developers learn string comparison like this:
+
+```ts
+if (
+  suppliedKey ===
+  expectedKey
+) {
+  allow();
+}
+```
+
+Correct?
+
+Functionally yes.
+
+Cryptographically not necessarily.
+
+Naïve comparisons may leak timing information.
+
+Attackers measure response duration.
+
+Repeatedly.
+
+Byte by byte.
+
+Over time, they infer secret values.
+
+Sensitive comparisons should use constant-time logic.
+
+Node provides:
+
+```ts
+import crypto from "node:crypto";
+
+crypto.timingSafeEqual(
+  Buffer.from(input),
+  Buffer.from(secret)
+);
+```
+
+This matters for:
+
+- webhook secrets
+- API keys
+- authentication systems
+- signed payload verification
+
+Will every SaaS dashboard require this?
+
+No.
+
+Should security-sensitive paths consider it?
+
+Absolutely.
+
+## React Security: Where Safe JSX Meets Unsafe Reality
+
+React improved frontend security dramatically compared to older DOM manipulation approaches.
+
+Automatic escaping matters.
+
+JSX helps.
+
+Still, dangerous patterns remain.
+
+The obvious example:
+
+```ts
+<div
+  dangerouslySetInnerHTML={{
+    __html: bio
+  }}
+/>
+```
+
+The method name is not subtle.
+
+If `bio` contains:
+
+```html
+<script>
+alert(1)
+</script>
+```
+
+You now own an XSS problem.
+
+Sanitize before rendering.
+
+Use:
+
+- DOMPurify
+- contextual sanitization
+- CSP
+
+Not blind trust.
+
+## Less Obvious React Injection: URL Context
+
+Developers often miss context-sensitive security.
+
+Example:
+
+```ts
+function SearchLink({
+  value
+}: {
+  value: string
+}) {
+
+  return (
+    <a
+      href={value}
+    >
+      Open
+    </a>
+  );
+}
+```
+
+Input:
+
+```
+javascript:alert(1)
+```
+
+Browser result:
+
+code execution on click.
+
+Same type.
+
+Different execution context.
+
+Safer:
+
+```ts
+function safeUrl(
+  input: string
+) {
+
+  const url =
+    new URL(input);
+
+  if (
+    ![
+      "https:",
+      "http:"
+    ].includes(
+      url.protocol
+    )
+  ) {
+    throw new Error(
+      "Invalid protocol"
+    );
+  }
+
+  return url.toString();
+}
+```
+
+Context matters.
+
+Types alone cannot model every browser execution rule.
+
+## Next.js and SSR: Your Frontend Is Quietly Running Backend Code
+
+SSR changes the threat model.
+
+Many frontend developers underestimate this.
+
+Once server rendering enters the picture, you inherit backend responsibilities.
+
+Examples:
+
+- cookies
+- request headers
+- server actions
+- filesystem access
+- environment variables
+- SSR caching
+- secret boundaries
+
+A mistake in SSR code is not “just frontend.”
+
+It can become:
+
+- credential leakage
+- SSRF
+- authorization bypass
+- cache poisoning
+
+Example:
+
+```ts
+const internalData = await fetch(process.env.INTERNAL_API);
+```
+
+Looks fine.
+
+Until request routing, cache behavior, or attacker-controlled inputs influence execution paths.
+
+Treat SSR code like backend code.
+
+Because it is.
+
+## CSRF: The Attack Many SPAs Assume They Solved
+
+Modern frontend stacks sometimes create a false sense of immunity around CSRF.
+
+JWTs.
+
+SPAs.
+
+`fetch()`.
+
+Client-side routing.
+
+People hear these terms and quietly conclude:
+
+> “CSRF is mostly an old-school form problem.”
+
+Not exactly.
+
+If authentication relies on cookies — especially automatically attached cookies — CSRF remains relevant.
+
+Classic scenario:
+
+Your application accepts:
+
+```http
+POST /api/account/delete
+```
+
+Authentication:
+
+```
+session cookie
+```
+
+No CSRF protection.
+
+No origin validation.
+
+No token strategy.
+
+An attacker hosts:
+
+```html
+<form
+  action="https://app.com/api/account/delete"
+  method="POST">
+
+  <input
+    type="hidden"
+    name="confirm"
+    value="true" />
+
+</form>
+
+<script>
+document.forms[0].submit();
+</script>
+```
+
+Victim visits malicious site.
+
+Browser attaches session cookie automatically.
+
+Request executes.
+
+The victim never intentionally interacted with your application.
+
+TypeScript did not fail.
+
+Because this is not a typing problem.
+
+Common mitigation strategies:
+
+SameSite Cookies
+
+Good baseline.
+
+Example:
+
+```
+SameSite=Lax
+```
+
+or stricter:
+
+```
+SameSite=Strict
+```
+
+Helpful.
+
+Not universally sufficient.
+
+### Origin Validation
+
+Validate:
+
+`Origin`
+
+and sometimes:
+
+`Referer`
+
+Especially for state-changing operations.
+
+Next.js middleware example:
+
+```ts
+const allowedOrigins = [
+  "https://myapp.com"
+];
+
+export function middleware(
+  req: NextRequest
+) {
+
+  const origin =
+    req.headers.get(
+      "origin"
+    );
+
+  if (
+    req.method !== "GET" &&
+    !allowedOrigins.includes(
+      origin ?? ""
+    )
+  ) {
+
+    return new Response(
+      null,
+      {
+        status: 403
+      }
+    );
+  }
+
+  return NextResponse.next();
+}
+```
+
+### CSRF Tokens
+
+Still extremely relevant.
+
+Especially for:
+
+- admin panels
+- traditional session auth
+- high-risk mutations
+- financial operations
+
+Security evolves.
+
+Threat classes rarely disappear completely.
+
+## GraphQL Security: Flexibility Comes With Interesting Failure Modes
+
+GraphQL dramatically changes API ergonomics.
+
+Single endpoint.
+
+Typed schema.
+
+Introspection.
+
+Strong tooling.
+
+Powerful query composition.
+
+And entirely new ways to shoot yourself in the foot.
+
+### Introspection Abuse
+
+Many teams leave introspection enabled in production indefinitely.
+
+Convenient?
+
+Absolutely.
+
+Harmless?
+
+Not necessarily.
+
+Introspection exposes:
+
+- schema structure
+- mutation names
+- field layouts
+- hidden capabilities
+- internal object relationships
+
+Attackers love reconnaissance.
+
+Production environments often deserve tighter control.
+
+Common configuration:
+
+```ts
+const server =
+  new ApolloServer({
+
+    typeDefs,
+
+    resolvers,
+
+    introspection:
+      process.env
+        .NODE_ENV !==
+      "production"
+});
+```
+
+Not every application disables introspection.
+
+But every application should make the decision intentionally.
+
+### Resolver Injection
+
+GraphQL's schema does not automatically validate business safety.
+
+Unsafe resolver:
+
+```ts
+const resolvers = {
+
+  Query: {
+
+    user: (
+      _: unknown,
+      args: {
+        id: string
+      }
+    ) => {
+
+      return db.raw(
+        `SELECT *
+         FROM users
+         WHERE id='${args.id}'`
+      );
+    }
+  }
+};
+```
+
+Schema typing exists.
+
+SQL injection still exists.
+
+Safer:
+
+```ts
+const UserIdSchema = z.string().uuid();
+```
+
+Then:
+
+```ts
+const id = UserIdSchema.parse(args.id);
+```
+
+Followed by parameterized queries.
+
+GraphQL types help developer tooling.
+
+They are not a replacement for validation.
+
+### Query Complexity Attacks
+
+GraphQL introduces another subtle issue:
+
+resource exhaustion.
+
+Deep nesting.
+
+Recursive queries.
+
+Expensive relationships.
+
+Attackers can intentionally request absurd query shapes.
+
+Example:
+
+```graphql
+query {
+  users {
+    posts {
+      comments {
+        author {
+          posts {
+            comments {
+              ...
+```
+
+Perfectly valid.
+
+Potentially catastrophic.
+
+Mitigation options:
+
+- depth limits
+- complexity analysis
+- rate limiting
+- caching
+- resolver budgeting
+
+Security is often resource management wearing a different costume.
+
+## SSRF: The Vulnerability That Turns Your Server Into an Internal Network Client
+
+Server-Side Request Forgery deserves more attention than it usually gets.
+
+Modern applications frequently accept URLs:
+
+- avatar importers
+- metadata scrapers
+- webhook validators
+- OpenGraph previews
+- PDF generators
+- image processors
+- integrations
+
+Simple implementation:
+
+```ts
+app.post("/import", async (req, res) => {
+    const { url } =
+      req.body;
+    const response =
+      await fetch(url);
+    res.json(
+      await response.json()
+    );
+});
+```
+
+Straightforward.
+
+Dangerous.
+
+Attackers may attempt:
+
+```
+http://localhost:3000
+```
+
+```
+http://127.0.0.1
+```
+
+```
+http://169.254.169.254
+```
+
+That last one matters.
+
+Cloud metadata endpoints matter.
+
+Internal admin interfaces matter.
+
+Private network ranges matter.
+
+### Why Hostname Checks Alone Fail
+
+Many developers try:
+
+```ts
+const parsed = new URL(url);
+
+if (parsed.hostname === "localhost") {
+  throw new Error("Invalid host");
+}
+```
+
+Insufficient.
+
+Attackers abuse:
+
+- redirects
+- alternate IP notation
+- DNS tricks
+- Unicode edge cases
+- parser inconsistencies
+
+Examples:
+
+```
+http://127.0.0.1@evil.com
+```
+
+```
+http://0x7f000001
+```
+
+Hostname validation alone rarely closes SSRF properly.
+
+### Better SSRF Defenses
+
+Use layered checks.
+
+Restrict protocols:
+
+```
+https:
+http:
+```
+
+Reject:
+
+```
+file:
+ftp:
+gopher:
+```
+
+Resolve DNS.
+
+Validate final IP ranges.
+
+Block:
+
+- 127.0.0.0/8
+- 10.0.0.0/8
+- 172.16.0.0/12
+- 192.168.0.0/16
+
+Treat URL ingestion as a security-sensitive feature.
+
+Because it is.
+
+### Unsafe Serialization and Accidental RCE
+
+JavaScript developers love serialization helpers.
+
+Sometimes too much.
+
+Dangerous pattern:
+
+libraries capable of restoring executable behavior.
+
+Example:
+
+```ts
+import serialize from "node-serialize";
+```
+
+Then:
+
+```ts
+serialize.unserialize(cookieValue);
+```
+
+Some serialization systems historically supported:
+
+- functions
+- executable reconstruction
+- eval-like behavior
+
+That is not a convenience feature.
+
+That is a potential RCE surface.
+
+Safe default:
+
+```ts
+JSON.parse()
+```
+
+Then:
+
+runtime validation.
+
+Not executable reconstruction.
+
+Serialization should restore data.
+
+Not code.
+
+## Supply Chain Attacks: Your Application Runs More Code Than Your Team Wrote
+
+Modern TypeScript projects rarely contain only first-party code.
+
+A small application might directly install:
+
+- React
+- Next.js
+- Zod
+- Tailwind
+- ESLint plugins
+- auth libraries
+- database clients
+- utility helpers
+
+Which quickly becomes:
+
+```
+120 direct dependencies
+1600 transitive dependencies
+```
+
+Your production system now executes code written by hundreds — sometimes thousands — of strangers.
+
+That is not automatically unsafe.
+
+But it dramatically changes the attack surface.
+
+## Dependency Confusion
+
+One of the most practical modern attacks.
+
+Scenario:
+
+Your company uses an internal package:
+
+```
+@mycompany/auth
+```
+
+Stored inside a private registry.
+
+An attacker publishes:
+
+```
+@mycompany/auth
+```
+
+to public npm.
+
+Higher version.
+
+Malicious `postinstall` hook.
+
+Weak registry configuration.
+
+Suddenly:
+
+```bash
+npm install
+```
+
+does something very different from what your engineers expected.
+
+TypeScript provides perfect typings.
+
+Meanwhile:
+
+```ts
+process.env.JWT_SECRET
+```
+
+quietly leaves your infrastructure.
+
+### Malicious Install Scripts
+
+Many developers forget that installing packages executes code.
+
+Examples:
+
+```json
+{
+  "scripts": {
+    "postinstall": "node setup.js"
+  }
+}
+```
+
+This mechanism exists for legitimate reasons.
+
+It is also an attractive attack vector.
+
+Threats include:
+
+- environment variable exfiltration
+- credential theft
+- crypto wallet targeting
+- CI compromise
+- filesystem access
+
+Mitigation strategies:
+
+```bash
+npm audit
+```
+
+Consider:
+
+- socket.dev
+- dependency reputation checks
+- registry restrictions
+- CI verification
+- minimal dependency philosophy
+
+And perhaps the least glamorous but most effective advice:
+
+**avoid unnecessary packages.**
+
+A 15-line utility function does not always need a dependency.
+
+### The event-stream Reminder
+
+The JavaScript ecosystem already lived through supply-chain compromise stories.
+
+The famous event-stream incident remains a useful reminder.
+
+Trusted package.
+
+Popular ecosystem position.
+
+Malicious code introduced downstream.
+
+Real impact.
+
+TypeScript did not fail.
+
+Because dependencies can be compromised independently from typing systems.
+
+Security architecture must assume ecosystem risk exists.
+
+## Branded Types: Where TypeScript Actually Helps Security
+
+After spending this article explaining what TypeScript does not secure, we should discuss where it can meaningfully strengthen security design.
+
+One interesting technique:
+
+branded types.
+
+Example:
+
+raw HTML versus sanitized HTML.
+
+Without stronger modeling:
+
+```ts
+type Html = string;
+```
+
+Problem:
+
+everything becomes interchangeable.
+
+Unsafe user input:
+
+```ts
+const payload: string = req.body.bio;
+```
+
+Sanitized HTML:
+
+```ts
+const safe: string = DOMPurify.sanitize(payload);
+```
+
+Same type.
+
+Different trust level.
+
+Branded types help encode trust boundaries.
+
+Example:
+
+```ts
+type SafeHtml = string & {
+    readonly __brand:
+      unique symbol;
+  };
+```
+
+Sanitizer:
+
+```ts
+function sanitizeHtml(input: string): SafeHtml {
+  return DOMPurify.sanitize(input) as SafeHtml;
+}
+```
+
+Reducer:
+
+```ts
+function render(html: SafeHtml) {
+  root.innerHTML = html;
+}
+```
+
+Now unsafe strings cannot silently flow into rendering APIs.
+
+TypeScript becomes a security amplifier.
+
+Not by magically preventing XSS.
+
+But by helping encode trusted transitions.
+
+Important distinction.
+
+### Security Tooling: Strong Systems Use Layers, Not Heroes
+
+One tool does not secure modern applications.
+
+One library does not secure modern applications.
+
+One language certainly does not secure modern applications.
+
+Security is layered.
+
+Practical baseline for TypeScript stacks:
+
+Runtime Validation
+
+Examples:
+
+- Zod
+- Valibot
+- class-validator
+- io-ts
+
+Validate boundaries.
+
+Always.
+
+### Dependency Security
+
+Use:
+
+- npm audit
+- socket.dev
+- SCA tooling
+- lockfiles
+- registry controls
+
+### Configuration Validation
+
+Validate:
+
+- env vars
+- secrets
+- deployment assumptions
+
+Startup failures beat silent misconfiguration.
+
+### CI Security Gates
+
+Add automated checks.
+
+Examples:
+
+- linting
+- dependency scans
+- secret detection
+- container scanning
+- policy validation
+
+Security that depends entirely on manual review eventually fails.
+
+### Security Linting
+
+This is where a tool like eslint-plugin-security fits naturally into the stack.
+
+It is not a silver bullet.
+
+It is not a replacement for audits.
+
+It is not runtime validation.
+
+But it can detect surprisingly useful classes of risky behavior.
+
+Examples include:
+
+- unsafe regex patterns
+- shell execution risks
+- suspicious dynamic behavior
+- object injection concerns
+- dangerous Node.js constructs
+- SSR-adjacent risky patterns
+
+Some rules lean heavily toward backend and Node.js scenarios.
+
+That criticism is fair.
+
+Still, modern TypeScript systems increasingly blur frontend and backend boundaries:
+
+- Next.js server actions
+- SSR
+- middleware
+- edge runtimes
+- full-stack React architectures
+
+Security linting can still surface dangerous patterns early in development.
+
+We recently published a dedicated deep dive covering configuration, ESLint v9 setup, real-world findings, limitations, false positives, and where the plugin actually provides value in production TypeScript projects:
+
+[Using eslint-plugin-security in Real JavaScript Projects](https://jsdev.space/howto/eslint-plugin-security/)
+
+Use security linting as one layer.
+
+Not your entire strategy.
+
+## Practical Security Checklist for Modern TypeScript Projects
+
+### Backend
+
+Use:
+
+- runtime validation everywhere
+- parameterized database access
+- strict JWT verification
+- secure CORS configuration
+- origin validation
+- safe logging
+- structured error handling
+- secret validation at startup
+
+Avoid:
+
+- SQL string concatenation
+- blind object merges
+- unsafe deserialization
+- shell interpolation
+- implicit cryptographic defaults
+
+### Frontend
+
+Use:
+
+- DOM sanitization
+- CSP
+- URL validation
+- careful env separation
+- CSRF protection
+- dependency hygiene
+
+Avoid:
+
+- untrusted dangerouslySetInnerHTML
+- inline unsafe scripts
+- browser secret leakage
+- blind localStorage trust
+
+### Full-Stack / SSR
+
+Treat SSR code like backend code.
+
+Because it is backend code.
+
+Audit:
+
+- fetch behavior
+- caching
+- cookies
+- secrets
+- request boundaries
+- server actions
+- middleware execution
+
+## Final Thoughts
+
+TypeScript genuinely improves software engineering.
+
+That is not up for debate.
+
+Strict typing prevents bugs.
+
+Interfaces improve communication.
+
+Inference improves maintainability.
+
+The ecosystem is extraordinarily productive.
+
+But security operates on different rules.
+
+Attackers do not care about your discriminated unions.
+
+SQL parsers do not care about your DTOs.
+
+Browsers do not care about your generic constraints.
+
+Security emerges from:
+
+- trust boundaries
+- runtime validation
+- secure defaults
+- layered tooling
+- dependency awareness
+- operational discipline
+
+TypeScript can absolutely strengthen that architecture.
+
+But only when we treat it as part of the system — not the system itself.
+
+The useful mental model is simple:
+
+**Types reduce accidental mistakes.**
+**Security reduces adversarial opportunities.**
+
+Those goals overlap sometimes.
+
+They are not the same thing.
+
+And building safer applications means understanding where the boundary actually lives.
