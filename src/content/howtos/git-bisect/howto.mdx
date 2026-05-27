@@ -1,0 +1,500 @@
+---
+title: "Howto Use Git Bisect to Find the Commit That Broke Everything'"
+slug: git-bisect
+heading: "Find the Exact Commit That Introduced the Bug Using Git’s Built-In Binary Search"
+icon: /icons/git.png
+image: /icon.png
+permalink: howto/git-bisect
+date: 2026-05-27
+author: anton liberant
+category: git
+type: howto
+tags: ['git-bisect']
+desc: Something worked last week and now it’s broken. The repository has fifty new commits and nobody knows what changed.
+subtitle: 'Stop manually checking dozens of commits. Learn how Git’s built-in binary search can pinpoint the exact change that introduced a bug in just a few steps.'
+---
+
+Every developer eventually runs into the same unpleasant scenario.
+
+The application worked perfectly a week ago.
+
+Now something is broken.
+
+Tests fail.
+
+The UI behaves strangely.
+
+An API endpoint returns nonsense.
+
+And during that week?
+
+Forty commits landed from multiple developers.
+
+Maybe eighty.
+
+Maybe three hundred.
+
+You could inspect commits one by one.
+
+Open diffs.
+
+Run builds.
+
+Test manually.
+
+Slowly lose your patience.
+
+Or you could let Git do the hard work.
+
+That’s exactly what git bisect exists for.
+
+Instead of checking commits sequentially, Git performs a binary search through commit history.
+
+You tell Git:
+
+> this version works
+
+and
+
+> this version is broken
+
+Git then jumps directly to the middle of the range and asks:
+
+> Does it work here? 
+
+After several answers, the offending commit appears.
+
+Forty commits?
+
+Roughly six checks.
+
+Eight hundred commits?
+
+Around ten.
+
+That’s the power of binary search applied to version control.
+
+## The Core Idea: Binary Search for Broken Code
+
+If you've ever searched through a sorted array using binary search, the logic will feel familiar.
+
+Suppose you have twelve commits:
+
+```
+c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11
+```
+
+You know:
+
+- `c0` worked
+- `c11` is broken
+
+Instead of checking:
+
+```
+c1 → c2 → c3 → c4 → c5 ...
+```
+
+Git immediately chooses the midpoint.
+
+Something like:
+
+```
+c5
+```
+
+You test it.
+
+If `c5` works:
+
+the bad commit must be later.
+
+If `c5` fails:
+
+the problem must be earlier.
+
+Each answer cuts the search space in half.
+
+That’s why `git bisect` becomes incredibly efficient on large histories.
+
+## Starting a Git Bisect Session
+
+Begin by starting a bisect session.
+
+```bash
+git bisect start
+```
+
+Now tell Git:
+
+the current state is broken.
+
+Usually this means your current `HEAD`.
+
+```bash
+git bisect bad
+```
+
+Next, mark a known working commit.
+
+You can use:
+
+- a commit hash
+- a branch reference
+- a tag
+- an older release version
+
+Example:
+
+```bash
+git bisect good v1.2.0
+```
+
+At this point, Git calculates the midpoint automatically and checks out a commit somewhere between those two states.
+
+You’ll see something like:
+
+```
+Bisecting: 4 revisions left to test
+Checking out commit abc1234
+```
+
+Now your job is simple:
+
+test the application.
+
+## Testing Each Candidate Commit
+
+Git has moved you to a candidate commit.
+
+Now answer one question:
+
+does the bug exist here?
+
+If everything works:
+
+```bash
+git bisect good
+```
+
+If the bug is present:
+
+```bash
+git bisect bad
+```
+
+Git immediately narrows the search range and jumps again.
+
+You repeat the cycle:
+
+- test
+- mark good or bad
+- test again
+- mark again
+
+Eventually Git reaches the answer.
+
+## When Git Finds the Guilty Commit
+
+After several rounds, Git stops and reports the result.
+
+Example:
+
+```
+a3f8c12 is the first bad commit
+```
+
+That commit introduced the problem.
+
+You now know exactly where to investigate.
+
+Instead of debugging forty random changes, you're examining one specific diff.
+
+That alone can save hours.
+
+## A Practical Example
+
+Imagine this timeline:
+
+```
+c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11
+```
+
+A week ago:
+
+```
+c0
+```
+
+Everything worked.
+
+Today:
+
+```
+c11
+```
+
+Production is broken.
+
+Start the session:
+
+```bash
+git bisect start
+git bisect bad
+git bisect good c0
+```
+
+Git chooses the midpoint.
+
+Example:
+
+``` 
+Checking out c5
+```
+
+You run the app.
+
+Suppose:
+
+`c5` still works.
+
+Mark it:
+
+```bash
+git bisect good
+```
+
+Git shrinks the search window.
+
+Now it may jump to:
+
+``` 
+c8
+```
+
+You test again.
+
+Suppose:
+
+`c8` fails.
+
+Mark it:
+
+```bash
+git bisect bad
+```
+
+Search space shrinks again.
+
+After a few iterations:
+
+Git identifies the exact commit responsible.
+
+You never manually walked through the entire history.
+
+## Don’t Forget to Reset Afterwards
+
+This is easy to forget.
+
+During a bisect session, Git repeatedly checks out temporary commits.
+
+Once you’re finished, return to your original branch state:
+
+```bash
+git bisect reset
+```
+
+Without reset, you may wonder why your repository suddenly sits on some detached historical commit.
+
+Always reset when you're done.
+
+## Automating Git Bisect with Tests
+
+Manual testing works.
+
+Automated testing works even better.
+
+If you already have a command that verifies correctness and returns:
+
+```
+0 → success
+non-zero → failure
+```
+
+you can automate the entire search.
+
+Example:
+
+```bash
+git bisect start
+git bisect bad HEAD
+git bisect good v1.2.0
+git bisect run npm test
+```
+
+Now Git handles everything.
+
+For each candidate commit it will:
+
+1. checkout commit
+2. run tests
+3. interpret result
+4. continue searching
+
+No manual interaction required.
+
+This becomes incredibly powerful for:
+
+- failing unit tests
+- broken builds
+- regression bugs
+- CI debugging
+- flaky integrations
+
+## Using Custom Validation Scripts
+
+You aren't limited to npm test.
+
+Any script can drive bisect.
+
+For example:
+
+```bash
+git bisect run ./check-build.sh
+```
+
+or
+
+```bash
+git bisect run pnpm lint
+```
+
+Or a custom Node validation script:
+
+```bash
+git bisect run node verify-api.js
+```
+
+As long as the command returns a proper exit code, Git can automate the search.
+
+That flexibility makes `git bisect` useful far beyond traditional testing.
+
+## Why Developers Forget This Tool Exists
+
+`git bisect` is oddly underused.
+
+Many developers know it exists but rarely reach for it.
+
+Instead they default to:
+
+- reading commit history manually
+- guessing likely changes
+- debugging recent merges
+- blaming dependencies
+- reopening old PRs
+
+Sometimes that works.
+
+Often it wastes time.
+
+`git bisect` gives you something much stronger:
+
+a systematic search strategy.
+
+No guessing.
+
+No intuition games.
+
+Just elimination.
+
+## When Git Bisect Becomes Especially Valuable
+
+This tool shines in situations like:
+
+### Regression Bugs
+
+Something used to work.
+
+Now it doesn't.
+
+Classic bisect territory.
+
+### Large Teams
+
+Many developers.
+
+Many commits.
+
+Unclear ownership.
+
+Bisect dramatically reduces noise.
+
+### Old Codebases
+
+You don't remember when the behavior changed.
+
+The repository history does.
+
+### CI Failures
+
+A build started failing somewhere in the last two weeks.
+
+Nobody knows where.
+
+Bisect knows.
+
+## Final Thoughts
+
+`git bisect` is essentially binary search applied to commit history.
+
+That simple idea makes it incredibly effective.
+
+Instead of checking commits one after another, Git repeatedly cuts the search range in half.
+
+Forty commits?
+
+A handful of checks.
+
+Hundreds of commits?
+
+Still surprisingly manageable.
+
+The workflow is simple:
+
+Start:
+
+```bash
+git bisect start
+```
+
+Mark broken state:
+
+```bash
+git bisect bad
+```
+
+Mark known working state:
+
+```bash
+git bisect good <commit>
+```
+
+Test.
+
+Answer.
+
+Repeat.
+
+Then finish:
+
+```bash
+git bisect reset
+```
+
+The next time somebody says:
+
+> “It worked last week, but now everything is broken…”
+
+you won’t need to manually inspect fifty commits.
+
+Let Git hunt down the culprit for you.
