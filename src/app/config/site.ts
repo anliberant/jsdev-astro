@@ -18,6 +18,10 @@ export const siteConfig = {
       name: 'Friday',
       path: '/friday/',
     },
+    {
+      name: 'News',
+      path: 'https://jsdev.news',
+    }
   ],
   footerLinks: [
     {
