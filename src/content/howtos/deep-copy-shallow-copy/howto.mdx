@@ -46,8 +46,8 @@ function deepClone(obj) {
 
  Simple  
  Good for plain objects  
-✘ Breaks on `Date`, `Map`, `Set`, `RegExp`, functions  
-✘ Fails on circular references
+ Limitation: breaks on `Date`, `Map`, `Set`, `RegExp`, functions  
+ Limitation: fails on circular references
 
 ---
 
@@ -70,8 +70,8 @@ function deepClone(obj) {
 
  Flexible  
  Can support circular references with extra logic  
-✘ More code  
-✘ Requires manual handling of special types
+ Limitation: more code  
+ Limitation: requires manual handling of special types
 
 ---
 
@@ -83,7 +83,7 @@ const cloned = structuredClone(original);
 
  Supports many built‑in types (Date, Map, Set, File, Blob)  
  Fast and native  
-✘ Not available in old browsers
+ Limitation: not available in old browsers
 
 ---
 
@@ -97,7 +97,7 @@ const result = cloneDeep(data);
 
  Battle‑tested  
  Handles edge cases and circular structures  
-✘ Adds dependency
+ Limitation: adds dependency
 
 ---
 

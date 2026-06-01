@@ -34,14 +34,14 @@ export const getStaticPaths = (async ({ paginate }) => {
 const { page } = Astro.props;
 
 const title =
-  page.currentPage === 1 ?
-    siteConfig.howtosPageTitle
-  : siteConfig.howtosPageTitle + ' ' + 'Page ' + page.currentPage;
+  page.currentPage === 1
+    ? siteConfig.howtosPageTitle
+    : siteConfig.howtosPageTitle + ' ' + 'Page ' + page.currentPage;
 
 const description =
-  page.currentPage === 1 ?
-    siteConfig.howtosPageDescription
-  : siteConfig.howtosPageDescription + ' - Page ' + page.currentPage;
+  page.currentPage === 1
+    ? siteConfig.howtosPageDescription
+    : siteConfig.howtosPageDescription + ' - Page ' + page.currentPage;
 
 const breadcrumbItems = generateHowtoBreadcrumbs(
   undefined,
@@ -50,21 +50,19 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
 );
 ---
 
-<BaseLayout
-  title={title}
-  description={description}>
+<BaseLayout title={title} description={description}>
+  <Fragment slot='head'>
+    {page.currentPage > 1 && <meta name='robots' content='noindex, follow' />}
+  </Fragment>
   <main class='main'>
     {
       page.currentPage > 1 && (
-        <Breadcrumbs
-          items={breadcrumbItems}
-          class='mt-10'
-        />
+        <Breadcrumbs items={breadcrumbItems} class='mt-10' />
       )
     }
 
     {
-      page.currentPage === 1 ?
+      page.currentPage === 1 ? (
         <HeadingBlock
           title={siteConfig.howtoHeadTitle}
           description={
@@ -73,7 +71,9 @@ const breadcrumbItems = generateHowtoBreadcrumbs(
           headingTwo='Each guide is written as an actionable workflow: reproduce the problem, apply the fix, and verify the result.'
           class='mt-10'
         />
-      : <h1 class='mt-10'>Howto Tutorials Page {page.currentPage}</h1>
+      ) : (
+        <h1 class='mt-10'>Howto Tutorials Page {page.currentPage}</h1>
+      )
     }
     <HowtoCategoriesList />
     <Howtos howtos={page.data} />

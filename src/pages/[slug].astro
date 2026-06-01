@@ -3,8 +3,14 @@ import type { GetStaticPaths } from 'astro';
 import { Image } from 'astro:assets';
 import { CollectionEntry, getCollection, render } from 'astro:content';
 
+import { siteConfig } from '@/app/config/site';
 import BaseLayout from '@/app/layouts/base-layout.astro';
 import { generatePostBreadcrumbs } from '@/shared/helpers/breadcrumbs.helpers';
+import {
+  createArticleJsonLd,
+  createBreadcrumbJsonLd,
+  shouldNoindexThinContent,
+} from '@/shared/helpers/seo.helpers';
 import Badge from '@/shared/ui/base/badge.astro';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import RelatedPosts from '@/shared/ui/base/related-posts/related-posts.astro';
@@ -29,27 +35,50 @@ type Props = {
 const { post } = Astro.props;
 const { Content, remarkPluginFrontmatter, headings } = await render(post);
 
-const categorySlug =
-  post.data.category ? post.data.category.toLowerCase().replace(/\s+/g, '-') : '';
+const categorySlug = post.data.category
+  ? post.data.category.toLowerCase().replace(/\s+/g, '-')
+  : '';
 const breadcrumbItems = generatePostBreadcrumbs(
   post.data.category ?? '',
   categorySlug,
   post.data.title
 );
 const newDate = formatDate(post.data.date);
+const articleUrl = `${siteConfig.siteUrl}/${post.data.permalink}/`;
+const shouldNoindex = shouldNoindexThinContent(post.body);
+const articleJsonLd = createArticleJsonLd({
+  title: post.data.title,
+  description: post.data.desc,
+  url: articleUrl,
+  image: post.data.image.src,
+  datePublished: post.data.date,
+  author: post.data.author,
+  tags: post.data.tags,
+  section: post.data.category,
+});
+const breadcrumbJsonLd = createBreadcrumbJsonLd(breadcrumbItems, articleUrl);
 ---
 
 <BaseLayout
   title={post.data.title}
   description={post.data.desc}
   image={post.data.image.src}
-  type='article'>
+  type='article'
+>
+  <Fragment slot='head'>
+    {shouldNoindex && <meta name='robots' content='noindex, follow' />}
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(articleJsonLd)}
+    />
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(breadcrumbJsonLd)}
+    />
+  </Fragment>
   <main class='main'>
     <section aria-label='Breadcrumbs'>
-      <Breadcrumbs
-        items={breadcrumbItems}
-        class='mt-10'
-      />
+      <Breadcrumbs items={breadcrumbItems} class='mt-10' />
     </section>
 
     <article class='post-article'>
@@ -58,15 +87,14 @@ const newDate = formatDate(post.data.date);
         <p class='post-subtitle'>{post.data.subtitle}</p>
         <p class='read-meta'>
           <time datetime={post.data.date.toISOString()}>{newDate}</time>
-          <span
-            class='read-time'
-            aria-label='Estimated reading time'>
+          <span class='read-time' aria-label='Estimated reading time'>
             <svg
               width='15'
               height='13'
               viewBox='0 0 15 13'
               fill='none'
-              xmlns='http://www.w3.org/2000/svg'>
+              xmlns='http://www.w3.org/2000/svg'
+            >
               <path
                 d='M7.5 2.38804V12.138M7.5 2.38804C7.5 2.38804 4.25 -0.397677 1 1.92375V12.138C4.25 9.81661 7.5 12.138 7.5 12.138C7.5 12.138 10.75 9.81661 14 12.138V1.92375C10.75 -0.397677 7.5 2.38804 7.5 2.38804Z'
               ></path>
@@ -76,9 +104,7 @@ const newDate = formatDate(post.data.date);
         </p>
       </header>
 
-      <aside
-        class='post-toc'
-        aria-label='Table of contents'>
+      <aside class='post-toc' aria-label='Table of contents'>
         <TableOfContents contentSelector='.post-content' />
       </aside>
 
@@ -93,30 +119,21 @@ const newDate = formatDate(post.data.date);
         />
       </figure>
 
-      <section
-        class='post-content'
-        aria-label='Article content'>
+      <section class='post-content' aria-label='Article content'>
         <Content components={mdxComponents} />
       </section>
 
       <footer class='post-footer'>
         <Separator />
         <div class='tags-wrapper'>
-          <a
-            href={`/${categorySlug}/`}
-            class='category-link'>
-            <Badge
-              class='category-badge'
-              title={post.data.category}
+          <a href={`/${categorySlug}/`} class='category-link'>
+            <Badge class='category-badge' title={post.data.category}
               >{post.data.category}</Badge
             >
           </a>
           <Tags tags={post.data.tags} />
         </div>
-        <RelatedPosts
-          collection='posts'
-          slug={post.data.slug}
-        />
+        <RelatedPosts collection='posts' slug={post.data.slug} />
       </footer>
     </article>
   </main>
