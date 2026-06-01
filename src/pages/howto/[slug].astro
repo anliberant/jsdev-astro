@@ -2,7 +2,13 @@
 import type { GetStaticPaths } from 'astro';
 import { CollectionEntry, getCollection, render } from 'astro:content';
 
+import { siteConfig } from '@/app/config/site';
 import BaseLayout from '@/app/layouts/base-layout.astro';
+import {
+  createArticleJsonLd,
+  createBreadcrumbJsonLd,
+  shouldNoindexThinContent,
+} from '@/shared/helpers/seo.helpers';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import RelatedPosts from '@/shared/ui/base/related-posts/related-posts.astro';
 import TableOfContents from '@/shared/ui/layout/table-of-contents.astro';
@@ -26,11 +32,27 @@ const { Content, remarkPluginFrontmatter, headings } = await render(howto);
 
 const breadcrumbItems = [
   { label: 'How-to', href: '/howto/' },
-  { label: howto.data.category, href: `/howto/${howto.data.category.toLowerCase()}/` },
+  {
+    label: howto.data.category,
+    href: `/howto/${howto.data.category.toLowerCase()}/`,
+  },
   { label: howto.data.title },
 ];
 
 const newDate = formatDate(howto.data.date);
+const articleUrl = `${siteConfig.siteUrl}/${howto.data.permalink}/`;
+const shouldNoindex = shouldNoindexThinContent(howto.body);
+const articleJsonLd = createArticleJsonLd({
+  title: howto.data.title,
+  description: howto.data.desc,
+  url: articleUrl,
+  image: `/og/${howto.data.slug}.png`,
+  datePublished: howto.data.date,
+  author: howto.data.author,
+  tags: howto.data.tags,
+  section: howto.data.category,
+});
+const breadcrumbJsonLd = createBreadcrumbJsonLd(breadcrumbItems, articleUrl);
 ---
 
 <BaseLayout
@@ -38,13 +60,22 @@ const newDate = formatDate(howto.data.date);
   description={howto.data.desc}
   image={howto.data.image}
   contentType={howto.data.type}
-  slug={howto.data.slug}>
+  slug={howto.data.slug}
+>
+  <Fragment slot='head'>
+    {shouldNoindex && <meta name='robots' content='noindex, follow' />}
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(articleJsonLd)}
+    />
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(breadcrumbJsonLd)}
+    />
+  </Fragment>
   <main class='main'>
     <section aria-label='Breadcrumbs'>
-      <Breadcrumbs
-        items={breadcrumbItems}
-        class='mt-10'
-      />
+      <Breadcrumbs items={breadcrumbItems} class='mt-10' />
     </section>
 
     <article class='post-article'>
@@ -53,15 +84,14 @@ const newDate = formatDate(howto.data.date);
         <p class='post-subtitle'>{howto.data.subtitle}</p>
         <p class='read-meta'>
           <time datetime={howto.data.date.toISOString()}>{newDate}</time>
-          <span
-            class='read-time'
-            aria-label='Estimated reading time'>
+          <span class='read-time' aria-label='Estimated reading time'>
             <svg
               width='15'
               height='13'
               viewBox='0 0 15 13'
               fill='none'
-              xmlns='http://www.w3.org/2000/svg'>
+              xmlns='http://www.w3.org/2000/svg'
+            >
               <path
                 d='M7.5 2.38804V12.138M7.5 2.38804C7.5 2.38804 4.25 -0.397677 1 1.92375V12.138C4.25 9.81661 7.5 12.138 7.5 12.138C7.5 12.138 10.75 9.81661 14 12.138V1.92375C10.75 -0.397677 7.5 2.38804 7.5 2.38804Z'
               ></path>
@@ -71,23 +101,16 @@ const newDate = formatDate(howto.data.date);
         </p>
       </header>
 
-      <aside
-        class='post-toc'
-        aria-label='Table of contents'>
+      <aside class='post-toc' aria-label='Table of contents'>
         <TableOfContents contentSelector='.post-content' />
       </aside>
 
-      <section
-        class='post-content'
-        aria-label='Article content'>
+      <section class='post-content' aria-label='Article content'>
         <Content components={mdxComponents} />
       </section>
 
       <footer class='post-footer'>
-        <RelatedPosts
-          collection='howtos'
-          slug={howto.data.slug}
-        />
+        <RelatedPosts collection='howtos' slug={howto.data.slug} />
       </footer>
     </article>
   </main>

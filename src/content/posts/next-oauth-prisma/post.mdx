@@ -144,7 +144,7 @@ In short, using `docker-compose up -d` is a convenient way to start your databas
 
 **Configure Prisma by creating a `.env` file in the root directory with the following:**
 
-```env
+```dotenv
 DATABASE_URL="postgresql://postgres_user:postgres_password@localhost:5432/postgres_auth?schema=public"
 ```
 
@@ -717,7 +717,7 @@ export { auth as middleware } from '@/auth';
 
 ### Add your Google and GitHub OAuth credentials to the .env file:
 
-```env
+```dotenv
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GITHUB_CLIENT_ID=your-github-client-id

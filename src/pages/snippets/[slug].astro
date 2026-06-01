@@ -2,14 +2,23 @@
 import type { GetStaticPaths } from 'astro';
 import { CollectionEntry, getCollection, render } from 'astro:content';
 
+import { siteConfig } from '@/app/config/site';
 import BaseLayout from '@/app/layouts/base-layout.astro';
+import {
+  createArticleJsonLd,
+  createBreadcrumbJsonLd,
+  shouldNoindexThinContent,
+} from '@/shared/helpers/seo.helpers';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import RelatedPosts from '@/shared/ui/base/related-posts/related-posts.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
 import { formatDate } from '@/shared/utils';
 
 export const getStaticPaths = (async () => {
-  const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
+  const allSnippets = await getCollection(
+    'snippets',
+    ({ data }) => !data.isDraft
+  );
   return allSnippets.map(snippet => ({
     params: { slug: snippet.data.slug },
     props: { snippet },
@@ -23,8 +32,24 @@ type Props = {
 const { snippet } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(snippet);
 
-const breadcrumbItems = [{ label: 'Snippets', href: '/snippets/' }, { label: snippet.data.title }];
+const breadcrumbItems = [
+  { label: 'Snippets', href: '/snippets/' },
+  { label: snippet.data.title },
+];
 const newDate = formatDate(snippet.data.date);
+const articleUrl = `${siteConfig.siteUrl}/${snippet.data.permalink}/`;
+const shouldNoindex = shouldNoindexThinContent(snippet.body);
+const articleJsonLd = createArticleJsonLd({
+  title: snippet.data.title,
+  description: snippet.data.desc,
+  url: articleUrl,
+  image: `/og/${snippet.data.slug}.png`,
+  datePublished: snippet.data.date,
+  author: snippet.data.author,
+  tags: snippet.data.tags,
+  section: snippet.data.category,
+});
+const breadcrumbJsonLd = createBreadcrumbJsonLd(breadcrumbItems, articleUrl);
 ---
 
 <BaseLayout
@@ -32,13 +57,22 @@ const newDate = formatDate(snippet.data.date);
   description={snippet.data.desc}
   image={snippet.data.image}
   contentType={snippet.data.type}
-  slug={snippet.data.slug}>
+  slug={snippet.data.slug}
+>
+  <Fragment slot='head'>
+    {shouldNoindex && <meta name='robots' content='noindex, follow' />}
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(articleJsonLd)}
+    />
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(breadcrumbJsonLd)}
+    />
+  </Fragment>
   <main class='main'>
     <section aria-label='Breadcrumbs'>
-      <Breadcrumbs
-        items={breadcrumbItems}
-        class='mt-10'
-      />
+      <Breadcrumbs items={breadcrumbItems} class='mt-10' />
     </section>
 
     <article class='post-article'>
@@ -47,25 +81,18 @@ const newDate = formatDate(snippet.data.date);
         <p class='post-subtitle'>{snippet.data.subtitle}</p>
         <p class='read-meta'>
           <time datetime={snippet.data.date.toISOString()}>{newDate}</time>
-          <span
-            class='read-time'
-            aria-label='Estimated reading time'>
+          <span class='read-time' aria-label='Estimated reading time'>
             {remarkPluginFrontmatter?.minutesRead ?? ''}
           </span>
         </p>
       </header>
 
-      <section
-        class='post-content'
-        aria-label='Snippet content'>
+      <section class='post-content' aria-label='Snippet content'>
         <Content components={mdxComponents} />
       </section>
 
       <footer class='post-footer'>
-        <RelatedPosts
-          collection='snippets'
-          slug={snippet.data.slug}
-        />
+        <RelatedPosts collection='snippets' slug={snippet.data.slug} />
       </footer>
     </article>
   </main>

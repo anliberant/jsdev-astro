@@ -115,7 +115,7 @@ Route Groups organize your code without affecting the URL path. Crucially, they 
 
 ### 2.1 Logical Grouping Without URL Impact
 
-```dash
+```bash
 app/
 ├─ (marketing)/about/page.tsx    // URL: /about
 └─ (shop)/products/page.tsx      // URL: /products
@@ -125,7 +125,7 @@ app/
 
 You can apply specific headers, footers, or wrapper components to a whole group.
 
-```dash
+```bash
 app/
 ├─ (shop)/
 │  ├─ layout.tsx
@@ -152,7 +152,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
 
 When areas need to be fully isolated (like an authenticated admin panel versus a public site, each with a different HTML structure), you create separate roots.
 
-```dash
+```bash
 app/
 ├─ (frontend)/
 │  ├─ layout.tsx  // contains its own <html> and <body>
@@ -171,7 +171,7 @@ Parallel routes allow you to render multiple regions within a layout independent
 
 **Structure**
 
-```dash
+```bash
 app/
 ├─ layout.tsx
 ├─ page.tsx              // The default slot = {children}
@@ -220,7 +220,7 @@ Intercepted routes let you render a different route inside the current layout (u
 
 **Structure**
 
-```dash
+```bash
 app/
 ├─ layout.tsx
 ├─ page.tsx                          // The main list page
@@ -323,7 +323,7 @@ export default function Home() {
 
 ### B) Error & Loading Boundaries per Slot
 
-```dash
+```bash
 app/@product/loading.tsx
 app/@product/error.tsx
 ```

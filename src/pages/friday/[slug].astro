@@ -2,14 +2,22 @@
 import type { GetStaticPaths } from 'astro';
 import { CollectionEntry, getCollection, render } from 'astro:content';
 
+import { siteConfig } from '@/app/config/site';
 import BaseLayout from '@/app/layouts/base-layout.astro';
+import {
+  createArticleJsonLd,
+  createBreadcrumbJsonLd,
+} from '@/shared/helpers/seo.helpers';
 import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import TableOfContents from '@/shared/ui/layout/table-of-contents.astro';
 import { mdxComponents } from '@/shared/ui/mdx';
 import { formatDate } from '@/shared/utils';
 
 export const getStaticPaths = (async () => {
-  const allFridays = await getCollection('fridays', ({ data }) => !data.isDraft);
+  const allFridays = await getCollection(
+    'fridays',
+    ({ data }) => !data.isDraft
+  );
   return allFridays.map(friday => ({
     params: { slug: friday.data.slug },
     props: { friday },
@@ -23,22 +31,44 @@ type Props = {
 const { friday } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(friday);
 
-const breadcrumbItems = [{ label: 'Fridays', href: '/friday/' }, { label: friday.data.title }];
+const breadcrumbItems = [
+  { label: 'Fridays', href: '/friday/' },
+  { label: friday.data.title },
+];
 
 const newDate = formatDate(friday.data.date);
+const articleUrl = `${siteConfig.siteUrl}/${friday.data.permalink}/`;
+const articleJsonLd = createArticleJsonLd({
+  title: friday.data.title,
+  description: friday.data.desc,
+  url: articleUrl,
+  image: friday.data.image.src,
+  datePublished: friday.data.date,
+  author: friday.data.author,
+  section: 'Friday',
+});
+const breadcrumbJsonLd = createBreadcrumbJsonLd(breadcrumbItems, articleUrl);
 ---
 
 <BaseLayout
   title={friday.data.title}
   description={friday.data.desc}
   image={friday.data.image.src}
-  type='article'>
+  type='article'
+>
+  <Fragment slot='head'>
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(articleJsonLd)}
+    />
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(breadcrumbJsonLd)}
+    />
+  </Fragment>
   <main class='main'>
     <section aria-label='Breadcrumbs'>
-      <Breadcrumbs
-        items={breadcrumbItems}
-        class='mt-10'
-      />
+      <Breadcrumbs items={breadcrumbItems} class='mt-10' />
     </section>
 
     <article class='post-article'>
@@ -47,22 +77,16 @@ const newDate = formatDate(friday.data.date);
         <p class='post-subtitle'>{friday.data.subtitle}</p>
         <p class='read-meta'>
           <time datetime={friday.data.date.toISOString()}>{newDate}</time>
-          <span
-            class='read-time'
-            aria-label='Estimated reading time'>
+          <span class='read-time' aria-label='Estimated reading time'>
             {remarkPluginFrontmatter?.minutesRead ?? ''}
           </span>
         </p>
       </header>
-      <aside
-        class='post-toc'
-        aria-label='Table of contents'>
+      <aside class='post-toc' aria-label='Table of contents'>
         <TableOfContents contentSelector='.post-content' />
       </aside>
 
-      <section
-        class='post-content'
-        aria-label='Article content'>
+      <section class='post-content' aria-label='Article content'>
         <Content components={mdxComponents} />
       </section>
     </article>

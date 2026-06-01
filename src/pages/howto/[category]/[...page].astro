@@ -19,10 +19,11 @@ export const getStaticPaths = async ({ paginate }) => {
     }
 
     const postsByCategory = allPosts.reduce((acc, post) => {
-      const categories =
-        Array.isArray(post.data.category) ? post.data.category
-        : post.data.category ? [post.data.category]
-        : [];
+      const categories = Array.isArray(post.data.category)
+        ? post.data.category
+        : post.data.category
+          ? [post.data.category]
+          : [];
 
       categories.forEach(category => {
         if (category && typeof category === 'string') {
@@ -55,7 +56,9 @@ export const getStaticPaths = async ({ paginate }) => {
 
     const allPaths = [];
 
-    for (const [categorySlug, categoryData] of Object.entries(postsByCategory)) {
+    for (const [categorySlug, categoryData] of Object.entries(
+      postsByCategory
+    )) {
       const pages = paginate(categoryData.posts, {
         params: { category: categorySlug },
         pageSize: siteConfig.postsPerPage,
@@ -94,32 +97,26 @@ const breadcrumbItems = generateCategoryBreadcrumbs(
 );
 
 const pageTitle =
-  currentPage === 1 ?
-    `${categoryName} Articles | JSdev`
-  : `${categoryName} Articles - Page ${currentPage} | JSdev`;
+  currentPage === 1
+    ? `${categoryName} Articles | JSdev`
+    : `${categoryName} Articles - Page ${currentPage} | JSdev`;
 
 const pageDescription = `Explore ${totalPosts} ${categoryName.toLowerCase()} posts and tutorials. ${
-  currentPage > 1 ?
-    `Page ${currentPage} of ${page.lastPage}.`
-  : 'Learn from our comprehensive guides and examples.'
+  currentPage > 1
+    ? `Page ${currentPage} of ${page.lastPage}.`
+    : 'Learn from our comprehensive guides and examples.'
 }`;
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot='head'>
+    {currentPage > 1 && <meta name='robots' content='noindex, follow' />}
+  </Fragment>
   <main class='main'>
-    {
-      currentPage > 1 && (
-        <Breadcrumbs
-          items={breadcrumbItems}
-          class='mt-10'
-        />
-      )
-    }
+    {currentPage > 1 && <Breadcrumbs items={breadcrumbItems} class='mt-10' />}
 
     {
-      currentPage === 1 ?
+      currentPage === 1 ? (
         <CategoryHead
           categoryName={categoryName}
           currentPage={currentPage}
@@ -127,18 +124,20 @@ const pageDescription = `Explore ${totalPosts} ${categoryName.toLowerCase()} pos
           type='howto'
           class='mt-10'
         />
-      : <h1>
+      ) : (
+        <h1>
           {categoryName} Page {page.currentPage}
         </h1>
+      )
     }
     <section class='taxonomy-intro'>
       <p>
-        This archive lists {totalPosts} how-to tutorials in {categoryName}, from quick fixes to
-        complete setup walkthroughs.
+        This archive lists {totalPosts} how-to tutorials in {categoryName}, from
+        quick fixes to complete setup walkthroughs.
       </p>
       <p>
-        If you are troubleshooting a specific error, scan the latest entries first, then continue to
-        older pages for alternative approaches.
+        If you are troubleshooting a specific error, scan the latest entries
+        first, then continue to older pages for alternative approaches.
       </p>
     </section>
     <Posts posts={page.data} />
@@ -165,4 +164,3 @@ const pageDescription = `Explore ${totalPosts} ${categoryName.toLowerCase()} pos
     margin: 0.5rem 0;
   }
 </style>
-

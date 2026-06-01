@@ -49,13 +49,13 @@ Multiple long-running tasks can run in parallel instead of blocking each other.
 
 ## When You Should Avoid Multithreading
 
-### ✘ Simple SSR/SSG apps  
+### Avoid simple SSR/SSG apps  
 Most Next.js applications don’t need worker threads.
 
-### ✘ Tasks that are already asynchronous  
+### Avoid tasks that are already asynchronous  
 I/O operations (fetching APIs, reading files, DB queries) already use Node’s built‑in nonblocking model.
 
-### ✘ Very frequent small tasks  
+### Avoid very frequent small tasks  
 Spawning workers introduces overhead. If a task is tiny, the main thread is faster.
 
 ---

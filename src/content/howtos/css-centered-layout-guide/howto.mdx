@@ -204,12 +204,12 @@ Equivalent:
 
 | Method            | Use Case                           | Compatibility | Flexibility |
 |-------------------|------------------------------------|---------------|-------------|
-| `text-align`      | Inline/inline-block content        | All           | ☆         |
-| Negative margins  | Known size elements                | IE6+          | ☆☆         |
-| `transform`       | Unknown size elements              | IE10+         |          |
-| Flexbox           | Modern layouts, responsive design  | IE11+         |          |
-| Grid              | Complex 2D layouts                 | IE11+         |          |
-| Table-cell        | Legacy browser support             | IE8+          | ☆         |
+| `text-align`      | Inline/inline-block content        | All           | Low         |
+| Negative margins  | Known size elements                | IE6+          | Low         |
+| `transform`       | Unknown size elements              | IE10+         | Medium      |
+| Flexbox           | Modern layouts, responsive design  | IE11+         | High        |
+| Grid              | Complex 2D layouts                 | IE11+         | High        |
+| Table-cell        | Legacy browser support             | IE8+          | Low         |
 
 **Selection tips**:
 - **Known size** → `margin: auto` or negative margins  

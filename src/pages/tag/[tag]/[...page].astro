@@ -79,21 +79,22 @@ if (!tag || !page || !tagName) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-const breadcrumbItems = generateTagBreadcrumbs(tagName, tag, isFirstPage ? undefined : currentPage);
+const breadcrumbItems = generateTagBreadcrumbs(
+  tagName,
+  tag,
+  isFirstPage ? undefined : currentPage
+);
 
-const pageTitle =
-  isFirstPage ?
-    `${tagName} Articles - Latest JavaScript Tutorials | JSdev`
+const pageTitle = isFirstPage
+  ? `${tagName} Articles - Latest JavaScript Tutorials | JSdev`
   : `${tagName} Articles - Page ${currentPage} | JSdev`;
 
-const pageDescription =
-  isFirstPage ?
-    `Discover ${totalPosts} expert articles about ${tagName.toLowerCase()}. Learn from practical examples, tutorials, and in-depth guides on ${tagName} development.`
+const pageDescription = isFirstPage
+  ? `Discover ${totalPosts} expert articles about ${tagName.toLowerCase()}. Learn from practical examples, tutorials, and in-depth guides on ${tagName} development.`
   : `Page ${currentPage} of ${page.lastPage} - Continue exploring ${tagName.toLowerCase()} articles and tutorials.`;
 
-const canonicalUrl =
-  isFirstPage ?
-    `${siteConfig.siteUrl}/tag/${tag}/`
+const canonicalUrl = isFirstPage
+  ? `${siteConfig.siteUrl}/tag/${tag}/`
   : `${siteConfig.siteUrl}/tag/${tag}/${currentPage}/`;
 
 const shouldIndex = isFirstPage;
@@ -101,52 +102,26 @@ const robotsContent = shouldIndex ? 'index, follow' : 'noindex, follow';
 const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={pageDescription}>
+<BaseLayout title={pageTitle} description={pageDescription}>
   <Fragment slot='head'>
-    <link
-      rel='canonical'
-      href={canonicalUrl}
-    />
-    <meta
-      name='robots'
-      content={robotsContent}
-    />
+    <link rel='canonical' href={canonicalUrl} />
+    <meta name='robots' content={robotsContent} />
 
     {
       page.url.prev && (
-        <link
-          rel='prev'
-          href={`${siteConfig.siteUrl}${page.url.prev}`}
-        />
+        <link rel='prev' href={`${siteConfig.siteUrl}${page.url.prev}`} />
       )
     }
     {
       page.url.next && (
-        <link
-          rel='next'
-          href={`${siteConfig.siteUrl}${page.url.next}`}
-        />
+        <link rel='next' href={`${siteConfig.siteUrl}${page.url.next}`} />
       )
     }
 
-    <meta
-      property='og:type'
-      content='website'
-    />
-    <meta
-      property='og:url'
-      content={canonicalUrl}
-    />
-    <meta
-      property='og:title'
-      content={pageTitle}
-    />
-    <meta
-      property='og:description'
-      content={pageDescription}
-    />
+    <meta property='og:type' content='website' />
+    <meta property='og:url' content={canonicalUrl} />
+    <meta property='og:title' content={pageTitle} />
+    <meta property='og:description' content={pageDescription} />
 
     {
       isFirstPage && (
@@ -193,11 +168,13 @@ const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
 
     <section class='taxonomy-intro'>
       <p>
-        Tag pages collect articles that share the same implementation theme, making it easier to
-        compare approaches across frameworks and release cycles.
+        Tag pages collect articles that share the same implementation theme,
+        making it easier to compare approaches across frameworks and release
+        cycles.
       </p>
       <p>
-        Use this list to find related guides quickly and identify recurring patterns around {tagName}.
+        Use this list to find related guides quickly and identify recurring
+        patterns around {tagName}.
       </p>
     </section>
     <Posts posts={page.data} />
@@ -207,7 +184,7 @@ const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
         <Pagination
           numPages={page.lastPage}
           currentPage={currentPage}
-          slug={`tags/${tag}`}
+          slug={`tag/${tag}`}
         />
       )
     }
@@ -234,7 +211,12 @@ const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
   }
 
   .tag-header__container {
@@ -296,4 +278,3 @@ const numberOfPages = Math.ceil(totalPosts / siteConfig.postsPerPage);
     margin: 0.5rem 0;
   }
 </style>
-

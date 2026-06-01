@@ -10,13 +10,19 @@ import Breadcrumbs from '@/shared/ui/base/breadcrumbs.astro';
 import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 import Pagination from '@/shared/ui/layout/pagination.astro';
 
-const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
+const allSnippets = await getCollection(
+  'snippets',
+  ({ data }) => !data.isDraft
+);
 const sortedSnippets = allSnippets.sort((a, b) => {
   return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
 });
 
 export const getStaticPaths = (async ({ paginate }) => {
-  const allSnippets = await getCollection('snippets', ({ data }) => !data.isDraft);
+  const allSnippets = await getCollection(
+    'snippets',
+    ({ data }) => !data.isDraft
+  );
   return paginate(
     allSnippets.sort((a, b) => {
       return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
@@ -30,40 +36,47 @@ export const getStaticPaths = (async ({ paginate }) => {
 const { page } = Astro.props;
 
 const title =
-  page.currentPage === 1 ?
-    siteConfig.snippetsPageTitle
-  : siteConfig.snippetsPageTitle + ' ' + 'Page ' + page.currentPage;
+  page.currentPage === 1
+    ? siteConfig.snippetsPageTitle
+    : siteConfig.snippetsPageTitle + ' ' + 'Page ' + page.currentPage;
 
 const breadcrumbItems = generateSnippetsBreadcrumbs(
   page.currentPage > 1 ? page.currentPage : undefined
 );
 
-const numberOfPages = Math.ceil(sortedSnippets.length / siteConfig.postsPerPage);
+const numberOfPages = Math.ceil(
+  sortedSnippets.length / siteConfig.postsPerPage
+);
 ---
 
 <BaseLayout
   title={title}
-  description={page.currentPage === 1 ?
-    siteConfig.snippetsPageDescription
-  : siteConfig.snippetsPageDescription + ' ' + 'Page ' + page.currentPage}>
+  description={page.currentPage === 1
+    ? siteConfig.snippetsPageDescription
+    : siteConfig.snippetsPageDescription + ' ' + 'Page ' + page.currentPage}
+>
+  <Fragment slot='head'>
+    {page.currentPage > 1 && <meta name='robots' content='noindex, follow' />}
+  </Fragment>
   <main class='main'>
     {
       page.currentPage > 1 && (
-        <Breadcrumbs
-          items={breadcrumbItems}
-          class='mt-10'
-        />
+        <Breadcrumbs items={breadcrumbItems} class='mt-10' />
       )
     }
 
     {
-      page.currentPage === 1 ?
+      page.currentPage === 1 ? (
         <HeadingBlock
           title={siteConfig.snippetsHeadTitle}
           description='Snippets are concise, reusable code solutions for daily development tasks in JavaScript, TypeScript, React, and Node.js.'
           headingTwo='Use this archive to quickly copy proven patterns, then adapt them to your project structure.'
         />
-      : <h1 class='page-heading'>JavaScript Snippets Page {page.currentPage}</h1>
+      ) : (
+        <h1 class='page-heading'>
+          JavaScript Snippets Page {page.currentPage}
+        </h1>
+      )
     }
     <Howtos howtos={page.data} />
     {
