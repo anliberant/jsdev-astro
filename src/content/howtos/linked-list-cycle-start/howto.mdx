@@ -1,0 +1,363 @@
+---
+title: Howto Find the Start of a Cycle in a Linked List
+slug: linked-list-cycle-start
+heading: Detecting the Entry Point of a Linked List Cycle
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/linked-list-cycle-start
+date: 2026-06-03
+author: anton liberant
+category: javascript
+type: howto
+tags: ["linked-list"]
+desc: "Learn how Floyd’s Fast and Slow Pointer algorithm detects cycles and finds the exact starting node of a loop in O(n) time and O(1) space."
+subtitle: "Master Floyd’s Tortoise and Hare algorithm to identify loops and locate the exact node where a circular linked list begins."
+---
+
+Linked lists are one of the most common data structures used in coding interviews, and cycle detection is one of the most frequently asked problems.
+
+At first glance, the challenge seems simple: determine whether a linked list contains a loop. However, many interviewers take the problem one step further and ask you to find the exact node where the cycle begins.
+
+The naive solution is to store every visited node inside a hash set and check whether you've seen a node before. While that works, it requires additional memory.
+
+A much more elegant solution uses Floyd’s Cycle Detection Algorithm, also known as the **Tortoise and Hare Algorithm**. This approach requires no extra storage and can both detect a cycle and locate its starting point.
+
+## The Problem
+
+Given the head of a singly linked list, return the node where a cycle begins.
+
+If no cycle exists, return `null`.
+
+### Example 1
+
+```text
+Input:
+3 → 2 → 0 → -4
+    ↑       ↓
+    └───────┘
+
+Output:
+Node with value 2
+```
+
+### Example 2
+
+```text
+Input:
+1 → 2
+↑   ↓
+└───┘
+
+Output:
+Node with value 1
+```
+
+### Example 3
+
+```text
+Input:
+1 → null
+
+Output:
+null
+```
+
+## Why a Normal Traversal Doesn't Work
+
+In a regular linked list, traversal eventually reaches `null`.
+
+```javascript
+let currentNode = head;
+
+while (currentNode) {
+  currentNode = currentNode.next;
+}
+```
+
+When a cycle exists, the traversal never terminates.
+
+```text
+1 → 2 → 3 → 4
+    ↑       ↓
+    └───────┘
+```
+
+The pointer keeps moving forever.
+
+This means we need a smarter approach.
+
+## Floyd's Fast and Slow Pointer Technique
+
+The core idea is simple.
+
+Create two pointers:
+
+* `slowRunner` moves one node at a time
+* `fastRunner` moves two nodes at a time
+
+If the list contains a cycle, the faster pointer will eventually catch the slower pointer.
+
+If the list has no cycle, the fast pointer will reach the end of the list.
+
+### Visual Example
+
+```text
+1 → 2 → 3 → 4 → 5
+        ↑       ↓
+        └───────┘
+```
+
+Iteration 1:
+
+```text
+slowRunner = 2
+fastRunner = 3
+```
+
+Iteration 2:
+
+```text
+slowRunner = 3
+fastRunner = 5
+```
+
+Iteration 3:
+
+```text
+slowRunner = 4
+fastRunner = 4
+```
+
+The pointers meet.
+
+Once they meet, we know a cycle exists.
+
+## Finding the Entry Point of the Cycle
+
+Detecting the cycle is only half of the problem.
+
+The next challenge is determining where the loop begins.
+
+After the first meeting:
+
+1. Leave one pointer at the meeting point.
+2. Move another pointer back to the head.
+3. Advance both pointers one step at a time.
+4. The node where they meet again is the cycle entry.
+
+### Why Does This Work?
+
+Assume:
+
+* `a` = distance from head to cycle entry
+* `b` = cycle length
+* `c` = distance from cycle entry to the meeting point
+
+When the two pointers meet:
+
+```text
+slow distance = a + c
+
+fast distance = a + c + k × b
+```
+
+Because the fast pointer moves twice as quickly:
+
+2(a+c)=a+c+kb
+
+Rearranging gives:
+
+```text
+a = kb - c
+```
+
+This means the distance from the head to the cycle entry is exactly equal to the distance from the meeting point back to the cycle entry when moving around the loop.
+
+As a result, one pointer starting from the head and another starting from the meeting point will arrive at the cycle entry simultaneously.
+
+## JavaScript Solution
+
+```javascript
+/**
+ * Definition for singly linked list.
+ * function ListNode(value, nextNode) {
+ *   this.val = value ?? 0;
+ *   this.next = nextNode ?? null;
+ * }
+ */
+
+/**
+ * @param {ListNode} head
+ * @returns {ListNode | null}
+ */
+function findCycleStart(head) {
+  let slowRunner = head;
+  let fastRunner = head;
+
+  while (fastRunner && fastRunner.next) {
+    slowRunner = slowRunner.next;
+    fastRunner = fastRunner.next.next;
+
+    if (slowRunner === fastRunner) {
+      let pointerFromHead = head;
+      let pointerFromMeeting = slowRunner;
+
+      while (pointerFromHead !== pointerFromMeeting) {
+        pointerFromHead = pointerFromHead.next;
+        pointerFromMeeting = pointerFromMeeting.next;
+      }
+
+      return pointerFromHead;
+    }
+  }
+
+  return null;
+}
+```
+
+## Step-by-Step Walkthrough
+
+Consider the following linked list:
+
+```text
+3 → 2 → 0 → -4
+    ↑       ↓
+    └───────┘
+```
+
+### Phase 1: Detect the Cycle
+
+```text
+slowRunner:
+3 → 2 → 0 → -4 → 2
+
+fastRunner:
+3 → 0 → 2 → -4 → 2
+```
+
+Eventually both pointers meet inside the loop.
+
+### Phase 2: Locate the Entry
+
+Reset one pointer:
+
+```text
+pointerFromHead = 3
+pointerFromMeeting = meeting node
+```
+
+Move both one step at a time:
+
+```text
+pointerFromHead:
+3 → 2
+
+pointerFromMeeting:
+0 → -4 → 2
+```
+
+Both arrive at node `2`.
+
+That node is returned as the cycle entry.
+
+## Alternative Solution Using a Hash Set
+
+Another common approach stores every visited node.
+
+```javascript
+function findCycleStart(head) {
+  const visitedNodes = new Set();
+
+  let currentNode = head;
+
+  while (currentNode) {
+    if (visitedNodes.has(currentNode)) {
+      return currentNode;
+    }
+
+    visitedNodes.add(currentNode);
+    currentNode = currentNode.next;
+  }
+
+  return null;
+}
+```
+
+### Pros
+
+* Easy to understand
+* Easy to implement
+
+### Cons
+
+* Requires additional memory
+* Space complexity becomes O(n)
+
+For interview settings, Floyd's algorithm is generally preferred.
+
+## Complexity Analysis
+
+| Operation        | Complexity |
+| ---------------- | ---------- |
+| Time Complexity  | O(n)       |
+| Space Complexity | O(1)       |
+
+The algorithm performs at most two traversals:
+
+1. Detecting the cycle.
+2. Finding the cycle entry.
+
+No extra data structures are required.
+
+## Common Interview Questions
+
+### Why do the pointers always meet when a cycle exists?
+
+Because the fast pointer gains one node on the slow pointer during each iteration inside the loop. Eventually it catches up.
+
+### Why reset one pointer to the head?
+
+The mathematical relationship between the meeting point and cycle entry guarantees that both pointers will reach the entry node at the same time when moving at equal speed.
+
+### Can this problem be solved without Floyd's algorithm?
+
+Yes. A hash set can track visited nodes.
+
+However:
+
+```text
+Hash Set:
+Time  = O(n)
+Space = O(n)
+
+Floyd:
+Time  = O(n)
+Space = O(1)
+```
+
+The Floyd solution is more efficient.
+
+### What prevents the fast pointer from causing errors?
+
+The loop condition ensures safe access:
+
+```javascript
+while (fastRunner && fastRunner.next)
+```
+
+This guarantees that `fastRunner.next.next` is only accessed when valid.
+
+## Final Thoughts
+
+Finding the start of a cycle in a linked list is one of the most important linked-list interview problems. The challenge combines pointer manipulation, algorithmic thinking, and a clever mathematical insight.
+
+The key idea is straightforward:
+
+1. Use a slow pointer moving one step at a time.
+2. Use a fast pointer moving two steps at a time.
+3. Detect the meeting point.
+4. Reset one pointer to the head.
+5. Move both pointers at the same speed.
+6. Their next meeting point is the beginning of the cycle.
+
+This elegant technique runs in **O(n)** time, uses **O(1)** extra space, and is considered the standard solution expected in technical interviews.
