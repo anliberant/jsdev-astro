@@ -48,7 +48,7 @@ export const siteConfig = {
     dailydev: 'https://app.daily.dev/squads/jsdevelopment',
   },
   postsPerPage: 15,
-  mainHeadTitle: 'Learn JavaScript The Easy Way',
+  mainHeadTitle: 'Production-ready JavaScript tutorials with full code and architecture notes',
   mainHeadHeadingTwo:
     'Master JavaScript, Node.js, and Frontend Development with Hands-On Tutorials',
   mainHeadDescription:
