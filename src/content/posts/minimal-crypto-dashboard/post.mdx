@@ -1,0 +1,923 @@
+---
+title: Build a Minimal Crypto Dashboard with CCXT, CoinGecko and React
+slug: minimal-crypto-dashboard
+heading: Building a Real-Time Crypto Dashboard with React, CCXT, CoinGecko and TradingView-Style Charts
+image: ./images/minimal-crypto-dashboard.png
+permalink: minimal-crypto-dashboard
+date: 2026-06-08
+author: anton liberant
+category: react
+type: post
+tags: ['crypto', 'dashboard', 'ccxt', 'coingecko', 'react-query', 'lightweight-charts']
+desc: Build a compact crypto dashboard with live prices, CoinGecko fallback, OHLCV candles, React Query and a monochrome table/chart layout.
+subtitle: 'A practical step-by-step guide to building a small crypto price dashboard with a Node.js API, CCXT market data, CoinGecko fallback prices and a candlestick chart.'
+---
+
+## Introduction
+
+In this tutorial, we are going to build a small crypto dashboard that shows live coin prices in a compact table and displays a candlestick chart for the selected coin.
+
+The idea is simple:
+
+* use [CCXT](https://github.com/ccxt/ccxt) as the main market data source;
+* use [CoinGecko](https://www.coingecko.com/) as a fallback when the exchange does not have a required pair;
+* use `fetchOHLCV` to load candlestick data;
+* use [React Query](https://tanstack.com/query/v3) to refresh prices automatically;
+* render candles with [Lightweight Charts](https://github.com/tradingview/lightweight-charts);
+* make the UI clean, compact and monochrome.
+
+By the end, we will have a small dashboard where the table sits on the left, the chart sits on the right, and clicking a coin updates the active chart.
+
+
+The complete source code for this project is available on [GitHub](https://github.com/jsdevspace/Minimal-Crypto-Dashboard).
+
+---
+
+## Step 1: Create the Project
+
+Start with a React + TypeScript Vite project:
+
+```bash
+npm create vite@latest crypto-dashboard -- --template react-ts
+cd crypto-dashboard
+```
+
+Install the packages:
+
+```bash
+npm install ccxt express cors @tanstack/react-query lightweight-charts concurrently tsx
+npm install -D @types/express @types/cors
+```
+
+We need:
+
+* `ccxt` for exchange market data;
+* `express` for the local API;
+* `cors` so the React app can call the API;
+* `@tanstack/react-query` for polling and caching;
+* `lightweight-charts` for the candlestick chart;
+* `concurrently` to run frontend and backend together;
+* `tsx` to run the TypeScript server directly.
+
+---
+
+## Step 2: Add Scripts
+
+Update `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+Now one command starts both the frontend and the backend:
+
+```bash
+npm run dev
+```
+
+---
+
+## Step 3: Create the Backend API
+
+Create a new file:
+
+```txt
+server/index.ts
+```
+
+Add the base Express server:
+
+```ts
+import express from "express";
+import cors from "cors";
+import * as ccxt from "ccxt";
+
+const app = express();
+
+app.use(cors());
+
+const exchange = new ccxt.bitget({
+  enableRateLimit: true,
+});
+
+app.listen(4000, () => {
+  console.log("API running on http://localhost:4000");
+});
+```
+
+We are using Bitget here because it works well for public market data and does not require an API key for tickers or candles.
+
+---
+
+## Step 4: Define the Watchlist
+
+Add a small watchlist:
+
+```ts
+type WatchAsset = {
+  symbol: string;
+  pair: string;
+  geckoId: string;
+};
+
+const watchlist: WatchAsset[] = [
+  { symbol: "BTC", pair: "BTC/USDT", geckoId: "bitcoin" },
+  { symbol: "ETH", pair: "ETH/USDT", geckoId: "ethereum" },
+  { symbol: "SOL", pair: "SOL/USDT", geckoId: "solana" },
+  { symbol: "DOGE", pair: "DOGE/USDT", geckoId: "dogecoin" },
+  { symbol: "TAO", pair: "TAO/USDT", geckoId: "bittensor" }
+];
+```
+
+Each coin has three fields:
+
+* `symbol` is what we show in the UI;
+* `pair` is what CCXT uses;
+* `geckoId` is what CoinGecko uses.
+
+This small mapping is important because exchanges and CoinGecko do not use the same identifiers.
+
+---
+
+## Step 5: Add CoinGecko Fallback
+
+Sometimes a coin exists on CoinGecko but does not have a liquid pair on the exchange we use. Instead of failing, we can fallback to CoinGecko.
+
+Add this helper:
+
+```ts
+async function getCoinGeckoPrices(ids: string[]) {
+  if (ids.length === 0) return {};
+
+  const url = new URL("https://api.coingecko.com/api/v3/simple/price");
+
+  url.searchParams.set("ids", [...ids, "tether"].join(","));
+  url.searchParams.set("vs_currencies", "usd");
+  url.searchParams.set("include_24hr_change", "true");
+  url.searchParams.set("include_24hr_vol", "true");
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("CoinGecko request failed");
+  }
+
+  const data = await response.json();
+  const tetherUsd = data.tether?.usd ?? 1;
+
+  return Object.fromEntries(
+    Object.entries(data).map(([id, value]: any) => [
+      id,
+      {
+        price: value.usd / tetherUsd,
+        change24h: value.usd_24h_change ?? null,
+        volume: value.usd_24h_vol ?? null
+      }
+    ])
+  );
+}
+```
+
+CoinGecko returns prices in USD. Exchange pairs usually come in USDT. For a small dashboard, USD and USDT are often close enough, but we can still normalize CoinGecko values by dividing them by the current Tether price.
+
+---
+
+## Step 6: Create the Prices Endpoint
+
+Now add `/api/prices`:
+
+```ts
+app.get("/api/prices", async (_req, res) => {
+  try {
+    await exchange.loadMarkets();
+
+    const pairs = watchlist.map((asset) => asset.pair);
+    const tickers = await exchange.fetchTickers(pairs);
+
+    const missingGeckoIds: string[] = [];
+
+    for (const asset of watchlist) {
+      if (!tickers[asset.pair]?.last) {
+        missingGeckoIds.push(asset.geckoId);
+      }
+    }
+
+    const geckoPrices = await getCoinGeckoPrices(missingGeckoIds);
+
+    const prices = watchlist.map((asset) => {
+      const ticker = tickers[asset.pair];
+      const gecko = geckoPrices[asset.geckoId] as any;
+
+      return {
+        symbol: asset.symbol,
+        pair: asset.pair,
+        source: ticker?.last ? "ccxt" : "coingecko",
+        price: ticker?.last ?? gecko?.price ?? null,
+        high24h: ticker?.high ?? null,
+        low24h: ticker?.low ?? null,
+        change24h: ticker?.percentage ?? gecko?.change24h ?? null,
+        volume: ticker?.quoteVolume ?? gecko?.volume ?? null
+      };
+    });
+
+    res.json(prices);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to load prices" });
+  }
+});
+```
+
+The flow is:
+
+1. Load exchange markets.
+2. Request tickers from CCXT.
+3. Find missing pairs.
+4. Request missing prices from CoinGecko.
+5. Merge both sources into one response.
+
+The frontend does not need to know how complicated the data fetching is. It receives one clean array.
+
+---
+
+## Step 7: Add Candlestick Data with `fetchOHLCV`
+
+For the chart, add another endpoint:
+
+```ts
+app.get("/api/candles/:symbol", async (req, res) => {
+  try {
+    await exchange.loadMarkets();
+
+    const coin = req.params.symbol.toUpperCase();
+    const pair = `${coin}/USDT`;
+
+    if (!exchange.markets[pair]) {
+      return res.status(404).json({
+        error: `No ${pair} market on Bitget`
+      });
+    }
+
+    const timeframe = String(req.query.timeframe ?? "1m");
+    const limit = Number(req.query.limit ?? 120);
+
+    const candles = await exchange.fetchOHLCV(
+      pair,
+      timeframe,
+      undefined,
+      limit
+    );
+
+    const result = candles.map(([time, open, high, low, close, volume]) => ({
+      time: Math.floor(time / 1000),
+      open,
+      high,
+      low,
+      close,
+      volume
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to load candles" });
+  }
+});
+```
+
+`fetchOHLCV` returns arrays in this format:
+
+```ts
+[
+  timestamp,
+  open,
+  high,
+  low,
+  close,
+  volume
+]
+```
+
+Lightweight Charts expects candle data as objects, so we convert the array into a cleaner structure.
+
+---
+
+## Step 8: Create Frontend API Helpers
+
+Create:
+
+```txt
+src/api/prices.ts
+```
+
+```ts
+export type CoinPrice = {
+  symbol: string;
+  pair: string;
+  source: "ccxt" | "coingecko";
+  price: number | null;
+  high24h: number | null;
+  low24h: number | null;
+  change24h: number | null;
+  volume: number | null;
+};
+
+export async function fetchPrices(): Promise<CoinPrice[]> {
+  const response = await fetch("http://localhost:4000/api/prices");
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch prices");
+  }
+
+  return response.json();
+}
+```
+
+Then create:
+
+```txt
+src/api/candles.ts
+```
+
+```ts
+export type Candle = {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export async function fetchCandles(symbol: string): Promise<Candle[]> {
+  const response = await fetch(
+    `http://localhost:4000/api/candles/${symbol}?timeframe=1m&limit=120`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch candles");
+  }
+
+  return response.json();
+}
+```
+
+---
+
+## Step 9: Add React Query Hook
+
+Create:
+
+```txt
+src/hooks/usePrices.ts
+```
+
+```ts
+import { useQuery } from "@tanstack/react-query";
+import { fetchPrices } from "../api/prices";
+
+export function usePrices() {
+  return useQuery({
+    queryKey: ["prices"],
+    queryFn: fetchPrices,
+    refetchInterval: 10_000
+  });
+}
+```
+
+This refreshes prices every 10 seconds.
+
+For a local dashboard, this is enough. In a production app, we could add caching, request deduplication and rate-limit protection on the backend.
+
+---
+
+## Step 10: Build the Candlestick Chart
+
+Create:
+
+```txt
+src/components/CandleChart.tsx
+```
+
+```tsx
+import { useEffect, useRef } from "react";
+import {
+  createChart,
+  CandlestickSeries,
+  type IChartApi,
+  type ISeriesApi,
+  type CandlestickData
+} from "lightweight-charts";
+import { useQuery } from "@tanstack/react-query";
+import { fetchCandles } from "../api/candles";
+
+type CandleChartProps = {
+  symbol: string;
+};
+
+export function CandleChart({ symbol }: CandleChartProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+
+  const { data } = useQuery({
+    queryKey: ["candles", symbol],
+    queryFn: () => fetchCandles(symbol),
+    refetchInterval: 15_000
+  });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const chart = createChart(containerRef.current, {
+      height: 360,
+      layout: {
+        background: { color: "#18181b" },
+        textColor: "#d4d4d8"
+      },
+      grid: {
+        vertLines: { color: "#27272a" },
+        horzLines: { color: "#27272a" }
+      }
+    });
+
+    const series = chart.addSeries(CandlestickSeries);
+
+    chartRef.current = chart;
+    seriesRef.current = series;
+
+    const resize = () => {
+      chart.applyOptions({
+        width: containerRef.current?.clientWidth ?? 800
+      });
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      chart.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!seriesRef.current || !data) return;
+
+    seriesRef.current.setData(data as CandlestickData[]);
+    chartRef.current?.timeScale().fitContent();
+  }, [data]);
+
+  return (
+    <section className="chartCard">
+      <div className="chartHeader">
+        <h2>{symbol}/USDT Chart</h2>
+        <span>1m candles</span>
+      </div>
+
+      <div ref={containerRef} />
+    </section>
+  );
+}
+```
+
+The chart updates whenever the selected symbol changes.
+
+---
+
+## Step 11: Build the Dashboard Layout
+
+Now update `src/App.tsx`:
+
+```tsx
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { usePrices } from "./hooks/usePrices";
+import { CandleChart } from "./components/CandleChart";
+import "./App.css";
+
+const queryClient = new QueryClient();
+
+function formatUsd(value: number | null) {
+  if (value == null) return "n/a";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value > 10 ? 2 : 6
+  }).format(value);
+}
+
+function formatNumber(value: number | null) {
+  if (value == null) return "n/a";
+
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+function formatPercent(value: number | null) {
+  if (value == null) return "n/a";
+
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
+
+function PriceDashboard() {
+  const { data, isLoading, error } = usePrices();
+  const [selectedSymbol, setSelectedSymbol] = useState("BTC");
+
+  const selectedCoin = useMemo(() => {
+    return data?.find((coin) => coin.symbol === selectedSymbol);
+  }, [data, selectedSymbol]);
+
+  if (isLoading) {
+    return <main className="dashboard">Loading prices...</main>;
+  }
+
+  if (error) {
+    return <main className="dashboard">Failed to load prices.</main>;
+  }
+
+  return (
+    <main className="dashboard">
+      <header className="pageHeader">
+        <div>
+          <h1>Crypto Dashboard</h1>
+          <p>Live prices with CCXT, CoinGecko fallback and OHLCV candles.</p>
+        </div>
+
+        {selectedCoin && (
+          <div className="selectedBadge">
+            Selected: <strong>{selectedCoin.symbol}/USDT</strong>
+          </div>
+        )}
+      </header>
+
+      <div className="dashboardGrid">
+        <section className="tableCard">
+          <div className="tableHeader">
+            <h2>Watchlist</h2>
+            <span>Click a coin</span>
+          </div>
+
+          <div className="tableWrap">
+            <table className="coinTable">
+              <thead>
+                <tr>
+                  <th>Coin</th>
+                  <th>Source</th>
+                  <th>Price</th>
+                  <th>24h</th>
+                  <th>Volume</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {data?.map((coin) => {
+                  const isSelected = coin.symbol === selectedSymbol;
+
+                  return (
+                    <tr
+                      key={coin.symbol}
+                      className={isSelected ? "selectedRow" : ""}
+                      onClick={() => setSelectedSymbol(coin.symbol)}
+                    >
+                      <td>
+                        <div className="coinCell">
+                          <span className="coinIcon">{coin.symbol[0]}</span>
+                          <div>
+                            <strong>{coin.symbol}</strong>
+                            <small>{coin.pair}</small>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className={`sourcePill ${coin.source}`}>
+                          {coin.source}
+                        </span>
+                      </td>
+
+                      <td>{formatUsd(coin.price)}</td>
+
+                      <td>
+                        <span
+                          className={
+                            coin.change24h != null && coin.change24h >= 0
+                              ? "up"
+                              : "down"
+                          }
+                        >
+                          {formatPercent(coin.change24h)}
+                        </span>
+                      </td>
+
+                      <td>{formatNumber(coin.volume)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <CandleChart symbol={selectedSymbol} />
+      </div>
+    </main>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <PriceDashboard />
+    </QueryClientProvider>
+  );
+}
+```
+
+The important part is this state:
+
+```ts
+const [selectedSymbol, setSelectedSymbol] = useState("BTC");
+```
+
+When the user clicks a table row, we call:
+
+```ts
+setSelectedSymbol(coin.symbol)
+```
+
+Then the chart receives the new symbol:
+
+```tsx
+<CandleChart symbol={selectedSymbol} />
+```
+
+This keeps the UI simple. The table controls the chart, and the selected row is highlighted with CSS.
+
+---
+
+## Step 12: Add the Final Monochrome UI
+
+Replace `src/App.css`:
+
+```css
+body {
+  margin: 0;
+  background: #0f0f10;
+  color: #f4f4f5;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.dashboard {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 36px;
+  letter-spacing: -0.04em;
+}
+
+.pageHeader p {
+  margin: 0;
+  color: #a1a1aa;
+  line-height: 1.6;
+}
+
+.selectedBadge {
+  border: 1px solid #27272a;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #18181b;
+  color: #a1a1aa;
+  white-space: nowrap;
+}
+
+.selectedBadge strong {
+  color: #f4f4f5;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 420px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.tableCard,
+.chartCard {
+  border: 1px solid #27272a;
+  border-radius: 16px;
+  background: #18181b;
+  overflow: hidden;
+}
+
+.tableHeader,
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #27272a;
+}
+
+.tableHeader h2,
+.chartHeader h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.tableHeader span,
+.chartHeader span {
+  color: #a1a1aa;
+  font-size: 12px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.coinTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 420px;
+}
+
+.coinTable th {
+  color: #a1a1aa;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 9px 12px;
+  border-bottom: 1px solid #27272a;
+}
+
+.coinTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #27272a;
+  font-size: 13px;
+}
+
+.coinTable tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.coinTable tbody tr:hover {
+  background: #202023;
+}
+
+.coinTable tbody tr.selectedRow {
+  background: #27272a;
+  box-shadow: inset 3px 0 0 #f4f4f5;
+}
+
+.coinCell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.coinCell strong {
+  display: block;
+  font-size: 13px;
+}
+
+.coinCell small {
+  display: block;
+  margin-top: 1px;
+  color: #a1a1aa;
+  font-size: 11px;
+}
+
+.coinIcon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #27272a;
+  color: #f4f4f5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sourcePill {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid #3f3f46;
+  padding: 3px 8px;
+  color: #d4d4d8;
+  background: #18181b;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sourcePill.ccxt,
+.sourcePill.coingecko {
+  background: #18181b;
+  color: #d4d4d8;
+}
+
+.up,
+.down {
+  color: #f4f4f5;
+}
+
+.chartCard {
+  min-height: 460px;
+}
+
+.chartCard > div:last-child {
+  padding: 0 16px 16px;
+}
+
+@media (max-width: 980px) {
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+```
+
+The UI is intentionally monochrome. No green/red candles in the table, no colorful badges, no noisy cards. This makes the dashboard feel more like a small internal tool than a crypto casino interface.
+
+---
+
+## Step 13: Run the App
+
+Start everything with:
+
+```bash
+npm run dev
+```
+
+Open the frontend URL from Vite, usually:
+
+```txt
+http://localhost:5173
+```
+
+The API runs on:
+
+```txt
+http://localhost:4000
+```
+
+You should now see:
+
+* a compact coin table on the left;
+* selected row highlighting;
+* a candlestick chart on the right;
+* live price updates;
+* CoinGecko fallback for missing exchange pairs;
+* OHLCV candles loaded from CCXT.
+
+---
+
+## What We Built
+
+This small dashboard is not a trading platform. It is a practical market data UI.
+
+The backend hides the messy part:
+
+* exchange symbols;
+* missing pairs;
+* fallback providers;
+* ticker normalization;
+* OHLCV conversion.
+
+The frontend stays simple:
+
+* React Query loads prices;
+* table rows control selected state;
+* the chart receives one symbol prop;
+* CSS handles the selected row and layout.
+
+This is a good base for a larger local crypto tracker. From here, we can add saved watchlists, portfolio positions, local storage, SQLite, historical snapshots, alerts, or even Electron packaging.
+
+The most important part is the architecture: CCXT is the primary source, CoinGecko is the fallback, and the UI consumes one clean internal API.
