@@ -21,6 +21,10 @@ export const siteConfig = {
     {
       name: 'News',
       path: 'https://jsdev.news',
+    },
+    {
+      name: 'AI Directory',
+      path: 'https://nextweekai.com'
     }
   ],
   footerLinks: [
