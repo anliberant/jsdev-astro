@@ -231,6 +231,14 @@ const { placeholder = 'Search...', className } = Astro.props;
 </div>
 
 <style is:global>
+  /* Search wrapper — fixed size prevents layout shift */
+  .search {
+    display: flex;
+    align-items: center;
+    min-width: 36px;
+    height: 36px;
+  }
+
   /* Search Trigger */
   .search-trigger {
     display: flex;

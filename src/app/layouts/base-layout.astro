@@ -56,22 +56,27 @@ const fullImageUrl =
       href='https://fonts.googleapis.com'
     />
     <link
+      rel='preconnect'
+      href='https://fonts.gstatic.com'
+      crossorigin
+    />
+    <link
       rel='icon'
       type='image/png'
       href='/icon.png'
     />
     <title>{fullTitle}</title>
 
-    <!-- Fonts -->
+    <!-- Fonts: display=optional prevents font-swap CLS -->
     <link
-      href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
+      href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=optional'
       rel='preload'
       as='style'
       onload="this.onload=null;this.rel='stylesheet'"
     />
     <noscript>
       <link
-        href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap'
+        href='https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=optional'
         rel='stylesheet'
       />
     </noscript>

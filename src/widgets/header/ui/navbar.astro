@@ -33,7 +33,7 @@ import ThemeSwitcher from './theme-switcher.astro';
       </a>
       <a
         href='https://github.com/anliberant/jsdev-astro'
-        aria-label='GitHub'
+        aria-label='View source on GitHub'
         class='group cursor-pointer'>
         <Github
           size={20}
@@ -55,12 +55,11 @@ import ThemeSwitcher from './theme-switcher.astro';
   }
   .header-panel {
     display: flex;
-    width: 100%;
     align-items: center;
-    justify-content: flex-end;
     gap: 0.25rem;
     min-width: 80px;
     min-height: 64px;
+    margin-left: auto;
   }
   @media (min-width: 768px) {
     .header-panel {
@@ -91,4 +90,3 @@ import ThemeSwitcher from './theme-switcher.astro';
     padding-right: 1rem;
   }
 </style>
-

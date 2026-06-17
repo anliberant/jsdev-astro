@@ -1,0 +1,730 @@
+---
+title: '35 React Interview Questions Senior Developers Still Get Wrong'
+slug: react-interview-questions-2026
+heading: React Interview Questions Every Developer Should Know in 2026
+image: ./images/react-interview-questions.png
+permalink: react-interview-questions-2026
+date: 2026-06-17
+author: anton liberant
+category: react
+type: post
+tags: ['interview-questions']
+desc: A practical collection of React 19 interview questions covering rendering, hooks, Context, React Compiler, Server Components, performance optimization...
+subtitle: Most React interviews no longer focus on memorizing APIs. They focus on rendering behavior, React 19 features, architecture decisions, and real-world problem solving.
+---
+
+React interviews have changed dramatically over the past few years.
+
+A few years ago, candidates were asked about class components, lifecycle methods, and whether they could recite the difference between `componentDidMount()` and `componentDidUpdate()`.
+
+Today, those questions rarely matter.
+
+Modern React interviews focus on a completely different set of topics:
+
+* Rendering behavior
+* State management
+* React 19 features
+* Server Components
+* Performance optimization
+* Architecture decisions
+* Developer experience
+
+Interviewers want to understand whether a developer can build and maintain large React applications—not whether they memorized API documentation.
+
+This guide covers the React questions that appear most frequently in modern interviews and explains the reasoning behind the answers.
+
+---
+
+## Understanding How React Actually Renders
+
+Many React developers can build applications successfully without fully understanding what happens after state changes.
+
+Unfortunately, this becomes obvious during interviews.
+
+### What Is React?
+
+The simplest answer is:
+
+> React is a JavaScript library for building user interfaces using reusable components.
+
+A better answer explains why developers choose React:
+
+> React allows developers to describe UI declaratively. Instead of manually updating the DOM, components describe what the UI should look like for a given state, and React handles the updates.
+
+---
+
+### What Is JSX?
+
+JSX is a syntax extension that allows HTML-like syntax inside JavaScript.
+
+Example:
+
+```tsx
+function WelcomeCard() {
+  return (
+    <section>
+      <h2>Welcome</h2>
+      <p>Thanks for joining.</p>
+    </section>
+  );
+}
+```
+
+During compilation, JSX is transformed into React element creation calls.
+
+Modern React projects rarely require developers to think about this transformation, but interviewers still occasionally ask about it.
+
+---
+
+### What Is the Virtual DOM?
+
+One of the most common React interview questions.
+
+The Virtual DOM is an in-memory representation of the UI.
+
+When state changes:
+
+1. React creates a new virtual tree.
+2. Compares it with the previous tree.
+3. Calculates the minimum required updates.
+4. Updates the browser DOM efficiently.
+
+Many candidates incorrectly claim that the Virtual DOM is "faster than the DOM."
+
+That's not entirely true.
+
+The real advantage is that React minimizes expensive DOM operations.
+
+---
+
+### What Is Reconciliation?
+
+Reconciliation is the process React uses to compare two virtual trees.
+
+For example:
+
+```tsx
+function Counter({ count }: Props) {
+  return <span>{count}</span>;
+}
+```
+
+If `count` changes from `5` to `6`, React does not rebuild the entire component tree.
+
+It identifies the smallest possible change and updates only the affected node.
+
+---
+
+## Keys: The Question That Appears Everywhere
+
+### Why Are Keys Important?
+
+Keys help React identify elements between renders.
+
+Bad:
+
+```tsx
+{
+  users.map((user, index) => (
+    <UserRow
+      key={index}
+      user={user}
+    />
+  ));
+}
+```
+
+Good:
+
+```tsx
+{
+  users.map((user) => (
+    <UserRow
+      key={user.id}
+      user={user}
+    />
+  ));
+}
+```
+
+Using array indexes can cause:
+
+* Incorrect state preservation
+* Broken animations
+* Unexpected form behavior
+* Unnecessary re-renders
+
+This question appears surprisingly often in interviews.
+
+---
+
+## Modern React Hooks Questions
+
+Hooks remain one of the most important interview topics.
+
+### When Should You Use useState?
+
+Use state when data affects rendering.
+
+```tsx
+const [isOpen, setIsOpen] =
+  useState(false);
+```
+
+Examples include:
+
+* Modals
+* Form inputs
+* Selected tabs
+* UI toggles
+
+If changing a value should trigger a UI update, it belongs in state.
+
+---
+
+### When Should You Use useRef Instead of useState?
+
+A common senior-level question.
+
+Not every value belongs in state.
+
+Bad:
+
+```tsx
+const [socket, setSocket] =
+  useState<WebSocket | null>(
+    null
+  );
+```
+
+Better:
+
+```tsx
+const socketRef =
+  useRef<WebSocket | null>(
+    null
+  );
+```
+
+Good use cases for refs:
+
+* WebSocket instances
+* Timers
+* DOM elements
+* External libraries
+
+Refs do not trigger re-renders.
+
+---
+
+### What Is the Biggest useEffect Mistake?
+
+Many developers use effects for derived state.
+
+Example:
+
+```tsx
+const [fullName, setFullName] =
+  useState('');
+
+useEffect(() => {
+  setFullName(
+    `${firstName} ${lastName}`
+  );
+}, [firstName, lastName]);
+```
+
+This is unnecessary.
+
+Better:
+
+```tsx
+const fullName =
+  `${firstName} ${lastName}`;
+```
+
+If a value can be calculated during rendering, it usually should be.
+
+---
+
+### useEffect vs useLayoutEffect
+
+A classic interview question.
+
+| Hook            | Runs         |
+| --------------- | ------------ |
+| useEffect       | After paint  |
+| useLayoutEffect | Before paint |
+
+Example:
+
+```tsx
+useLayoutEffect(() => {
+  const width =
+    element.current?.offsetWidth;
+}, []);
+```
+
+Use `useLayoutEffect` when measuring or synchronizing with the DOM before the browser paints.
+
+For most side effects, use `useEffect`.
+
+---
+
+## React 19 Interview Questions
+
+This is where most modern interviews focus.
+
+---
+
+### What Are Actions?
+
+Actions simplify async state management.
+
+Before React 19:
+
+```tsx
+const [loading, setLoading] =
+  useState(false);
+
+const handleSubmit =
+  async () => {
+    setLoading(true);
+
+    try {
+      await saveProfile();
+    } finally {
+      setLoading(false);
+    }
+  };
+```
+
+React 19:
+
+```tsx
+const [
+  profile,
+  submitProfile,
+  pending,
+] = useActionState(
+  updateProfile,
+  null
+);
+```
+
+[Understanding React 19 useActionState From First Principles](https://jsdev.space/howto/react19-useactionstate-guide/)
+
+Less boilerplate.
+
+Better UX.
+
+Built-in pending states.
+
+---
+
+### What Is useOptimistic?
+
+One of the most popular React 19 questions.
+
+It allows optimistic updates before a request finishes.
+
+```tsx
+const [
+  messages,
+  addOptimisticMessage,
+] = useOptimistic(
+  chatMessages,
+  (current, text) => [
+    ...current,
+    {
+      id: crypto.randomUUID(),
+      text,
+      pending: true,
+    },
+  ]
+);
+```
+
+The UI updates immediately.
+
+The server response arrives later.
+
+Users perceive the application as much faster.
+
+---
+
+### What Is React Compiler?
+
+React Compiler is one of the biggest React changes in years.
+
+Historically:
+
+```tsx
+const activeUsers =
+  useMemo(
+    () =>
+      users.filter(
+        (user) => user.active
+      ),
+    [users]
+  );
+```
+
+With React Compiler:
+
+```tsx
+const activeUsers =
+  users.filter(
+    (user) => user.active
+  );
+```
+
+The compiler can automatically insert memoization where safe.
+
+As adoption increases, many manual optimization patterns may disappear.
+
+---
+
+### What Is the Difference Between Server Components and Client Components?
+
+Server Components:
+
+* Run on the server
+* Send no JavaScript
+* Can access databases directly
+* Cannot use hooks
+
+Client Components:
+
+* Run in the browser
+* Support interactivity
+* Support state and effects
+* Handle user interactions
+
+A strong React 19 developer should understand where each belongs.
+
+---
+
+## Performance Questions
+
+Performance questions frequently separate junior and senior candidates.
+
+### What Causes Unnecessary Re-renders?
+
+A common example:
+
+```tsx
+<Dashboard
+  onRefresh={() =>
+    fetchAnalytics()
+  }
+/>
+```
+
+Every render creates a new function.
+
+Better:
+
+```tsx
+const handleRefresh =
+  useCallback(() => {
+    fetchAnalytics();
+  }, []);
+
+<Dashboard
+  onRefresh={
+    handleRefresh
+  }
+/>
+```
+
+Although React Compiler reduces the need for manual memoization, understanding rendering behavior remains important.
+
+---
+
+### How Would You Optimize a Large Table?
+
+A common enterprise React question.
+
+The answer should include:
+
+* Virtualization
+* Pagination
+* Memoized columns
+* Server-side filtering
+* Stable keys
+
+Example:
+
+```tsx
+import {
+  FixedSizeList,
+} from 'react-window';
+```
+
+Virtualization often provides the biggest performance improvement.
+
+---
+
+### Context vs Zustand
+
+Interviewers increasingly ask this question.
+
+Use Context for:
+
+* Theme
+* Authentication
+* Localization
+* Feature flags
+
+Use Zustand for:
+
+* Dashboard state
+* Table filters
+* Search results
+* Chart data
+
+A simple rule:
+
+> Context is for application configuration. Zustand is for business state.
+
+---
+
+## State Management Questions
+
+### What Is Prop Drilling?
+
+Prop drilling occurs when data passes through components that don't use it.
+
+```tsx
+<App>
+  <Layout>
+    <Sidebar>
+      <Profile />
+    </Sidebar>
+  </Layout>
+</App>
+```
+
+If user data travels through every layer, prop drilling appears.
+
+Solutions include:
+
+* Context
+* Zustand
+* Jotai
+* Redux Toolkit
+
+---
+
+### When Should You Use useReducer?
+
+A good answer:
+
+> Use useReducer when state transitions become complex or when multiple pieces of state change together.
+
+Example:
+
+```tsx
+const [state, dispatch] =
+  useReducer(
+    reducer,
+    initialState
+  );
+```
+
+This often produces cleaner logic than multiple `useState` calls.
+
+---
+
+## React Router Questions
+
+### How Do You Navigate Programmatically?
+
+```tsx
+import {
+  useNavigate,
+} from 'react-router-dom';
+
+function DashboardButton() {
+  const navigate =
+    useNavigate();
+
+  return (
+    <button
+      onClick={() =>
+        navigate('/dashboard')
+      }
+    >
+      Dashboard
+    </button>
+  );
+}
+```
+
+---
+
+### How Do You Protect Private Routes?
+
+```tsx
+function ProtectedRoute({
+  children,
+}: Props) {
+  return isAuthenticated
+    ? children
+    : (
+      <Navigate
+        to="/login"
+      />
+    );
+}
+```
+
+Private routes remain a common interview topic.
+
+---
+
+### How Do You Read Query Parameters?
+
+```tsx
+const [params] =
+  useSearchParams();
+
+const page =
+  params.get('page');
+```
+
+Simple question.
+
+Frequently asked.
+
+---
+
+## Testing Questions
+
+Many companies now care about testing knowledge.
+
+### Why Is React Testing Library Preferred Over Enzyme?
+
+React Testing Library encourages testing behavior instead of implementation details.
+
+Bad test:
+
+```tsx
+wrapper.state();
+```
+
+Good test:
+
+```tsx
+screen.getByRole(
+  'button'
+);
+```
+
+The test interacts with the application the way users do.
+
+---
+
+### How Do You Test Custom Hooks?
+
+```tsx
+const { result } =
+  renderHook(() =>
+    useCounter()
+  );
+```
+
+This is now the standard approach.
+
+---
+
+### What Should Be Tested?
+
+Good candidates focus on:
+
+* User interactions
+* Business logic
+* Accessibility
+* Critical flows
+
+Not internal implementation details.
+
+---
+
+## Senior-Level Architecture Questions
+
+These questions increasingly appear in senior interviews.
+
+### When Does React.memo Make Performance Worse?
+
+Memoization has costs.
+
+If a component is small and cheap to render, memoization may create more work than it saves.
+
+Always measure before optimizing.
+
+---
+
+### When Should State Live in React Query Instead of Zustand?
+
+React Query manages:
+
+* Server state
+* Caching
+* Synchronization
+* Background refetching
+
+Zustand manages:
+
+* Client state
+* UI state
+* Temporary application state
+
+Understanding this distinction is a strong senior-level signal.
+
+---
+
+### Why Is Derived State Usually a Mistake?
+
+If data can be calculated from existing state, storing it creates duplication.
+
+Bad:
+
+```tsx
+const [fullName, setFullName] =
+  useState('');
+```
+
+Better:
+
+```tsx
+const fullName =
+  `${firstName} ${lastName}`;
+```
+
+Less state means fewer bugs.
+
+---
+
+## Final Thoughts
+
+Modern React interviews are no longer about memorizing APIs.
+
+The strongest candidates understand:
+
+* Rendering behavior
+* Hooks
+* State management
+* React 19 features
+* Performance optimization
+* Server Components
+* Architecture trade-offs
+
+Focus on understanding how React works rather than memorizing dozens of isolated answers.
+
+That knowledge scales far beyond any interview.
+
+For additional preparation and hundreds of community-curated React interview questions, check out:
+
+**[GreatFrontEnd React Interview Questions Repository](https://github.com/greatfrontend/top-reactjs-interview-questions?utm_source=chatgpt.com)** 

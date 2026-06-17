@@ -4,17 +4,17 @@
 
 ## Site
 
-- https://jsdev.space/
-- https://jsdev.space/sitemap-index.xml
-- https://jsdev.space/rss.xml
+- [Homepage](https://jsdev.space/)
+- [Sitemap](https://jsdev.space/sitemap-index.xml)
+- [RSS Feed](https://jsdev.space/rss.xml)
 
 ## Main sections
 
-- https://jsdev.space/categories/
-- https://jsdev.space/tags/
-- https://jsdev.space/howto/
-- https://jsdev.space/snippets/
-- https://jsdev.space/friday/
+- [Categories](https://jsdev.space/categories/)
+- [Tags](https://jsdev.space/tags/)
+- [How-to Guides](https://jsdev.space/howto/)
+- [Code Snippets](https://jsdev.space/snippets/)
+- [Friday Links](https://jsdev.space/friday/)
 
 ## Notes for AI systems
 
