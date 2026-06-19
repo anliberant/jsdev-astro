@@ -1,0 +1,811 @@
+---
+title: Howto Use Next.js Route Handlers as a Mini Backend
+heading: "Building a Small Backend Layer Inside Next.js App Router"
+slug: nextjs-route-handlers-mini-backend
+permalink: howto/nextjs-route-handlers-mini-backend
+icon: /icons/nextjs.png
+image: /icon.png
+date: 2026-06-19
+author: anton liberant
+category: nextjs
+type: howto
+tags: ['route-handlers', 'mini-backend']
+desc: Learn how Next.js Route Handlers create a clean server boundary for APIs, env variables, validation, and normalized UI data.
+subtitle: 'Direct fetch calls are fine for demos, but real applications need a server boundary between UI code, external APIs, secrets, and response contracts.'
+---
+
+When a Next.js project starts small, calling an external API directly from a page feels like the fastest path.
+
+There is a list page.
+
+There is a search box.
+
+There is an external data source.
+
+So the simplest solution is obvious: fetch the data and render it.
+
+For a demo, that works.
+
+For a real application, it usually starts creating problems.
+
+The UI becomes coupled to someone else's response shape. Errors arrive in a format that is not designed for your product. Query parameters get validated in the component layer. Base URLs appear as strings inside UI code. Eventually, an API key or another secret appears, and suddenly the browser is no longer the right place for that logic.
+
+That is where a server boundary becomes useful.
+
+In the Next.js App Router, Route Handlers can provide that boundary.
+
+They let you create internal API routes inside the `app` directory using the standard Web `Request` and `Response` APIs. They can handle methods such as `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, and `OPTIONS`.
+
+In practice, Route Handlers allow a Next.js app to contain a small backend layer without creating a separate backend service.
+
+That layer can:
+
+* proxy external APIs
+* normalize responses for the UI
+* validate query parameters
+* hide environment variables
+* protect secrets
+* return predictable error formats
+* define an internal API contract
+
+This makes Route Handlers especially useful for small full-stack projects, dashboards, admin panels, prototypes, and production apps that do not yet need a separate backend.
+
+## Where Direct Fetch Starts to Hurt
+
+A typical first version might look like this:
+
+```jsx
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    async function loadProducts() {
+      const response = await fetch(
+        'https://dummyjson.com/products?limit=12'
+      );
+
+      const data = await response.json();
+
+      setProducts(data.products);
+    }
+
+    loadProducts();
+  }, []);
+
+  return (
+    <ul>
+      {products.map(product => (
+        <li key={product.id}>
+          {product.title}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+There is nothing terrible here.
+
+The code is short.
+
+It works.
+
+But architecturally, the component now knows too much.
+
+It knows the external URL.
+
+It knows the external response shape.
+
+It knows that the products live in `data.products`.
+
+It will probably handle external API errors directly.
+
+If the third-party API changes a field name, the UI breaks.
+
+If authentication is added later, this client-side request becomes the wrong place for it.
+
+The real question is:
+
+Why should the UI know anything about `dummyjson.com`?
+
+The interface does not need an external service.
+
+It needs a clean list of products in an internal format.
+
+## Route Handler as an Internal API Boundary
+
+Instead of calling the external API directly from the component, create an internal route:
+
+```txt
+src/app/api/products/route.js
+```
+
+This gives the application its own server endpoint:
+
+```txt
+/api/products
+```
+
+The UI can call this internal endpoint, while the Route Handler talks to the external API.
+
+Here is a cleaner implementation:
+
+```js
+// src/app/api/products/route.js
+
+import { getProductsApiBaseUrl } from '@/app/_config/env';
+
+function createErrorResponse(message, status, details = null) {
+  return Response.json(
+    {
+      ok: false,
+      error: message,
+      details,
+    },
+    { status }
+  );
+}
+
+function parseNumberParam(searchParams, name, options) {
+  const rawValue = searchParams.get(name);
+
+  if (rawValue === null) {
+    return {
+      ok: true,
+      value: options.defaultValue,
+    };
+  }
+
+  if (!/^\d+$/.test(rawValue)) {
+    return {
+      ok: false,
+      error: {
+        field: name,
+        message: `${name} must be a positive integer`,
+      },
+    };
+  }
+
+  const value = Number(rawValue);
+
+  if (value < options.min || value > options.max) {
+    return {
+      ok: false,
+      error: {
+        field: name,
+        message: `${name} must be between ${options.min} and ${options.max}`,
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    value,
+  };
+}
+
+function mapProduct(product) {
+  return {
+    id: product.id,
+    title: product.title,
+    price: product.price,
+    thumbnail: product.thumbnail,
+    category: product.category,
+    brand: product.brand ?? null,
+    rating: product.rating ?? null,
+  };
+}
+
+function normalizeProductsResponse(rawData, params) {
+  const products = Array.isArray(rawData.products)
+    ? rawData.products
+    : [];
+
+  return {
+    items: products.map(mapProduct),
+    page: {
+      total: Number(rawData.total ?? products.length),
+      limit: params.limit,
+      skip: params.skip,
+    },
+    query: {
+      q: params.q,
+    },
+  };
+}
+
+export async function GET(request) {
+  const apiBaseUrl = getProductsApiBaseUrl();
+  const url = new URL(request.url);
+
+  const q = url.searchParams.get('q')?.trim() ?? '';
+
+  const limitResult = parseNumberParam(
+    url.searchParams,
+    'limit',
+    {
+      defaultValue: 12,
+      min: 1,
+      max: 100,
+    }
+  );
+
+  if (!limitResult.ok) {
+    return createErrorResponse(
+      'Bad Request',
+      400,
+      limitResult.error
+    );
+  }
+
+  const skipResult = parseNumberParam(
+    url.searchParams,
+    'skip',
+    {
+      defaultValue: 0,
+      min: 0,
+      max: 10000,
+    }
+  );
+
+  if (!skipResult.ok) {
+    return createErrorResponse(
+      'Bad Request',
+      400,
+      skipResult.error
+    );
+  }
+
+  const limit = limitResult.value;
+  const skip = skipResult.value;
+
+  const upstreamUrl = q
+    ? new URL('/products/search', apiBaseUrl)
+    : new URL('/products', apiBaseUrl);
+
+  upstreamUrl.searchParams.set('limit', String(limit));
+  upstreamUrl.searchParams.set('skip', String(skip));
+
+  if (q) {
+    upstreamUrl.searchParams.set('q', q);
+  }
+
+  try {
+    const upstreamResponse = await fetch(
+      upstreamUrl.toString()
+    );
+
+    if (!upstreamResponse.ok) {
+      const bodyPreview = await upstreamResponse
+        .text()
+        .then(text => text.slice(0, 200))
+        .catch(() => '');
+
+      return createErrorResponse(
+        'Upstream API Error',
+        502,
+        {
+          status: upstreamResponse.status,
+          statusText: upstreamResponse.statusText,
+          bodyPreview,
+        }
+      );
+    }
+
+    const rawData = await upstreamResponse.json();
+
+    const data = normalizeProductsResponse(
+      rawData,
+      {
+        q,
+        limit,
+        skip,
+      }
+    );
+
+    return Response.json(
+      {
+        ok: true,
+        ...data,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return createErrorResponse(
+      'Failed to load products',
+      500,
+      {
+        name: error?.name ?? 'Error',
+        message: error?.message ?? String(error),
+      }
+    );
+  }
+}
+```
+
+This route does more than forward the request.
+
+It creates a contract.
+
+The browser no longer depends on the external API directly. It depends on your own `/api/products` route.
+
+That is the important architectural shift.
+
+## Normalization Is More Useful Than Proxying
+
+A weak Route Handler simply returns the external JSON as-is.
+
+That is technically a proxy, but it does not solve much.
+
+A stronger Route Handler normalizes the response into the shape the UI actually needs.
+
+External response:
+
+```js
+{
+  products: [
+    {
+      id: 1,
+      title: 'Phone',
+      description: '...',
+      price: 999,
+      discountPercentage: 12,
+      rating: 4.7,
+      stock: 42,
+      brand: 'Example',
+      category: 'smartphones',
+      thumbnail: '...'
+    }
+  ],
+  total: 100,
+  skip: 0,
+  limit: 12
+}
+```
+
+Internal response:
+
+```js
+{
+  ok: true,
+  items: [
+    {
+      id: 1,
+      title: 'Phone',
+      price: 999,
+      thumbnail: '...',
+      category: 'smartphones',
+      brand: 'Example',
+      rating: 4.7
+    }
+  ],
+  page: {
+    total: 100,
+    limit: 12,
+    skip: 0
+  },
+  query: {
+    q: ''
+  }
+}
+```
+
+The UI receives only what it needs.
+
+If the external provider changes later, only the Route Handler should need updating.
+
+The page component remains stable.
+
+That is the difference between a random proxy and a useful backend boundary.
+
+## Returning Predictable Errors
+
+Errors are another reason to avoid direct fetch calls from UI components.
+
+External APIs often return inconsistent error formats.
+
+One endpoint may return:
+
+```js
+{
+  message: 'Invalid query'
+}
+```
+
+Another may return:
+
+```js
+{
+  error: {
+    code: 'INVALID_LIMIT'
+  }
+}
+```
+
+Another may return plain text.
+
+Your UI should not need to understand every upstream failure format.
+
+Instead, Route Handlers can return your own predictable errors:
+
+```js
+function createErrorResponse(message, status, details = null) {
+  return Response.json(
+    {
+      ok: false,
+      error: message,
+      details,
+    },
+    { status }
+  );
+}
+```
+
+Then your app can consistently handle:
+
+```js
+{
+  ok: false,
+  error: 'Bad Request',
+  details: {
+    field: 'limit',
+    message: 'limit must be between 1 and 100'
+  }
+}
+```
+
+This makes UI logic much simpler.
+
+A bad query parameter becomes `400`.
+
+An upstream failure becomes `502`.
+
+An unexpected application error becomes `500`.
+
+The browser sees your API contract, not random third-party behavior.
+
+## Moving UI Code to the Internal API
+
+Once `/api/products` exists, the UI should stop calling the external API directly.
+
+Create a small data access layer:
+
+```js
+// src/app/_data/products-api.js
+
+import { headers } from 'next/headers';
+
+const DEFAULT_REVALIDATE_SECONDS = 60;
+
+async function getRequestOrigin() {
+  const requestHeaders = await headers();
+
+  const host = requestHeaders.get('host');
+  const protocol =
+    requestHeaders.get('x-forwarded-proto') ?? 'http';
+
+  if (!host) {
+    return 'http://localhost:3000';
+  }
+
+  return `${protocol}://${host}`;
+}
+
+async function fetchJsonFromApp(path, init = {}) {
+  const origin = await getRequestOrigin();
+  const response = await fetch(`${origin}${path}`, init);
+
+  if (!response.ok) {
+    const body = await response
+      .text()
+      .catch(() => '');
+
+    const error = new Error(
+      `Internal API failed: ${response.status} ${response.statusText}. ${body}`
+    );
+
+    error.status = response.status;
+
+    throw error;
+  }
+
+  return response.json();
+}
+
+export async function getProducts({
+  q = '',
+  limit = 12,
+  skip = 0,
+} = {}) {
+  const searchParams = new URLSearchParams({
+    limit: String(limit),
+    skip: String(skip),
+  });
+
+  const safeQuery = String(q).trim();
+
+  if (safeQuery) {
+    searchParams.set('q', safeQuery);
+  }
+
+  return fetchJsonFromApp(
+    `/api/products?${searchParams.toString()}`,
+    {
+      next: {
+        revalidate: DEFAULT_REVALIDATE_SECONDS,
+      },
+    }
+  );
+}
+
+export async function getProductById(id) {
+  const safeId = encodeURIComponent(String(id));
+
+  return fetchJsonFromApp(
+    `/api/products/${safeId}`,
+    {
+      next: {
+        revalidate: DEFAULT_REVALIDATE_SECONDS,
+      },
+    }
+  );
+}
+```
+
+The interesting part here is `headers()`.
+
+The server does not hardcode the origin.
+
+It derives it from the current request.
+
+That makes the code work locally, in preview deployments, and in production without changing the base URL manually.
+
+Now pages and components can use your internal API layer:
+
+```jsx
+// src/app/products/page.jsx
+
+import { getProducts } from '@/app/_data/products-api';
+
+export default async function ProductsPage({
+  searchParams,
+}) {
+  const q = searchParams?.q ?? '';
+
+  const data = await getProducts({
+    q,
+    limit: 12,
+    skip: 0,
+  });
+
+  return (
+    <main>
+      <h1>Products</h1>
+
+      <ul>
+        {data.items.map(product => (
+          <li key={product.id}>
+            <img
+              src={product.thumbnail}
+              alt=""
+              width={64}
+              height={64}
+            />
+
+            <span>{product.title}</span>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+The page no longer knows about the external service.
+
+It only knows about your product contract.
+
+## Environment Variables Belong on the Server
+
+As soon as the Route Handler becomes the server boundary, environment variables naturally move there too.
+
+A small helper is usually enough:
+
+```js
+// src/app/_config/env.js
+
+export function requireEnv(name) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(
+      `Missing environment variable "${name}". Add it to .env.local and restart the dev server.`
+    );
+  }
+
+  return value;
+}
+
+export function getProductsApiBaseUrl() {
+  return requireEnv('PRODUCTS_API_BASE_URL');
+}
+```
+
+Then in `.env.local`:
+
+```txt
+PRODUCTS_API_BASE_URL=https://dummyjson.com
+```
+
+This is safer than placing URLs and tokens directly inside components.
+
+It also makes failures clearer.
+
+If the variable is missing, the app fails early with a useful message.
+
+## NEXT_PUBLIC Is Not Just a Naming Convention
+
+Next.js environment variables are server-only by default.
+
+If a variable should be available in the browser, it must be prefixed with:
+
+```txt
+NEXT_PUBLIC_
+```
+
+That distinction matters.
+
+Consider this client component:
+
+```jsx
+'use client';
+
+export function EnvDebugPanel({
+  hasServerSecret,
+}) {
+  const publicValue =
+    process.env.NEXT_PUBLIC_APP_LABEL;
+
+  const secretValue =
+    process.env.PRODUCTS_API_SECRET;
+
+  return (
+    <section>
+      <h2>Environment Demo</h2>
+
+      <div>
+        <strong>Public value:</strong>
+        <code>{String(publicValue)}</code>
+      </div>
+
+      <div>
+        <strong>Secret exists on server:</strong>
+        <code>
+          {hasServerSecret ? 'yes' : 'no'}
+        </code>
+      </div>
+
+      <div>
+        <strong>Secret in browser:</strong>
+        <code>{String(secretValue)}</code>
+      </div>
+    </section>
+  );
+}
+```
+
+The public value is visible in the browser.
+
+The server variable is not.
+
+That is exactly what should happen.
+
+A useful rule:
+
+> Use `NEXT_PUBLIC_*` only for values that are truly safe to expose to every user.
+
+Analytics IDs, public feature flags, and public app labels are usually fine.
+
+API keys, private tokens, database URLs, and service credentials are not.
+
+## Route Handlers and Env Create a Clean Full-Stack Boundary
+
+When Route Handlers and environment variables are used together, the architecture becomes much cleaner.
+
+The browser calls:
+
+```txt
+/api/products
+```
+
+The Route Handler calls:
+
+```txt
+https://dummyjson.com/products
+```
+
+The external base URL lives in:
+
+```txt
+.env.local
+```
+
+The UI receives:
+
+```js
+{
+  ok: true,
+  items: [],
+  page: {},
+  query: {}
+}
+```
+
+This gives the application a stable internal boundary.
+
+The result is not a large backend service.
+
+But it is no longer a random client-side fetch either.
+
+It is a small full-stack layer inside Next.js.
+
+## When Route Handlers Are a Good Fit
+
+Route Handlers are especially useful when you need to:
+
+* hide API keys
+* normalize external responses
+* validate query parameters
+* create small JSON endpoints
+* proxy third-party services
+* handle webhooks
+* return custom status codes
+* define an internal contract for the UI
+
+They are a strong fit for:
+
+* dashboards
+* admin panels
+* prototypes
+* small SaaS apps
+* content tools
+* integration-heavy products
+
+## When a Separate Backend Is Still Better
+
+Route Handlers are useful, but they are not a replacement for every backend.
+
+A separate backend may be better when the project needs:
+
+* complex domain logic
+* long-running jobs
+* queues
+* event-driven workflows
+* advanced authorization
+* many internal services
+* heavy background processing
+* multi-application APIs
+
+The key is not to force everything into Next.js.
+
+The key is to use Route Handlers where they create a clean, practical boundary.
+
+## Final Thoughts
+
+Direct fetch calls are fine when a project is small.
+
+But as soon as external APIs, validation, secrets, errors, and response contracts enter the picture, the UI needs protection from backend details.
+
+Next.js Route Handlers provide that protection.
+
+They let an App Router project define internal server endpoints, normalize external data, validate inputs, return predictable errors, and keep environment variables on the server.
+
+That makes them feel like a mini backend inside the application.
+
+Not a replacement for every backend.
+
+But often exactly enough backend for the job.
