@@ -1,0 +1,209 @@
+---
+title: 'Friday Links #39 — JavaScript Releases & Web Experiments'
+slug: friday-39
+heading: "What Happened This Week in AI Development, JavaScript, and the Modern Web"
+image: ./images/friday-39.png
+permalink: friday/friday-39
+date: 2026-06-19
+author: anton liberant
+type: friday
+isDraft: false
+desc: "A weekly roundup of AI agents, JavaScript releases, developer tools, browser updates, open-source projects, and engineering insights."
+subtitle: 'The latest releases, AI tooling breakthroughs, browser platform updates, developer experiments, and noteworthy open-source projects.'
+---
+
+![Friday Links #39](./images/friday-39.png)
+
+Another busy week in software development.
+
+AI tooling continued evolving at an absurd pace, JavaScript frameworks shipped new releases, browser vendors rolled out experimental features, and open-source maintainers somehow found time to launch another wave of libraries, runtimes, and developer tools.
+
+This edition collects the releases, discussions, tutorials, experiments, and projects that stood out during the week.
+
+Whether you're following React, TypeScript, AI agents, browser APIs, infrastructure, or modern web tooling, here are the links worth opening in a new tab.
+
+## 🧠 Language & Runtime Updates
+
+### TypeScript 7.0 Beta Continues To Generate Excitement
+
+The TypeScript team continues refining TypeScript 7.0 and its new Go-based compiler architecture. Early benchmarks and community testing suggest substantial performance improvements for large codebases, monorepos, and editor tooling. The transition marks one of the most significant architectural changes in TypeScript's history.
+
+### VoidZero Joins Cloudflare
+
+One of the biggest JavaScript ecosystem stories this week: the team behind Vite, Rolldown, Oxc, Vitest, and VoidZero is joining Cloudflare. The move could accelerate development across the next generation of JavaScript tooling and infrastructure.
+
+[The Cloudflare Blog](https://blog.cloudflare.com/voidzero-joins-cloudflare/)
+
+### npm 12 Will Disable Install Scripts By Default
+
+npm is preparing a major security-focused change. Future versions will no longer execute `preinstall`, `install`, and `postinstall` scripts automatically by default. The goal is to reduce supply-chain attack risks and improve package installation security.
+
+Node.js Security Releases Land Across Multiple Branches
+
+Node.js shipped security updates for multiple active release lines, including fixes for high-severity vulnerabilities. Teams running production workloads should review the latest security advisories and update accordingly.
+
+[rfcs](https://github.com/npm/rfcs)
+
+### Node.js 24 Continues To Improve Developer Experience
+
+Recent updates to Node.js 24 introduced support for UUID v7 generation, additional testing utilities, and improvements across the platform. The project continues pushing toward a more batteries-included developer experience.
+
+### Node.js Security Releases Land Across Multiple Versions
+
+The Node.js team released security updates across several supported release lines, including Node.js 22, 24, and 26. The updates address multiple high-severity vulnerabilities affecting core dependencies and runtime components. Teams running production workloads should review the advisories and upgrade as soon as possible to ensure their applications remain protected.
+
+[Node.js Security Releases](https://nodejs.org/en/blog/vulnerability/june-2026-security-releases)
+
+## 📜 Articles & Tutorials
+
+[How to Build ChatGPT From Scratch: Understanding LLMs Step by Step](https://nextweekai.com/blog/build-chatgpt-from-scratch-guide/)
+
+[TypeScript Performance in TanStack Table V9](https://tanstack.com/blog/tanstack-table-v9-typescript-performance)
+
+[Introducing eve, an open-source agent framework](https://vercel.com/changelog/introducing-eve-an-open-source-agent-framework)
+
+[How to Use Lazy Loading Without Hurting Web Performance](https://www.debugbear.com/blog/lazy-loading-performance)
+
+[An Interactive Cover Component](https://kittygiraudel.com/2026/04/09/an-interactive-cover-component/)
+
+[Streaming HTML](https://olliewilliams.xyz/blog/streaming-html/)
+
+[A backdoor in a LinkedIn job offer](https://roman.pt/posts/linkedin-backdoor/)
+
+[The problem with useEffect](https://www.react.doctor/blog/the-problem-with-useeffect)
+
+[AI-assisted engineers are burning out, is this fine?](https://evilmartians.com/chronicles/ai-assisted-engineers-are-burning-out-is-this-fine)
+
+[How To Make Your Design System AI-Ready](https://www.smashingmagazine.com/2026/06/how-make-design-system-ai-ready/)
+
+[Introducing the MDN MCP server](https://developer.mozilla.org/en-US/blog/introducing-mdn-mcp-server/)
+
+[Software Is Made Between Commits](https://zed.dev/blog/introducing-deltadb)
+
+## ⚒️ Tools
+
+[NextWeekAI](https://nextweekai.com/) - Curated directory of cutting-edge AI tools.
+
+[View Transitions Toolkit](https://chrome.dev/view-transitions-toolkit/)
+
+A collection of utility functions to more easily work with View Transitions. 
+
+[eslint-plugin-unicorn 67.0](https://github.com/sindresorhus/eslint-plugin-unicorn) -  Adds Even More Ways to Improve Your Code
+
+Nodemailer 9.0 Tightens Email Security in Node.js
+
+[Nodemailer 9.0](https://nodemailer.com/) is out, bringing updates to one of the most widely used email libraries in the Node.js ecosystem. The package continues to support SMTP, Amazon SES, and Sendmail-based delivery, while version 9.0 adds a notable security improvement: TLS connections are now validated by default when fetching remote content. For projects that generate rich emails with external assets, this is a small but important hardening update.
+
+[Tabulator 6.5](https://github.com/tabulator-tables/tabulator) - Easy to use, simple to code, fully featured, interactive JavaScript tables and data grids.
+
+[`<relative-time>` element](https://github.com/github/relative-time-element) - Web component extensions to the standard `<time>` element. 
+
+[MiniPixelFont generator](https://xem.github.io/miniPixelFont/js13k.html)
+
+[React Foundation Launches to Support the Future of React](https://react.foundation)
+
+The newly announced React Foundation aims to provide long-term sustainability for one of the world's most widely used frontend ecosystems. The organization introduces a community-driven governance model focused on transparent decision-making, direct funding for maintainers, and financial support for critical open-source projects. By creating a dedicated foundation, the React community hopes to ensure the continued health, stability, and growth of the ecosystem for years to come.
+
+[Is Your Site Agent-Ready?](https://isitagentready.com) - A simple tool to check if your website is ready for AI agents.
+
+[Taste Skill](https://github.com/leonxlnx/taste-skill) -  Helps frontend projects escape the generic SaaS look
+
+[Gemma Gem](https://github.com/kessler/gemma-gem) - Your personal AI assistant living right inside the browser. Gemma Gem runs Google's Gemma 4 model entirely on-device via WebGPU — no API keys, no cloud, no data leaving your machine. It can read pages, click buttons, fill forms, run JavaScript, and answer questions about any site you visit.
+
+[Desktop Commander MCP](https://github.com/wonderwhy-er/DesktopCommanderMCP) - This is MCP server for Claude that gives it terminal control, file system search and diff file editing capabilities 
+
+[DepsGuard](https://depsguard.com) - Hardens Package Manager Configs Against Supply-Chain Attacks
+
+## 📚 Libs
+
+### zod-compiler Brings Zero-Overhead Validation to Zod
+
+[zod-compiler](https://github.com/gajus/zod-compiler) is a new build-time optimization tool that transforms existing Zod schemas into highly optimized validators during bundling. Designed to work with Vite, Webpack, and other modern build systems, it preserves the familiar Zod API while generating tree-shakeable validation code with virtually no runtime overhead. The project claims validation performance improvements ranging from 2× to 75× depending on schema complexity—all without requiring changes to application code. For teams heavily invested in Zod, this could be one of the most interesting performance-focused tooling releases of the year.
+
+[PolyCSS](https://polycss.com/) - Render textured 3D meshes in the DOM with CSS. No WebGL or `<canvas>` needed: each polygon is a real DOM element. 
+
+[CalendarJS](https://calendarjs.com)
+
+[sem](https://github.com/Ataraxy-Labs/sem) -  Semantic version control => entity-level diffs, blame, and impact analysis on top of git. 28 languages via tree-sitter. Built for coding agents. 
+
+## ⌚ Releases
+
+[Vite 8.1 Released](https://github.com/vitejs/vite/blob/v8.1.0-beta.0/packages/vite/CHANGELOG.md#810-beta0-2026-06-15)
+
+[Astro 7.0.0 Beta 4 Released](https://github.com/withastro/astro/releases/tag/astro@7.0.0-beta.4)
+
+[Vue 3.6](https://github.com/vuejs/core/blob/minor/CHANGELOG.md#360-beta15-2026-06-11)
+
+[SvelteKit 3.0 Released](https://github.com/sveltejs/kit/releases/tag/%40sveltejs%2Fkit%403.0.0-next.4)
+
+[TanStack AI Beta](https://tanstack.com/blog/tanstack-ai-beta)
+
+[ESLint v10.5.0 released](https://eslint.org/blog/2026/06/eslint-v10.5.0-released/)
+
+[Biome v2.5](https://biomejs.dev/blog/biome-v2-5/) — 500 Lint Rules, Plugin Code Fix, and Cross-File Linting
+
+[Introducing Nub](https://nubjs.com/blog/introducing-nub) - an all-in-one toolkit for Node.js
+
+[Playwright 1.61](https://playwright.dev/docs/release-notes#version-161), [billboard.js 4.0.1](https://github.com/naver/billboard.js), [React Native 0.86](https://reactnative.dev/blog/2026/06/11/react-native-0.86), [Fable 5.2](https://github.com/fable-compiler/Fable/releases/tag/5.2.0), 
+
+[axios v1.18.0](https://github.com/axios/axios/releases/tag/v1.18.0), [Node Telegram Bot API 1.0/1.1](https://github.com/yagop/node-telegram-bot-api/releases), [graphql-js 17.0](https://github.com/graphql/graphql-js), [node-gyp v13.0.0](https://github.com/nodejs/node-gyp)
+
+[React Native Windows v0.83 is here!!](https://devblogs.microsoft.com/react-native/%F0%9F%9A%80react-native-windows-v0-83-is-here/)
+
+## 📺 Videos
+
+[Copying other website's Design.MD File. Is it stealing?](https://www.youtube.com/watch?v=nl6zw_L1j_U)
+
+[Signs you’re cracked at programming](https://www.youtube.com/watch?v=fLwP3tlDe2U)
+
+[Distributed Transactions Explained: 2 Phase Commit vs Saga Pattern](https://www.youtube.com/watch?v=DOFflggE_0Q)
+
+[The Rise of Generative UI for Developers (CopilotKit)](https://www.youtube.com/watch?v=kVL_7csy_ZM)
+
+[MERN Stack Project: Realtime Chat App Tutorial - React.js & Socket.io 2026](https://www.youtube.com/watch?v=7-aY-tS2LhE)
+
+[Adapting to dynamic content using modern CSS](https://www.youtube.com/watch?v=-fW2KFS022I)
+
+[99% of Developers Don't Get WebSockets](https://www.youtube.com/watch?v=vuezTFo4kRE)
+
+[Most Important Programming Languages In 2026](https://www.youtube.com/watch?v=JG7wBlY0VUg)
+
+## 🗞️ News & Updates
+
+### Jeff Bezos Says AI Will Create a Labor Shortage — As Amazon Cuts 30,000 Jobs
+
+![Jeff Bezos Speaking at VivaTech](./images/jeff_bezos.jpeg)
+
+Speaking at the [VivaTech conference in Paris](https://thehill.com/policy/technology/5928754-jeff-bezos-ai-labor/), Amazon founder Jeff Bezos pushed back against one of the most common fears surrounding artificial intelligence: mass unemployment. Instead, Bezos argued that AI will eventually create a shortage of workers rather than replace them.
+
+The statement comes at an interesting moment. Amazon has eliminated roughly 30,000 corporate positions in recent years—about 10% of its white-collar workforce—with automation and AI-driven efficiency playing a role in those reductions.
+
+According to Bezos, AI expands what people are capable of accomplishing rather than making them obsolete. Human ambition, he argues, is effectively unlimited. There will always be more products to build, services to improve, and problems to solve. The real constraint isn't imagination—it's execution. By increasing productivity, AI could allow smaller teams to tackle significantly larger projects, creating demand for entirely new categories of work.
+
+Bezos also believes rising productivity could reshape participation in the labor market itself. If AI-driven gains substantially increase incomes, some households may no longer require two full-time earners to maintain the same standard of living. In that scenario, labor shortages would emerge not only because businesses need more workers, but also because fewer people choose to remain in the workforce.
+
+Whether that prediction proves accurate remains an open question. For now, the debate continues as companies invest heavily in AI while simultaneously restructuring parts of their workforce. The long-term impact of AI on employment may depend less on how many jobs it eliminates and more on how quickly new opportunities emerge to replace them.
+
+### Google Is Testing a New reCAPTCHA That Requires Hand Gestures
+
+![Google reCAPTCHA with Hand Gesture Verification](./images/recaptcha.jpeg)
+
+[Google has begun testing a more advanced version of reCAPTCHA](https://docs.cloud.google.com/recaptcha/docs/hand-gesture-verification) that verifies users through hand gestures performed in front of a device's camera. Instead of selecting traffic lights, clicking bicycles, or solving image puzzles, users may be asked to perform a specific hand movement that the system can recognize and validate.
+
+According to reports, the experimental system tracks 21 hand landmarks and analyzes whether the performed gesture matches the requested action. Google says the captured video is not linked to a user's identity and is deleted immediately after verification. Alternative verification methods will remain available for users who cannot complete gesture-based challenges.
+
+The idea has already sparked privacy concerns. Critics argue that any authentication system requiring camera access introduces additional privacy risks, regardless of how temporary or anonymous the collected data may be. Others question whether increasingly complex CAPTCHA systems are becoming more frustrating for humans than for the bots they're designed to stop.
+
+Google has not announced when—or if—the feature will be rolled out more broadly. For now, it remains an experimental test, and the company may still adjust or abandon the approach based on user feedback and real-world results.
+
+---
+
+That wraps up Friday Links #39.
+
+The ecosystem never really slows down. Frameworks evolve, AI keeps reshaping developer workflows, browsers gain new capabilities, and open-source communities continue shipping at an impressive pace.
+
+As always, the goal of this roundup is simple: filter the noise and surface the releases, tools, articles, and discussions that are actually worth your time.
+
+If we missed something interesting, there's a good chance it'll show up in next week's edition.
+
+See you in Friday Links #X40.
