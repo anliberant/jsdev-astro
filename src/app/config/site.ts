@@ -19,12 +19,8 @@ export const siteConfig = {
       path: '/friday/',
     },
     {
-      name: 'News',
-      path: 'https://jsdev.news',
-    },
-    {
-      name: 'AI Directory',
-      path: 'https://nextweekai.com'
+      name: 'Tools',
+      path: 'https://jstools.space',
     }
   ],
   footerLinks: [
@@ -40,6 +36,10 @@ export const siteConfig = {
       name: 'Contact',
       path: '/contact/',
     },
+    {
+      name: 'AI Directory',
+      path: 'https://nextweekai.com'
+    }
   ],
   social: {
     github: 'https://github.com/jsdevspace',

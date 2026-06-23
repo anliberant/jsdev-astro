@@ -17,7 +17,7 @@ const currentPath = Astro.url.pathname;
           class:list={[
             'nav-link',
             { 'nav-link--active': isActiveLink(navLink.path, currentPath) },
-            { 'nav-link--new': navLink.name === 'AI Directory' },
+            { 'nav-link--new': navLink.name === 'Tools' },
           ]}>
           {navLink.name}
         </a>
