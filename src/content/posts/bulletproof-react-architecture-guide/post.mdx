@@ -1,0 +1,538 @@
+---
+title: "Bulletproof React: Building React Apps That Survive Growth"
+slug: bulletproof-react-architecture-guide
+heading: Why Bulletproof React Became the Most Popular React Architecture on GitHub
+permalink: bulletproof-react-architecture-guide
+image: ./images/bulletproof-react.png
+date: 2026-06-23
+author: anton liberant
+category: nodejs
+type: post
+tags: ['bulletproof-react', 'tanstack-query', 'zustand', 'react-architecture', 'react-best-practices']
+desc: Learn how Bulletproof React uses feature-based architecture, public APIs, TanStack Query, Zustand.
+subtitle: 'A deep dive into Bulletproof React, the popular GitHub architecture guide that helps teams organize React applications.'
+---
+
+Every React developer has experienced this moment.
+
+You open a project you built six months ago and immediately wonder:
+
+*Why is this component here?*
+
+*Why does this hook depend on three unrelated modules?*
+
+*Why are API requests scattered across five different directories?*
+
+And perhaps the most terrifying question:
+
+*Who wrote this code?*
+
+Then you realize it was you.
+
+React is one of the most flexible frontend frameworks ever created. It gives developers complete freedom over component design, state management, folder structures, API communication, testing strategies, and architectural decisions.
+
+That freedom is both React's greatest strength and its biggest weakness.
+
+Without clear boundaries, most React projects slowly evolve into collections of loosely connected components, utilities, hooks, and services that become increasingly difficult to understand, maintain, and extend.
+
+This problem becomes especially painful as teams grow.
+
+What starts as a clean side project eventually becomes a codebase nobody fully understands.
+
+That is exactly the problem that **Bulletproof React** was created to solve.
+
+The ideas discussed in this article are inspired by Alan Alickovic's excellent open-source project - [bulletproof-react](https://github.com/alan2207/bulletproof-react) - which has become one of the most popular React architecture references on GitHub.
+
+Rather than providing another boilerplate or starter kit, Bulletproof React offers a set of architectural principles and conventions designed to keep React applications maintainable long after their initial release.
+
+Let's explore why it has become one of the most respected React architecture references on GitHub.
+
+## The Real Problem With React
+
+React intentionally avoids enforcing architectural decisions.
+
+Unlike frameworks that prescribe strict folder structures and application boundaries, React gives developers complete freedom.
+
+At first, that feels empowering.
+
+A typical project starts with something like this:
+
+```text
+src/
+  components/
+  hooks/
+  utils/
+  services/
+  pages/
+```
+
+Everything looks perfectly reasonable.
+
+Until it doesn't.
+
+As the application grows, related code becomes scattered throughout the project.
+
+A profile page may depend on:
+
+* components/UserProfile.tsx
+* hooks/useUser.ts
+* services/userApi.ts
+* utils/userHelpers.ts
+* types/user.ts
+
+Understanding a single feature requires jumping between multiple unrelated directories.
+
+The project is technically organized.
+
+But it isn't structured around how developers actually think.
+
+Developers think in features.
+
+Traditional React projects are usually organized around file types.
+
+That's where Bulletproof React starts.
+
+## The Core Idea: Organize by Features
+
+The most important concept in Bulletproof React is feature-based architecture.
+
+Instead of grouping code by technical category, related functionality lives together.
+
+A simplified example looks like this:
+
+```text
+src/
+  features/
+    auth/
+    projects/
+    comments/
+    notifications/
+```
+
+Each feature contains everything it needs:
+
+```text
+auth/
+  api/
+  components/
+  hooks/
+  stores/
+  types/
+  utils/
+  index.ts
+```
+
+Authentication logic stays inside authentication.
+
+Project management logic stays inside projects.
+
+Comment functionality stays inside comments.
+
+Everything related to a feature lives together.
+
+This creates several immediate advantages.
+
+### Better Discoverability
+
+When a developer needs to modify authentication, they know exactly where to go.
+
+No more hunting across five unrelated folders.
+
+### Easier Refactoring
+
+Changes remain localized.
+
+Modifying a feature rarely impacts unrelated parts of the application.
+
+### Team Scalability
+
+Multiple developers can work simultaneously on different features without constantly stepping on each other's toes.
+
+### Clear Ownership
+
+Features naturally become bounded contexts.
+
+Developers can reason about them independently.
+
+This is one of the biggest reasons large engineering teams increasingly prefer feature-driven architectures.
+
+## Shared Code Still Exists
+
+Not everything belongs inside a feature.
+
+Some code is truly reusable.
+
+Bulletproof React keeps shared infrastructure at the application level:
+
+```text
+src/
+  components/
+    ui/
+    layout/
+
+  lib/
+  providers/
+  routes/
+  types/
+  utils/
+```
+
+The key rule is simple:
+
+If something is only used by one feature, it belongs inside that feature.
+
+If it is reused across multiple features, it can be promoted to shared infrastructure.
+
+Many teams accidentally reverse this rule and end up with gigantic shared component directories that nobody understands.
+
+## Public APIs: Protecting Your Architecture
+
+Feature-based architecture alone is not enough.
+
+Developers can still bypass boundaries.
+
+Imagine this import:
+
+```ts
+import { PrivateRoute } from '@/features/auth/components/PrivateRoute';
+```
+
+Technically it works.
+
+Architecturally it's dangerous.
+
+The importing module now depends on an internal implementation detail.
+
+If the authentication team refactors its internal structure, unrelated parts of the application break.
+
+Bulletproof React solves this through Public APIs.
+
+Every feature exposes only approved exports through its root index file:
+
+```ts
+export { useAuth } from './hooks/useAuth';
+export { AuthProvider } from './components/AuthProvider';
+export type { User } from './types';
+```
+
+Consumers import only from the feature root:
+
+```ts
+import { useAuth } from '@/features/auth';
+```
+
+Everything else remains private.
+
+This approach mirrors how libraries and packages expose public interfaces.
+
+Features become miniature applications with clearly defined contracts.
+
+## Enforcing Architecture With ESLint
+
+Architecture documentation is helpful.
+
+Automated enforcement is better.
+
+Bulletproof React strongly encourages using ESLint rules to prevent illegal imports.
+
+Without enforcement, architectural boundaries eventually become suggestions.
+
+With enforcement, they become guarantees.
+
+A properly configured ESLint setup can block imports from internal feature directories and ensure that all communication happens through public APIs.
+
+This transforms architecture from a convention into a system.
+
+The result is less architectural drift and fewer accidental dependencies.
+
+## Rethinking State Management
+
+Few topics generate more debate in the React ecosystem than state management.
+
+Redux.
+
+Context.
+
+Zustand.
+
+MobX.
+
+Jotai.
+
+Recoil.
+
+The list never ends.
+
+Bulletproof React approaches the problem differently.
+
+Instead of asking:
+
+*"Which state library should we use?"*
+
+It asks:
+
+*"What kind of state is this?"*
+
+That distinction changes everything.
+
+### UI State
+
+Temporary component state belongs inside components.
+
+```ts
+const [isOpen, setIsOpen] = useState(false);
+```
+
+Simple.
+
+Local.
+
+No global storage required.
+
+### Application State
+
+Things like notifications, themes, and global UI behavior belong in lightweight state stores.
+
+Libraries like Zustand excel here.
+
+### Server State
+
+This is where many React projects make mistakes.
+
+Data fetched from an API is not application state.
+
+It is cached server state.
+
+Treating server data like Redux state creates unnecessary complexity.
+
+Instead, Bulletproof React recommends TanStack Query.
+
+```ts
+const { data } = useQuery({
+  queryKey: ['projects'],
+  queryFn: fetchProjects,
+});
+```
+
+Caching.
+
+Refetching.
+
+Background synchronization.
+
+Retries.
+
+Invalidation.
+
+All handled automatically.
+
+### URL State
+
+Search filters.
+
+Pagination.
+
+Sorting.
+
+These belong in the URL.
+
+Not in Redux.
+
+Not in Context.
+
+The browser already provides a state container for these values.
+
+Use it.
+
+This separation dramatically simplifies large applications.
+
+## API Communication Without Chaos
+
+Another common source of technical debt is API access.
+
+In many projects, network requests appear everywhere.
+
+Components fetch data directly.
+
+Hooks call APIs.
+
+Services duplicate logic.
+
+Authentication gets implemented three different ways.
+
+Bulletproof React introduces a dedicated API layer.
+
+A shared client handles:
+
+* Base URLs
+* Authentication headers
+* Error handling
+* Request configuration
+* Logging
+
+Individual features define their own API operations.
+
+For example:
+
+```ts
+features/projects/api/
+```
+
+All project-related requests live together.
+
+This makes network behavior predictable and easier to maintain.
+
+## Security Is Part of Architecture
+
+Frontend developers often assume security belongs exclusively to backend teams.
+
+That assumption creates vulnerabilities.
+
+Bulletproof React treats security as an architectural concern.
+
+One example is token storage.
+
+Many applications still store authentication tokens in localStorage.
+
+While convenient, this increases exposure to XSS attacks.
+
+A safer approach is using secure httpOnly cookies managed by the server.
+
+Bulletproof React also encourages:
+
+* Route protection
+* Permission-based rendering
+* Environment validation
+* Secure defaults
+
+Security should not be an afterthought.
+
+It should be built into the architecture from day one.
+
+## Performance Should Not Be Optional
+
+Performance problems rarely appear on day one.
+
+They emerge as applications grow.
+
+Bulletproof React promotes performance-conscious defaults.
+
+### Route-Based Code Splitting
+
+Instead of shipping the entire application upfront, pages are loaded when needed.
+
+```ts
+const DashboardPage = lazy(() => import('./Dashboard'));
+```
+
+Users download less JavaScript.
+
+Initial load times improve.
+
+### Smart Data Fetching
+
+TanStack Query prevents duplicate requests and unnecessary network traffic.
+
+### Lazy Loading
+
+Large components and media assets load only when required.
+
+### Performance Monitoring
+
+Metrics such as:
+
+* LCP
+* INP
+* CLS
+
+should be monitored continuously rather than checked occasionally.
+
+Performance is easier to maintain than to recover.
+
+## Testing That Reflects Reality
+
+One of the most practical aspects of Bulletproof React is its testing philosophy.
+
+The goal is not 100% coverage.
+
+The goal is confidence.
+
+Modern implementations typically use:
+
+* Vitest for unit testing
+* React Testing Library for component testing
+* Playwright for end-to-end testing
+* MSW for API mocking
+
+This creates a testing pyramid that balances speed and reliability.
+
+Unit tests validate individual pieces.
+
+Integration tests verify collaboration between modules.
+
+End-to-end tests confirm critical user flows.
+
+Together, they provide far more value than chasing arbitrary coverage numbers.
+
+## When Bulletproof React Is Too Much
+
+No architecture is perfect.
+
+Bulletproof React has trade-offs.
+
+For small projects, it can feel excessive.
+
+A landing page or short-lived MVP probably doesn't need:
+
+* Public APIs
+* Feature boundaries
+* Advanced state separation
+* Architectural enforcement
+
+There is overhead.
+
+Developers must learn the conventions.
+
+Teams must maintain discipline.
+
+Some flexibility is sacrificed in exchange for consistency.
+
+But once a project reaches meaningful complexity, those costs usually become worthwhile.
+
+The larger the codebase becomes, the more valuable structure becomes.
+
+## Final Thoughts
+
+Bulletproof React is not a framework.
+
+It is not a boilerplate.
+
+It is not a collection of magical libraries.
+
+It is a set of architectural principles designed to solve a problem every React team eventually encounters:
+
+How do we prevent our application from becoming impossible to maintain?
+
+The answer is not more abstractions.
+
+It is better boundaries.
+
+Feature-based organization.
+
+Public APIs.
+
+Clear ownership.
+
+Thoughtful state management.
+
+Security and performance built into the process.
+
+The longer a project is expected to live, the more these principles matter.
+
+And perhaps that is the most valuable lesson Bulletproof React teaches:
+
+Good architecture is not about making software easier to build today.
+
+It is about making software easier to understand six months from now.
+
+When future-you opens the project again, that investment pays for itself.
