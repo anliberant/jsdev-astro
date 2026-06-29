@@ -1,0 +1,344 @@
+---
+title: Modern CSS Features That Replace Old Tricks
+slug: modern-css-features
+heading: "Stop Writing Legacy CSS: Modern Features You Should Be Using Instead"
+image: ./images/modern-css-features.png
+permalink: modern-css-features
+date: 2026-06-29
+author: anton liberant
+category: css
+type: post
+tags: []
+desc: Discover modern CSS features that replace outdated hacks for modals, fonts, alignment, dark mode, and international layouts with cleaner, more maintainable code.
+subtitle: 'CSS has evolved dramatically over the last few years. Many techniques that once required hacks, extra wrappers, or JavaScript can now be replaced with simpler, native solutions.'
+---
+
+CSS has changed more in the last few years than it did during the previous decade.
+
+Many patterns that developers once considered "best practice" were actually workarounds for missing browser features. We relied on JavaScript to compensate for layout problems, added unnecessary wrappers, and wrote dozens of lines of CSS just to accomplish relatively simple tasks.
+
+Today, most of those hacks are no longer necessary.
+
+Modern browsers support a collection of new CSS features that make code shorter, more readable, and easier to maintain. If your stylesheets still contain old patterns copied from projects built five or ten years ago, chances are you can simplify them considerably.
+
+Let's look at several CSS features that deserve a permanent place in every modern codebase.
+
+---
+
+## 1. Stop Fixing Layout Shifts with JavaScript
+
+One of the oldest UI problems appears whenever a modal dialog opens.
+
+The browser removes the scrollbar after `overflow: hidden` is applied to the page, causing the entire layout to jump horizontally.
+
+For years developers compensated by manually calculating the scrollbar width.
+
+```css
+body.modal-open {
+  overflow: hidden;
+  margin-right: 14px;
+}
+```
+
+Others preferred changing the body's width instead.
+
+```css
+body.modal-open {
+  position: fixed;
+  overflow: hidden;
+  width: calc(100% - 14px);
+  height: 100%;
+}
+```
+
+Both approaches work.
+
+Neither is particularly elegant.
+
+The hardcoded value depends on the operating system, browser, zoom level, and accessibility settings. Sooner or later someone reports that the layout still shifts.
+
+Modern CSS solves this with a single property.
+
+```css
+html {
+  scrollbar-gutter: stable;
+}
+```
+
+That's it.
+
+When `scrollbar-gutter: stable` is enabled, the browser permanently reserves space for the scrollbar. Opening a modal no longer changes the layout because that space already exists.
+
+```css
+html,
+body {
+  scrollbar-gutter: stable;
+}
+```
+
+The browser determines the correct scrollbar width automatically.
+
+No calculations.
+
+No JavaScript.
+
+No platform-specific fixes.
+
+---
+
+## 2. Replace Generic Font Fallbacks with `system-ui`
+
+Many projects still define fonts like this.
+
+```css
+body {
+  font-family: "Inter", sans-serif;
+}
+```
+
+There is nothing technically wrong with it.
+
+The problem appears when the custom font fails to load.
+
+The browser falls back to an arbitrary sans-serif font that often looks completely different from the rest of the operating system.
+
+Modern CSS offers a better fallback.
+
+```css
+body {
+  font-family: "Inter", system-ui;
+}
+```
+
+The `system-ui` keyword tells the browser to use the platform's native interface font.
+
+That means:
+
+* San Francisco on macOS and iOS
+* Segoe UI on Windows
+* Roboto on Android
+* Ubuntu on Ubuntu Linux
+
+The result feels much more natural because your application immediately adopts the typography users already see throughout their operating system.
+
+If your custom font loads successfully, nothing changes.
+
+If it doesn't, the fallback still looks intentional.
+
+---
+
+## 3. Center Elements Without Flexbox
+
+Ask most developers how they center an element and the answer is usually one of these.
+
+```css
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+```
+
+Or:
+
+```css
+.container {
+  display: grid;
+  place-items: center;
+}
+```
+
+Both are perfectly valid.
+
+The question is whether you actually need Flexbox or Grid.
+
+If the parent only contains one child, modern CSS provides a surprisingly clean alternative.
+
+```css
+.container {
+  min-height: 300px;
+  align-content: center;
+}
+
+.card {
+  width: 240px;
+  margin-inline: auto;
+}
+```
+
+Here the responsibilities are divided naturally.
+
+The parent handles vertical alignment.
+
+The child centers itself horizontally.
+
+There is no need to introduce Flexbox solely for centering.
+
+This approach reduces unnecessary layout contexts and keeps the CSS easier to reason about.
+
+---
+
+## 4. Simplify Dark Mode with `light-dark()`
+
+Dark mode used to require media queries everywhere.
+
+A typical implementation looked like this.
+
+```css
+:root {
+  --background: white;
+  --text: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1b1b1b;
+    --text: white;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+}
+```
+
+There is nothing fundamentally wrong with this pattern.
+
+It simply becomes repetitive as projects grow.
+
+Modern CSS introduces `light-dark()`.
+
+```css
+:root {
+  color-scheme: light dark;
+
+  --background: light-dark(#ffffff, #1b1b1b);
+  --text: light-dark(#222222, #f4f4f4);
+}
+```
+
+The rest of the stylesheet remains unchanged.
+
+```css
+body {
+  background: var(--background);
+  color: var(--text);
+}
+```
+
+The browser automatically selects the appropriate value based on the user's preferred color scheme.
+
+This significantly reduces duplicated variables and media queries.
+
+The only requirement is enabling support with:
+
+```css
+:root {
+  color-scheme: light dark;
+}
+```
+
+For projects supporting both light and dark themes, `light-dark()` quickly becomes one of the most useful additions to modern CSS.
+
+---
+
+## 5. Stop Using `left` and `right` for Text Alignment
+
+Most websites are built for left-to-right languages.
+
+As a result, developers often write:
+
+```css
+.article {
+  text-align: left;
+}
+```
+
+Or:
+
+```css
+.article {
+  text-align: right;
+}
+```
+
+These values work until the application needs to support Arabic, Hebrew, or another right-to-left language.
+
+Modern CSS solves this elegantly.
+
+```css
+.article {
+  text-align: start;
+}
+```
+
+Or:
+
+```css
+.article {
+  text-align: end;
+}
+```
+
+The browser automatically adapts.
+
+For English:
+
+```text
+start → left
+end   → right
+```
+
+For Arabic:
+
+```text
+start → right
+end   → left
+```
+
+No additional CSS is required.
+
+Logical properties make internationalization almost effortless and eliminate another class of layout bugs.
+
+---
+
+## Why These Features Matter
+
+None of these properties are revolutionary on their own.
+
+Their real value comes from what they replace.
+
+Instead of JavaScript hacks, manual calculations, duplicated media queries, and unnecessary layout containers, developers can rely on native browser behavior.
+
+That leads to:
+
+* Less code
+* Fewer bugs
+* Better accessibility
+* Easier maintenance
+* More predictable layouts
+* Better internationalization support
+
+Modern CSS is no longer just about writing styles.
+
+It increasingly provides high-level layout and UI primitives that previously required frameworks or custom utilities.
+
+The more of these features you adopt, the smaller your stylesheets become.
+
+Ironically, writing modern CSS often means writing much less CSS.
+
+---
+
+## Final Thoughts
+
+CSS has matured into an incredibly capable language.
+
+Properties such as `scrollbar-gutter`, `system-ui`, `margin-inline`, `align-content`, `light-dark()`, and logical alignment values eliminate many patterns that developers relied on for years.
+
+If you're starting a new project today, there is little reason to carry those old workarounds forward.
+
+The browser can now solve many of those problems for you.
+
+The best CSS written in 2026 is often the CSS you no longer have to write.
+
