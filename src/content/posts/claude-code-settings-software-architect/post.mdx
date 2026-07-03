@@ -1,0 +1,772 @@
+---
+title: "10 Claude Code Settings That Made Me a Faster Software Architect"
+heading: "How I Tuned Claude Code Into a Better Engineering Partner"
+desc: "These ten configuration tweaks dramatically improved accuracy, reduced interruptions, and saved hours of engineering time every month."
+subtitle: "Practical Claude Code workflows, configuration files, and guardrails that help experienced developers get consistently better results."
+author: "Anton Liberant"
+date: 2026-07-03
+category: "llm"
+tags: ["Claude", "anthropic"]
+slug: claude-code-settings-software-architect
+permalink: claude-code-settings-software-architect
+image: ./images/claude-code-settings.png
+---
+
+Like most developers, I started by accepting the defaults. They worked well enough, and Claude quickly became part of my daily workflow. But over time I noticed a pattern: the mistakes weren't random. They repeated themselves.
+
+The agent would occasionally forget project conventions, lose important context halfway through a long session, or confidently refactor code that didn't need changing. None of these issues were catastrophic, but together they added up to hours of unnecessary review, corrections, and backtracking every month.
+
+Instead of blaming the model, I started treating Claude Code like any other engineering tool: something that benefits from configuration.
+
+After months of experimentation, I ended up with ten changes that noticeably improved both speed and reliability. Some came from the documentation, while others only emerged after making plenty of mistakes in real projects.
+
+This isn't a beginner's guide to Claude Code.
+
+It's a collection of workflows, configuration patterns, and practical guardrails for developers who already use the tool and want to get more consistent results.
+
+Each section includes configuration examples you can copy directly into your own project.
+
+---
+
+## 1. Keep `CLAUDE.md` Small
+
+One of the biggest mistakes I made during my first few months was turning `CLAUDE.md` into an encyclopedia.
+
+At one point the file had grown to nearly **40,000 characters**.
+
+It contained architecture decisions, coding conventions, testing rules, domain knowledge, onboarding notes, deployment instructions, prompt templates, API contracts, and even project history.
+
+My assumption seemed reasonable:
+
+> More context should produce better answers.
+
+It didn't.
+
+### The Attention Problem
+
+Large language models don't treat every part of a long document equally.
+
+As the file grew, Claude became increasingly likely to overlook information buried in the middle. Important architectural rules that had worked perfectly before suddenly started disappearing from its reasoning.
+
+This wasn't subtle.
+
+I actually tested it by asking Claude to repeat a rule located around line 300 of my own `CLAUDE.md`.
+
+It couldn't find it.
+
+After repeating the experiment several times, the pattern became obvious: the longer the document became, the less reliable its middle sections were during extended conversations.
+
+### My Rule: 8,000 Characters Maximum
+
+Today I treat `CLAUDE.md` as permanent session context.
+
+Only information that should appear in **every single conversation** belongs there:
+
+* technology stack
+* coding principles
+* architectural constraints
+* project-wide rules
+* links to additional documentation
+
+Everything else lives elsewhere.
+
+My project now looks like this:
+
+```text
+.claude/
+├── CLAUDE.md              # Always loaded (<8 KB)
+├── skills/
+│   ├── nestjs.md
+│   ├── migrations.md
+│   ├── review.md
+│   └── testing.md
+└── specs/
+    ├── domain-model.md
+    ├── api-contracts.md
+    └── infrastructure.md
+```
+
+Instead of trying to keep every possible detail loaded all the time, I organize information into focused documents that Claude only reads when they're actually relevant.
+
+Think of it as lazy loading for project knowledge.
+
+### The Results
+
+After restructuring everything:
+
+* `CLAUDE.md` shrank from roughly **40K** to **6K** characters.
+* Session initialization became noticeably cheaper.
+* Token usage dropped by roughly **35%**.
+* Claude stopped "forgetting" rules buried in the middle of giant documents.
+* Responses became more consistent during long development sessions.
+
+This single change produced a bigger improvement than any prompt engineering trick I experimented with.
+
+Sometimes better AI results don't come from writing better prompts.
+
+They come from giving the model less—but better organized—context.
+
+## 2. Three `settings.json` Tweaks That Changed My Workflow
+
+Most developers never open `.claude/settings.json`.
+
+The default configuration is good enough to get started, so it's easy to ignore. But after a month of daily usage, I realized that a few small changes dramatically improved the experience.
+
+These are the three settings that had the biggest impact.
+
+### Allow Safe Commands Automatically
+
+The first change was removing unnecessary confirmation prompts.
+
+Claude spends much of its time reading files, checking Git history, running tests, or searching through the project. None of these operations are destructive, yet by default they often require confirmation.
+
+I allow read-only operations and verification commands to run automatically while keeping anything destructive behind manual approval.
+
+```json id="cl3u5a"
+{
+  "permissions": {
+    "allow": [
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git show:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rm -rf:*)"
+    ]
+  }
+}
+```
+
+The difference was immediate.
+
+Instead of approving fifteen or twenty harmless operations during a session, I now approve only the actions that could actually change something important.
+
+Development feels much more like pair programming than remote controlling an assistant.
+
+---
+
+### Log Every Session Automatically
+
+The second improvement was surprisingly simple.
+
+I added a Stop hook that records every completed Claude session.
+
+```json id="8dw0mh"
+{
+  "hooks": {
+    "Stop": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "echo \"$(date '+%Y-%m-%d %H:%M') session ended\" >> ~/.claude/log.txt"
+      }]
+    }]
+  }
+}
+```
+
+At first I expected this to be little more than curiosity.
+
+Instead, it gave me real data.
+
+I discovered I was spending more than two hours every day working with Claude Code across four or five separate sessions. Before measuring it, I would have guessed less than half that amount.
+
+You can't optimize what you never measure.
+
+---
+
+### Block Obviously Dangerous Commands
+
+Finally, I explicitly deny commands that should never execute accidentally.
+
+```json id="vljrq4"
+{
+  "permissions": {
+    "deny": [
+      "Bash(drop table:*)",
+      "Bash(truncate:*)",
+      "Bash(delete from * where 1:*)"
+    ]
+  }
+}
+```
+
+These rules don't replace good engineering practices.
+
+They simply provide another layer of protection against expensive mistakes.
+
+The entire configuration lives inside the repository, so every developer on the team benefits from the same safety rails instead of relying on individual habits.
+
+---
+
+## 3. Don't Enable `acceptEdits` Everywhere
+
+One of Claude Code's most tempting features is `acceptEdits`.
+
+It removes confirmation dialogs before file modifications, making the agent feel dramatically faster.
+
+The first time you enable it, you'll probably wonder why it isn't always on.
+
+After six months of using it, my answer is simple:
+
+**Because it shouldn't be.**
+
+### Where It Works Well
+
+I enable `acceptEdits` for tasks that are predictable and easy to verify automatically.
+
+For example:
+
+* migrating JavaScript to TypeScript
+* replacing `any` types
+* renaming files or symbols
+* updating imports
+* formatting code
+* generating tests for existing functionality
+* editing documentation
+
+These changes are largely mechanical, and automated tests can quickly confirm whether anything broke.
+
+### Where I Never Use It
+
+I keep manual approval enabled for work that requires judgment.
+
+That includes:
+
+* building new features
+* architectural refactoring
+* authentication
+* payment systems
+* database layers
+* any task where "done" cannot be defined in a few seconds
+
+Those are exactly the situations where I want to review every proposed change before it reaches disk.
+
+### A Lesson I Learned the Hard Way
+
+One day I asked Claude to remove unused imports.
+
+A perfect task for `acceptEdits`.
+
+It completed that job...
+
+...and then decided it would be helpful to refactor several services while it was already editing the files.
+
+Nothing was technically broken.
+
+The refactoring even looked reasonable.
+
+It just wasn't better than the architecture we had intentionally chosen.
+
+What should have been a five-minute cleanup became thirty minutes of code review.
+
+Since then I've followed one simple rule:
+
+> Only enable `acceptEdits` when automated tests can reliably detect mistakes.
+
+If tests can't tell you something went wrong, manual approval is still worth the extra click.
+
+---
+
+## 4. Hooks Are the Most Underrated Claude Code Feature
+
+Hooks are simple shell scripts that run before or after Claude executes tools.
+
+They're easy to overlook, but they've become one of the most valuable parts of my workflow.
+
+These three hooks have earned a permanent place in every project.
+
+### Stop Hook: Build a Session History
+
+Every completed session records the task and timestamp.
+
+```bash id="cf6rwa"
+#!/bin/bash
+
+TASK=$(cat /tmp/claude_current_task 2>/dev/null || echo "no task")
+echo "$(date '+%Y-%m-%d %H:%M') | $TASK" >> ~/.claude/session_history.log
+```
+
+Over time this becomes a surprisingly useful engineering journal.
+
+It shows where your time actually goes instead of where you think it goes.
+
+---
+
+### PreToolUse Hook: Block Dangerous Operations
+
+The second hook intercepts risky commands before they execute.
+
+```bash id="xgrkmt"
+#!/bin/bash
+
+COMMAND="$1"
+
+DANGEROUS="(rm -rf|DROP TABLE|truncate|DELETE FROM.*WHERE 1=1|git reset --hard|kubectl delete)"
+
+if echo "$COMMAND" | grep -qiE "$DANGEROUS"; then
+  echo "BLOCKED: potentially dangerous command" >&2
+  exit 1
+fi
+```
+
+During my first three months, this hook triggered seven times.
+
+Five of those commands eventually turned out to be correct—I simply verified them manually first.
+
+The other two...
+
+I'm very glad never executed automatically.
+
+---
+
+### Notification Hook: Stop Watching the Terminal
+
+The final hook is almost embarrassingly simple.
+
+```bash id="6tvqmd"
+# macOS
+osascript -e 'display notification "Claude Code finished" with title "Claude Code"'
+
+# Linux
+notify-send "Claude Code" "Task completed"
+```
+
+Instead of checking the terminal every thirty seconds, I can work on something else until Claude is finished.
+
+It sounds trivial, but removing constant context switching noticeably improved my productivity.
+
+---
+
+Hooks aren't flashy.
+
+They don't make headlines.
+
+But together they make Claude Code feel much less like an AI chatbot and much more like a configurable engineering assistant that understands the boundaries of your workflow.
+
+## 5. Use Multiple Models as an Architecture Review Panel
+
+One of the most powerful Claude Code workflows isn't a feature—it's a mindset.
+
+Instead of asking one model for the "best" solution, ask multiple models to solve the same problem from different perspectives.
+
+I reserve this approach for decisions that are expensive to reverse:
+
+* application architecture
+* module boundaries
+* database design
+* service contracts
+* event-driven systems
+* large-scale refactoring
+
+Rather than looking for consensus, I'm looking for trade-offs.
+
+Here's a prompt pattern that has worked remarkably well:
+
+```text id="2xq6ga"
+Opus:
+Design this system with reliability and explicit contracts as the top priority.
+
+Sonnet:
+Design the same system with developer velocity and maintainability as the priority.
+
+Haiku:
+Solve the same problem with the smallest possible amount of complexity and abstraction.
+```
+
+The results are rarely identical.
+
+One model usually produces a conservative architecture, another optimizes for speed of implementation, while the third often suggests a surprisingly elegant minimalist solution.
+
+Finally, I start a fourth session and ask Claude to synthesize the strongest ideas from all three proposals while taking my project's constraints into account.
+
+The entire process takes around twenty minutes.
+
+On one recent event-driven refactor, it replaced what would normally have been several hours of team discussion.
+
+If you're working alone or don't always have another senior engineer available for design reviews, this is one of the closest things you'll find to an architectural sounding board.
+
+---
+
+## 6. Match the Agent's Effort to the Task
+
+Not every task deserves the same level of reasoning.
+
+One mistake I made early on was asking Claude to think equally hard about everything.
+
+A typo fix doesn't need a five-minute planning phase.
+
+A database migration absolutely does.
+
+Eventually I formalized four effort levels that I now use consistently.
+
+### Low Effort
+
+Fast implementation.
+
+No planning.
+
+No explanation.
+
+Perfect for:
+
+* utility scripts
+* tiny bug fixes
+* throwaway tooling
+* quick experiments
+
+---
+
+### Medium Effort
+
+A brief implementation plan followed by coding.
+
+Ideal for everyday development work such as standard features and routine refactoring.
+
+---
+
+### High Effort
+
+Detailed planning before writing code.
+
+This is where I place new components, public APIs, and significant architectural changes.
+
+---
+
+### Maximum Effort
+
+This mode deliberately slows the process down.
+
+The workflow becomes:
+
+1. Analyze the problem.
+2. Produce a detailed plan.
+3. Wait for approval.
+4. Implement.
+5. Summarize the outcome.
+
+I reserve this for changes involving:
+
+* authentication
+* core infrastructure
+* schema migrations
+* security
+* production-critical systems
+
+Interestingly, simply deciding whether a task deserves `/effort max` often clarifies how risky it really is.
+
+If maximum effort feels excessive, the task is probably smaller than you initially thought.
+
+If it feels appropriate, you're probably making the right decision by slowing down.
+
+---
+
+## 7. Learn to Recognize Context Rot
+
+Every long Claude Code session eventually reaches a point where quality starts to decline.
+
+I call this **Context Rot**.
+
+The symptoms are surprisingly consistent.
+
+The model begins to:
+
+* suggest ideas you've already rejected;
+* recommend changing code it wrote just a few minutes earlier;
+* ask for context that has already been discussed several times.
+
+At first I assumed pushing forward would eventually get things back on track.
+
+It never did.
+
+Once Context Rot appears, the fastest solution is almost always to start a fresh session.
+
+### My Handoff Template
+
+Instead of copying the entire conversation, I write a short summary.
+
+```markdown id="ux5lmk"
+
+## Context
+
+### Goal
+One sentence describing the objective.
+
+### Completed
+- File A: completed
+- File B: completed
+
+### Already Rejected
+- Approach X
+- Approach Y
+
+### Next Step
+One concrete task.
+```
+
+Preparing this summary usually takes less than five minutes.
+
+Continuing a deteriorating session often wastes thirty.
+
+My personal rule is simple:
+
+> If three consecutive messages fail to move the project forward, I start a new conversation without hesitation.
+
+---
+
+## 8. The Two Corrections Rule
+
+This single rule has probably saved me more time than any prompt engineering trick.
+
+If I have corrected Claude twice on the same issue during one conversation, I stop.
+
+Not because the model is stubborn.
+
+Because the conversation has become inefficient.
+
+Before adopting this rule, I often spent hours repeating variations of the same instruction.
+
+Claude would improve slightly.
+
+I'd clarify again.
+
+It would improve slightly again.
+
+Eventually neither of us was making meaningful progress.
+
+Now I restart instead.
+
+Usually one of three things is wrong.
+
+### 1. The Task Is Too Large
+
+Break it into smaller pieces.
+
+Instead of asking for one complicated solution, solve three simpler problems.
+
+---
+
+### 2. The Expected Result Isn't Clear
+
+Don't describe the outcome.
+
+Show it.
+
+Concrete examples consistently outperform abstract instructions.
+
+---
+
+### 3. Claude Needs a Better Starting Point
+
+Rather than saying:
+
+> "Build a service."
+
+I'll sketch the interface, define the boundaries, or create a rough implementation outline first.
+
+Claude is dramatically more reliable when filling in an existing structure than inventing one from scratch.
+
+Since adopting this rule, I've stopped wasting entire afternoons trying to rescue conversations that should have ended an hour earlier.
+
+Sometimes the smartest prompt isn't another correction.
+
+It's a fresh start.
+
+## 9. Create Different Sandbox Profiles for Different Environments
+
+Not every environment should have the same permissions.
+
+Your local development machine isn't production.
+
+Your staging cluster isn't your production database.
+
+Claude Code includes a built-in safety system, but I found that tailoring permissions for each environment made the workflow both safer and faster.
+
+Instead of maintaining a single configuration, I use multiple profiles.
+
+```text id="mz4kfj"
+.claude/
+├── settings.json
+├── settings.staging.json
+└── settings.local.json
+```
+
+The production profile is intentionally strict.
+
+```json id="d4qt0x"
+{
+  "permissions": {
+    "deny": [
+      "Bash(kubectl delete:*)",
+      "Bash(terraform destroy:*)",
+      "Bash(DROP TABLE:*)"
+    ]
+  }
+}
+```
+
+My local profile is much more permissive.
+
+```json id="g8jv2c"
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose down:*)",
+      "Bash(docker compose up --build:*)",
+      "Bash(npm run db:reset:*)"
+    ]
+  }
+}
+```
+
+Switching between them is trivial.
+
+```bash id="epbwh3"
+CLAUDE_CONFIG=.claude/settings.local.json claude code
+```
+
+Or even better, create shell aliases:
+
+```bash id="kn5kys"
+alias cc-local='CLAUDE_CONFIG=.claude/settings.local.json claude code'
+alias cc='claude code'
+```
+
+The result is exactly what you'd expect.
+
+Local development feels much faster because Docker operations, local databases, and development scripts no longer require constant confirmation.
+
+Production remains appropriately cautious.
+
+The important lesson isn't about these exact permission rules.
+
+It's about recognizing that different environments deserve different levels of trust.
+
+---
+
+## 10. Use Skills Instead of One Giant Context File
+
+The final improvement ties everything together.
+
+Earlier we shrank `CLAUDE.md` to a small permanent context.
+
+The question then becomes:
+
+Where does everything else go?
+
+The answer is **Skills**.
+
+Skills are Markdown files stored under `.claude/skills/` that Claude loads only when they're needed.
+
+Instead of forcing every session to remember every project convention, you load specialized knowledge on demand.
+
+Here's what my directory looks like today:
+
+```text id="hf43cq"
+.claude/skills/
+├── nestjs-conventions.md
+├── clean-architecture.md
+├── typescript-strict.md
+├── git-workflow.md
+├── testing-strategy.md
+├── migration-playbook.md
+└── code-review-checklist.md
+```
+
+Each file focuses on one specific area.
+
+For example:
+
+* building a NestJS module → load `nestjs-conventions`
+* architecture refactoring → load `clean-architecture`
+* reviewing a pull request → load `code-review-checklist`
+* writing migrations → load `migration-playbook`
+
+Each skill contains practical rules instead of generic documentation.
+
+A simplified example might look like this:
+
+```markdown id="uq2knr"
+
+## NestJS Conventions
+
+### Module Structure
+
+domain/
+application/
+infrastructure/
+presentation/
+
+### Rules
+
+- Business validation never uses class-validator.
+- Repository pattern is mandatory.
+- Lifecycle hooks belong only in the Application layer.
+```
+
+The difference is subtle but important.
+
+Claude only receives the information that actually matters for the current task.
+
+That reduces noise, lowers token usage, and dramatically decreases the chance of mixing unrelated project rules together.
+
+After switching to Skills:
+
+* `CLAUDE.md` shrank from around **40,000** characters to roughly **6,000**.
+* Session initialization became significantly cheaper.
+* Token consumption dropped by approximately **30–40%**.
+* Claude stopped confusing conventions from unrelated parts of the project.
+* Long conversations became much more consistent.
+
+Think of Skills as modular documentation for AI.
+
+The same design principles that make software easier to maintain also make AI context easier to manage.
+
+---
+
+## Final Thoughts
+
+After six months of daily development with Claude Code, one conclusion stands out above everything else:
+
+**Claude Code isn't just an AI coding assistant. It's a configurable engineering platform.**
+
+The default experience is already good enough to be genuinely useful.
+
+But "good enough" leaves a surprising amount of productivity on the table.
+
+Most of the improvements in this article didn't come from writing better prompts.
+
+They came from designing a better workflow.
+
+Smaller context files.
+
+Modular documentation.
+
+Clear safety boundaries.
+
+Purpose-built hooks.
+
+Environment-specific permissions.
+
+Explicit effort levels.
+
+None of these changes are particularly complicated.
+
+Yet together they transformed Claude Code from a helpful autocomplete tool into something that feels much closer to a reliable engineering teammate.
+
+That's probably the biggest lesson I've learned.
+
+The quality of your AI assistant isn't determined only by the model you're using.
+
+It's determined just as much by the system you build around it.
+
+Invest time in that system, and the gains compound with every session that follows.
