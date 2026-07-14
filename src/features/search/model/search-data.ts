@@ -1,4 +1,5 @@
 import { getCollection } from 'astro:content';
+
 import type { SearchableContent } from './types.js';
 
 export function transformCollectionToSearchable(
@@ -15,15 +16,14 @@ export function transformCollectionToSearchable(
       basePath = '/friday';
     }
     let href = `${basePath}/${item.data?.permalink || item.slug}/`;
-    
+
     return {
       id: item.id || `${category}-${index}`,
       title: item.data?.title || 'Untitled',
       href,
       category,
-      excerpt: item.data?.description || '',
+      excerpt: item.data?.desc || item.data?.description || '',
       tags: item.data?.tags || [],
-      data: item.data
     };
   });
 }
@@ -34,14 +34,14 @@ export async function getAllSearchData(): Promise<SearchableContent[]> {
       getCollection('posts').catch(() => []),
       getCollection('howtos').catch(() => []),
       getCollection('snippets').catch(() => []),
-      getCollection('fridays').catch(() => [])
+      getCollection('fridays').catch(() => []),
     ]);
 
     const searchData = [
       ...transformCollectionToSearchable(posts, 'posts'),
       ...transformCollectionToSearchable(howtos, 'howtos'),
       ...transformCollectionToSearchable(snippets, 'snippets'),
-      ...transformCollectionToSearchable(fridays, 'fridays')
+      ...transformCollectionToSearchable(fridays, 'fridays'),
     ];
 
     return searchData;
@@ -52,22 +52,25 @@ export async function getAllSearchData(): Promise<SearchableContent[]> {
 }
 
 export function filterByCategory(
-  data: SearchableContent[], 
+  data: SearchableContent[],
   category: string
 ): SearchableContent[] {
   return data.filter(item => item.category === category);
 }
 
-export function getPopularContent(data: SearchableContent[], limit = 5): SearchableContent[] {
+export function getPopularContent(
+  data: SearchableContent[],
+  limit = 5
+): SearchableContent[] {
   const categories = ['posts', 'howtos', 'snippets', 'fridays'];
   const popular: SearchableContent[] = [];
-  
+
   categories.forEach(category => {
     const categoryItems = filterByCategory(data, category);
     if (categoryItems.length > 0) {
       popular.push(categoryItems[0]);
     }
   });
-  
+
   return popular.slice(0, limit);
 }

@@ -12,7 +12,8 @@ const { placeholder = 'Search...', className } = Astro.props;
     type='button'
     class='search-trigger'
     id='searchTrigger'
-    aria-label='Open search'>
+    aria-label='Open search'
+  >
     <svg
       class='search-trigger__icon'
       width='16'
@@ -20,20 +21,15 @@ const { placeholder = 'Search...', className } = Astro.props;
       viewBox='0 0 24 24'
       fill='none'
       stroke='currentColor'
-      stroke-width='2'>
-      <circle
-        cx='11'
-        cy='11'
-        r='8'
-      ></circle>
+      stroke-width='2'
+    >
+      <circle cx='11' cy='11' r='8'></circle>
       <path d='m21 21-4.35-4.35'></path>
     </svg>
 
     <span class='search-trigger__text'>{placeholder}</span>
 
-    <kbd
-      class='search-trigger__shortcut'
-      aria-label='Press Ctrl+K to search'
+    <kbd class='search-trigger__shortcut' aria-label='Press Ctrl+K to search'
       >Ctrl+K</kbd
     >
   </button>
@@ -44,11 +40,9 @@ const { placeholder = 'Search...', className } = Astro.props;
     id='searchModal'
     role='dialog'
     aria-labelledby='search-title'
-    aria-modal='true'>
-    <div
-      class='search-modal__overlay'
-      id='searchOverlay'
-    ></div>
+    aria-modal='true'
+  >
+    <div class='search-modal__overlay' id='searchOverlay'></div>
 
     <div class='search-modal__dialog'>
       <div class='search-modal__header'>
@@ -60,12 +54,9 @@ const { placeholder = 'Search...', className } = Astro.props;
             viewBox='0 0 24 24'
             fill='none'
             stroke='currentColor'
-            stroke-width='2'>
-            <circle
-              cx='11'
-              cy='11'
-              r='8'
-            ></circle>
+            stroke-width='2'
+          >
+            <circle cx='11' cy='11' r='8'></circle>
             <path d='m21 21-4.35-4.35'></path>
           </svg>
           <input
@@ -83,33 +74,29 @@ const { placeholder = 'Search...', className } = Astro.props;
           type='button'
           class='search-close'
           id='searchClose'
-          aria-label='Close search'>
+          aria-label='Close search'
+        >
           <svg
             width='16'
             height='16'
             viewBox='0 0 24 24'
             fill='none'
             stroke='currentColor'
-            stroke-width='2'>
+            stroke-width='2'
+          >
             <path d='m18 6-12 12'></path>
             <path d='m6 6 12 12'></path>
           </svg>
         </button>
       </div>
 
-      <div
-        class='search-content'
-        id='searchContent'>
+      <div class='search-content' id='searchContent'>
         <!-- Default state -->
-        <div
-          class='search-default'
-          id='searchDefault'>
+        <div class='search-default' id='searchDefault'>
           <div class='quick-access'>
             <h3 class='section-title'>Quick Access</h3>
             <div class='quick-links'>
-              <a
-                href='/'
-                class='quick-link'>
+              <a href='/' class='quick-link'>
                 <div class='quick-link-icon posts-icon'>
                   <svg
                     width='16'
@@ -117,20 +104,22 @@ const { placeholder = 'Search...', className } = Astro.props;
                     viewBox='0 0 24 24'
                     fill='none'
                     stroke='currentColor'
-                    stroke-width='2'>
-                    <path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'></path>
+                    stroke-width='2'
+                  >
+                    <path
+                      d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'
+                    ></path>
                     <polyline points='14,2 14,8 20,8'></polyline>
                   </svg>
                 </div>
                 <div class='quick-link-content'>
                   <span class='quick-link-title'>All Posts</span>
-                  <span class='quick-link-desc'>Browse our latest articles</span>
+                  <span class='quick-link-desc'>Browse our latest articles</span
+                  >
                 </div>
               </a>
 
-              <a
-                href='/howto/'
-                class='quick-link'>
+              <a href='/howto/' class='quick-link'>
                 <div class='quick-link-icon howtos-icon'>
                   <svg
                     width='16'
@@ -138,7 +127,8 @@ const { placeholder = 'Search...', className } = Astro.props;
                     viewBox='0 0 24 24'
                     fill='none'
                     stroke='currentColor'
-                    stroke-width='2'>
+                    stroke-width='2'
+                  >
                     <path
                       d='M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z'
                     ></path>
@@ -150,9 +140,7 @@ const { placeholder = 'Search...', className } = Astro.props;
                 </div>
               </a>
 
-              <a
-                href='/snippets/'
-                class='quick-link'>
+              <a href='/snippets/' class='quick-link'>
                 <div class='quick-link-icon snippets-icon'>
                   <svg
                     width='16'
@@ -160,7 +148,8 @@ const { placeholder = 'Search...', className } = Astro.props;
                     viewBox='0 0 24 24'
                     fill='none'
                     stroke='currentColor'
-                    stroke-width='2'>
+                    stroke-width='2'
+                  >
                     <path d='M8 4v16m8-16v16M4 8h16M4 16h16'></path>
                   </svg>
                 </div>
@@ -170,9 +159,7 @@ const { placeholder = 'Search...', className } = Astro.props;
                 </div>
               </a>
 
-              <a
-                href='/friday/'
-                class='quick-link'>
+              <a href='/friday/' class='quick-link'>
                 <div class='quick-link-icon fridays-icon'>
                   <svg
                     width='16'
@@ -180,7 +167,8 @@ const { placeholder = 'Search...', className } = Astro.props;
                     viewBox='0 0 24 24'
                     fill='none'
                     stroke='currentColor'
-                    stroke-width='2'>
+                    stroke-width='2'
+                  >
                     <path
                       d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
                     ></path>
@@ -196,16 +184,12 @@ const { placeholder = 'Search...', className } = Astro.props;
         </div>
 
         <!-- Search results -->
-        <div
-          class='search-results hidden'
-          id='searchResults'>
+        <div class='search-results hidden' id='searchResults'>
           <div id='searchResultsContent'></div>
         </div>
 
         <!-- No results -->
-        <div
-          class='search-empty hidden'
-          id='searchEmpty'>
+        <div class='search-empty hidden' id='searchEmpty'>
           <div class='empty-state'>
             <svg
               width='48'
@@ -213,12 +197,9 @@ const { placeholder = 'Search...', className } = Astro.props;
               viewBox='0 0 24 24'
               fill='none'
               stroke='currentColor'
-              stroke-width='1.5'>
-              <circle
-                cx='11'
-                cy='11'
-                r='8'
-              ></circle>
+              stroke-width='1.5'
+            >
+              <circle cx='11' cy='11' r='8'></circle>
               <path d='m21 21-4.35-4.35'></path>
             </svg>
             <h3>No results found</h3>
@@ -308,8 +289,10 @@ const { placeholder = 'Search...', className } = Astro.props;
 
     /* transform: scale(0.95); */
 
-    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.2s;
-      /* transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); */
+    transition:
+      opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0s 0.2s;
+    /* transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); */
 
     will-change: opacity;
   }
@@ -321,7 +304,9 @@ const { placeholder = 'Search...', className } = Astro.props;
     padding-top: 10vh;
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
+    transition:
+      opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0s 0s;
   }
 
   .search-modal__overlay {
@@ -345,7 +330,6 @@ const { placeholder = 'Search...', className } = Astro.props;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     overflow: hidden;
     /* transform: scale(0.95); */
-
   }
 
   /* .search-modal.open .search-modal__dialog {
@@ -642,7 +626,7 @@ const { placeholder = 'Search...', className } = Astro.props;
     margin: 0;
   }
 
-  :global(.search-highlight) {
+  .search-highlight {
     background: hsl(48 96% 53% / 0.25);
     color: hsl(25 95% 53%);
     padding: 1px 2px;
@@ -680,11 +664,11 @@ const { placeholder = 'Search...', className } = Astro.props;
     display: none !important;
   }
 
-  :global(.dark) .search-modal__dialog {
+  .dark .search-modal__dialog {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
 
-  :global(.dark) .search-highlight {
+  .dark .search-highlight {
     background: hsl(48 96% 53% / 0.3);
     color: hsl(48 96% 53%);
   }
@@ -767,58 +751,63 @@ const { placeholder = 'Search...', className } = Astro.props;
 </style>
 
 <script is:inline>
-  let searchControllerPromise = null
+  let searchControllerPromise = null;
 
   const ensureSearchController = async () => {
     if (window.__searchController) {
-      return window.__searchController
+      return window.__searchController;
     }
 
     if (!searchControllerPromise) {
       searchControllerPromise = import('/scripts/search-client.js')
         .then(module => module.initSearchController())
         .finally(() => {
-          searchControllerPromise = null
-        })
+          searchControllerPromise = null;
+        });
     }
 
-    return searchControllerPromise
-  }
+    return searchControllerPromise;
+  };
 
   const openSearchWithLazyInit = async () => {
-    const controller = await ensureSearchController()
-    controller.openModal()
-  }
+    const controller = await ensureSearchController();
+    controller.openModal();
+  };
 
   document.addEventListener('DOMContentLoaded', () => {
-    const trigger = document.getElementById('searchTrigger')
+    const trigger = document.getElementById('searchTrigger');
 
     trigger?.addEventListener(
       'click',
       async event => {
-        event.preventDefault()
-        await openSearchWithLazyInit()
+        event.preventDefault();
+        await openSearchWithLazyInit();
       },
       { once: true }
-    )
+    );
 
     const initialKeyboardHandler = async event => {
       const isCmdOrCtrlK =
-        event.key === 'k' && (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey
+        event.key === 'k' &&
+        (event.metaKey || event.ctrlKey) &&
+        !event.shiftKey &&
+        !event.altKey;
       const isSlash =
-        event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey
+        event.key === '/' &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.shiftKey;
 
       if (!isCmdOrCtrlK && !isSlash) {
-        return
+        return;
       }
 
-      event.preventDefault()
-      document.removeEventListener('keydown', initialKeyboardHandler)
-      await openSearchWithLazyInit()
-    }
+      event.preventDefault();
+      document.removeEventListener('keydown', initialKeyboardHandler);
+      await openSearchWithLazyInit();
+    };
 
-    document.addEventListener('keydown', initialKeyboardHandler)
-  })
+    document.addEventListener('keydown', initialKeyboardHandler);
+  });
 </script>
-
-

@@ -28,10 +28,11 @@ const { title, description, headingTwo, class: className = '' } = Astro.props;
   }
 
   .heading-block h1 {
-    font-family: 'PT Serif', serif;
+    font-family: Georgia, 'Times New Roman', serif;
     font-size: 1.5rem;
     line-height: 2.25rem /* 36px */;
     margin: 0;
+    text-rendering: optimizeSpeed;
   }
 
   @media (min-width: 768px) {

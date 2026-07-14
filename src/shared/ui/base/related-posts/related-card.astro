@@ -14,9 +14,7 @@ const { post } = Astro.props;
 
 <div class='card'>
   <div class='card-content'>
-    <a
-      href={`/${post.data.permalink}/`}
-      class='card-title'>
+    <a href={`/${post.data.permalink}/`} class='card-title'>
       {post.data.title}
     </a>
   </div>
@@ -40,7 +38,7 @@ const { post } = Astro.props;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.12);
   }
 
-  :global(.dark) .card:hover {
+  :global(.dark .card:hover) {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
   }
 

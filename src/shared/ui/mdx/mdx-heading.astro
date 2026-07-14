@@ -26,10 +26,7 @@ const textContent = slotContent.replace(/<[^>]*>/g, '').trim();
 const headingId = id || slugify(textContent);
 ---
 
-<Tag
-  id={headingId}
-  class={`heading heading-${Tag}`}
-  {...props}>
+<Tag id={headingId} class={`heading heading-${Tag}`} {...props}>
   <slot />
 </Tag>
 
@@ -66,7 +63,7 @@ const headingId = id || slugify(textContent);
     font-size: 1rem;
   }
 
-  :global(.dark) .heading {
+  :global(.dark .heading) {
     color: red !important;
   }
 </style>

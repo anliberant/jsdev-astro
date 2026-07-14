@@ -18,7 +18,8 @@ const currentPath = Astro.url.pathname;
             'nav-link',
             { 'nav-link--active': isActiveLink(navLink.path, currentPath) },
             { 'nav-link--new': navLink.name === 'Tools' },
-          ]}>
+          ]}
+        >
           {navLink.name}
         </a>
       ))
@@ -28,7 +29,8 @@ const currentPath = Astro.url.pathname;
   <button
     class='mobile-menu-btn'
     aria-label='Toggle navigation menu'
-    data-mobile-menu-trigger>
+    data-mobile-menu-trigger
+  >
     <svg
       class='menu-icon'
       width='24'
@@ -36,41 +38,19 @@ const currentPath = Astro.url.pathname;
       viewBox='0 0 24 24'
       stroke='currentColor'
       fill='none'
-      stroke-width='2'>
-      <line
-        x1='4'
-        y1='6'
-        x2='20'
-        y2='6'
-      ></line>
-      <line
-        x1='4'
-        y1='12'
-        x2='20'
-        y2='12'
-      ></line>
-      <line
-        x1='4'
-        y1='18'
-        x2='20'
-        y2='18'
-      ></line>
+      stroke-width='2'
+    >
+      <line x1='4' y1='6' x2='20' y2='6'></line>
+      <line x1='4' y1='12' x2='20' y2='12'></line>
+      <line x1='4' y1='18' x2='20' y2='18'></line>
     </svg>
   </button>
 
-  <div
-    class='mobile-sheet-overlay'
-    data-mobile-overlay
-  ></div>
+  <div class='mobile-sheet-overlay' data-mobile-overlay></div>
 
-  <aside
-    class='mobile-sheet'
-    data-mobile-sheet>
+  <aside class='mobile-sheet' data-mobile-sheet>
     <div class='mobile-sheet__header'>
-      <a
-        href='/'
-        aria-label='Home'
-        class='mobile-sheet__logo'>
+      <a href='/' aria-label='Home' class='mobile-sheet__logo'>
         <Logo />
       </a>
     </div>
@@ -78,7 +58,8 @@ const currentPath = Astro.url.pathname;
     <nav class='mobile-nav'>
       <a
         href='/categories/'
-        class={`mobile-nav__link ${isActiveLink('/categories/', currentPath) ? 'mobile-nav__link--active' : ''}`}>
+        class={`mobile-nav__link ${isActiveLink('/categories/', currentPath) ? 'mobile-nav__link--active' : ''}`}
+      >
         Categories
       </a>
       {
@@ -87,9 +68,15 @@ const currentPath = Astro.url.pathname;
             href={`${navLink.path}`}
             class:list={[
               'mobile-nav__link',
-              { 'mobile-nav__link--active': isActiveLink(navLink.path, currentPath) },
+              {
+                'mobile-nav__link--active': isActiveLink(
+                  navLink.path,
+                  currentPath
+                ),
+              },
               { 'mobile-nav--new': navLink.name === 'AI Directory' },
-            ]}>
+            ]}
+          >
             {navLink.name}
           </a>
         ))
@@ -107,26 +94,18 @@ const currentPath = Astro.url.pathname;
   <button
     class='mobile-close-btn'
     aria-label='Close navigation menu'
-    data-mobile-close>
+    data-mobile-close
+  >
     <svg
       width='24'
       height='24'
       viewBox='0 0 24 24'
       stroke='currentColor'
       fill='none'
-      stroke-width='2'>
-      <line
-        x1='6'
-        y1='6'
-        x2='18'
-        y2='18'
-      ></line>
-      <line
-        x1='6'
-        y1='18'
-        x2='18'
-        y2='6'
-      ></line>
+      stroke-width='2'
+    >
+      <line x1='6' y1='6' x2='18' y2='18'></line>
+      <line x1='6' y1='18' x2='18' y2='6'></line>
     </svg>
   </button>
 </div>
@@ -332,11 +311,11 @@ const currentPath = Astro.url.pathname;
     }
   }
 
-  :global(.dark) .mobile-sheet {
+  :global(.dark .mobile-sheet) {
     box-shadow: 2px 0 20px rgba(0, 0, 0, 0.5);
   }
 
-  :global(.dark) .mobile-close-btn {
+  :global(.dark .mobile-close-btn) {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
@@ -412,7 +391,8 @@ const currentPath = Astro.url.pathname;
     }
 
     init() {
-      if (!this.trigger || !this.overlay || !this.sheet || !this.closeBtn) return;
+      if (!this.trigger || !this.overlay || !this.sheet || !this.closeBtn)
+        return;
 
       this.trigger.addEventListener('click', () => this.open());
       this.closeBtn.addEventListener('click', () => this.close());
@@ -437,7 +417,8 @@ const currentPath = Astro.url.pathname;
 
       document.body.style.overflow = 'hidden';
 
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
       document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
 

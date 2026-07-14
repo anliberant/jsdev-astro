@@ -97,11 +97,11 @@ const { name, heading, description, metaDescription } = getCategoryInfo(
   }
 
   /* Dark mode styles */
-  :global(.dark) .category-card {
+  :global(.dark .category-card) {
     background-color: #2f4858;
   }
 
-  :global(.dark) .category-card::before {
+  :global(.dark .category-card::before) {
     background: linear-gradient(to right, #cbd5e1, #64748b);
   }
 </style>

@@ -21,7 +21,9 @@ const {
   homeLabel = 'Home',
 } = Astro.props;
 
-const breadcrumbItems = showHome ? [{ label: homeLabel, href: '/' }, ...items] : items;
+const breadcrumbItems = showHome
+  ? [{ label: homeLabel, href: '/' }, ...items]
+  : items;
 
 const finalItems = breadcrumbItems.map((item, index) => ({
   ...item,
@@ -29,29 +31,25 @@ const finalItems = breadcrumbItems.map((item, index) => ({
 }));
 ---
 
-<nav
-  class={`breadcrumbs ${className}`}
-  aria-label='Breadcrumb'>
+<nav class={`breadcrumbs ${className}`} aria-label='Breadcrumb'>
   <ol class='breadcrumb-list'>
     {
       finalItems.map((item, index) => (
         <li class='breadcrumb-item'>
-          {item.href && !item.isActive ?
-            <a
-              href={item.href}
-              class='breadcrumb-link'>
+          {item.href && !item.isActive ? (
+            <a href={item.href} class='breadcrumb-link'>
               {item.label}
             </a>
-          : <span
+          ) : (
+            <span
               class='breadcrumb-current'
-              aria-current={item.isActive ? 'page' : undefined}>
+              aria-current={item.isActive ? 'page' : undefined}
+            >
               {item.label}
             </span>
-          }
+          )}
           {index < finalItems.length - 1 && (
-            <span
-              class='breadcrumb-separator'
-              aria-hidden='true'>
+            <span class='breadcrumb-separator' aria-hidden='true'>
               {separator}
             </span>
           )}
@@ -137,7 +135,7 @@ const finalItems = breadcrumbItems.map((item, index) => ({
     font-size: 1rem;
   }
 
-  :global(.dark) .breadcrumb-link:hover {
+  :global(.dark .breadcrumb-link:hover) {
     background: hsl(var(--muted) / 0.3);
   }
 </style>

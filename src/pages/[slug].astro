@@ -1,6 +1,6 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import { CollectionEntry, getCollection, render } from 'astro:content';
 
 import { siteConfig } from '@/app/config/site';
@@ -109,12 +109,17 @@ const breadcrumbJsonLd = createBreadcrumbJsonLd(breadcrumbItems, articleUrl);
       </aside>
 
       <figure class='post-image-wrapper'>
-        <Image
+        <Picture
           src={post.data.image}
           alt={post.data.title}
           title={post.data.title}
           width={800}
-          quality={68}
+          formats={['avif', 'webp']}
+          quality={66}
+          loading='eager'
+          decoding='sync'
+          fetchpriority='high'
+          sizes='(max-width: 900px) 100vw, 800px'
           class='post-image'
         />
       </figure>

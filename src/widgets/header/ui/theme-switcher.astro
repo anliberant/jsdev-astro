@@ -11,13 +11,19 @@ const isDark = `(window.matchMedia("(prefers-color-scheme: dark)").matches || lo
 
 <style>
   .theme-switcher {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 20px;
     cursor: pointer;
   }
   .icon {
     display: none;
   }
 
-  :global(.dark) .sun {
+  :global(.dark .sun) {
     display: block;
   }
 
@@ -29,7 +35,7 @@ const isDark = `(window.matchMedia("(prefers-color-scheme: dark)").matches || lo
     fill: white;
     stroke: white;
   }
-  :global(.dark) .moon {
+  :global(.dark .moon) {
     display: none;
   }
 

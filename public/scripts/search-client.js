@@ -174,19 +174,53 @@ export function initSearchController() {
       this.searchStore = new SearchStore();
       this.keyboardManager = new KeyboardManager();
       this.debouncedSearch = debounce(this.handleSearch.bind(this), 300);
+      this.searchDataPromise = null;
+      this.hasSearchData = false;
       this.init();
     }
 
     init() {
-      this.loadSearchData();
       this.bindEvents();
       this.setupKeyboardShortcuts();
     }
 
-    loadSearchData() {
+    async loadSearchData() {
+      if (this.hasSearchData) {
+        return;
+      }
+
       if (window.searchData) {
         this.searchStore.updateData(window.searchData);
+        this.hasSearchData = true;
+        return;
       }
+
+      if (!this.searchDataPromise) {
+        this.searchDataPromise = fetch('/search-data.json', {
+          headers: { accept: 'application/json' },
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`Search data request failed: ${response.status}`);
+            }
+
+            return response.json();
+          })
+          .then(data => {
+            this.searchStore.updateData(Array.isArray(data) ? data : []);
+            this.hasSearchData = true;
+          })
+          .catch(error => {
+            console.error('Failed to load search data:', error);
+            this.searchStore.updateData([]);
+            this.hasSearchData = true;
+          })
+          .finally(() => {
+            this.searchDataPromise = null;
+          });
+      }
+
+      await this.searchDataPromise;
     }
 
     bindEvents() {
@@ -214,6 +248,7 @@ export function initSearchController() {
       const input = document.getElementById('searchInput');
       modal?.classList.add('open');
       document.body.style.overflow = 'hidden';
+      this.loadSearchData();
       setTimeout(() => input?.focus(), 100);
     }
 
@@ -228,12 +263,14 @@ export function initSearchController() {
       }
     }
 
-    handleSearch(query) {
+    async handleSearch(query) {
       const startTime = performance.now();
       if (!query || query.length < 2) {
         this.showDefaultState();
         return;
       }
+
+      await this.loadSearchData();
 
       const results = this.searchStore.search(query);
       const groupedResults = this.searchStore.groupByCategory(results);

@@ -8,23 +8,13 @@ import Button from './button.astro';
   method='post'
   data-netlify='true'
   data-netlify-honeypot='bot-field'
-  netlify>
-  <input
-    type='hidden'
-    name='bot-field'
-  />
-  <input
-    type='hidden'
-    name='form-name'
-    value='contact'
-  />
+  netlify
+>
+  <input type='hidden' name='bot-field' />
+  <input type='hidden' name='form-name' value='contact' />
 
   <div class='form-group'>
-    <label
-      for='name'
-      class='form-label'
-      >Name</label
-    >
+    <label for='name' class='form-label'>Name</label>
     <input
       type='text'
       id='name'
@@ -37,11 +27,7 @@ import Button from './button.astro';
   </div>
 
   <div class='form-group'>
-    <label
-      for='email'
-      class='form-label'
-      >Email</label
-    >
+    <label for='email' class='form-label'>Email</label>
     <input
       type='email'
       id='email'
@@ -53,11 +39,7 @@ import Button from './button.astro';
   </div>
 
   <div class='form-group'>
-    <label
-      for='phone'
-      class='form-label'
-      >Phone</label
-    >
+    <label for='phone' class='form-label'>Phone</label>
     <input
       type='tel'
       id='phone'
@@ -68,11 +50,7 @@ import Button from './button.astro';
   </div>
 
   <div class='form-group'>
-    <label
-      for='message'
-      class='form-label'
-      >Message</label
-    >
+    <label for='message' class='form-label'>Message</label>
     <textarea
       id='message'
       name='message'
@@ -80,14 +58,9 @@ import Button from './button.astro';
       placeholder='Enter your message'
       rows='5'
       required
-      minlength='20'
-    ></textarea>
+      minlength='20'></textarea>
   </div>
-  <Button
-    type='submit'
-    class='form-button'
-    >Submit</Button
-  >
+  <Button type='submit' class='form-button'>Submit</Button>
 </form>
 
 <script>
@@ -95,7 +68,9 @@ import Button from './button.astro';
     const form = document.querySelector('.contact-form') as HTMLFormElement;
     const nameInput = document.getElementById('name') as HTMLInputElement;
     const emailInput = document.getElementById('email') as HTMLInputElement;
-    const messageInput = document.getElementById('message') as HTMLTextAreaElement;
+    const messageInput = document.getElementById(
+      'message'
+    ) as HTMLTextAreaElement;
 
     if (form) {
       form.addEventListener('submit', function (e) {
@@ -114,7 +89,10 @@ import Button from './button.astro';
         }
 
         if (!messageInput.value || messageInput.value.length < 20) {
-          showError(messageInput, 'Message must be at least 20 characters long');
+          showError(
+            messageInput,
+            'Message must be at least 20 characters long'
+          );
           isValid = false;
         }
 
@@ -242,25 +220,25 @@ import Button from './button.astro';
     margin-top: 0.25rem;
   }
 
-  :global(.dark) .form-label {
+  :global(.dark .form-label) {
     color: #f3f4f6;
   }
 
-  :global(.dark) .form-input,
-  :global(.dark) .form-textarea {
+  :global(.dark .form-input),
+  :global(.dark .form-textarea) {
     background-color: #1f2937;
     border-color: #374151;
     color: #f3f4f6;
   }
 
-  :global(.dark) .form-input:focus,
-  :global(.dark) .form-textarea:focus {
+  :global(.dark .form-input:focus),
+  :global(.dark .form-textarea:focus) {
     border-color: #60a5fa;
     box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
   }
 
-  :global(.dark) .form-input::placeholder,
-  :global(.dark) .form-textarea::placeholder {
+  :global(.dark .form-input::placeholder),
+  :global(.dark .form-textarea::placeholder) {
     color: #6b7280;
   }
 

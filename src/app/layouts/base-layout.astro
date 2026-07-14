@@ -26,45 +26,28 @@ const {
 } = Astro.props;
 
 const fullTitle = title || siteConfig.title;
-const shouldUseGeneratedOG = ['howto', 'snippets'].includes(contentType.toLowerCase());
+const shouldUseGeneratedOG = ['howto', 'snippets'].includes(
+  contentType.toLowerCase()
+);
 
-const fullImageUrl =
-  shouldUseGeneratedOG ? `${siteConfig.siteUrl}/og/${slug}.png`
-  : typeof image === 'string' && image.trim() !== '' ?
-    image.startsWith('http') ?
-      image
-    : `${siteConfig.siteUrl}${image}`
-  : siteConfig.image;
+const fullImageUrl = shouldUseGeneratedOG
+  ? `${siteConfig.siteUrl}/og/${slug}.png`
+  : typeof image === 'string' && image.trim() !== ''
+    ? image.startsWith('http')
+      ? image
+      : `${siteConfig.siteUrl}${image}`
+    : siteConfig.image;
 ---
 
 <!doctype html>
-<html
-  lang='en'
-  data-theme='light'>
+<html lang='en' data-theme='light'>
   <head>
     <meta charset='UTF-8' />
-    <meta
-      name='description'
-      content={description}
-    />
-    <meta
-      name='viewport'
-      content='width=device-width, initial-scale=1.0'
-    />
-    <link
-      rel='preconnect'
-      href='https://fonts.googleapis.com'
-    />
-    <link
-      rel='preconnect'
-      href='https://fonts.gstatic.com'
-      crossorigin
-    />
-    <link
-      rel='icon'
-      type='image/png'
-      href='/icon.png'
-    />
+    <meta name='description' content={description} />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <link rel='preconnect' href='https://fonts.googleapis.com' />
+    <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
+    <link rel='icon' type='image/png' href='/icon.png' />
     <title>{fullTitle}</title>
 
     <!-- Fonts: display=optional prevents font-swap CLS -->
@@ -88,66 +71,27 @@ const fullImageUrl =
     />
 
     <!-- SEO Meta Tags -->
-    <meta
-      property='og:title'
-      content={fullTitle}
-    />
-    <meta
-      property='og:description'
-      content={description}
-    />
-    <meta
-      property='og:image'
-      content={fullImageUrl}
-    />
-    <meta
-      property='og:url'
-      content={Astro.url}
-    />
-    <meta
-      property='og:type'
-      content={type}
-    />
-    <meta
-      property='og:site_name'
-      content={siteConfig.shortTitle}
-    />
+    <meta property='og:title' content={fullTitle} />
+    <meta property='og:description' content={description} />
+    <meta property='og:image' content={fullImageUrl} />
+    <meta property='og:url' content={Astro.url} />
+    <meta property='og:type' content={type} />
+    <meta property='og:site_name' content={siteConfig.shortTitle} />
 
     <!-- Twitter Card -->
-    <meta
-      name='twitter:card'
-      content='summary_large_image'
-    />
-    <meta
-      name='twitter:title'
-      content={fullTitle}
-    />
-    <meta
-      name='twitter:description'
-      content={description}
-    />
-    <meta
-      name='twitter:image'
-      content={fullImageUrl}
-    />
+    <meta name='twitter:card' content='summary_large_image' />
+    <meta name='twitter:title' content={fullTitle} />
+    <meta name='twitter:description' content={description} />
+    <meta name='twitter:image' content={fullImageUrl} />
     {
       siteConfig.twitterUsername && (
-        <meta
-          name='twitter:site'
-          content={siteConfig.twitterUsername}
-        />
+        <meta name='twitter:site' content={siteConfig.twitterUsername} />
       )
     }
 
     <!-- Canonical URL (default, can be overridden) -->
-    <link
-      rel='canonical'
-      href={Astro.url}
-    />
-    <link
-      rel='sitemap'
-      href='/sitemap-index.xml'
-    />
+    <link rel='canonical' href={Astro.url} />
+    <link rel='sitemap' href='/sitemap-index.xml' />
     <slot name='head' />
   </head>
   <body>
@@ -186,9 +130,12 @@ const fullImageUrl =
           window.gtag('js', new Date());
           window.gtag('config', GA_MEASUREMENT_ID);
 
-          appendScript(`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`, {
-            async: '',
-          });
+          appendScript(
+            `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`,
+            {
+              async: '',
+            }
+          );
 
           appendScript('https://cloud.umami.is/script.js', {
             defer: '',
@@ -202,21 +149,32 @@ const fullImageUrl =
           window.removeEventListener('keydown', onFirstInteraction);
           window.removeEventListener('scroll', onFirstInteraction);
           window.removeEventListener('touchstart', onFirstInteraction);
+          document.removeEventListener('visibilitychange', onPageHidden);
         };
 
-        window.addEventListener('pointerdown', onFirstInteraction, { passive: true });
+        const onPageHidden = () => {
+          if (document.visibilityState === 'hidden') {
+            loadAnalytics();
+            document.removeEventListener('visibilitychange', onPageHidden);
+          }
+        };
+
+        window.addEventListener('pointerdown', onFirstInteraction, {
+          passive: true,
+        });
         window.addEventListener('keydown', onFirstInteraction);
-        window.addEventListener('scroll', onFirstInteraction, { passive: true });
-        window.addEventListener('touchstart', onFirstInteraction, { passive: true });
+        window.addEventListener('scroll', onFirstInteraction, {
+          passive: true,
+        });
+        window.addEventListener('touchstart', onFirstInteraction, {
+          passive: true,
+        });
+        document.addEventListener('visibilitychange', onPageHidden);
 
         window.addEventListener(
           'load',
           () => {
-            if ('requestIdleCallback' in window) {
-              window.requestIdleCallback(loadAnalytics, { timeout: 8000 });
-            } else {
-              setTimeout(loadAnalytics, 8000);
-            }
+            setTimeout(loadAnalytics, 30000);
           },
           { once: true }
         );

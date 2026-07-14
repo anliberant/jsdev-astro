@@ -39,9 +39,7 @@ const highlightedHtml = await codeToHtml(rawCode, {
 });
 ---
 
-<div
-  class='code-block'
-  data-raw-code={rawCode}>
+<div class='code-block' data-raw-code={rawCode}>
   <div class='code-header'>
     <div class='language-badge'>{language}</div>
     {file && <div class='file-name'>{file}</div>}
@@ -51,9 +49,7 @@ const highlightedHtml = await codeToHtml(rawCode, {
       <span class='copied-text'>Copied!</span>
     </button>
   </div>
-  <div
-    class='code-content'
-    set:html={highlightedHtml}>
+  <div class='code-content' set:html={highlightedHtml}>
     <!-- Shiki-highlighted HTML will be injected here -->
   </div>
 </div>
@@ -146,7 +142,7 @@ const highlightedHtml = await codeToHtml(rawCode, {
   .copy-button:hover {
     background-color: var(--primary-hover, rgba(15, 23, 42, 0.9));
   }
-  :global(.dark) .copy-button:hover {
+  :global(.dark .copy-button:hover) {
     color: white;
   }
 
@@ -183,6 +179,10 @@ const highlightedHtml = await codeToHtml(rawCode, {
     line-height: 1.5;
     flex: 1;
     overflow: visible;
+  }
+
+  .code-content :global(.shiki span[style*='#E36209']) {
+    color: #9a3412 !important;
   }
 
   /* This is the magic rule that swaps the colors in dark mode */
