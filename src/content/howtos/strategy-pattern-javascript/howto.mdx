@@ -1,0 +1,413 @@
+---
+title: Howto Replace if-Else with the Strategy Pattern
+slug: strategy-pattern-javascript
+heading: How to Use the Strategy Pattern in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/strategy-pattern-javascript
+date: 2026-07-14
+author: anton liberant
+category: javascript
+type: howto
+tags: ['design-patterns', 'architecture']
+desc: Learn how to replace complex if-else chains with the Strategy Pattern in JavaScript using configurable validation, state mapping, and environment-specific logic.
+subtitle: 'The Strategy Pattern replaces branching logic with reusable, composable behaviors that are easier to extend and test.'
+---
+
+## How to Use the Strategy Pattern in JavaScript
+
+Every frontend developer has written a function that started with one `if` statement and slowly turned into twenty.
+
+It usually begins with something harmless.
+
+You need to validate an email.
+
+Then someone asks for phone number validation.
+
+Next comes passwords, usernames, ZIP codes, country-specific rules, feature flags, and suddenly one function contains the business logic for half the application.
+
+The code still works, but every new requirement makes it harder to read, test, and maintain.
+
+The Strategy Pattern offers a much cleaner solution.
+
+Instead of expanding one giant conditional statement, you split each behavior into an independent strategy and choose the correct one at runtime.
+
+---
+
+## The Problem with Large if-Else Chains
+
+Imagine you're building a user registration form.
+
+A common implementation looks something like this.
+
+```ts
+function validate(value, type) {
+  if (type === "email") {
+    return /\S+@\S+\.\S+/.test(value)
+      ? ""
+      : "Invalid email address";
+  }
+
+  if (type === "phone") {
+    return /^\+?[1-9]\d{7,14}$/.test(value)
+      ? ""
+      : "Invalid phone number";
+  }
+
+  if (type === "password") {
+    return value.length >= 8
+      ? ""
+      : "Password is too short";
+  }
+
+  return "";
+}
+```
+
+The implementation works.
+
+The problem is scalability.
+
+Every new validation rule requires modifying the same function.
+
+Soon dozens of unrelated conditions become tightly coupled, making even small changes risky.
+
+---
+
+## What Is the Strategy Pattern?
+
+The Strategy Pattern encapsulates multiple algorithms behind a common interface.
+
+Instead of asking a function to decide *how* something should happen, you provide the behavior you want to execute.
+
+Rather than writing:
+
+```text
+if this...
+else if that...
+else...
+```
+
+you write:
+
+```text
+Select strategy
+↓
+
+Execute strategy
+```
+
+Each strategy becomes a small, reusable function with a single responsibility.
+
+---
+
+## Refactoring Validation
+
+Instead of putting every rule inside one function, separate them into individual validators.
+
+```ts
+const validators = {
+  required: value =>
+    value.trim()
+      ? ""
+      : "This field is required",
+
+  email: value =>
+    /^\S+@\S+\.\S+$/.test(value)
+      ? ""
+      : "Invalid email address",
+
+  phone: value =>
+    /^\+?[1-9]\d{7,14}$/.test(value)
+      ? ""
+      : "Invalid phone number",
+
+  minLength: length =>
+    value =>
+      value.length >= length
+        ? ""
+        : `Minimum ${length} characters`,
+};
+```
+
+Now the validation engine becomes extremely small.
+
+```ts
+function validate(value, rules) {
+
+  for (const rule of rules) {
+
+    const strategy =
+      typeof rule === "function"
+        ? rule
+        : validators[rule];
+
+    const error = strategy(value);
+
+    if (error) {
+      return error;
+    }
+  }
+
+  return "";
+}
+```
+
+Using it is straightforward.
+
+```ts
+validate(
+  "john@example.com",
+  ["required", "email"]
+);
+
+validate(
+  "abc",
+  [
+    "required",
+    validators.minLength(8),
+  ]
+);
+```
+
+Notice what changed.
+
+Adding a new validation rule never requires touching the validation engine.
+
+You simply register another strategy.
+
+This follows one of the core principles of good software design:
+
+**Open for extension, closed for modification.**
+
+---
+
+## React Integration
+
+This approach works naturally with modern React form libraries.
+
+For example:
+
+```tsx
+<Form.Item
+  name="email"
+  rules={[
+    {
+      validator: (_, value) =>
+        validators.email(value),
+    },
+  ]}
+>
+  <Input />
+</Form.Item>
+```
+
+The form doesn't care how email validation works.
+
+It simply executes the selected strategy.
+
+The same validators can also be reused in APIs, custom hooks, or server-side validation.
+
+---
+
+## Strategy Pattern for Status Mapping
+
+Validation isn't the only place where developers overuse conditional logic.
+
+Status mapping is another common example.
+
+Many applications receive numeric status codes from an API.
+
+Instead of writing multiple conditional statements throughout the UI, create a configuration object.
+
+```ts
+const ORDER_STATUS = {
+
+  pending: {
+    label: "Pending",
+    color: "orange",
+  },
+
+  paid: {
+    label: "Paid",
+    color: "green",
+  },
+
+  cancelled: {
+    label: "Cancelled",
+    color: "gray",
+  },
+};
+```
+
+Now rendering becomes much simpler.
+
+```tsx
+const status =
+  ORDER_STATUS[order.status];
+
+<Tag color={status.color}>
+  {status.label}
+</Tag>
+```
+
+Adding a new status becomes a single-line change.
+
+No rendering logic needs to be modified.
+
+This pattern also works well for:
+
+* user roles
+* notification types
+* feature flags
+* payment states
+* API response codes
+
+---
+
+## Environment-Specific Behavior
+
+Different environments often require completely different implementations.
+
+During development you may want verbose console logging.
+
+Production applications usually send errors to monitoring services instead.
+
+Instead of adding environment checks everywhere, provide different strategies.
+
+```ts
+// devLogger.ts
+
+export const logger = {
+  error: console.error,
+  warn: console.warn,
+};
+```
+
+```ts
+// productionLogger.ts
+
+export const logger = {
+  error(message, extra) {
+    Sentry.captureMessage(
+      message,
+      { extra }
+    );
+  },
+
+  warn() {},
+};
+```
+
+Then load the appropriate implementation.
+
+```ts
+const logger = await import(
+  `./loggers/${import.meta.env.MODE}.ts`
+);
+
+logger.error("Something failed");
+```
+
+Modern bundlers can tree-shake unused implementations, keeping production bundles smaller.
+
+---
+
+## Other Great Use Cases
+
+Once you start looking for them, Strategy Pattern opportunities appear everywhere.
+
+Formatting values:
+
+```text
+Date formatter
+Currency formatter
+File size formatter
+Percentage formatter
+```
+
+Authentication:
+
+```text
+Password login
+OAuth
+Magic links
+Passkeys
+```
+
+Payments:
+
+```text
+Stripe
+PayPal
+Square
+Adyen
+```
+
+Search algorithms:
+
+```text
+Exact match
+Fuzzy search
+Full-text search
+Semantic search
+```
+
+Instead of branching through multiple implementations, choose the appropriate strategy.
+
+---
+
+## Benefits
+
+Using the Strategy Pattern provides several advantages.
+
+**Smaller functions**
+
+Each strategy has one responsibility.
+
+**Better testing**
+
+Strategies can be tested independently.
+
+**Easy extension**
+
+Adding new behavior doesn't require modifying existing logic.
+
+**Reusable code**
+
+The same strategies can be shared across multiple features.
+
+**Cleaner architecture**
+
+Business logic becomes separated from decision-making logic.
+
+---
+
+## When Not to Use It
+
+Not every `if` statement should become a strategy.
+
+If you only have two simple conditions that are unlikely to grow, introducing extra abstraction may make the code harder to understand.
+
+The Strategy Pattern shines when:
+
+* new behaviors are added regularly
+* multiple implementations share the same interface
+* business rules change frequently
+* different environments require different behavior
+
+Otherwise, a simple conditional may be perfectly acceptable.
+
+---
+
+## Final Thoughts
+
+The Strategy Pattern is one of the most practical design patterns in frontend development because it solves a problem every growing application eventually faces.
+
+Conditional logic scales poorly.
+
+Strategies scale naturally.
+
+Instead of expanding one function every time requirements change, encapsulate each behavior inside its own strategy and let configuration decide which one should run.
+
+The result is cleaner code, easier testing, and a codebase that remains maintainable as your application grows.

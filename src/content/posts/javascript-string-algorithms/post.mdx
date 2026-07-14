@@ -1,0 +1,408 @@
+---
+title: 'JavaScript String Algorithms Every Developer Should Know'
+slug: javascript-string-algorithms
+heading: 'Mastering JavaScript String Algorithms'
+permalink: javascript-string-algorithms
+image: ./images/javascript-string-algorithms.png
+date: 2026-07-14
+author: anton liberant
+category: javascript
+type: post
+tags: ['algorithms', 'strings', 'interview', 'data-structures']
+desc: 'Learn common JavaScript string interview questions: reversing strings, detecting palindromes, using two pointers, and optimizing practical solutions.'
+subtitle: 'String problems look simple, but they teach some of the most important concepts in JavaScript, from immutable data and built-in APIs to algorithmic thinking and space optimization.'
+---
+
+String algorithms are among the most common topics in JavaScript interviews.
+
+At first glance, they seem straightforward. Reverse a string, check whether it's a palindrome, or remove a character. None of these problems look particularly difficult.
+
+However, these exercises teach much more than simple string manipulation. They reveal how well you understand JavaScript fundamentals, immutable data structures, algorithmic thinking, and time and space complexity. 
+
+In this article, we'll explore three classic interview questions:
+
+* Reversing a string
+* Checking whether a string is a palindrome
+* Determining whether removing at most one character can produce a palindrome
+
+Along the way, you'll also learn why the two-pointer technique is one of the most valuable patterns in algorithm design.
+
+---
+
+## Reversing a String
+
+The classic problem is simple.
+
+Given:
+
+```js
+"abc"
+```
+
+Return:
+
+```js
+"cba"
+```
+
+Unlike arrays, JavaScript strings don't have a built-in `reverse()` method.
+
+This doesn't work:
+
+```js
+const str = "abc";
+
+// TypeError
+str.reverse();
+```
+
+Instead, the standard solution converts the string into an array.
+
+```js
+const str = "abc";
+
+const reversed = str
+  .split("")
+  .reverse()
+  .join("");
+
+console.log(reversed); // "cba"
+```
+
+The process consists of three steps:
+
+1. `split("")` converts the string into an array.
+2. `reverse()` reverses the array.
+3. `join("")` combines everything back into a string.
+
+This solution is clean, easy to read, and runs in **O(n)** time.
+
+Its space complexity is also **O(n)** because a new array is created. 
+
+---
+
+## Why Does a String Have `.length`?
+
+JavaScript strings are primitive values.
+
+```js
+typeof "hello";
+// "string"
+```
+
+Yet they still behave like objects.
+
+```js
+const str = "hello";
+
+console.log(str.length);
+console.log(str[0]);
+```
+
+How is that possible?
+
+Whenever you access a property or method on a primitive string, JavaScript temporarily wraps it in a `String` object behind the scenes.
+
+Conceptually, it's similar to this:
+
+```js
+const temp = new String("hello");
+
+temp.length;
+```
+
+The wrapper object exists only for the duration of the operation before being discarded.
+
+This behavior lets primitive values expose useful methods while remaining lightweight. 
+
+---
+
+## Understanding `call()` and `this`
+
+Another interview favorite involves `Function.prototype.call()`.
+
+Consider this example.
+
+```js
+const person = {
+  name: "Alice",
+
+  say() {
+    console.log(this.name);
+  },
+};
+
+const anotherPerson = {
+  name: "Bob",
+};
+
+person.say();
+
+person.say.call(anotherPerson);
+```
+
+The first call prints:
+
+```text
+Alice
+```
+
+The second prints:
+
+```text
+Bob
+```
+
+`call()` doesn't copy the function.
+
+It simply changes what `this` refers to during execution.
+
+This same mechanism powers one of JavaScript's most reliable type-checking techniques.
+
+```js
+Object.prototype.toString.call([]);
+```
+
+Result:
+
+```text
+[object Array]
+```
+
+Because `toString()` executes with a different `this`, it can inspect many different object types. 
+
+---
+
+## Checking for a Palindrome
+
+A palindrome reads the same in both directions.
+
+Examples include:
+
+```text
+level
+racecar
+abba
+```
+
+The simplest solution reverses the string and compares it with the original.
+
+```js
+function isPalindrome(str) {
+  return str ===
+    str
+      .split("")
+      .reverse()
+      .join("");
+}
+```
+
+Although easy to understand, this approach creates another string and requires extra memory. 
+
+---
+
+## The Better Solution: Two Pointers
+
+A palindrome is symmetrical.
+
+Instead of reversing the entire string, compare characters from both ends.
+
+```js
+function isPalindrome(str) {
+  let left = 0;
+  let right = str.length - 1;
+
+  while (left < right) {
+    if (str[left] !== str[right]) {
+      return false;
+    }
+
+    left++;
+    right--;
+  }
+
+  return true;
+}
+```
+
+This solution still runs in **O(n)** time.
+
+However, it only uses **O(1)** extra memory because no additional arrays or strings are created. 
+
+The two-pointer technique appears in countless interview questions involving:
+
+* symmetric data
+* sorted arrays
+* substrings
+* intervals
+* partitioning
+
+Learning it early pays off repeatedly.
+
+---
+
+## Remove One Character to Form a Palindrome
+
+Now let's make the problem slightly harder.
+
+Given a string, determine whether removing **at most one character** makes it a palindrome.
+
+Examples:
+
+```text
+"aba"  → true
+
+"abca" → true
+
+"abc"  → false
+```
+
+The two-pointer approach still works.
+
+Whenever the left and right characters match, continue toward the center.
+
+If they don't match, only two possibilities remain.
+
+Skip the left character.
+
+Or skip the right one.
+
+```js
+function validPalindrome(str) {
+
+  function isPalindrome(left, right) {
+
+    while (left < right) {
+
+      if (str[left] !== str[right]) {
+        return false;
+      }
+
+      left++;
+      right--;
+    }
+
+    return true;
+  }
+
+  let left = 0;
+  let right = str.length - 1;
+
+  while (left < right) {
+
+    if (str[left] !== str[right]) {
+
+      return (
+        isPalindrome(left + 1, right) ||
+        isPalindrome(left, right - 1)
+      );
+    }
+
+    left++;
+    right--;
+  }
+
+  return true;
+}
+```
+
+The helper function lets us verify both possibilities without duplicating code. 
+
+---
+
+## Why Only Two Cases?
+
+Suppose these two characters don't match.
+
+```text
+... x ........ y ...
+    ↑          ↑
+   left      right
+```
+
+If removing one character can solve the problem, then one of these mismatched characters must disappear.
+
+Removing any other character won't fix the current mismatch.
+
+Therefore, we only need to test:
+
+```js
+isPalindrome(left + 1, right);
+```
+
+or
+
+```js
+isPalindrome(left, right - 1);
+```
+
+Nothing else needs to be checked.
+
+That's why the algorithm remains linear instead of becoming quadratic. 
+
+---
+
+## Complexity Analysis
+
+### Reverse String
+
+* Time: **O(n)**
+* Space: **O(n)**
+
+### Palindrome (Two Pointers)
+
+* Time: **O(n)**
+* Space: **O(1)**
+
+### Remove One Character
+
+Although an additional palindrome check may occur after finding a mismatch, every character is still visited only a constant number of times.
+
+The complexity remains:
+
+* Time: **O(n)**
+* Space: **O(1)** 
+
+---
+
+## Good Habits When Solving String Problems
+
+As you practice more interview questions, several patterns emerge.
+
+**Remember that strings are immutable.**
+
+Most operations create new strings rather than modifying existing ones.
+
+**Prefer two pointers whenever possible.**
+
+They're often faster and require less memory than repeatedly creating arrays or substrings.
+
+**Extract reusable logic.**
+
+Small helper functions usually make algorithms easier to understand and easier to test.
+
+**Always think about edge cases.**
+
+Test your solution with:
+
+* empty strings
+* single-character strings
+* already-valid inputs
+* repeated characters
+* very long strings
+
+These scenarios often reveal hidden bugs. 
+
+---
+
+## Final Thoughts
+
+String algorithms are much more than interview exercises.
+
+They teach fundamental JavaScript concepts like immutable strings, wrapper objects, built-in APIs, function binding, and algorithm optimization.
+
+More importantly, they encourage a problem-solving mindset.
+
+Rather than reaching for the first solution that works, learn to identify patterns, simplify the problem, and choose algorithms that minimize both time and memory usage.
+
+Master these classic questions, and you'll be well prepared not only for coding interviews, but also for writing cleaner, more efficient JavaScript in everyday projects. 

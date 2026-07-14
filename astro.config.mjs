@@ -1,4 +1,5 @@
 import mdx from '@astrojs/mdx';
+import { unified } from '@astrojs/markdown-remark';
 import netlify from '@astrojs/netlify';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
@@ -15,7 +16,9 @@ export default defineConfig({
   adapter: netlify(),
 
   markdown: {
-    remarkPlugins: [remarkReadingTime],
+    processor: unified({
+      remarkPlugins: [remarkReadingTime],
+    }),
     shikiConfig: {
       theme: 'dracula',
       themes: {
@@ -37,4 +40,3 @@ export default defineConfig({
     },
   },
 });
-
