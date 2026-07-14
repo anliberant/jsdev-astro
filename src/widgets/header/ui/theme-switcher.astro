@@ -23,7 +23,7 @@ const isDark = `(window.matchMedia("(prefers-color-scheme: dark)").matches || lo
     display: none;
   }
 
-  :global(.dark .sun) {
+  :global(html.dark) .sun {
     display: block;
   }
 
@@ -35,7 +35,7 @@ const isDark = `(window.matchMedia("(prefers-color-scheme: dark)").matches || lo
     fill: white;
     stroke: white;
   }
-  :global(.dark .moon) {
+  :global(html.dark) .moon {
     display: none;
   }
 

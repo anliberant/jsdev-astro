@@ -1,0 +1,350 @@
+---
+title: 'How to Protect HTML Content from Being Copied'
+slug: protect-from-copying
+heading: Protecting HTML Content Against Copying
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/protect-from-copying
+date: 2026-07-14
+author: anton liberant
+category: javascript
+type: howto
+tags: ['clipboard', 'security']
+desc: "Learn what actually works to discourage copying content in HTML. Explore CSS, JavaScript, Canvas, clipboard APIs, font obfuscation."
+subtitle: "Every anti-copy technique has a bypass. The real goal isn't making copying impossible, but making it expensive enough that most users won't bother."
+---
+
+Every few months, someone asks the same question:
+
+> "How can I stop users from copying my website?"
+
+The short answer is simple.
+
+You can't.
+
+If a browser can display your content, a user can eventually copy it.
+
+The only thing frontend code can do is increase the effort required.
+
+Whether that's enough depends on who you're trying to stop. Casual visitors, curious developers, and professional scrapers all require very different levels of protection.
+
+Understanding this difference is the key to choosing the right approach.
+
+---
+
+## The Fundamental Problem
+
+Every anti-copy solution starts with the same limitation.
+
+Before a browser can display text, it has to download and render that content.
+
+Once users can see it, they have multiple ways to extract it.
+
+They can:
+
+* copy the text
+* inspect the HTML
+* capture a screenshot
+* run OCR on the screenshot
+* use browser extensions
+* automate the browser with scripts
+
+As long as people can read the content, there will always be a way to obtain it.
+
+That means anti-copy techniques don't answer the question:
+
+> **Can users copy this?**
+
+Instead they answer:
+
+> **How difficult is it to copy?**
+
+---
+
+## Level 1: CSS Protection
+
+The simplest approach disables text selection.
+
+```css
+.protected {
+  user-select: none;
+  -webkit-user-select: none;
+}
+```
+
+Users can't highlight text, which also prevents the usual **Ctrl+C** workflow.
+
+This is probably the most common anti-copy technique on the web.
+
+### How easy is it to bypass?
+
+Very easy.
+
+Open DevTools and remove the CSS rule.
+
+Or simply execute:
+
+```js
+document.querySelector(".protected")
+  .style.userSelect = "text";
+```
+
+Text selection immediately works again.
+
+---
+
+## Disable the Context Menu
+
+Another popular trick blocks the right-click menu.
+
+```js
+document.addEventListener(
+  "contextmenu",
+  event => event.preventDefault()
+);
+```
+
+Without the context menu, users lose quick access to **Copy**.
+
+Unfortunately, they also lose:
+
+* Translate
+* Inspect
+* Dictionary lookup
+* Accessibility tools
+* Browser extensions
+
+The downside often outweighs the protection.
+
+Most browsers also allow users to disable websites from blocking the context menu.
+
+---
+
+## Level 2: JavaScript Event Blocking
+
+Instead of preventing selection, JavaScript can intercept the copy operation itself.
+
+```js
+document.addEventListener(
+  "copy",
+  event => {
+    event.preventDefault();
+  }
+);
+```
+
+Pressing **Ctrl+C** no longer places anything on the clipboard.
+
+This is slightly stronger than CSS.
+
+It is still easy to bypass.
+
+A developer can register another event listener before yours or simply disable JavaScript entirely.
+
+---
+
+## Invisible Overlay Layers
+
+Some websites place a transparent element above the content.
+
+```css
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 999;
+}
+```
+
+Users interact with the overlay instead of the text underneath.
+
+Again, DevTools defeats the technique almost instantly.
+
+Deleting the overlay or changing `pointer-events` restores normal interaction.
+
+---
+
+## Level 3: Allow Copying, but Modify It
+
+Instead of fighting the user, many large websites take a different approach.
+
+They allow copying.
+
+They simply modify what gets copied.
+
+```js
+document.addEventListener(
+  "copy",
+  event => {
+
+    event.preventDefault();
+
+    const text =
+      window.getSelection().toString();
+
+    event.clipboardData.setData(
+      "text/plain",
+      text +
+      "\n\nSource: example.com"
+    );
+  }
+);
+```
+
+Users still get their selected text.
+
+However, every paste now includes a source attribution.
+
+This strategy has become popular because it preserves usability while encouraging proper attribution.
+
+It's far less frustrating than disabling copying altogether.
+
+---
+
+## Level 4: Don't Store Text as Text
+
+Eventually developers realize that every DOM node can be inspected.
+
+The next idea is simple.
+
+Don't place text inside the DOM.
+
+---
+
+### Render Everything with Canvas
+
+Instead of HTML, draw text directly onto a `<canvas>`.
+
+```js
+const ctx =
+  canvas.getContext("2d");
+
+ctx.font = "16px sans-serif";
+
+ctx.fillText(
+  "Confidential",
+  20,
+  40
+);
+```
+
+Users see readable content.
+
+The HTML contains almost nothing.
+
+Traditional scrapers receive an empty page.
+
+There are serious trade-offs.
+
+Search engines cannot index the content.
+
+Screen readers lose access.
+
+Rendering becomes more expensive.
+
+Responsive layouts become harder.
+
+Attackers can still use OCR or intercept drawing commands.
+
+---
+
+## Font Obfuscation
+
+One of the strongest frontend techniques uses custom fonts.
+
+The HTML stores meaningless characters.
+
+The font maps those characters to completely different glyphs.
+
+For example:
+
+```text
+HTML:
+xk#2m
+
+Displayed:
+hello
+```
+
+When users copy the text, they receive the original encoded characters instead of what appeared on screen.
+
+This technique is commonly used by premium document platforms and online reading services.
+
+It is significantly harder to bypass.
+
+However, it still isn't impossible.
+
+A determined attacker can analyze the font mapping or simply rely on OCR.
+
+---
+
+## Choose Protection Based on the Threat
+
+Not every website needs military-grade protection.
+
+Think about who you're trying to stop.
+
+### Casual visitors
+
+Simple CSS and basic JavaScript usually discourage accidental copying.
+
+### Developers
+
+Browser DevTools bypass nearly every client-side protection within seconds.
+
+### Professional scrapers
+
+Automation tools combined with OCR can eventually extract almost any visible content.
+
+The difference is time.
+
+The stronger your protection, the longer extraction takes.
+
+---
+
+## Don't Sacrifice User Experience
+
+Many anti-copy techniques create bigger problems than they solve.
+
+Blocking selection prevents users from quoting your articles.
+
+Disabling right-click breaks browser features people rely on every day.
+
+Rendering everything inside Canvas hurts SEO and accessibility.
+
+Before adding protection, ask yourself an important question.
+
+Are you trying to stop content theft, or are you making your own website harder to use?
+
+In many cases, adding attribution to copied text provides a better balance than preventing copying entirely.
+
+---
+
+## Which Technique Should You Choose?
+
+For most websites, a layered approach works best.
+
+Start with lightweight protection.
+
+Add clipboard attribution.
+
+Avoid techniques that harm accessibility or search indexing unless your content genuinely requires stronger protection.
+
+If you're publishing premium documents or paid educational material, Canvas rendering or font obfuscation may provide additional resistance.
+
+Just remember that these techniques delay copying.
+
+They don't eliminate it.
+
+---
+
+## Final Thoughts
+
+The perfect anti-copy solution doesn't exist.
+
+Every piece of content displayed in a browser can eventually be extracted.
+
+The goal is not to build an unbreakable system.
+
+The goal is to raise the cost of copying high enough that casual users stop trying while legitimate visitors continue enjoying a good experience.
+
+That's the balance every frontend developer should aim for.
