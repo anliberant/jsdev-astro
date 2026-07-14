@@ -1,0 +1,398 @@
+---
+title: "Observer vs Publish-Subscribe: What's the Difference?"
+slug: observer-vs-publish-subscribe-pattern
+heading: Observer vs Publish-Subscribe in Modern Frontend Architecture
+image: ./images/observer-vs-publish-subscribe-pattern.png
+permalink: observer-vs-publish-subscribe-pattern
+date: 2026-07-14
+author: anton liberant
+category: javascript
+type: post
+tags: ['design-patterns', 'architecture', 'event-driven']
+desc: Learn the real difference between the Observer and Publish-Subscribe patterns. Compare implementations, understand trade-offs, and see practical examples.
+subtitle: "Two patterns that look almost identical at first glance solve very different architectural problems."
+---
+
+If you've been building frontend applications for a while, you've probably encountered both the **Observer** pattern and the **Publish-Subscribe (Pub/Sub)** pattern.
+
+They often look almost identical. Both involve listeners, callbacks, and notifications. Both allow multiple parts of an application to react when something changes.
+
+Because of these similarities, developers frequently use the names interchangeably. In reality, they solve different problems and lead to different application architectures.
+
+Understanding where they differ helps you design applications that are easier to scale, test, and maintain.
+
+Let's compare both patterns using the same real-world example.
+
+---
+
+## A Common Frontend Scenario
+
+Imagine you're building a real-time stock dashboard.
+
+A WebSocket connection continuously receives market updates.
+
+Several independent parts of the application need those updates:
+
+* a price chart
+* a watchlist
+* a notification panel
+* an activity log
+
+The WebSocket should not care who consumes the data. It simply receives new market information.
+
+There are two common ways to distribute those updates.
+
+---
+
+## Option 1: The Observer Pattern
+
+With the Observer pattern, the subject directly keeps track of every observer.
+
+Whenever new data arrives, it loops through every registered observer and calls them one by one.
+
+```ts
+class Subject {
+  #observers = new Set();
+
+  subscribe(observer) {
+    this.#observers.add(observer);
+    return () => this.#observers.delete(observer);
+  }
+
+  notify(payload) {
+    this.#observers.forEach(observer => observer(payload));
+  }
+}
+```
+
+Usage is straightforward.
+
+```ts
+const ticker = new Subject();
+
+const drawChart = (tick) => {};
+const flashRow = (tick) => {};
+const logTick = (tick) => {};
+
+ticker.subscribe(drawChart);
+ticker.subscribe(flashRow);
+ticker.subscribe(logTick);
+
+socket.addEventListener("message", event => {
+  ticker.notify(JSON.parse(event.data));
+});
+```
+
+Here, the `ticker` object knows every consumer.
+
+Whenever new market data arrives, it actively notifies each observer.
+
+### Characteristics
+
+* The subject owns the list of observers.
+* Every observer receives every update.
+* Consumers are directly connected to the data source.
+* Adding a new observer only requires calling `subscribe()`.
+
+This creates a clear one-to-many relationship between a single source of truth and its consumers.
+
+---
+
+## Option 2: Publish-Subscribe
+
+The Publish-Subscribe pattern introduces an intermediary.
+
+Instead of sending updates directly to consumers, publishers emit events into an event bus.
+
+Subscribers simply listen for the events they care about.
+
+```ts
+class EventBus {
+  #events = {};
+
+  on(event, callback) {
+    (this.#events[event] ||= []).push(callback);
+    return () => this.off(event, callback);
+  }
+
+  off(event, callback) {
+    this.#events[event] =
+      this.#events[event]?.filter(cb => cb !== callback);
+  }
+
+  emit(event, ...args) {
+    this.#events[event]?.forEach(cb => cb(...args));
+  }
+}
+```
+
+Using the event bus looks very similar.
+
+```ts
+const bus = new EventBus();
+
+bus.on("tick", drawChart);
+bus.on("tick", flashRow);
+bus.on("tick", logTick);
+
+socket.addEventListener("message", event => {
+  bus.emit("tick", JSON.parse(event.data));
+});
+```
+
+The important difference is that the WebSocket never communicates with the consumers directly.
+
+It only emits an event.
+
+The event bus decides who receives it.
+
+---
+
+## The Key Difference
+
+At first glance, both implementations produce the same result.
+
+The architecture, however, is completely different.
+
+### Observer
+
+```
+WebSocket
+      │
+      ▼
+   Subject
+      │
+ ┌────┼────┐
+ ▼    ▼    ▼
+Chart List Logger
+```
+
+The subject knows every observer.
+
+Communication is direct.
+
+---
+
+## Publish-Subscribe
+
+```
+WebSocket
+      │
+      ▼
+  Event Bus
+      │
+ ┌────┼────┐
+ ▼    ▼    ▼
+Chart List Logger
+```
+
+Neither the publisher nor the subscribers know about each other.
+
+The event bus sits between them.
+
+This extra layer creates much looser coupling.
+
+---
+
+## Where You'll Find the Observer Pattern
+
+Many frontend APIs are built around Observer semantics.
+
+### React State Subscriptions
+
+React doesn't implement the classic Observer pattern internally in the same way as Vue, but the pattern appears throughout the React ecosystem.
+
+When a component subscribes to an external store, it automatically re-renders whenever the relevant state changes. Libraries like Redux, Zustand, MobX, Jotai, and React's own `useSyncExternalStore` API all rely on this idea.
+
+Each store maintains a list of subscribers. When the state changes, it notifies those subscribers, allowing React to update only the components that depend on the changed data.
+
+The relationship is still the same: a single source of state owns its subscribers and informs them whenever its data changes.
+---
+
+### Browser Observer APIs
+
+Modern browsers also provide several observer-based APIs.
+
+Examples include:
+
+* `IntersectionObserver`
+* `MutationObserver`
+* `ResizeObserver`
+
+Each watches a specific target and triggers callbacks whenever that target changes.
+
+Again, the observed object directly manages its observers.
+
+---
+
+### State Management Libraries
+
+Several state management solutions also follow Observer principles.
+
+Examples include:
+
+* MobX
+* Signals
+* SolidJS reactivity
+* Angular Signals
+
+All of them maintain explicit relationships between observable state and dependent computations.
+
+---
+
+## Where Publish-Subscribe Shines
+
+Pub/Sub becomes much more useful when modules should remain independent.
+
+A publisher shouldn't know who is listening.
+
+A subscriber shouldn't know who produced the event.
+
+---
+
+## Cross-Component Communication
+
+Lightweight event buses are common in both React and Vue applications.
+
+One popular choice is **mitt**.
+
+```ts
+import mitt from "mitt";
+
+type Events = {
+  "user-login": {
+    userId: string;
+    name: string;
+  };
+};
+
+export const eventBus = mitt<Events>();
+```
+
+Publishing an event:
+
+```ts
+eventBus.emit("user-login", {
+  userId: user.id,
+  name: user.name,
+});
+```
+
+Listening for it:
+
+```tsx
+useEffect(() => {
+  const handler = data => setUser(data);
+
+  eventBus.on("user-login", handler);
+
+  return () => {
+    eventBus.off("user-login", handler);
+  };
+}, []);
+```
+
+The login component doesn't know who reacts to the event.
+
+The navigation bar doesn't know where the event originated.
+
+Both only communicate through the event bus.
+
+---
+
+### Micro-Frontends
+
+Micro-frontend architectures frequently use Pub/Sub.
+
+Independent applications often communicate through shared event buses rather than importing each other's code directly.
+
+This keeps teams independent while allowing applications to exchange information.
+
+---
+
+### Custom Events
+
+The browser's own `CustomEvent` system is another example of Publish-Subscribe.
+
+Components dispatch events.
+
+Other components listen for them.
+
+Neither side depends on the other.
+
+---
+
+## A Common Mistake: Forgetting to Unsubscribe
+
+Both patterns rely on callbacks.
+
+That means both can create memory leaks.
+
+If callbacks remain registered after a component has been destroyed, the JavaScript garbage collector cannot release the associated memory.
+
+In React, always clean up subscriptions inside `useEffect`.
+
+```tsx
+useEffect(() => {
+  eventBus.on("update", handler);
+
+  return () => {
+    eventBus.off("update", handler);
+  };
+}, []);
+```
+
+In Vue, remove subscriptions inside `onUnmounted()`.
+
+Ignoring cleanup may not cause immediate problems, but over time it can lead to unnecessary memory usage and unexpected behavior.
+
+---
+
+## Choosing the Right Pattern
+
+| Scenario               | Best Choice       |
+| ---------------------- | ----------------- |
+| Reactive state updates | Observer          |
+| Vue reactivity         | Observer          |
+| Browser observer APIs  | Observer          |
+| Cross-component events | Publish-Subscribe |
+| Global notifications   | Publish-Subscribe |
+| Micro-frontends        | Publish-Subscribe |
+| Topic-based messaging  | Publish-Subscribe |
+
+A simple rule of thumb works well:
+
+Choose **Observer** when there is a clear ownership relationship between data and its consumers.
+
+Choose **Publish-Subscribe** when independent modules simply happen to be interested in the same events.
+
+---
+
+## Performance Considerations
+
+Performance differences are usually small, but the architecture matters.
+
+Observer implementations often have slightly lower overhead because notifications are sent directly to observers.
+
+Publish-Subscribe systems add an extra routing layer, but they provide much greater flexibility.
+
+In large applications, maintainability is usually more valuable than the tiny runtime cost of an event bus.
+
+The better choice depends more on system design than on raw performance.
+
+---
+
+## Final Thoughts
+
+Observer and Publish-Subscribe are closely related, but they solve different architectural problems.
+
+The Observer pattern creates direct dependencies between a data source and its consumers. This makes it ideal for reactive systems, state management, and browser observers.
+
+Publish-Subscribe introduces an event broker between producers and consumers. That additional layer removes direct dependencies and makes independent modules much easier to connect.
+
+The easiest way to remember the distinction is this:
+
+* **Observer** connects objects directly.
+* **Publish-Subscribe** connects objects through an event bus.
+
+Once you recognize that difference, choosing the right pattern becomes much more straightforward, and your frontend architecture becomes easier to extend as your application grows.
