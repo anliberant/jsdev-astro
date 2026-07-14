@@ -32,7 +32,7 @@ Drizzle is a lightweight relational ORM built for JavaScript and TypeScript. Sup
 
 ---
 
-# Installing Drizzle ORM
+## Installing Drizzle ORM
 
 Use your preferred package manager:
 
@@ -56,7 +56,7 @@ npm install -D drizzle-kit
 
 ---
 
-# Defining a Schema (PostgreSQL Example)
+## Defining a Schema (PostgreSQL Example)
 
 Schemas in Drizzle are declared via functions that closely mimic SQL structure.
 
@@ -73,7 +73,7 @@ Schemas are fully typed—queries against `users.firstName` will autocomplete an
 
 ---
 
-# Database Initialization
+## Database Initialization
 
 Establishing a connection is straightforward:
 
@@ -95,7 +95,7 @@ const db = drizzle(client, { casing: "snake_case" });
 
 ---
 
-# Simple Select Query
+## Simple Select Query
 
 ```ts
 const rows = await db.select().from(users);
@@ -109,7 +109,7 @@ SELECT "id", "first_name" FROM "users";
 
 ---
 
-# Shared Structures Between Tables
+## Shared Structures Between Tables
 
 Use helpers to reduce duplication:
 
@@ -137,7 +137,7 @@ export const users = pgTable("users", {
 
 ---
 
-# Full Schema with Relations, Enums & Indexes
+## Full Schema with Relations, Enums & Indexes
 
 ```ts
 import * as t from "drizzle-orm/pg-core";
@@ -182,7 +182,7 @@ export const comments = table("comments", {
 
 ---
 
-# Select Queries & Joins
+## Select Queries & Joins
 
 ### Basic Left Join
 
@@ -212,7 +212,7 @@ async function getProducts({ name, category, maxPrice }) {
 
 ---
 
-# Subqueries
+## Subqueries
 
 ```ts
 const staffView = db
@@ -229,7 +229,7 @@ const tickets = await db
 
 ---
 
-# CRUD Operations
+## CRUD Operations
 
 ### Insert
 
@@ -257,7 +257,7 @@ await db.delete(users).where(eq(users.firstName, "Vasya"));
 
 ---
 
-# Conclusion
+## Conclusion
 
 Drizzle ORM succeeds by being small, predictable, and type‑accurate. Unlike traditional ORMs, it avoids magic abstractions and instead exposes SQL-like primitives with strong TypeScript inference. Whether you are building an API server, a serverless function, or an edge application, Drizzle offers the performance and clarity needed to work efficiently with relational data.
 

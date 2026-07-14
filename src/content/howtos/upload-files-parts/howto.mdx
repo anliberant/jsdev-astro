@@ -27,7 +27,7 @@ This guide provides an improved chunk-uploading strategy with:
 
 ---
 
-# Step 1: Slice the File into Chunks
+## Step 1: Slice the File into Chunks
 
 Use `Blob.prototype.slice()` to split a large file into smaller parts:
 
@@ -58,7 +58,7 @@ function createFileChunks(file, size = 5 * 1024 * 1024) {
 
 ---
 
-# Step 2: Build the HTTP Request for Each Chunk
+## Step 2: Build the HTTP Request for Each Chunk
 
 Each chunk should be wrapped in `FormData` with metadata:
 
@@ -93,7 +93,7 @@ You can include:
 
 ---
 
-# Step 3: Upload Chunks with Retry & Progress Support
+## Step 3: Upload Chunks with Retry & Progress Support
 
 ```js
 async function uploadChunks(chunkRequests, onProgress) {
@@ -139,7 +139,7 @@ Parallel uploading **greatly improves speed** on fast networks.
 
 ---
 
-# Step 4: Pause & Resume Uploads
+## Step 4: Pause & Resume Uploads
 
 ```js
 let paused = false;
@@ -162,7 +162,7 @@ Resume simply continues with unfinished chunks.
 
 ---
 
-# Step 5: Send Merge Request to Server
+## Step 5: Send Merge Request to Server
 
 After all chunks upload successfully:
 
@@ -189,9 +189,9 @@ On backend, `/merge` typically:
 
 ---
 
-# Optional Enhancements
+## Optional Enhancements
 
-## Use Real Hashing (MD5 / SHA-1 / SHA-256)
+### Use Real Hashing (MD5 / SHA-1 / SHA-256)
 
 Instead of:
 
@@ -264,7 +264,7 @@ app.post("/merge", async (req, res) => {
 
 ---
 
-# Final Notes
+## Final Notes
 
 Chunked uploading is:
 - reliable  

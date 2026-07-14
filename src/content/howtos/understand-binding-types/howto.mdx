@@ -53,7 +53,7 @@ Mastering `this` will help you:
 
 ---
 
-# 1. Default Binding
+## 1. Default Binding
 
 Default binding applies when a function is called without any context.
 
@@ -112,7 +112,7 @@ Because `fn()` uses **default binding**, not the object.
 
 ---
 
-# 2. Implicit Binding
+## 2. Implicit Binding
 
 Implicit binding occurs when a function is invoked as a method of an object.
 
@@ -164,7 +164,7 @@ document.addEventListener("click", button.click.bind(button));
 
 ---
 
-# 3. Explicit Binding
+## 3. Explicit Binding
 
 Explicit binding lets you directly control `this` using:
 
@@ -174,7 +174,7 @@ Explicit binding lets you directly control `this` using:
 
 ---
 
-## `call()`
+## `call()``
 
 Calls the function immediately with a specified `this`.
 
@@ -243,7 +243,7 @@ setTimeout(counter.increment.bind(counter), 1000);
 
 ---
 
-# 4. New Binding (Constructor Binding)
+## 4. New Binding (Constructor Binding)
 
 When calling a function with `new`, JavaScript performs:
 
@@ -280,7 +280,7 @@ console.log(obj.value);
 
 ---
 
-# 5. Precedence of Binding Rules
+## 5. Precedence of Binding Rules
 
 When several binding types overlap, JavaScript follows this priority:
 
@@ -305,7 +305,7 @@ obj1.foo.call(obj2);
 
 ---
 
-# 6. Arrow Functions and Lexical Binding
+## 6. Arrow Functions and Lexical Binding
 
 Arrow functions do **not** have their own `this`.  
 Instead, they inherit `this` from the surrounding scope.
@@ -338,7 +338,7 @@ new A();
 
 ---
 
-# 7. Real Practical Examples
+## 7. Real Practical Examples
 
 ### Example 1: Fixing Event Handler Binding
 
@@ -374,7 +374,7 @@ const logger = {
 
 ---
 
-# Conclusion
+## Conclusion
 
 Understanding JavaScript binding gives you full control over how functions are executed and how objects behave. Once you master:
 

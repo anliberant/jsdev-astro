@@ -29,7 +29,7 @@ Using both gives you a “local-first” model: show cached data immediately, th
 
 ---
 
-# Step 1: Configure localforage
+## Step 1: Configure localforage
 
 ```js
 import localforage from 'localforage';
@@ -43,7 +43,7 @@ This instance will store cached lists by key.
 
 ---
 
-# Step 2: Build a useLocalforage Hook
+## Step 2: Build a useLocalforage Hook
 
 ```js
 import { useCallback, useEffect, useState } from 'react';
@@ -82,7 +82,7 @@ This hook retrieves cached data on mount and exposes methods to persist new data
 
 ---
 
-# Step 3: Create the useLocalQuery Hook
+## Step 3: Create the useLocalQuery Hook
 
 ```js
 import { useQuery, useQueryClient } from 'react-query';
@@ -116,7 +116,7 @@ export const useLocalQuery = ({ queryKey, queryFn, onSuccess }) => {
 
 ---
 
-# Example Component
+## Example Component
 
 ```js
 import axios from 'axios';
@@ -147,7 +147,7 @@ export const ListComponent = () => {
 
 ---
 
-# Key Advantages
+## Key Advantages
 
 - Instant load from local storage  
 - Updated automatically via react-query  
@@ -157,7 +157,7 @@ export const ListComponent = () => {
 
 ---
 
-# Conclusion
+## Conclusion
 
 Using react-query together with localforage creates a powerful caching layer that persists list data across reloads and sessions. The UI loads instantly using local storage while staying fresh through background API requests. This hybrid model provides both performance and reliability, making it ideal for dashboards, admin panels, and mobile-friendly apps.
 

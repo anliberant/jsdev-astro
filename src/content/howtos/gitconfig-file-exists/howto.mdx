@@ -26,7 +26,7 @@ Here is an improved, extended guide on how to reliably fix this issue.
 
 ---
 
-# 1. Close All Apps That Might Be Using Git
+## 1. Close All Apps That Might Be Using Git
 
 Before modifying `.gitconfig`, Git creates a lock file to prevent concurrent writes.  
 If anything else is touching your configuration, Git refuses to continue.
@@ -44,7 +44,7 @@ Then retry your Git command.
 
 ---
 
-# 2. Delete the `.gitconfig.lock` File (Most Common Fix)
+## 2. Delete the `.gitconfig.lock` File (Most Common Fix)
 
 Navigate to:
 
@@ -73,7 +73,7 @@ Delete **only** the `.lock` file — *do not* delete `.gitconfig`.
 
 ---
 
-# 3. Check Which Process Is Locking the File (Advanced but Reliable)
+## 3. Check Which Process Is Locking the File (Advanced but Reliable)
 
 Sometimes Windows keeps a handle open even after an app closes.
 
@@ -99,7 +99,7 @@ Get-Process -Id (Get-FileLockInfo ~/.gitconfig).ProcessId
 
 ---
 
-# 4. Fix Permissions
+## 4. Fix Permissions
 
 Sometimes Git cannot create or remove the lock file because of access restrictions.
 
@@ -122,7 +122,7 @@ Then retry your Git command.
 
 ---
 
-# 5. Run the Terminal as Administrator
+## 5. Run the Terminal as Administrator
 
 If permissions are restricted by corporate policy or file virtualization:
 
@@ -133,7 +133,7 @@ Retry your Git operation.
 
 ---
 
-# 6. Ensure Your `.gitconfig` Is Not Read‑Only
+## 6. Ensure Your `.gitconfig` Is Not Read‑Only
 
 Windows sometimes sets files as read-only (especially after backups).
 
@@ -149,13 +149,13 @@ attrib -r ~/.gitconfig
 
 ---
 
-# 7. Restart Your Computer (Releases Stuck File Handles)
+## 7. Restart Your Computer (Releases Stuck File Handles)
 
 If a process crashed and left phantom locks, a reboot clears the Windows handle table.
 
 ---
 
-# 8. Delete Temporary Git Files in Case of Corruption
+## 8. Delete Temporary Git Files in Case of Corruption
 
 Sometimes the Git config directory itself contains stray temp files.
 
@@ -175,7 +175,7 @@ These may reference old handles that prevent file cleanup.
 
 ---
 
-# 9. For Global Git Config Issues in WSL
+## 9. For Global Git Config Issues in WSL
 
 If you are using WSL and Git mixes Windows + Linux paths:
 
@@ -188,7 +188,7 @@ Also check `/mnt/c/Users/<username>/.gitconfig`.
 
 ---
 
-# Summary
+## Summary
 
 | Problem | Cause | Fix |
 |--------|--------|-----|

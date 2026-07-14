@@ -102,7 +102,7 @@ const { name, heading, description, metaDescription } =
 const pageTitle =
   currentPage === 1
     ? `${heading}`
-    : `${heading} Articles - Page ${currentPage} | JSdev`;
+    : `${categoryName} - Page ${currentPage} | JSdev`;
 
 const pageDescription = `${description} ${
   currentPage > 1 && `Page ${currentPage} of ${page.lastPage}.`

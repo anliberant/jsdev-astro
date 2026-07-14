@@ -101,15 +101,15 @@ All with **zero unnecessary runtime**.
 
 ---
 
-# Packaging with Webpack
+## Packaging with Webpack
 
-## Step 1: Install Webpack
+### Step 1: Install Webpack
 
 ```bash
 npm install --save-dev webpack webpack-cli
 ```
 
-## Step 2: Create Webpack Config
+### Step 2: Create Webpack Config
 
 `webpack.config.mjs`
 
@@ -128,7 +128,7 @@ export default {
 };
 ```
 
-## Step 3: Build
+### Step 3: Build
 
 ```bash
 npx webpack -c webpack.config.mjs
@@ -140,9 +140,9 @@ The JS file contains ~100 lines of boilerplate runtime code.
 
 ---
 
-# CSS Handling: Rollup vs. Webpack
+## CSS Handling: Rollup vs. Webpack
 
-## Extracting CSS with Rollup
+### Extracting CSS with Rollup
 
 Install plugin:
 
@@ -166,7 +166,7 @@ export default {
 };
 ```
 
-## Extracting CSS with Webpack
+### Extracting CSS with Webpack
 
 Install loaders:
 
@@ -193,7 +193,7 @@ Webpack will still generate runtime code alongside your JS.
 
 ---
 
-# When to Choose Rollup
+## When to Choose Rollup
 
 Use Rollup if you need:
 
@@ -211,7 +211,7 @@ Use Webpack if you need:
 
 ---
 
-# Rollup in Modern Build Systems
+## Rollup in Modern Build Systems
 
 Modern frameworks depend on Rollup:
 
@@ -223,7 +223,7 @@ Rollup continues to be the industry standard for **library authors**.
 
 ---
 
-# Conclusion
+## Conclusion
 
 Rollup is the optimal choice for packaging component libraries, offering minimal, runtime-free bundles and first-class support for multiple module formats. Webpack remains excellent for applications, but Rollup delivers unmatched efficiency for published packages.
 

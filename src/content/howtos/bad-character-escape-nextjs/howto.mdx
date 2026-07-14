@@ -14,8 +14,6 @@ desc: "Fix “Module parse failed: Bad character escape sequence” in Next.js. 
 subtitle: "Fix “Module parse failed: Bad character escape sequence” in Next.js. Learn why it happens, how Windows paths break Webpack, and how to apply reliable fixes."
 ---
 
-# Fixing “Module parse failed: Bad character escape sequence” in Next.js
-
 This error occurs frequently on **Windows**, especially in **Next.js 14–15**, and is caused by how Webpack parses file paths containing backslashes (`\\`). These backslashes get interpreted as escape sequences, leading to invalid JavaScript deep inside Next.js loaders.
 
 Here is an improved, expanded, and more complete guide with additional solutions and explanations.
@@ -36,7 +34,7 @@ Webpack interprets sequences like `\U`, `\t`, `\p` as escape characters, causing
 
 ---
 
-# Why This Happens
+## Why This Happens
 
 Windows paths:
 
@@ -60,7 +58,7 @@ When a loader (like **next-metadata-route-loader**) inserts an unescaped Windows
 
 ---
 
-# 1. Remove or Replace favicon.ico
+## 1. Remove or Replace favicon.ico
 
 Many developers confirmed that `src/app/favicon.ico` being processed by Next.js metadata loader caused the crash.
 
@@ -80,7 +78,7 @@ Then later place a favicon into `/public/favicon.ico`.
 
 ---
 
-# 2. Clear the `.next` Cache
+## 2. Clear the `.next` Cache
 
 The metadata cache often contains incorrectly escaped paths.
 
@@ -93,7 +91,7 @@ This alone fixes the issue for many.
 
 ---
 
-# 3. Normalize Windows Paths Manually
+## 3. Normalize Windows Paths Manually
 
 If your code or config generates paths, normalize them:
 
@@ -107,7 +105,7 @@ Use this when passing paths to loaders or Webpack configuration.
 
 ---
 
-# 4. Patch or Adjust Webpack Configuration
+## 4. Patch or Adjust Webpack Configuration
 
 If a loader emits raw Windows paths, you can override handling:
 
@@ -133,7 +131,7 @@ This prevents Webpack from inserting unescaped paths into comments.
 
 ---
 
-# 5. Temporarily Disable Metadata Route Processing
+## 5. Temporarily Disable Metadata Route Processing
 
 You can bypass the problematic loader:
 
@@ -146,13 +144,13 @@ If the error disappears, the issue is tied to metadata image handling.
 
 ---
 
-# 6. Ensure Files Are UTF‑8 Encoded
+## 6. Ensure Files Are UTF‑8 Encoded
 
 Incorrect encodings can produce malformed byte sequences Webpack cannot parse.
 
 ---
 
-# 7. Upgrade Next.js + Webpack
+## 7. Upgrade Next.js + Webpack
 
 Many Windows path-escaping bugs were fixed after:
 
@@ -165,7 +163,7 @@ Next.js 15 includes improved Windows support.
 
 ---
 
-# 8. Patch the Broken Loader (Permanent Fix)
+## 8. Patch the Broken Loader (Permanent Fix)
 
 If the issue is inside Next.js internals, patch the loader:
 
@@ -201,7 +199,7 @@ This ensures every backslash is escaped properly.
 
 ---
 
-# Summary
+## Summary
 
 | Cause | Fix |
 |-------|-----|

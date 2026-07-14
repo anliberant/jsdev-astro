@@ -25,7 +25,22 @@ const {
   contentType = '',
 } = Astro.props;
 
+const truncateSeoText = (value: string, maxLength = 155) => {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  const clipped = normalized.slice(0, maxLength - 1);
+  const lastSpace = clipped.lastIndexOf(' ');
+  const safeText = lastSpace > 80 ? clipped.slice(0, lastSpace) : clipped;
+
+  return `${safeText.trim()}…`;
+};
+
 const fullTitle = title || siteConfig.title;
+const seoDescription = truncateSeoText(description);
 const shouldUseGeneratedOG = ['howto', 'snippets'].includes(
   contentType.toLowerCase()
 );
@@ -43,7 +58,7 @@ const fullImageUrl = shouldUseGeneratedOG
 <html lang='en' data-theme='light'>
   <head>
     <meta charset='UTF-8' />
-    <meta name='description' content={description} />
+    <meta name='description' content={seoDescription} />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <link rel='preconnect' href='https://fonts.googleapis.com' />
     <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
@@ -72,7 +87,7 @@ const fullImageUrl = shouldUseGeneratedOG
 
     <!-- SEO Meta Tags -->
     <meta property='og:title' content={fullTitle} />
-    <meta property='og:description' content={description} />
+    <meta property='og:description' content={seoDescription} />
     <meta property='og:image' content={fullImageUrl} />
     <meta property='og:url' content={Astro.url} />
     <meta property='og:type' content={type} />
@@ -81,7 +96,7 @@ const fullImageUrl = shouldUseGeneratedOG
     <!-- Twitter Card -->
     <meta name='twitter:card' content='summary_large_image' />
     <meta name='twitter:title' content={fullTitle} />
-    <meta name='twitter:description' content={description} />
+    <meta name='twitter:description' content={seoDescription} />
     <meta name='twitter:image' content={fullImageUrl} />
     {
       siteConfig.twitterUsername && (

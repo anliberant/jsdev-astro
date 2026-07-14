@@ -325,7 +325,6 @@ hr {
 .post-content h4,
 .post-content h5,
 .post-content h6 {
-  color: red !important;
   scroll-margin-top: 6rem;
   margin: 2rem 0 1rem 0;
   font-weight: 600;

@@ -30,7 +30,7 @@ Fixing the issue involves updating your environment, dependencies, or replacing 
 
 ---
 
-# 1. Update Your Dependencies
+## 1. Update Your Dependencies
 
 The most common cause is an outdated dependency.
 
@@ -52,7 +52,7 @@ If the warning is gone, the issue was in one of your old packages.
 
 ---
 
-# 2. Switch to the Official npm Package
+## 2. Switch to the Official npm Package
 
 If your own code imports `punycode` directly:
 
@@ -78,7 +78,7 @@ This ensures you use the maintained standalone library instead of the removed bu
 
 ---
 
-# 3. Patch a Dependency Using `patch-package`
+## 3. Patch a Dependency Using `patch-package`
 
 If the deprecated import exists inside a third‑party library:
 
@@ -120,7 +120,7 @@ Now the fix applies automatically after every install.
 
 ---
 
-# 4. Update Node.js
+## 4. Update Node.js
 
 Older Node.js versions may still expose partial warnings or outdated internals.
 
@@ -141,7 +141,7 @@ Node.js 16+ fully removes the built‑in module, so using the standalone package
 
 ---
 
-# 5. Locate the Source of the Deprecated Import
+## 5. Locate the Source of the Deprecated Import
 
 Search inside your project:
 
@@ -159,7 +159,7 @@ This ensures long‑term compatibility.
 
 ---
 
-# 6. Notify Package Maintainers
+## 6. Notify Package Maintainers
 
 If the issue originates from a dependency:
 
@@ -171,7 +171,7 @@ This helps ensure the ecosystem gradually removes deprecated imports.
 
 ---
 
-# 7. Temporary: Suppress the Warning
+## 7. Temporary: Suppress the Warning
 
 This method should be used only when you cannot update code or dependencies immediately.
 
@@ -192,7 +192,7 @@ This hides the warning but does **not** fix the root cause.
 
 ---
 
-# Summary
+## Summary
 
 | Solution | When to Use |
 |---------|-------------|

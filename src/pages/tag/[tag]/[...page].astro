@@ -86,11 +86,11 @@ const breadcrumbItems = generateTagBreadcrumbs(
 );
 
 const pageTitle = isFirstPage
-  ? `${tagName} Articles - Latest JavaScript Tutorials | JSdev`
+  ? `${tagName} Articles | JSdev`
   : `${tagName} Articles - Page ${currentPage} | JSdev`;
 
 const pageDescription = isFirstPage
-  ? `Discover ${totalPosts} expert articles about ${tagName.toLowerCase()}. Learn from practical examples, tutorials, and in-depth guides on ${tagName} development.`
+  ? `Browse ${totalPosts} JavaScript articles tagged ${tagName.toLowerCase()}, with practical examples and implementation notes.`
   : `Page ${currentPage} of ${page.lastPage} - Continue exploring ${tagName.toLowerCase()} articles and tutorials.`;
 
 const canonicalUrl = isFirstPage
