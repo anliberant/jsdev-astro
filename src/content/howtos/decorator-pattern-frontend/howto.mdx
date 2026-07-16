@@ -1,0 +1,790 @@
+---
+title: Howto Use the Decorator Pattern in Front-End Development
+slug: decorator-pattern-frontend
+heading: "Decorator Pattern in React: A Practical Guide"
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/decorator-pattern-frontend
+date: 2026-07-16
+author: anton liberant
+category: react
+type: howto
+tags: ['decorator-pattern', 'patterns']
+desc: Learn how decorators separate business logic from performance monitoring, retries, debouncing, permissions, and loading states.
+subtitle: 'Learn how to implement the decorator pattern in React applications for clean, maintainable code.'
+---
+
+The decorator pattern appears throughout modern front-end development, even when developers do not call it by name.
+
+Higher-order functions, React higher-order components, performance wrappers, retry utilities, access-control layers, and memoization helpers all follow a similar principle. They take existing behavior and add something around it without rewriting the original implementation.
+
+React's `memo` function is a familiar example. It accepts a component and returns an enhanced version that can skip unnecessary renders.
+
+The same approach can be used for API monitoring, retry strategies, permission checks, loading indicators, debouncing, analytics, and error handling.
+
+This article explains the decorator pattern through practical JavaScript and React examples.
+
+## The Problem: Business Logic Mixed with Monitoring
+
+Suppose an application needs to measure how long an API request takes.
+
+The most direct solution is to place timing code inside the request function:
+
+```js
+async function fetchUsers() {
+  const start = performance.now();
+
+  const response = await fetch('/api/users');
+  const data = await response.json();
+
+  const duration = performance.now() - start;
+  console.log(`Request completed in ${duration.toFixed(2)}ms`);
+
+  return data;
+}
+```
+
+The function works, but it now has two responsibilities.
+
+It retrieves users and measures performance.
+
+That may not seem serious when there is only one request. The problem becomes clearer after adding `fetchOrders`, `fetchProducts`, `fetchInvoices`, and several other API functions.
+
+Each function would need similar timing logic. Updating the logging format or changing the monitoring system would require editing every implementation.
+
+This is the kind of duplication the decorator pattern can remove.
+
+Performance tracking is a cross-cutting concern. It affects many parts of an application, but it is not part of the main business operation.
+
+Other common cross-cutting concerns include:
+
+* Logging
+* Analytics
+* Authentication
+* Authorization
+* Caching
+* Retries
+* Error reporting
+* Rate limiting
+* Debouncing
+
+Instead of placing these behaviors inside every function, decorators keep them in reusable wrappers.
+
+## What Is the Decorator Pattern?
+
+The decorator pattern adds new responsibilities to an existing function, object, or component without changing its original source code.
+
+In JavaScript, a decorator is often implemented as a function that accepts another function and returns a new one.
+
+```js
+function withExtraBehavior(fn) {
+  return function (...args) {
+    // Run additional behavior before the original function.
+
+    const result = fn(...args);
+
+    // Run additional behavior after the original function.
+
+    return result;
+  };
+}
+```
+
+The returned function preserves the original behavior while adding another layer around it.
+
+Front-end applications commonly use two forms of this pattern:
+
+1. Higher-order functions that decorate ordinary JavaScript functions.
+2. Higher-order components that decorate React components.
+
+Modern React applications often prefer custom Hooks and component composition over higher-order components. However, HOCs remain useful in libraries, route guards, legacy codebases, and reusable component infrastructure.
+
+## Decorating Functions with Higher-Order Functions
+
+A higher-order function accepts another function, returns a function, or does both.
+
+This makes higher-order functions a natural way to implement decorators in JavaScript.
+
+## Adding Performance Monitoring
+
+The timing logic from the previous example can be extracted into a reusable decorator:
+
+```js
+function withPerformance(fn, label = fn.name || 'anonymous') {
+  return async function (...args) {
+    const start = performance.now();
+
+    try {
+      return await fn.apply(this, args);
+    } finally {
+      const duration = performance.now() - start;
+
+      console.log(
+        `[${label}] completed in ${duration.toFixed(2)}ms`,
+      );
+    }
+  };
+}
+```
+
+The original API function can now focus only on its main responsibility:
+
+```js
+async function fetchUsers() {
+  const response = await fetch('/api/users');
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+```
+
+Create a decorated version when performance monitoring is required:
+
+```js
+const monitoredFetchUsers = withPerformance(
+  fetchUsers,
+  'Fetch users',
+);
+
+const users = await monitoredFetchUsers();
+```
+
+The decorator runs the original function, measures its execution time, and reports the result.
+
+The `finally` block ensures that timing information is recorded even when the request fails.
+
+The use of `fn.apply(this, args)` also preserves the original function's context. This matters when decorating object methods that depend on `this`.
+
+The original `fetchUsers` function remains unchanged and can still be used without monitoring.
+
+## Adding a Retry Mechanism
+
+Network requests can fail because of temporary connectivity problems, rate limits, overloaded services, or unstable third-party APIs.
+
+Retry logic can also be implemented as a decorator:
+
+```js
+function wait(duration) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, duration);
+  });
+}
+
+function withRetry(
+  fn,
+  {
+    retries = 3,
+    delay = 1000,
+    shouldRetry = () => true,
+  } = {},
+) {
+  return async function (...args) {
+    let lastError;
+
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      try {
+        return await fn.apply(this, args);
+      } catch (error) {
+        lastError = error;
+
+        const reachedLastAttempt = attempt === retries;
+
+        if (reachedLastAttempt || !shouldRetry(error)) {
+          throw error;
+        }
+
+        await wait(delay);
+      }
+    }
+
+    throw lastError;
+  };
+}
+```
+
+The request can now gain retry behavior without knowing anything about retry rules:
+
+```js
+const resilientFetchUsers = withRetry(fetchUsers, {
+  retries: 3,
+  delay: 800,
+});
+
+const users = await resilientFetchUsers();
+```
+
+The decorator is reusable because it is not tied to `fetchUsers`.
+
+```js
+const resilientFetchOrders = withRetry(fetchOrders, {
+  retries: 2,
+  delay: 500,
+});
+
+const resilientSaveProduct = withRetry(saveProduct, {
+  retries: 4,
+  delay: 1200,
+});
+```
+
+A retry decorator should not automatically repeat every failed operation.
+
+For example, retrying a request after a `401 Unauthorized` response is usually pointless. Retrying a payment request may also be dangerous if the endpoint is not idempotent.
+
+The `shouldRetry` option allows the caller to decide which failures are temporary:
+
+```js
+const resilientFetchUsers = withRetry(fetchUsers, {
+  retries: 3,
+  delay: 1000,
+  shouldRetry(error) {
+    return error instanceof TypeError;
+  },
+});
+```
+
+The strategy can later be replaced with exponential backoff without modifying every API function.
+
+```js
+function withExponentialRetry(fn, retries = 3) {
+  return async function (...args) {
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      try {
+        return await fn.apply(this, args);
+      } catch (error) {
+        if (attempt === retries) {
+          throw error;
+        }
+
+        const delay = 500 * 2 ** attempt;
+        await wait(delay);
+      }
+    }
+  };
+}
+```
+
+Centralizing the retry policy makes it easier to test, maintain, and change.
+
+## Decorating Functions with Debouncing
+
+Search fields often send a request after the user stops typing.
+
+Without debouncing, every keystroke may trigger another API call:
+
+```js
+function searchProducts(keyword) {
+  return fetch(
+    `/api/search?q=${encodeURIComponent(keyword)}`,
+  );
+}
+```
+
+A debounce decorator delays execution until the function has not been called for a specified period:
+
+```js
+function debounce(fn, delay = 300) {
+  let timerId;
+
+  return function (...args) {
+    clearTimeout(timerId);
+
+    timerId = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+}
+```
+
+The decorated function can be used in an input handler:
+
+```js
+const handleSearch = debounce((keyword) => {
+  searchProducts(keyword);
+}, 300);
+```
+
+Each call resets the timer. The wrapped function runs only after the calls have stopped for 300 milliseconds.
+
+This keeps timing behavior separate from the search implementation.
+
+In React, debouncing is often implemented through a custom Hook because the timer must survive renders and be cleaned up correctly. The underlying idea is still similar: wrap existing behavior with another reusable capability.
+
+## Combining Multiple Decorators
+
+Decorators become especially useful when several independent behaviors need to be applied to one function.
+
+```js
+const enhancedFetchUsers = withPerformance(
+  withRetry(fetchUsers, {
+    retries: 3,
+    delay: 1000,
+  }),
+  'Fetch users with retry',
+);
+```
+
+The decorated function now has both retry and performance-monitoring behavior.
+
+The order matters.
+
+In the example above, performance monitoring measures the complete operation, including failed attempts and waiting periods.
+
+Reversing the order changes the result:
+
+```js
+const enhancedFetchUsers = withRetry(
+  withPerformance(fetchUsers, 'Fetch users attempt'),
+  {
+    retries: 3,
+    delay: 1000,
+  },
+);
+```
+
+Now every individual attempt is measured separately.
+
+Neither version is universally correct. The correct order depends on what the application needs to observe.
+
+A small composition helper can make several decorators easier to combine:
+
+```js
+function pipeDecorators(...decorators) {
+  return function (fn) {
+    return decorators.reduceRight(
+      (current, decorate) => decorate(current),
+      fn,
+    );
+  };
+}
+```
+
+Use it to create a configured function pipeline:
+
+```js
+const enhanceRequest = pipeDecorators(
+  (fn) => withPerformance(fn, 'Users request'),
+  (fn) =>
+    withRetry(fn, {
+      retries: 3,
+      delay: 1000,
+    }),
+);
+
+const enhancedFetchUsers = enhanceRequest(fetchUsers);
+```
+
+This approach keeps each decorator small and gives each one a clear responsibility.
+
+## Decorators and React Components
+
+A higher-order component is a function that accepts a React component and returns another component.
+
+Its basic structure looks like this:
+
+```jsx
+function withFeature(Component) {
+  function EnhancedComponent(props) {
+    return <Component {...props} />;
+  }
+
+  return EnhancedComponent;
+}
+```
+
+The enhanced component can add permission checks, loading states, analytics, feature flags, error boundaries, or other shared behavior.
+
+## Adding Access Control
+
+Administrative pages often need to verify that a user is signed in and has the correct role.
+
+Without a shared abstraction, every protected page may repeat the same checks.
+
+A higher-order component can centralize that logic:
+
+```jsx
+import { Navigate } from 'react-router-dom';
+
+function withAuth(Component) {
+  function ProtectedComponent({
+    requiredRole,
+    ...componentProps
+  }) {
+    const { isAuthenticated, role } = useAuth();
+
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+
+    if (requiredRole && role !== requiredRole) {
+      return (
+        <section>
+          <h1>Access denied</h1>
+          <p>You do not have permission to open this page.</p>
+        </section>
+      );
+    }
+
+    return <Component {...componentProps} />;
+  }
+
+  const componentName =
+    Component.displayName || Component.name || 'Component';
+
+  ProtectedComponent.displayName = `withAuth(${componentName})`;
+
+  return ProtectedComponent;
+}
+```
+
+Apply the decorator to a page component:
+
+```jsx
+function Dashboard() {
+  return <main>Administrative dashboard</main>;
+}
+
+const AdminDashboard = withAuth(Dashboard);
+```
+
+Then provide the required role:
+
+```jsx
+<AdminDashboard requiredRole="admin" />
+```
+
+The `Dashboard` component does not need to understand authentication, redirects, or authorization rules.
+
+When permission requirements change, the shared wrapper can be updated in one place.
+
+In applications using modern routers, access control is often implemented at the route or layout level instead of wrapping every component. That can be cleaner when an entire section of the application shares the same rules.
+
+The decorator approach remains useful when access behavior must be attached directly to specific components.
+
+## Adding a Loading State
+
+A loading decorator can display a placeholder until data becomes available:
+
+```jsx
+function withLoading(Component) {
+  function ComponentWithLoading({
+    loading,
+    loadingFallback = <p>Loading...</p>,
+    ...props
+  }) {
+    if (loading) {
+      return loadingFallback;
+    }
+
+    return <Component {...props} />;
+  }
+
+  const componentName =
+    Component.displayName || Component.name || 'Component';
+
+  ComponentWithLoading.displayName =
+    `withLoading(${componentName})`;
+
+  return ComponentWithLoading;
+}
+```
+
+Decorate a list component:
+
+```jsx
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+const UserListWithLoading = withLoading(UserList);
+```
+
+Use the enhanced component:
+
+```jsx
+<UserListWithLoading
+  loading={isLoading}
+  users={users}
+  loadingFallback={<UserListSkeleton />}
+/>
+```
+
+The original `UserList` only renders users. It does not contain asynchronous state management or loading markup.
+
+## React.memo as a Built-In Decorator
+
+React provides a decorator-like utility through `memo`.
+
+```jsx
+const MemoizedUserList = React.memo(UserList);
+```
+
+`memo` accepts a component and returns an enhanced version.
+
+The returned component can skip rendering when its props have not changed.
+
+A custom comparison function can also be provided:
+
+```jsx
+const MemoizedUserList = React.memo(
+  UserList,
+  (previousProps, nextProps) => {
+    return previousProps.users === nextProps.users;
+  },
+);
+```
+
+This follows the same broad structure as a decorator:
+
+```txt
+Original component
+        ↓
+      React.memo
+        ↓
+Enhanced component
+```
+
+The original component remains available, while the returned component adds another behavior around it.
+
+Memoization should still be applied carefully. Wrapping every component in `memo` can add complexity without producing a meaningful performance improvement.
+
+## HOCs, Hooks, and Component Composition
+
+Higher-order components were especially common before React Hooks became available.
+
+Today, many behaviors are easier to express through custom Hooks:
+
+```jsx
+function usePermission(requiredRole) {
+  const { isAuthenticated, role } = useAuth();
+
+  return {
+    isAuthenticated,
+    hasPermission:
+      !requiredRole || role === requiredRole,
+  };
+}
+```
+
+A component can use the Hook directly:
+
+```jsx
+function AdminDashboard() {
+  const { isAuthenticated, hasPermission } =
+    usePermission('admin');
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!hasPermission) {
+    return <AccessDenied />;
+  }
+
+  return <Dashboard />;
+}
+```
+
+Component composition is another alternative:
+
+```jsx
+function ProtectedRoute({ requiredRole, children }) {
+  const { isAuthenticated, role } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requiredRole && role !== requiredRole) {
+    return <AccessDenied />;
+  }
+
+  return children;
+}
+```
+
+Usage remains explicit:
+
+```jsx
+<ProtectedRoute requiredRole="admin">
+  <Dashboard />
+</ProtectedRoute>
+```
+
+Hooks and composition are often easier to follow because the extra behavior is visible in the component tree.
+
+Higher-order components remain valuable when working with existing HOC-based APIs, exporting preconfigured components, sharing behavior across class components, or building library-level abstractions.
+
+The best implementation may change, but the decorator principle remains relevant.
+
+## Preserving Function Behavior
+
+A decorator should preserve the behavior of the original function as closely as possible.
+
+That includes its arguments, return value, asynchronous behavior, and `this` context.
+
+Consider an object method:
+
+```js
+const userService = {
+  baseUrl: '/api/users',
+
+  async load() {
+    const response = await fetch(this.baseUrl);
+    return response.json();
+  },
+};
+```
+
+A decorator that invokes `fn(...args)` may lose the expected context.
+
+```js
+function brokenDecorator(fn) {
+  return function (...args) {
+    return fn(...args);
+  };
+}
+```
+
+A safer implementation forwards the current context:
+
+```js
+function safeDecorator(fn) {
+  return function (...args) {
+    return fn.apply(this, args);
+  };
+}
+```
+
+The method can then be replaced without breaking its use of `this`:
+
+```js
+userService.load = withPerformance(
+  userService.load,
+  'Load users',
+);
+
+await userService.load();
+```
+
+Arrow functions should not be used for wrappers that need their own dynamic `this` value.
+
+## Avoiding Common Decorator Mistakes
+
+Decorators improve separation of concerns, but they can also make code harder to understand when used without restraint.
+
+### Hiding Too Much Behavior
+
+A decorated function may perform logging, retries, caching, authorization, and analytics before reaching the original implementation.
+
+That makes the call site look simple, but the actual execution path becomes less obvious.
+
+Keep decorators focused and give them descriptive names.
+
+```js
+const fetchUsersWithRetryAndMonitoring =
+  withPerformance(
+    withRetry(fetchUsers, {
+      retries: 3,
+      delay: 1000,
+    }),
+    'Fetch users',
+  );
+```
+
+Clear naming makes the additional behavior easier to discover.
+
+### Applying Decorators in the Wrong Order
+
+Decorator order can change performance measurements, error handling, caching, and retry behavior.
+
+For example, placing a cache outside a retry wrapper is not equivalent to placing it inside.
+
+Treat decorator ordering as part of the implementation rather than a cosmetic choice.
+
+### Retrying Unsafe Operations
+
+Some operations should not be repeated automatically.
+
+A failed request may have reached the server even when the client did not receive a response. Retrying a non-idempotent operation could create duplicate records or duplicate payments.
+
+Use retries only when the operation and error type make repetition safe.
+
+### Losing Static Properties in React HOCs
+
+A higher-order component does not automatically copy custom static properties from the wrapped component.
+
+```jsx
+Dashboard.requiredPermission = 'admin';
+
+const ProtectedDashboard = withAuth(Dashboard);
+```
+
+`ProtectedDashboard.requiredPermission` will not exist unless it is copied manually or through a utility designed to hoist non-React statics.
+
+This matters mostly in library and framework code that relies on component metadata.
+
+### Creating Decorated Components During Render
+
+Do not create a higher-order component inside another component's render path:
+
+```jsx
+function App() {
+  const ProtectedDashboard = withAuth(Dashboard);
+
+  return <ProtectedDashboard />;
+}
+```
+
+A new component type is created during every render. React may treat it as a different component and reset its state.
+
+Create decorated components at module scope instead:
+
+```jsx
+const ProtectedDashboard = withAuth(Dashboard);
+
+function App() {
+  return <ProtectedDashboard />;
+}
+```
+
+## When the Decorator Pattern Is Useful
+
+The decorator pattern is a good fit when the same secondary behavior must be attached to several unrelated functions or components.
+
+It works especially well when:
+
+* The core implementation should remain unchanged.
+* The additional behavior can be reused.
+* Several independent capabilities must be combined.
+* The wrapper can preserve the original interface.
+* The behavior has a clear and limited responsibility.
+
+A decorator may be unnecessary when the additional logic is used only once, tightly belongs to the core operation, or makes execution harder to trace than a direct implementation would.
+
+Not every wrapper needs to become an abstraction.
+
+## Final Thoughts
+
+The decorator pattern is one of the most practical design patterns in front-end development.
+
+Its main idea is simple: keep the original function or component focused, then add secondary behavior through a reusable wrapper.
+
+Higher-order functions can add performance monitoring, retries, caching, logging, throttling, and debouncing.
+
+Higher-order components can add access control, loading states, analytics, and other shared UI behavior.
+
+Modern React often expresses the same ideas through Hooks, route layouts, and component composition. These techniques may look different, but they solve a similar architectural problem.
+
+When logging, permission checks, retry logic, or loading states begin appearing in several places, do not copy them again.
+
+Extract the behavior, wrap the original implementation, and keep the core logic clean.
