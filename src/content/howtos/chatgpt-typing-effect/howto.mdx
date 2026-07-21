@@ -1,0 +1,1082 @@
+---
+title: How to Build the ChatGPT Typing Effect in Modern JavaScript
+slug: chatgpt-typing-effect
+heading: Building the ChatGPT Typing Effect
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/chatgpt-typing-effect
+date: 2026-07-17
+author: anton liberant
+category: javascript
+type: howto
+tags: ['typewriter', 'effect', 'streaming', 'chatgpt']
+desc: 'Learn how to create a streaming AI response that feels identical to ChatGPT.'
+subtitle: 'Create a streaming AI response that feels identical to ChatGPT.'
+---
+
+
+One of the reasons ChatGPT feels so responsive has nothing to do with model speed.
+
+The answer isn't generated instantly. Instead, text starts appearing almost immediately, making the application feel alive. Even when the model needs ten seconds to finish a response, users never feel like they're staring at a frozen screen.
+
+Many tutorials call this a "typewriter effect."
+
+It isn't.
+
+ChatGPT isn't animating existing text. It's rendering new tokens the moment they arrive from the server.
+
+Let's build the real thing.
+
+<Codepen id='019f82e1-e086-7839-90fd-d8b27d8cac27' />
+---
+
+## Why ChatGPT Feels Fast
+
+A traditional API waits until everything is finished before returning a response.
+
+```
+Browser
+   │
+   ├──── Request ───► Server
+   │
+   │      Waiting...
+   │
+   ◄──── Full JSON ──┤
+```
+
+Streaming works differently.
+
+```
+Browser
+   │
+   ├──── Request ───► Server
+   │
+   ◄──── Hello
+   ◄──── there
+   ◄──── this
+   ◄──── is
+   ◄──── ChatGPT...
+```
+
+The model is already generating tokens internally.
+
+Streaming simply exposes those tokens as soon as they exist.
+
+That small UX improvement completely changes how the application feels.
+
+---
+
+## Step 1. Enable Streaming
+
+Most AI APIs expose a streaming option.
+
+```js
+const response = await fetch("/api/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    messages,
+    stream: true,
+  }),
+});
+```
+
+Instead of waiting for one large JSON object, the server keeps the HTTP connection open and continuously sends small chunks of data. 
+
+---
+
+## Step 2. Read the Response Stream
+
+This is where most tutorials stop.
+
+```js
+const reader = response.body.getReader();
+
+while (true) {
+  const { value, done } = await reader.read();
+
+  if (done) break;
+
+  console.log(value);
+}
+```
+
+Unfortunately, this doesn't produce a polished ChatGPT experience.
+
+There are several problems waiting for you.
+
+---
+
+## Step 3. Decode UTF-8 Correctly
+
+The biggest mistake is decoding every chunk independently.
+
+Chinese, Japanese, Korean, emoji, and many Unicode characters occupy multiple bytes.
+
+A chunk may split one character into two different packets.
+
+Bad:
+
+```js
+decoder.decode(value);
+```
+
+Correct:
+
+```js
+const decoder = new TextDecoder();
+
+text += decoder.decode(value, {
+  stream: true,
+});
+```
+
+The `stream: true` option tells the decoder to keep incomplete characters in memory until the remaining bytes arrive. Without it, you'll eventually see corrupted text. 
+
+---
+
+## Step 4. Keep Your Own Buffer
+
+Another mistake is assuming every network packet contains complete JSON.
+
+It doesn't.
+
+One read may end halfway through a message.
+
+```
+data: {"choices":[{"delta":{"cont
+
+next chunk...
+
+ent":"Hello"}}]}
+```
+
+Instead, accumulate everything inside a buffer.
+
+```js
+let buffer = "";
+
+buffer += decoder.decode(chunk, {
+  stream: true,
+});
+
+const lines = buffer.split("\n");
+
+buffer = lines.pop() ?? "";
+```
+
+Only parse complete lines.
+
+Leave incomplete data for the next iteration. 
+
+---
+
+## Step 5. Parse Server-Sent Events
+
+Most LLM providers send responses like this:
+
+```
+data: {...}
+
+data: {...}
+
+data: {...}
+
+data: [DONE]
+```
+
+Extract only the useful content.
+
+```js
+for (const line of lines) {
+  if (!line.startsWith("data:")) {
+    continue;
+  }
+
+  const json = line.slice(5).trim();
+
+  if (json === "[DONE]") {
+    break;
+  }
+
+  const data = JSON.parse(json);
+
+  const token =
+    data.choices?.[0]?.delta?.content;
+
+  if (token) {
+    output += token;
+  }
+}
+```
+
+At this point you'll already have working streaming.
+
+But it still won't feel exactly like ChatGPT.
+
+---
+
+## Step 6. Update the DOM Efficiently
+
+Many developers do this:
+
+```js
+element.textContent += token;
+```
+
+Every token forces the browser to repaint.
+
+If the response contains thousands of tokens, performance starts dropping.
+
+Instead, accumulate tokens.
+
+```js
+let pending = "";
+
+pending += token;
+```
+
+Then render only once per animation frame.
+
+```js
+let scheduled = false;
+
+function flush() {
+  if (scheduled) return;
+
+  scheduled = true;
+
+  requestAnimationFrame(() => {
+    element.textContent += pending;
+
+    pending = "";
+    scheduled = false;
+  });
+}
+```
+
+This keeps scrolling smooth even during very long responses.
+
+---
+
+## Step 7. Auto-Scroll Like ChatGPT
+
+Users should never have to scroll manually while new text appears.
+
+```js
+function scrollToBottom() {
+  container.scrollTop =
+    container.scrollHeight;
+}
+```
+
+Call it after every rendered batch instead of every token.
+
+The movement becomes smooth and natural.
+
+---
+
+## Step 8. Markdown Should Render While Streaming
+
+ChatGPT formats text immediately.
+
+Headings appear instantly.
+
+Lists grow line by line.
+
+Code blocks expand while they're still being generated.
+
+Instead of waiting until the response finishes, continuously re-render Markdown.
+
+```js
+markdown.render(output);
+```
+
+Libraries like **Marked**, **Markdown-It**, or **Shiki** work well for this.
+
+---
+
+## Step 9. Animate the Caret
+
+One tiny detail makes the UI feel much more alive.
+
+Add a blinking cursor while tokens are still arriving.
+
+```css
+.cursor {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+```
+
+Remove it as soon as the stream ends.
+
+It's a tiny touch, but users instantly recognize the familiar ChatGPT experience.
+
+---
+
+## Step 10. Handle Errors Gracefully
+
+Streaming should never crash because one packet is malformed.
+
+```js
+try {
+  const data = JSON.parse(json);
+}
+catch {
+  continue;
+}
+```
+
+Also remember to detect the end marker.
+
+```js
+if (json === "[DONE]") {
+  break;
+}
+```
+
+Without it, your loading indicator may never disappear. 
+
+---
+
+## The Complete Streaming Loop
+
+Putting everything together produces a surprisingly compact implementation.
+
+```js
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+let buffer = "";
+let output = "";
+
+while (true) {
+  const { value, done } = await reader.read();
+
+  if (done) break;
+
+  buffer += decoder.decode(value, {
+    stream: true,
+  });
+
+  const lines = buffer.split("\n");
+  buffer = lines.pop() ?? "";
+
+  for (const line of lines) {
+    if (!line.startsWith("data:")) continue;
+
+    const json = line.slice(5).trim();
+
+    if (json === "[DONE]") continue;
+
+    try {
+      const data = JSON.parse(json);
+
+      const token =
+        data.choices?.[0]?.delta?.content;
+
+      if (!token) continue;
+
+      output += token;
+
+      scheduleRender(output);
+    } catch {
+      // Ignore malformed chunks.
+    }
+  }
+}
+```
+
+---
+
+## Common Mistakes
+
+The bugs below appear in almost every first implementation.
+
+* Forgetting `stream: true` when decoding UTF-8.
+* Parsing incomplete JSON chunks.
+* Updating the DOM after every token.
+* Ignoring the `[DONE]` event.
+* Not batching UI updates.
+* Rendering Markdown only after the response finishes.
+* Forgetting automatic scrolling.
+* Leaving the cursor visible after streaming ends.
+
+Fixing these details is what separates a basic demo from an interface that genuinely feels like ChatGPT.
+
+---
+
+## Testing the ChatGPT Typing Effect with a Large Response
+
+A streaming interface may look perfect when the response contains two paragraphs.
+
+The real problems begin when the model generates several thousand words, multiple code blocks, long lists, and complex Markdown. Updating the entire message after every token can make the browser lag, break automatic scrolling, and cause syntax highlighting to consume too much CPU.
+
+Before using the implementation in production, we should test it with a realistically large response.
+
+## Create a Large Test Message
+
+The following function generates a response containing headings, paragraphs, lists, tables, and JavaScript code.
+
+```js
+function createLargeTestMessage(sectionCount = 80) {
+  const sections = [];
+
+  for (let index = 1; index <= sectionCount; index += 1) {
+    sections.push(`
+## Section ${index}
+
+Streaming interfaces should remain responsive even when a response contains a large amount of text. The browser must decode incoming bytes, parse complete events, update the visible message, preserve Markdown formatting, and keep the viewport close to the newest content.
+
+### What the interface is doing
+
+1. Reading another chunk from the response stream.
+2. Decoding UTF-8 without breaking multibyte characters.
+3. Extracting complete Server-Sent Events.
+4. Appending new text to the message buffer.
+5. Scheduling a visual update.
+6. Keeping automatic scrolling under control.
+
+\`\`\`javascript
+function processSection${index}(items) {
+  return items
+    .filter(item => item.enabled)
+    .map(item => ({
+      ...item,
+      section: ${index},
+      processedAt: Date.now(),
+    }));
+}
+\`\`\`
+
+| Metric | Expected result |
+| --- | --- |
+| Section | ${index} |
+| Rendering | Smooth |
+| Broken characters | None |
+| Lost chunks | None |
+| Interface state | Responsive |
+`);
+  }
+
+  return sections.join("\n");
+}
+
+const largeMessage = createLargeTestMessage();
+
+console.log(
+  `Generated ${largeMessage.length.toLocaleString()} characters`
+);
+```
+
+With 80 sections, the generated response will contain tens of thousands of characters.
+
+You can increase the value to simulate much larger answers.
+
+```js
+const mediumResponse = createLargeTestMessage(40);
+const largeResponse = createLargeTestMessage(100);
+const extremeResponse = createLargeTestMessage(300);
+```
+
+The extreme version is intentionally excessive. It helps reveal performance problems that may not appear during normal usage.
+
+## Simulate a Real Network Stream
+
+Assigning the entire test message at once does not test the streaming interface.
+
+We need to split it into uneven chunks, just as a real network connection would.
+
+```js
+function splitIntoRandomChunks(text, minimum = 1, maximum = 24) {
+  const chunks = [];
+  let position = 0;
+
+  while (position < text.length) {
+    const size =
+      Math.floor(Math.random() * (maximum - minimum + 1)) +
+      minimum;
+
+    chunks.push(text.slice(position, position + size));
+    position += size;
+  }
+
+  return chunks;
+}
+```
+
+Small random chunks are important.
+
+A real stream does not guarantee that each chunk will contain one word, one token, or one complete JSON event. One chunk may contain half a Unicode character while another may contain several complete events.
+
+Now create an asynchronous stream simulator.
+
+```js
+function wait(milliseconds) {
+  return new Promise(resolve => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
+async function* simulateTextStream(text, options = {}) {
+  const {
+    minimumChunkSize = 1,
+    maximumChunkSize = 20,
+    minimumDelay = 5,
+    maximumDelay = 25,
+  } = options;
+
+  const chunks = splitIntoRandomChunks(
+    text,
+    minimumChunkSize,
+    maximumChunkSize
+  );
+
+  for (const chunk of chunks) {
+    const delay =
+      Math.floor(
+        Math.random() * (maximumDelay - minimumDelay + 1)
+      ) + minimumDelay;
+
+    await wait(delay);
+    yield chunk;
+  }
+}
+```
+
+This produces a variable stream instead of a perfectly uniform animation.
+
+```js
+for await (const chunk of simulateTextStream(largeMessage)) {
+  console.log(chunk);
+}
+```
+
+## Build a Buffered ChatGPT-Style Renderer
+
+The renderer should not update the DOM after every received chunk.
+
+Instead, it stores incoming text in a pending buffer and flushes it once per animation frame.
+
+```js
+function createStreamingRenderer({
+  element,
+  scrollContainer,
+  onUpdate,
+}) {
+  let completeText = "";
+  let pendingText = "";
+  let frameId = null;
+  let finished = false;
+
+  function render() {
+    frameId = null;
+
+    if (!pendingText) {
+      return;
+    }
+
+    completeText += pendingText;
+    pendingText = "";
+
+    if (onUpdate) {
+      onUpdate(completeText);
+    } else {
+      element.textContent = completeText;
+    }
+
+    if (scrollContainer) {
+      scrollContainer.scrollTop =
+        scrollContainer.scrollHeight;
+    }
+  }
+
+  function scheduleRender() {
+    if (frameId !== null) {
+      return;
+    }
+
+    frameId = requestAnimationFrame(render);
+  }
+
+  return {
+    append(text) {
+      if (finished) {
+        return;
+      }
+
+      pendingText += text;
+      scheduleRender();
+    },
+
+    finish() {
+      finished = true;
+
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+        frameId = null;
+      }
+
+      render();
+    },
+
+    getText() {
+      return completeText + pendingText;
+    },
+  };
+}
+```
+
+Use it with the simulated large response.
+
+```js
+const output = document.querySelector("#output");
+const chat = document.querySelector("#chat");
+
+const renderer = createStreamingRenderer({
+  element: output,
+  scrollContainer: chat,
+});
+
+const testMessage = createLargeTestMessage(100);
+
+for await (
+  const chunk of simulateTextStream(testMessage, {
+    minimumChunkSize: 2,
+    maximumChunkSize: 40,
+    minimumDelay: 2,
+    maximumDelay: 12,
+  })
+) {
+  renderer.append(chunk);
+}
+
+renderer.finish();
+```
+
+Even though chunks may arrive every few milliseconds, the visible interface updates at most once per animation frame.
+
+That normally means no more than about 60 visual updates per second.
+
+## Add Performance Measurements
+
+A stress test is more useful when it produces actual numbers.
+
+```js
+async function runStreamingPerformanceTest({
+  text,
+  renderer,
+  streamOptions,
+}) {
+  const startedAt = performance.now();
+
+  let chunkCount = 0;
+  let receivedCharacters = 0;
+
+  for await (
+    const chunk of simulateTextStream(text, streamOptions)
+  ) {
+    chunkCount += 1;
+    receivedCharacters += chunk.length;
+
+    renderer.append(chunk);
+  }
+
+  renderer.finish();
+
+  const finishedAt = performance.now();
+  const duration = finishedAt - startedAt;
+
+  return {
+    characters: receivedCharacters,
+    chunks: chunkCount,
+    durationMs: Math.round(duration),
+    charactersPerSecond: Math.round(
+      receivedCharacters / (duration / 1000)
+    ),
+  };
+}
+```
+
+Run the test and display the result.
+
+```js
+const testText = createLargeTestMessage(100);
+
+const result = await runStreamingPerformanceTest({
+  text: testText,
+  renderer,
+  streamOptions: {
+    minimumChunkSize: 5,
+    maximumChunkSize: 60,
+    minimumDelay: 1,
+    maximumDelay: 8,
+  },
+});
+
+console.table(result);
+```
+
+The exact result depends on the machine and the artificial delay, but the important questions are visual:
+
+* Does the input remain responsive?
+* Can the user still select and copy text?
+* Does scrolling remain smooth?
+* Are any characters missing?
+* Does the final output exactly match the original string?
+* Does CPU usage remain reasonable?
+
+## Verify That No Text Was Lost
+
+Visual inspection is not enough.
+
+After streaming completes, compare the rendered result with the original message.
+
+```js
+const renderedText = renderer.getText();
+
+if (renderedText === testText) {
+  console.log("Streaming test passed");
+} else {
+  console.error("Streaming test failed");
+  console.error({
+    expectedLength: testText.length,
+    actualLength: renderedText.length,
+  });
+}
+```
+
+This catches subtle bugs where a chunk is skipped, duplicated, or rendered after the stream has already been marked as finished.
+
+For a stricter check, locate the first mismatching character.
+
+```js
+function findFirstDifference(expected, actual) {
+  const length = Math.max(
+    expected.length,
+    actual.length
+  );
+
+  for (let index = 0; index < length; index += 1) {
+    if (expected[index] !== actual[index]) {
+      return {
+        index,
+        expected: expected[index],
+        actual: actual[index],
+        expectedContext: expected.slice(
+          Math.max(0, index - 30),
+          index + 30
+        ),
+        actualContext: actual.slice(
+          Math.max(0, index - 30),
+          index + 30
+        ),
+      };
+    }
+  }
+
+  return null;
+}
+```
+
+Usage:
+
+```js
+const difference = findFirstDifference(
+  testText,
+  renderedText
+);
+
+if (difference) {
+  console.error("Content mismatch", difference);
+}
+```
+
+## Test Unicode and Split Characters
+
+Large English text is not enough.
+
+The test should include characters that use multiple UTF-8 bytes.
+
+```js
+const unicodeTest = `
+English: Streaming response
+Hebrew: תגובה זורמת בזמן אמת
+Russian: Потоковый ответ в реальном времени
+Chinese: 实时流式响应
+Japanese: リアルタイムストリーミング
+Arabic: استجابة متدفقة في الوقت الفعلي
+Emoji: 🚀 🧠 ⚡ 🧩
+`;
+
+const unicodeMessage = unicodeTest.repeat(500);
+```
+
+When working with an actual byte stream, the important part is still:
+
+```js
+const decoder = new TextDecoder();
+
+buffer += decoder.decode(value, {
+  stream: true,
+});
+```
+
+After the stream finishes, flush the decoder one final time.
+
+```js
+buffer += decoder.decode();
+```
+
+This ensures that any remaining internally buffered bytes are processed.
+
+## Test Large Markdown Responses
+
+Continuously parsing the entire Markdown document is usually the most expensive part of the interface.
+
+A simple implementation might do this:
+
+```js
+messageElement.innerHTML = markdownParser.render(
+  completeText
+);
+```
+
+This reparses the entire response after every update.
+
+It may work for short messages, but a large answer can contain hundreds of Markdown nodes and several code blocks.
+
+A safer approach is to throttle Markdown rendering.
+
+```js
+function createThrottledMarkdownRenderer({
+  element,
+  renderMarkdown,
+  interval = 50,
+}) {
+  let latestText = "";
+  let timeoutId = null;
+
+  function render() {
+    timeoutId = null;
+    element.innerHTML = renderMarkdown(latestText);
+  }
+
+  return {
+    update(text) {
+      latestText = text;
+
+      if (timeoutId !== null) {
+        return;
+      }
+
+      timeoutId = setTimeout(render, interval);
+    },
+
+    finish(text) {
+      latestText = text;
+
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+      render();
+    },
+  };
+}
+```
+
+Use plain-text updates frequently and perform full Markdown rendering less often, or use the throttled renderer for every update.
+
+```js
+const markdownRenderer =
+  createThrottledMarkdownRenderer({
+    element: output,
+    renderMarkdown: text => marked.parse(text),
+    interval: 60,
+  });
+
+const renderer = createStreamingRenderer({
+  element: output,
+  scrollContainer: chat,
+  onUpdate(text) {
+    markdownRenderer.update(text);
+  },
+});
+```
+
+When the stream ends, perform one final complete render.
+
+```js
+renderer.finish();
+markdownRenderer.finish(renderer.getText());
+```
+
+## Do Not Highlight Code on Every Token
+
+Syntax highlighting is even more expensive than Markdown parsing.
+
+Avoid running a highlighter every time a new character appears inside a code block.
+
+Bad:
+
+```js
+onEveryChunk(() => {
+  renderMarkdown();
+  highlightEveryCodeBlock();
+});
+```
+
+Better:
+
+```js
+onStreamUpdate(() => {
+  renderMarkdown();
+});
+
+onStreamComplete(() => {
+  highlightEveryCodeBlock();
+});
+```
+
+A more advanced interface can highlight only completed code blocks, but highlighting once at the end is enough for most applications.
+
+## Improve Automatic Scrolling
+
+Always forcing the page to the bottom creates another problem.
+
+A user may scroll upward to reread an earlier paragraph while the response is still arriving. ChatGPT does not aggressively pull the viewport back down once the user has moved away from the bottom.
+
+Check whether the user is already near the bottom.
+
+```js
+function isNearBottom(element, threshold = 120) {
+  const distance =
+    element.scrollHeight -
+    element.scrollTop -
+    element.clientHeight;
+
+  return distance <= threshold;
+}
+```
+
+Track the scrolling state.
+
+```js
+let shouldAutoScroll = true;
+
+chat.addEventListener("scroll", () => {
+  shouldAutoScroll = isNearBottom(chat);
+});
+```
+
+Then scroll only when appropriate.
+
+```js
+if (shouldAutoScroll) {
+  chat.scrollTop = chat.scrollHeight;
+}
+```
+
+This feels much closer to a real chat interface.
+
+## Add a Stop Button
+
+Long responses need cancellation.
+
+```js
+const controller = new AbortController();
+
+const response = await fetch("/api/chat", {
+  method: "POST",
+  signal: controller.signal,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    messages,
+    stream: true,
+  }),
+});
+```
+
+Connect it to a button.
+
+```js
+stopButton.addEventListener("click", () => {
+  controller.abort();
+});
+```
+
+Handle cancellation separately from real errors.
+
+```js
+try {
+  await readStreamingResponse(response);
+} catch (error) {
+  if (error.name === "AbortError") {
+    console.log("Generation stopped by the user");
+  } else {
+    throw error;
+  }
+}
+```
+
+## Recommended Stress-Test Levels
+
+Use several response sizes instead of testing only one extreme case.
+
+```js
+const testLevels = {
+  small: createLargeTestMessage(10),
+  normal: createLargeTestMessage(40),
+  large: createLargeTestMessage(100),
+  extreme: createLargeTestMessage(300),
+};
+```
+
+A production-quality interface should handle the `large` test without noticeable lag.
+
+The `extreme` test may not represent a realistic model response, but it is useful for identifying inefficient rendering, unbounded memory use, and aggressive automatic scrolling.
+
+## What a Successful Test Looks Like
+
+The implementation is ready when all of the following remain true during a large response:
+
+1. The text appears continuously without artificial per-character delays.
+2. Unicode characters are never corrupted.
+3. No chunks are skipped or duplicated.
+4. The input and stop button remain responsive.
+5. Scrolling stays smooth.
+6. The page does not jump when Markdown blocks change.
+7. The user can scroll upward without being forced back down.
+8. The final rendered content exactly matches the received response.
+9. Syntax highlighting runs only when necessary.
+10. The loading cursor disappears when streaming finishes.
+
+This stress test reveals an important detail about the ChatGPT typing effect.
+
+Reading the stream is the easy part.
+
+The difficult part is rendering a constantly growing document without making the browser do unnecessary work.
+
+# Final Thoughts
+
+The famous ChatGPT typing effect isn't a CSS animation.
+
+It isn't a fake typewriter.
+
+It's simply a well-designed streaming interface built on top of Server-Sent Events, careful UTF-8 decoding, buffered parsing, and efficient rendering.
+
+None of the individual techniques are particularly complex.
+
+The real magic comes from combining them together.

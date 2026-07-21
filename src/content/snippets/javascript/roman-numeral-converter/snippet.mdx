@@ -1,0 +1,100 @@
+---
+title: JavaScript Roman Numeral Converter
+slug: roman-numeral-converter
+heading: Convert Number to Roman Numeral in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/roman-numeral-converter
+date: 2026-07-21
+author: anton liberant
+category: javascript
+type: snippets
+tags: ['arrays', 'map']
+desc: Discover a quick and easy code snippet to convert numbers to Roman numerals in JavaScript. Perfect for enhancing your data management skills.
+subtitle: 'JavaScript Roman Numeral Converter (Bidirectional)'
+---
+
+A lightweight, dependency-free JavaScript utility to convert integers to Roman numerals and parse Roman numerals back to numbers. Handles standard subtractive notation rules (`IV`, `IX`, `XC`, etc.) with built-in validation for numbers between 1 and 3999.
+
+This code snippet provides two helper functions, `toRoman` and `fromRoman`, to seamlessly convert between Arabic numbers and Roman numerals in JavaScript.
+* **`toRoman(num)`**: Accepts a positive integer (1 to 3999) and builds a Roman numeral string using a standard mapping array.
+* **`fromRoman(str)`**: Takes a valid Roman numeral string and evaluates its numeric value using a right-to-left character comparison to account for subtractive combinations like `IV` or `CM`.
+
+Both functions include robust input validation and run with $O(1)$ time complexity for standard ranges.
+
+```js
+const ROMAN_MAP = [
+  { value: 1000, symbol: 'M' },
+  { value: 900,  symbol: 'CM' },
+  { value: 500,  symbol: 'D' },
+  { value: 400,  symbol: 'CD' },
+  { value: 100,  symbol: 'C' },
+  { value: 90,   symbol: 'XC' },
+  { value: 50,   symbol: 'L' },
+  { value: 40,   symbol: 'XL' },
+  { value: 10,   symbol: 'X' },
+  { value: 9,    symbol: 'IX' },
+  { value: 5,    symbol: 'V' },
+  { value: 4,    symbol: 'IV' },
+  { value: 1,    symbol: 'I' },
+];
+
+/**
+ * Converts an integer to a Roman numeral.
+ * @param {number} num - Integer between 1 and 3999.
+ * @returns {string} Roman numeral representation.
+ */
+export function toRoman(num) {
+  if (!Number.isInteger(num) || num < 1 || num > 3999) {
+    throw new Error('Input must be an integer between 1 and 3999.');
+  }
+
+  let result = '';
+  for (const { value, symbol } of ROMAN_MAP) {
+    while (num >= value) {
+      result += symbol;
+      num -= value;
+    }
+  }
+  return result;
+}
+
+/**
+ * Converts a Roman numeral to an integer.
+ * @param {string} str - Roman numeral string.
+ * @returns {number} Integer representation.
+ */
+export function fromRoman(str) {
+  if (typeof str !== 'string' || !str.trim()) {
+    throw new Error('Input must be a non-empty string.');
+  }
+
+  const romanValues = {
+    I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000
+  };
+
+  const formatted = str.trim().toUpperCase();
+  let result = 0;
+
+  for (let i = 0; i < formatted.length; i++) {
+    const current = romanValues[formatted[i]];
+    const next = romanValues[formatted[i + 1]];
+
+    if (!current) {
+      throw new Error(`Invalid Roman numeral character: ${formatted[i]}`);
+    }
+
+    if (next && current < next) {
+      result -= current;
+    } else {
+      result += current;
+    }
+  }
+
+  return result;
+}
+
+// Example usage:
+// console.log(toRoman(2026)); // "MMXXVI"
+// console.log(fromRoman("MMXXVI")); // 2026
+```
