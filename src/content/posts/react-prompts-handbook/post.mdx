@@ -1,0 +1,745 @@
+---
+title: '13 AI Prompts Every React Developer Should Save'
+slug: react-prompts-handbook
+heading: 'The React AI Prompt Handbook'
+image: ./images/react-ai-prompts-handbook.png
+permalink: react-prompts-handbook
+date: 2026-07-28
+author: anton liberant
+category: llm
+type: post
+tags: ['ai', 'prompt']
+desc: 'Boost your React workflow with 13 practical AI prompts for Cursor, Claude Code, GitHub Copilot, and Codex. Copy, customize, and build faster.'
+subtitle: 'Stop fighting your AI coding assistant. These React-focused prompts help you build better components, fix bugs faster, and ship production-ready code.'
+---
+
+AI has changed front-end development more in the last two years than most JavaScript frameworks did in the previous decade.
+
+Today, generating a component takes seconds. Refactoring hundreds of lines of code can happen while you refill your coffee. Entire features appear almost instantly inside Cursor or Claude Code.
+
+Yet many developers still feel disappointed.
+
+They ask AI to build a modal, then spend twenty minutes fixing accessibility issues. They generate a dashboard, only to discover duplicated state, unnecessary re-renders, and components that would never survive a production code review.
+
+Eventually they conclude that AI simply isn't reliable.
+
+The truth is usually much less dramatic.
+
+The problem isn't the model.
+
+It's the prompt.
+
+---
+
+## Why Most AI Responses Feel Random
+
+AI doesn't understand your project the way another engineer would.
+
+It only sees the instructions you provide.
+
+When the request lacks context, the model fills the gaps with assumptions. Sometimes those assumptions are correct. Most of the time they aren't.
+
+Consider this prompt:
+
+> Build a React login component.
+
+What should the AI generate?
+
+Should it use React Hook Form or native forms?
+
+Should it validate email addresses?
+
+Should it support loading states?
+
+Should it include dark mode?
+
+Should it be responsive?
+
+Should it use Context, Zustand, or local state?
+
+None of those decisions were specified, so the model has to guess.
+
+Now compare it with this:
+
+> Build a production-ready React 19 login form using TypeScript and Tailwind CSS v4. Include client-side validation, loading and error states, keyboard accessibility, semantic HTML, responsive design, complete TypeScript interfaces, and clean component composition. Avoid external UI libraries and return code that follows modern React best practices.
+
+The second prompt removes ambiguity.
+
+Instead of inventing requirements, the AI can focus on solving the problem.
+
+That difference alone often determines whether you'll spend five minutes reviewing code or an hour rewriting it.
+
+---
+
+## Stop Asking AI to Write Code
+
+One of the biggest misconceptions about AI-assisted development is believing its primary job is writing code.
+
+It isn't.
+
+The best developers rarely ask AI to "build something."
+
+Instead, they ask it to think like a senior engineer.
+
+A good prompt provides context, explains constraints, defines success, and sets quality expectations before a single line of code is generated.
+
+That's exactly how experienced engineers communicate during code reviews and technical planning.
+
+AI works best when you treat it the same way.
+
+---
+
+## The Five Ingredients of Every Great React Prompt
+
+Nearly every prompt in this article follows the same structure.
+
+### 1. Define the Role
+
+Tell the model who it should be.
+
+Examples include:
+
+* Senior React engineer
+* Front-end architect
+* Performance specialist
+* Accessibility expert
+* Code reviewer
+
+This simple step dramatically changes the quality of the response.
+
+---
+
+### 2. Describe the Stack
+
+Avoid generic requests.
+
+Specify exactly what your project uses.
+
+For example:
+
+* React 19
+* TypeScript
+* Tailwind CSS v4
+* Vite
+* React Router
+* TanStack Query
+
+The more accurately AI understands the environment, the less cleanup you'll need later.
+
+---
+
+### 3. Explain the Goal
+
+Don't describe implementation first.
+
+Describe the business problem.
+
+Compare these two requests.
+
+Poor:
+
+> Build a modal.
+
+Better:
+
+> Build an accessible confirmation dialog that prevents accidental account deletion and supports keyboard navigation, focus trapping, loading states, and optimistic UI.
+
+The second version tells AI what users actually need instead of how to write JSX.
+
+---
+
+### 4. Define Your Standards
+
+Professional projects follow rules.
+
+Your prompt should too.
+
+Good examples include:
+
+* Production-ready code only
+* No unnecessary dependencies
+* Fully typed
+* Accessible
+* Responsive
+* Reusable
+* ESLint compliant
+* No duplicated logic
+* Explain important decisions
+
+Quality expectations lead to higher quality output.
+
+---
+
+### 5. Ask for More Than Code
+
+Most developers stop after asking for a component.
+
+You can get far more value by requesting additional context.
+
+Ask AI to include:
+
+* Architecture decisions
+* Trade-offs
+* Performance considerations
+* Accessibility notes
+* Future improvements
+* Alternative implementations
+
+These explanations often become more valuable than the code itself.
+
+---
+
+## Before We Start
+
+The following prompts were written specifically for modern React development.
+
+Every example assumes the same stack:
+
+* React 19
+* TypeScript
+* Tailwind CSS v4
+
+They work particularly well with Cursor, Claude Code, GitHub Copilot, Codex, and similar coding assistants.
+
+Simply replace the placeholders with your own project details and adapt the requirements to your application.
+
+The first prompt is one you'll probably use almost every day.
+
+## Prompt 1. Build a Production-Ready React Component
+
+Every React project eventually accumulates dozens of buttons, cards, forms, dialogs, tables, and navigation components. Most of them share the same problem. They started as quick experiments and slowly evolved into production code.
+
+Instead of asking AI to "build a card component," give it enough information to design something you can actually maintain six months later.
+
+```text
+You are a senior React engineer.
+
+Create a production-ready React 19 component using TypeScript and Tailwind CSS v4.
+
+Component:
+[Describe the component]
+
+Requirements:
+
+• Use functional components and modern React patterns.
+• Keep the component reusable and composable.
+• Use semantic HTML and full accessibility support.
+• Support loading, disabled, error and empty states where appropriate.
+• Accept well-designed props with complete TypeScript interfaces.
+• Avoid unnecessary re-renders.
+• Write clean code that follows modern React best practices.
+• Include responsive Tailwind CSS classes.
+• Do not use external UI libraries unless requested.
+• Comment only complex logic.
+
+Return:
+
+1. Complete component
+2. Props interface
+3. Example usage
+4. Explanation of important implementation decisions
+```
+
+This prompt consistently produces cleaner APIs than generic requests. The generated components usually require only minor adjustments before they are ready to ship.
+
+---
+
+## Prompt 2. Build a Complex Reusable Feature
+
+Simple components are easy.
+
+Large UI widgets are where most AI assistants begin to struggle.
+
+Whether you're building a data table, drag-and-drop uploader, Kanban board, or searchable combobox, the model needs to think beyond JSX.
+
+This prompt encourages architectural decisions instead of simply generating markup.
+
+```text
+Act as a senior React architect.
+
+Build a reusable feature using React 19, TypeScript and Tailwind CSS v4.
+
+Feature:
+[Describe the feature]
+
+Requirements:
+
+• Organize the code into maintainable files.
+• Separate UI from business logic.
+• Create custom hooks where appropriate.
+• Prevent unnecessary re-renders.
+• Memoize expensive computations.
+• Support controlled and uncontrolled modes when appropriate.
+• Include keyboard accessibility.
+• Support dark mode.
+• Expose a clean API with flexible props.
+• Avoid overengineering.
+
+Return:
+
+• Folder structure
+• Full implementation
+• Usage examples
+• Performance notes
+• Future extension ideas
+```
+
+The result usually resembles something written by an experienced engineer rather than a quick prototype.
+
+---
+
+## Prompt 3. Debug React Errors Like a Senior Engineer
+
+Most developers paste an error message into AI and ask, "What's wrong?"
+
+That rarely produces a satisfying answer.
+
+The model has almost no context, so it guesses. Sometimes it guesses correctly. Sometimes it doesn't.
+
+Instead, ask AI to investigate the problem like a debugger.
+
+```text
+Act as a senior React debugging expert.
+
+Technology:
+
+React 19
+TypeScript
+Tailwind CSS
+
+Problem:
+
+[Paste the error]
+
+Relevant code:
+
+[Paste related code]
+
+Tasks:
+
+• Identify the root cause.
+• Explain why the bug occurs.
+• Explain why previous implementations fail.
+• Fix the issue.
+• Improve the implementation where possible.
+• Point out hidden problems.
+• Return production-ready code.
+```
+
+This prompt often uncovers problems you didn't even know existed, including stale closures, missing dependencies, incorrect memoization, or unstable state updates.
+
+---
+
+## Prompt 4. Diagnose Performance Problems
+
+Performance issues are rarely caused by a single mistake.
+
+A slow page might be suffering from unnecessary renders, oversized components, expensive calculations, poor state management, or inefficient effects.
+
+Rather than asking AI to "make this faster," let it perform a structured investigation.
+
+```text
+Act as a React performance engineer.
+
+Problem:
+
+[Describe the issue]
+
+Environment:
+
+React 19
+TypeScript
+Tailwind CSS
+
+Tasks:
+
+• List every possible cause.
+• Rank causes by probability.
+• Explain how to reproduce each issue.
+• Suggest optimized solutions.
+• Explain trade-offs.
+• Return improved production-ready code.
+```
+
+This works especially well for dashboards, tables, infinite scrolling, virtualized lists, and applications with frequent state updates.
+
+---
+
+## Prompt 5. Refactor Legacy Components
+
+Every React project contains components nobody wants to touch.
+
+They're too large, full of duplicated logic, and impossible to understand without reading them several times.
+
+Instead of rewriting everything from scratch, let AI improve the existing implementation while preserving the behavior.
+
+```text
+Act as a senior software engineer performing a code review.
+
+Refactor the following React component.
+
+Goals:
+
+• Reduce complexity.
+• Remove duplicated logic.
+• Improve readability.
+• Improve maintainability.
+• Strengthen TypeScript types.
+• Preserve all existing behavior.
+• Follow React 19 best practices.
+• Apply clean architecture principles.
+
+After refactoring explain:
+
+• What changed
+• Why it changed
+• Expected long-term benefits
+```
+
+One useful trick is to run this prompt multiple times. The first pass usually simplifies the structure. The second often finds opportunities for further cleanup that were hidden by the original implementation.
+
+---
+
+## Prompt 6. Modernize Legacy React Code
+
+Frameworks evolve quickly.
+
+Patterns that were considered best practice three years ago often look outdated today.
+
+Migrating old components manually can take hours, especially when they rely on deprecated APIs or class components.
+
+This prompt helps AI perform a careful migration without changing the user-facing behavior.
+
+```text
+Migrate the following React code to modern React 19.
+
+Requirements:
+
+• Replace deprecated APIs.
+• Convert class components to functional components where appropriate.
+• Improve TypeScript types.
+• Simplify effects.
+• Modernize state management.
+• Remove unnecessary code.
+• Preserve existing functionality.
+• Explain every important migration step.
+```
+
+Besides producing cleaner code, the explanation usually highlights outdated React patterns that still exist elsewhere in your application. Those insights often become a useful checklist for future refactoring efforts.
+
+---
+
+## Prompt 7. Generate Better Tailwind UI
+
+Tailwind CSS removes much of the friction from writing styles, but it doesn't automatically produce beautiful interfaces.
+
+AI tends to generate layouts that technically work but feel generic. Spacing is inconsistent, typography lacks hierarchy, and components often look like they came straight from a boilerplate template.
+
+Instead of asking for "a nice dashboard," define the design principles you expect.
+
+```text
+You are a senior UI engineer and design systems expert.
+
+Generate production-ready JSX using React 19 and Tailwind CSS v4.
+
+Component:
+
+[Describe the UI]
+
+Design goals:
+
+• Modern SaaS aesthetic
+• Excellent visual hierarchy
+• Consistent spacing
+• Responsive layout
+• Dark mode support
+• Keyboard accessibility
+• Semantic HTML
+• Mobile-first design
+• Reusable utility classes
+• No unnecessary wrapper elements
+• Clean typography
+• Subtle hover and focus states
+
+Return:
+
+• Complete JSX
+• Tailwind classes only
+• Short explanation of design decisions
+```
+
+This prompt consistently produces layouts that feel much closer to professionally designed products instead of simple demos.
+
+---
+
+## Prompt 8. Build Smooth React Interactions
+
+Animations often look simple until you build them.
+
+Dropdown menus flicker. Accordions jump. Drag-and-drop feels sluggish. Infinite scrolling causes unnecessary rendering.
+
+Rather than focusing on animation alone, ask AI to think about user experience and performance together.
+
+```text
+Implement the following interaction using React 19,
+TypeScript and Tailwind CSS v4.
+
+Interaction:
+
+[Describe the interaction]
+
+Requirements:
+
+• Smooth animations
+• Keyboard accessibility
+• Mobile support
+• High performance
+• Prefer CSS transitions where possible
+• Avoid unnecessary React state
+• Respect prefers-reduced-motion
+• Explain important implementation details
+
+Return:
+
+• Complete JSX
+• TypeScript
+• Tailwind styles
+```
+
+This prompt works especially well for:
+
+* Drag and drop
+* Command palettes
+* Navigation menus
+* Context menus
+* Modal dialogs
+* Image galleries
+* Infinite scrolling
+* Sortable lists
+
+---
+
+## Prompt 9. Generate a Complete API Layer
+
+Connecting a UI to an API usually involves far more than writing a fetch request.
+
+You need proper typing, reusable request functions, error handling, loading states, authentication, and a structure that scales as the application grows.
+
+Instead of generating isolated API calls, let AI build the entire layer.
+
+```text
+Build a complete API layer for a React application.
+
+Technology:
+
+React 19
+TypeScript
+Axios
+
+API documentation:
+
+[Paste API documentation]
+
+Generate:
+
+• API client
+• Request functions
+• Response types
+• Request interceptors
+• Response interceptors
+• Error handling
+• Mock responses
+• Reusable hooks
+• Usage examples
+
+Organize everything into production-ready files.
+```
+
+You'll usually receive a much cleaner project structure than if you generated every endpoint separately.
+
+---
+
+## Prompt 10. Write Tests That Matter
+
+Many developers ask AI to generate unit tests, then never read them.
+
+The result is often dozens of assertions that verify implementation details instead of real user behavior.
+
+A better prompt encourages AI to think like a QA engineer rather than a code generator.
+
+```text
+Generate complete tests for the following React component.
+
+Technology:
+
+React Testing Library
+Vitest
+
+Requirements:
+
+• Test rendering
+• Test user interactions
+• Test accessibility
+• Test keyboard navigation
+• Test edge cases
+• Test loading and error states
+• Avoid unnecessary snapshots
+
+Return production-ready test files.
+```
+
+Good tests should make refactoring safer, not more difficult.
+
+---
+
+## Prompt 11. Review My Component
+
+One of the most underrated uses of AI is code review.
+
+Instead of generating new code, ask the model to criticize the code you've already written.
+
+This often produces better results than asking for improvements directly because the AI evaluates the component from multiple perspectives.
+
+```text
+Act as a senior React reviewer.
+
+Review the following component.
+
+Evaluate:
+
+• Architecture
+• Component composition
+• TypeScript quality
+• Accessibility
+• Tailwind usage
+• Performance
+• React best practices
+• Security
+• Reusability
+• Maintainability
+
+For every issue provide:
+
+• Severity
+• Explanation
+• Improved code
+
+Finish with an overall score from 1 to 10.
+```
+
+This prompt is excellent before opening a pull request. It frequently catches issues that would otherwise appear during code review.
+
+---
+
+## Prompt 12. Optimize React Performance
+
+Performance optimization isn't just about adding `useMemo` everywhere.
+
+Sometimes memoization makes code slower. Sometimes a single context provider causes hundreds of unnecessary renders. Sometimes the biggest issue is simply too much state.
+
+Ask AI to investigate the application systematically.
+
+```text
+Act as a React performance specialist.
+
+Analyze the following code.
+
+Identify:
+
+• Unnecessary re-renders
+• Expensive computations
+• Incorrect hook usage
+• Missing memoization
+• Incorrect dependency arrays
+• Large bundle contributors
+• Inefficient state updates
+• Rendering bottlenecks
+
+Optimize the implementation.
+
+For every optimization explain:
+
+• Why it matters
+• Estimated performance impact
+• Possible trade-offs
+
+Return the final optimized code.
+```
+
+This prompt is particularly useful for dashboards, complex forms, large tables, and applications with thousands of rendered elements.
+
+---
+
+## Prompt 13. Build an Entire Feature
+
+Sometimes generating a single component isn't enough.
+
+You already know the feature you want, but you don't want to spend the next hour creating folders, wiring hooks, defining types, writing API calls, and connecting everything together.
+
+Instead of asking AI to build individual pieces, ask it to design the entire feature from the beginning.
+
+```text
+You are a senior front-end engineer.
+
+Build a complete production-ready feature.
+
+Feature:
+
+[Describe the feature]
+
+Technology:
+
+React 19
+TypeScript
+Tailwind CSS v4
+
+Requirements:
+
+• Split into reusable components
+• Create custom hooks where appropriate
+• Build the API layer
+• Include loading, empty and error states
+• Support optimistic UI where appropriate
+• Implement responsive design
+• Follow accessibility best practices
+• Use a scalable folder structure
+• Keep business logic separate from UI
+• Avoid unnecessary dependencies
+
+Return:
+
+1. Folder structure
+2. Every required file
+3. Architecture explanation
+4. Future improvement suggestions
+```
+
+This is one of the most powerful prompts in the collection. Instead of acting like an autocomplete tool, AI starts thinking like a software architect and delivers a complete feature that fits naturally into a modern React application.
+
+---
+
+## Common Mistakes That Lead to Bad AI Responses
+
+Even the best prompt can't compensate for missing context. If your results feel inconsistent, there's a good chance you're making one of these mistakes.
+
+The first is being too vague. Asking for "a better component" forces AI to guess what "better" means. Explain the goal instead. Tell it whether you care about accessibility, performance, maintainability, or user experience.
+
+Another common mistake is requesting implementation before defining the problem. Start with the outcome you want to achieve, then describe the technical constraints. The generated solution will usually be much more appropriate.
+
+Many developers also expect the perfect answer on the first try. Experienced engineers don't work that way, and neither should you. Treat AI like a teammate. Review the output, ask follow-up questions, request alternatives, and iterate until the solution fits your project.
+
+Finally, don't forget that AI has no knowledge of your architecture unless you provide it. Mention your folder structure, coding conventions, preferred libraries, and existing patterns whenever they matter. A few extra lines of context can dramatically improve the quality of the response.
+
+---
+
+## Final Thoughts
+
+The developers getting the most value from AI aren't necessarily using a more advanced model.
+
+They're asking better questions.
+
+A carefully written prompt gives AI the context it needs to produce code that's easier to maintain, easier to review, and much closer to production quality. It also reduces the endless back-and-forth that happens when the first response misses the mark.
+
+Think of these prompts as starting points rather than rigid templates. Adapt them to your own stack, coding standards, and project requirements. Over time you'll build a personal prompt library that reflects the way your team works.
+
+The biggest productivity gain doesn't come from generating code faster. It comes from spending less time fixing code that never should have been generated in the first place.
