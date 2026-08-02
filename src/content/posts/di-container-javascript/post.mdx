@@ -1,0 +1,1048 @@
+---
+title: Build a Dependency Injection Container in Vanilla JavaScript
+slug: di-container-javascript
+heading: How to Build a Modern Dependency Injection Container in Pure JavaScript
+image: ./images/di-container.png
+permalink: di-container-javascript
+date: 2026-08-02
+author: anton liberant
+category: javascript
+type: post
+tags: ['dependency-injection']
+desc: Learn how to build a dependency injection container in vanilla JavaScript with singleton, scoped, and transient lifetimes, all without TypeScript.
+subtitle: 'Build a lightweight DI container without TypeScript, decorators, or reflect-metadata.'
+---
+
+Dependency injection has been part of application architecture for years. In the JavaScript world, however, the discussion almost always ends up revolving around TypeScript, decorators, and `reflect-metadata`.
+
+That raises an interesting question.
+
+Can you build a practical DI container using nothing but modern JavaScript?
+
+The answer is yes.
+
+In this article, we'll build a lightweight dependency injection container from scratch without TypeScript, decorators, or runtime reflection. Instead of trying to inspect constructor parameters at runtime, we'll use JavaScript's own strengths. Classes are first-class values. They can carry metadata, be used as tokens, and be created dynamically.
+
+The result is a surprisingly clean design that supports singletons, scoped services, transient lifetimes, and dependency resolution while keeping the domain layer completely independent from the container.
+
+The implementation shown here is an experiment rather than a production-ready framework, but it demonstrates that JavaScript already provides everything needed for an elegant DI solution.
+
+## Why Constructor Inspection Doesn't Work
+
+Most dependency injection frameworks try to determine what a class depends on by analyzing its constructor.
+
+Consider this service:
+
+```javascript
+class CartApplicationService {
+  constructor(repository, catalog, discountPolicy) {
+    this.repository = repository;
+    this.catalog = catalog;
+    this.discountPolicy = discountPolicy;
+  }
+}
+```
+
+At runtime, JavaScript knows only one thing.
+
+This constructor accepts three arguments.
+
+It has no idea that `repository` should implement a shopping cart repository, that `catalog` represents a product catalog, or that `discountPolicy` contains business rules for calculating discounts.
+
+Parameter names are not contracts. After minification they often become `a`, `b`, and `c`. Default parameters, destructuring, and rest syntax make runtime analysis even less reliable.
+
+Many frameworks solve this problem by generating metadata through decorators or TypeScript compilation.
+
+Without those tools, the container has no reliable way to discover dependencies automatically.
+
+## A Different Approach
+
+Instead of asking the container to guess dependencies later, we can declare them when the component is created.
+
+Because JavaScript classes are regular runtime values, they can store their own metadata.
+
+Imagine an API like this:
+
+```javascript
+const CartApplicationService = component(
+  {
+    name: "CartApplicationService",
+    lifetime: "scoped",
+    inject: {
+      carts: CART_REPOSITORY,
+      catalog: PRODUCT_CATALOG,
+      discounts: DISCOUNT_POLICY,
+    },
+  },
+  () =>
+    class {
+      constructor({ carts, catalog, discounts }) {
+        this.carts = carts;
+        this.catalog = catalog;
+        this.discounts = discounts;
+      }
+    }
+);
+```
+
+This simple factory creates a class and attaches its dependency information at the same time.
+
+No decorators.
+
+No reflection.
+
+No parsing constructor signatures.
+
+The class itself becomes the source of truth.
+
+Concrete services can even use the class object itself as the dependency token, while abstractions can be represented by `Symbol` values.
+
+## Creating a Component
+
+Let's begin with the `component()` helper.
+
+Its job is simple.
+
+It creates a class, validates its configuration, and stores dependency metadata directly on the constructor using a private `Symbol`.
+
+```javascript
+const COMPONENT_METADATA = Symbol("di.component.metadata");
+
+const LIFETIMES = new Set([
+  "singleton",
+  "scoped",
+  "transient",
+]);
+
+function component(
+  {
+    name,
+    inject = {},
+    lifetime = "transient",
+  },
+  classFactory
+) {
+  if (!name) {
+    throw new TypeError("Component name is required");
+  }
+
+  if (!LIFETIMES.has(lifetime)) {
+    throw new TypeError(`Unsupported lifetime: ${lifetime}`);
+  }
+
+  const ComponentClass = classFactory();
+
+  if (typeof ComponentClass !== "function") {
+    throw new TypeError("classFactory must return a class");
+  }
+
+  Object.defineProperties(ComponentClass, {
+    name: {
+      value: name,
+      configurable: true,
+    },
+    [COMPONENT_METADATA]: {
+      value: Object.freeze({
+        inject: Object.freeze({ ...inject }),
+        lifetime,
+      }),
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    },
+  });
+
+  return ComponentClass;
+}
+```
+
+Instead of maintaining a global metadata registry, every component carries its own configuration.
+
+The metadata lives under a private `Symbol`, making accidental access almost impossible. It stays hidden during normal property enumeration while remaining available to the container whenever registration happens.
+
+Giving each generated class a readable name is also worth the effort. Although dependency resolution doesn't rely on class names, meaningful names make stack traces, error messages, and debugging sessions much easier to understand.
+
+Retrieving that metadata later is straightforward.
+
+```javascript
+function getComponentMetadata(ComponentClass) {
+  return ComponentClass[COMPONENT_METADATA] ?? null;
+}
+```
+
+The container doesn't need reflection.
+
+It simply reads the metadata that every component already exposes internally.
+
+## Choosing Dependency Tokens
+
+When a dependency has only one implementation, the class itself can act as its own token.
+
+```javascript
+container.registerClass(Logger);
+
+const logger = container.resolve(Logger);
+```
+
+The constructor doubles as the lookup key, which keeps registration simple.
+
+Abstractions are different.
+
+A shopping cart repository might have several implementations, including an in-memory version, PostgreSQL, Redis, or even a remote HTTP service.
+
+In those cases, `Symbol` values make excellent identifiers.
+
+```javascript
+const CART_REPOSITORY = Symbol("CartRepository");
+const PRODUCT_CATALOG = Symbol("ProductCatalog");
+const DISCOUNT_POLICY = Symbol("DiscountPolicy");
+```
+
+The application depends only on these abstract tokens.
+
+The composition root decides which implementation satisfies each dependency.
+
+```javascript
+container.registerClass(InMemoryCartRepository, {
+  token: CART_REPOSITORY,
+});
+```
+
+This keeps the domain model isolated from infrastructure concerns and allows implementations to change without affecting business logic.
+
+## Building the Container
+
+Now it's time to implement the container itself.
+
+Our goal is to keep the API small while supporting the features most applications actually need.
+
+The container will support three provider types:
+
+* Values
+* Classes
+* Factories
+
+It will also support three service lifetimes:
+
+* **singleton** creates one instance for the entire application.
+* **scoped** creates one instance for each request scope.
+* **transient** creates a new instance every time it is resolved.
+
+The registration API stays intentionally simple.
+
+```javascript
+class Container {
+  #providers = new Map();
+  #singletons = new Map();
+
+  registerValue(token, value) {
+    this.#providers.set(token, {
+      type: "value",
+      value,
+      lifetime: "singleton",
+      inject: {},
+    });
+
+    return this;
+  }
+
+  registerClass(
+    ComponentClass,
+    {
+      token = ComponentClass,
+      inject,
+      lifetime,
+    } = {}
+  ) {
+    const metadata = getComponentMetadata(ComponentClass) ?? {
+      inject: {},
+      lifetime: "transient",
+    };
+
+    this.#providers.set(token, {
+      type: "class",
+      ComponentClass,
+      inject: inject ?? metadata.inject,
+      lifetime: lifetime ?? metadata.lifetime,
+    });
+
+    return this;
+  }
+
+  registerFactory(
+    token,
+    {
+      inject = {},
+      lifetime = "transient",
+      factory,
+    }
+  ) {
+    this.#providers.set(token, {
+      type: "factory",
+      inject,
+      lifetime,
+      factory,
+    });
+
+    return this;
+  }
+}
+```
+
+Each provider stores only the information needed to create an instance later.
+
+Values are returned directly.
+
+Factories execute a function.
+
+Classes are instantiated after their dependencies have been resolved.
+
+Nothing happens during registration. The container simply records how each dependency should be created.
+
+## Resolving Dependencies
+
+The real work happens inside `resolve()`.
+
+When a dependency is requested, the container performs four steps:
+
+1. Find the provider.
+2. Resolve every dependency recursively.
+3. Create the object.
+4. Cache it if its lifetime requires caching.
+
+A simplified version looks like this:
+
+```javascript
+#resolve(token, scope, path) {
+  if (scope?.hasOverride(token)) {
+    return scope.getOverride(token);
+  }
+
+  const provider = this.#providers.get(token);
+
+  if (!provider) {
+    throw new Error(
+      `Provider is not registered: ${String(token)}`
+    );
+  }
+
+  if (
+    provider.lifetime === "singleton" &&
+    this.#singletons.has(token)
+  ) {
+    return this.#singletons.get(token);
+  }
+
+  if (provider.lifetime === "scoped") {
+    if (!scope) {
+      throw new Error(
+        "Scoped provider must be resolved from a scope"
+      );
+    }
+
+    if (scope.hasCached(token)) {
+      return scope.getCached(token);
+    }
+  }
+
+  if (path.includes(token)) {
+    throw new Error("Circular dependency detected");
+  }
+
+  const dependencies = {};
+
+  for (const [name, dependencyToken] of Object.entries(
+    provider.inject
+  )) {
+    dependencies[name] = this.#resolve(
+      dependencyToken,
+      scope,
+      [...path, token]
+    );
+  }
+
+  const instance =
+    provider.type === "class"
+      ? new provider.ComponentClass(dependencies)
+      : provider.type === "factory"
+      ? provider.factory(dependencies)
+      : provider.value;
+
+  if (provider.lifetime === "singleton") {
+    this.#singletons.set(token, instance);
+  }
+
+  if (provider.lifetime === "scoped") {
+    scope.setCached(token, instance);
+  }
+
+  return instance;
+}
+```
+
+The algorithm is surprisingly compact.
+
+Every dependency is resolved using exactly the same process, regardless of whether it is another class, a factory, or a predefined value.
+
+Because the container builds the dependency graph recursively, each object automatically receives fully initialized dependencies before its constructor runs.
+
+## Detecting Circular Dependencies
+
+Circular dependencies are one of the easiest ways to crash a dependency injection container.
+
+Imagine these two services:
+
+```javascript
+class CartService {
+  constructor({ pricing }) {}
+}
+
+class PricingService {
+  constructor({ carts }) {}
+}
+```
+
+Neither service can be created first.
+
+Resolving one immediately requires the other, which eventually leads back to the original request.
+
+Instead of overflowing the call stack, the container keeps track of the current resolution path.
+
+Whenever a token appears twice, it throws an error immediately.
+
+A production-ready implementation can even display the entire dependency chain.
+
+```text
+Circular dependency detected:
+CartService
+    ↓
+PricingService
+    ↓
+CartService
+```
+
+Errors like this are much easier to understand than a generic "Maximum call stack size exceeded" exception.
+
+## Why Constructor Parameters Are Passed as an Object
+
+Many dependency injection frameworks call constructors like this:
+
+```javascript
+new CartService(repository, logger, clock);
+```
+
+That works, but it introduces an unnecessary constraint.
+
+Constructor argument order becomes part of the public API.
+
+Adding a single dependency often means updating multiple files simply because one parameter moved.
+
+An object-based constructor avoids that problem.
+
+```javascript
+new CartService({
+  repository,
+  logger,
+  clock,
+});
+```
+
+Now every dependency is identified by name instead of position.
+
+Adding or removing dependencies becomes much safer.
+
+The component definition also becomes easier to read.
+
+```javascript
+inject: {
+  carts: CART_REPOSITORY,
+  catalog: PRODUCT_CATALOG,
+  discounts: DISCOUNT_POLICY,
+}
+```
+
+Notice that this is **not** property injection.
+
+Dependencies are still provided through the constructor.
+
+The object is fully initialized before it can ever be used, which keeps each class immutable from the outside and much easier to test.
+
+## Adding Request Scopes
+
+Singletons and transient services cover many use cases, but most web applications need one more lifetime.
+
+Request-scoped services.
+
+Some objects should exist only while processing a single HTTP request. Examples include a transaction context, a unit of work, the current user, or an identity map.
+
+Each request should receive its own instance while reusing it throughout that request.
+
+A simple `Scope` object makes this possible.
+
+```javascript id="w4r1km"
+class Scope {
+  #cache = new Map();
+
+  constructor(container, overrides) {
+    this.container = container;
+    this.overrides = overrides;
+  }
+
+  resolve(token) {
+    return this.container.resolveFromScope(token, this);
+  }
+
+  hasCached(token) {
+    return this.#cache.has(token);
+  }
+
+  getCached(token) {
+    return this.#cache.get(token);
+  }
+
+  setCached(token, value) {
+    this.#cache.set(token, value);
+  }
+}
+```
+
+Every scope owns its own cache.
+
+Singletons still belong to the root container, but scoped services live only inside the current request. Once the request finishes, the entire cache can be discarded.
+
+Creating a request scope is straightforward.
+
+```javascript id="zq9r8x"
+const request = container.createScope([
+  [REQUEST_CONTEXT, { id: "request-42" }],
+]);
+
+const service = request.resolve(CartApplicationService);
+```
+
+The request context isn't registered globally.
+
+Instead, it is supplied when the scope is created.
+
+Every scoped component resolved inside this request will receive the same context object, while another request gets its own completely independent instance.
+
+This approach naturally supports concurrent requests without relying on global state.
+
+## Applying the Container to a Real Project
+
+A dependency injection container becomes much more useful when applied to real application architecture.
+
+Let's build a simplified shopping cart using Domain-Driven Design.
+
+The example includes:
+
+* A `Cart` aggregate
+* A `Money` value object
+* An application service
+* Repository interfaces
+* A product catalog
+* A discount policy
+* An event bus
+
+The important detail is that the domain layer knows absolutely nothing about dependency injection.
+
+Business objects shouldn't care how they're created.
+
+They should only contain business rules.
+
+## A Simple Value Object
+
+The `Money` class is a good example.
+
+It validates its own invariants and remains completely independent from the container.
+
+```javascript id="4dntgx"
+class Money {
+  constructor(cents, currency = "EUR") {
+    if (!Number.isSafeInteger(cents)) {
+      throw new TypeError(
+        "Money must be stored as integer cents"
+      );
+    }
+
+    if (cents < 0) {
+      throw new Error(
+        "Money cannot be negative"
+      );
+    }
+
+    this.cents = cents;
+    this.currency = currency;
+
+    Object.freeze(this);
+  }
+
+  add(other) {
+    if (this.currency !== other.currency) {
+      throw new Error("Currency mismatch");
+    }
+
+    return new Money(
+      this.cents + other.cents,
+      this.currency
+    );
+  }
+
+  multiply(quantity) {
+    return new Money(
+      this.cents * quantity,
+      this.currency
+    );
+  }
+}
+```
+
+Notice that `Money` contains no decorators, metadata, container references, or dependency injection logic.
+
+It's simply a value object that protects its own state.
+
+That makes it easy to test, reuse, and understand.
+
+## Building the Aggregate
+
+The `Cart` aggregate owns the shopping cart's business rules.
+
+It decides what operations are valid.
+
+It prevents adding products after checkout.
+
+It rejects invalid quantities.
+
+It refuses to checkout an empty cart.
+
+A simplified version looks like this:
+
+```javascript id="5ajdt4"
+class Cart {
+  #items = new Map();
+  #events = [];
+
+  addProduct({
+    sku,
+    name,
+    unitPrice,
+    quantity = 1,
+  }) {
+    this.#assertOpen();
+    this.#assertQuantity(quantity);
+
+    const current = this.#items.get(sku);
+
+    const nextQuantity =
+      (current?.quantity ?? 0) + quantity;
+
+    this.#assertQuantity(nextQuantity);
+
+    this.#items.set(sku, {
+      sku,
+      name,
+      unitPrice,
+      quantity: nextQuantity,
+    });
+  }
+
+  checkout({
+    discountPolicy,
+    now,
+  }) {
+    this.#assertOpen();
+
+    if (this.#items.size === 0) {
+      throw new Error(
+        "Cannot checkout an empty cart"
+      );
+    }
+
+    const subtotal = this.subtotal();
+
+    const discount =
+      discountPolicy.calculate({
+        cart: this,
+        subtotal,
+      });
+
+    const total = subtotal.subtract(discount);
+
+    this.status = "checked-out";
+
+    this.#events.push({
+      type: "CartCheckedOut",
+      occurredAt: now.toISOString(),
+      payload: {
+        cartId: this.id,
+        total: total.toJSON(),
+      },
+    });
+
+    return {
+      subtotal,
+      discount,
+      total,
+    };
+  }
+}
+```
+
+One design choice is worth highlighting.
+
+The discount policy is passed directly into the domain operation instead of being looked up through the container.
+
+The aggregate has no knowledge of dependency injection.
+
+It simply receives everything it needs through its public API.
+
+This keeps the domain model completely isolated from infrastructure concerns and avoids turning the container into a hidden service locator.
+
+## Turning the Application Service into a Component
+
+The application service coordinates the entire workflow.
+
+It loads aggregates from the repository, retrieves products from the catalog, invokes domain logic, persists changes, and publishes domain events.
+
+Unlike the domain model, the application layer is an ideal place for dependency injection.
+
+```javascript id="m81wpr"
+const CartApplicationService = component(
+  {
+    name: "CartApplicationService",
+    lifetime: "scoped",
+    inject: {
+      carts: CART_REPOSITORY,
+      catalog: PRODUCT_CATALOG,
+      discounts: DISCOUNT_POLICY,
+      events: EVENT_BUS,
+      createId: ID_GENERATOR,
+      clock: CLOCK,
+      request: REQUEST_CONTEXT,
+    },
+  },
+  () =>
+    class {
+      constructor({
+        carts,
+        catalog,
+        discounts,
+        events,
+        createId,
+        clock,
+        request,
+      }) {
+        this.carts = carts;
+        this.catalog = catalog;
+        this.discounts = discounts;
+        this.events = events;
+        this.createId = createId;
+        this.clock = clock;
+        this.request = request;
+      }
+
+      async addProduct(cartId, sku, quantity = 1) {
+        const cart = await this.carts.getById(cartId);
+        const product = await this.catalog.getBySku(sku);
+
+        cart.addProduct({
+          ...product,
+          quantity,
+        });
+
+        await this.carts.save(cart);
+
+        return cart.toView(this.discounts);
+      }
+
+      async checkout(cartId) {
+        const cart = await this.carts.getById(cartId);
+
+        const totals = cart.checkout({
+          discountPolicy: this.discounts,
+          now: this.clock(),
+        });
+
+        await this.carts.save(cart);
+        await this.events.publishAll(
+          cart.pullDomainEvents()
+        );
+
+        return totals;
+      }
+    }
+);
+```
+
+Notice how the service contains almost no business logic.
+
+Its responsibility is orchestration.
+
+Business rules remain inside the aggregate, while infrastructure concerns stay inside repositories and external services.
+
+Choosing a **scoped** lifetime here prepares the application for more advanced scenarios. A transaction, an identity map, or a unit of work can later be added to the same request scope without changing the service itself.
+
+Even if the service is stateless today, request scoping makes future architectural changes much easier.
+
+## Registering Infrastructure Components
+
+Infrastructure implementations are regular components too.
+
+For example, an in-memory repository can be registered under an abstract repository token.
+
+```javascript id="zjsqxu"
+const InMemoryCartRepository = component(
+  {
+    name: "InMemoryCartRepository",
+    lifetime: "singleton",
+  },
+  () =>
+    class {
+      #storage = new Map();
+
+      async getById(id) {
+        const snapshot = this.#storage.get(id);
+
+        return snapshot
+          ? new Cart(snapshot)
+          : null;
+      }
+
+      async save(cart) {
+        this.#storage.set(
+          cart.id,
+          cart.toSnapshot()
+        );
+      }
+    }
+);
+```
+
+One small implementation detail makes a significant difference.
+
+The repository stores **snapshots**, not aggregate instances.
+
+If the repository returned the exact object stored in memory, modifications would immediately affect the stored version before `save()` was ever called.
+
+That behavior hides bugs which would become obvious when switching to a real database.
+
+Returning fresh aggregate instances more closely matches how persistence actually works and produces more reliable tests.
+
+The discount policy can be implemented as another independent component.
+
+```javascript id="1gsjcd"
+const CouponDiscountPolicy = component(
+  {
+    name: "CouponDiscountPolicy",
+    lifetime: "singleton",
+  },
+  () =>
+    class {
+      calculate({ cart, subtotal }) {
+        if (cart.coupon === "HABR10") {
+          return subtotal.percent(10);
+        }
+
+        return Money.zero(
+          subtotal.currency
+        );
+      }
+    }
+);
+```
+
+Nothing inside the policy depends on the container.
+
+It simply exposes a well-defined API that the application service can use.
+
+Replacing this implementation with a different pricing strategy later requires changing only the composition root.
+
+## Building the Composition Root
+
+Every application needs one place where object graphs are assembled.
+
+This is commonly known as the **composition root**.
+
+Its job is to connect abstractions with concrete implementations.
+
+```javascript id="vfvtfc"
+const container = new Container()
+  .registerClass(InMemoryCartRepository, {
+    token: CART_REPOSITORY,
+  })
+  .registerClass(InMemoryProductCatalog, {
+    token: PRODUCT_CATALOG,
+  })
+  .registerClass(CouponDiscountPolicy, {
+    token: DISCOUNT_POLICY,
+  })
+  .registerClass(InMemoryEventBus, {
+    token: EVENT_BUS,
+  })
+  .registerValue(
+    ID_GENERATOR,
+    randomUUID
+  )
+  .registerValue(
+    CLOCK,
+    () => new Date()
+  )
+  .registerClass(
+    CartApplicationService
+  );
+```
+
+Every dependency is wired together in one place.
+
+The rest of the application knows nothing about concrete implementations.
+
+Repositories can move from memory to PostgreSQL.
+
+The event bus can switch from synchronous dispatch to Kafka.
+
+The application service never needs to change.
+
+Once registration is complete, creating a request scope is trivial.
+
+```javascript id="2h6e89"
+const request = container.createScope([
+  [
+    REQUEST_CONTEXT,
+    { id: randomUUID() },
+  ],
+]);
+
+const carts =
+  request.resolve(
+    CartApplicationService
+  );
+```
+
+From this point forward, the entire dependency graph is created automatically.
+
+Every service receives exactly the dependencies it requires, with the correct lifetime applied throughout the object graph.
+
+## Running the Application
+
+With everything registered, using the container becomes almost effortless.
+
+Create a request scope, resolve the application service, and execute your use case.
+
+```javascript id="6t4xq8"
+const request = container.createScope([
+  [REQUEST_CONTEXT, { id: randomUUID() }],
+]);
+
+const carts = request.resolve(
+  CartApplicationService
+);
+
+const created = await carts.createCart();
+const cartId = created.cart.id;
+
+await carts.addProduct(cartId, "coffee", 2);
+await carts.addProduct(cartId, "mug", 1);
+await carts.applyCoupon(cartId, "HABR10");
+
+console.dir(
+  await carts.checkout(cartId),
+  {
+    depth: null,
+  }
+);
+```
+
+The application code never creates repositories, discount policies, or event buses manually.
+
+Each dependency is resolved automatically.
+
+The shopping cart service doesn't know whether its repository stores data in memory, PostgreSQL, Redis, or somewhere else entirely.
+
+That decision belongs exclusively to the composition root.
+
+## Why This Approach Works
+
+Most JavaScript dependency injection libraries rely on runtime reflection or TypeScript metadata.
+
+This implementation takes a different route.
+
+Instead of inspecting constructor parameters after a class has already been defined, dependencies are declared when the component is created.
+
+That small design decision removes the need for decorators, parameter parsing, and metadata generated during compilation.
+
+JavaScript already provides everything required.
+
+Classes are ordinary runtime values.
+
+They can be created dynamically, passed between functions, used as `Map` keys, and extended with custom metadata.
+
+Rather than fighting the language, the container simply embraces those capabilities.
+
+## Benefits
+
+This design has several advantages.
+
+**No runtime reflection**
+
+The container never attempts to analyze constructor signatures or inspect parameter names.
+
+Everything it needs is declared explicitly.
+
+**Works without TypeScript**
+
+The implementation runs in any modern JavaScript environment without compiler support.
+
+**Strong separation of concerns**
+
+The domain model contains only business logic.
+
+Infrastructure stays in the composition root.
+
+The dependency injection container is responsible only for assembling object graphs.
+
+**Simple mental model**
+
+Every component clearly declares its dependencies, making the dependency graph easy to understand and debug.
+
+**Fully testable**
+
+Every class can still be instantiated with `new`.
+
+Nothing depends on hidden framework behavior.
+
+Unit tests remain straightforward because constructors accept ordinary JavaScript objects.
+
+## Limitations
+
+Although the implementation is surprisingly capable, it is still intentionally small.
+
+A production-ready container would eventually need additional features such as:
+
+* asynchronous initialization
+* automatic resource disposal
+* optional dependencies
+* modules and package discovery
+* lazy resolution
+* interception and middleware
+* lifecycle hooks
+* advanced diagnostics
+
+Those additions can all be built on top of the same core ideas without changing the overall architecture.
+
+## Final Thoughts
+
+Building a dependency injection container in plain JavaScript is not only possible, it's remarkably elegant.
+
+The language already provides everything needed to describe dependencies, create object graphs, and manage service lifetimes.
+
+Instead of reconstructing metadata after classes have been defined, this approach stores dependency information directly on the components themselves. The result is a lightweight container that remains predictable, easy to debug, and free from compiler-specific features.
+
+Perhaps the most important lesson is architectural rather than technical.
+
+Not every class in an application should become a component.
+
+Domain objects like `Cart`, `Money`, and other business entities should remain completely independent from the dependency injection container. They can be created with `new`, tested in isolation, and focused entirely on enforcing business rules.
+
+Dependency injection belongs at the application's boundaries, where repositories, databases, HTTP clients, queues, caches, and external services are connected together.
+
+Keeping those responsibilities separate leads to code that is easier to understand, easier to test, and much easier to evolve as the application grows.
