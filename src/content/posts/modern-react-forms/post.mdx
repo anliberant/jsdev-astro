@@ -1,0 +1,1230 @@
+---
+title: Building Better React Forms Without a Form Library
+slug: modern-react-forms
+heading: "Modern React Forms: State, Validation, and Better Patterns"
+image: ./images/modern-react-forms.png
+permalink: modern-react-forms
+date: 2026-08-10
+author: anton liberant
+category: react
+type: post
+tags: ['forms']
+desc: Build better React forms with controlled inputs, shared handlers, validation, derived state, and a clean component structure.
+subtitle: 'From simple inputs to reusable handlers and clean validation'
+---
+
+A React form can stay simple for longer than you might expect.
+
+One input usually means one state value and one change handler. Add another field and the same approach still feels fine. Then validation arrives, error messages appear, the submit button needs its own rules, and suddenly the component has twice as much code as the form itself.
+
+It's tempting to reach for a form library immediately.
+
+For a large checkout flow or a form with dozens of fields, that may be the right decision. For a login screen, settings panel, newsletter form, or small registration flow, plain React is often enough.
+
+The trick is deciding what actually belongs in state.
+
+We'll start with a single input and gradually turn it into a complete form with shared handlers, validation, derived state, and a small reusable container.
+
+## Controlled and Uncontrolled Inputs
+
+Consider a comment box.
+
+We only care about the text when somebody presses Submit. Nothing else on the page depends on every character being typed.
+
+A ref works well here:
+
+```jsx
+import { useRef } from "react";
+
+function CommentBox() {
+  const inputRef = useRef(null);
+
+  function handleSubmit() {
+    const comment = inputRef.current?.value.trim();
+
+    if (!comment) return;
+
+    console.log(comment);
+  }
+
+  return (
+    <div>
+      <textarea
+        ref={inputRef}
+        placeholder="Write a comment..."
+      />
+
+      <button onClick={handleSubmit}>
+        Submit
+      </button>
+    </div>
+  );
+}
+```
+
+The browser owns the textarea value. React simply reads it when necessary.
+
+Typing doesn't update React state, which is perfectly fine because the component doesn't need that value while the user is typing.
+
+Now take a search input:
+
+```jsx
+import { useState } from "react";
+
+function SearchInput() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <input
+      type="search"
+      value={query}
+      onChange={event => {
+        setQuery(event.target.value);
+      }}
+      placeholder="Search..."
+    />
+  );
+}
+```
+
+This time React owns the current value.
+
+Every change follows the same small loop:
+
+```text
+User types
+    ↓
+onChange
+    ↓
+setQuery()
+    ↓
+render
+    ↓
+value={query}
+```
+
+That makes the input controlled.
+
+The distinction matters because controlled inputs give the rest of your component immediate access to their current values.
+
+If the UI needs to validate, filter, calculate, show something conditionally, or enable another control while the user types, state is usually the more convenient place for that value.
+
+## A Ref Does Not Automatically Mean Uncontrolled
+
+This is worth clearing up because the terminology is occasionally explained badly.
+
+Using `useRef()` somewhere in a component does not make an input uncontrolled.
+
+This is controlled:
+
+```jsx
+<input
+  ref={inputRef}
+  value={username}
+  onChange={handleChange}
+/>
+```
+
+React still determines the value through `value={username}`.
+
+This is uncontrolled:
+
+```jsx
+<input ref={inputRef} />
+```
+
+Here the DOM owns the current value.
+
+The question isn't whether a ref exists.
+
+The question is who controls `value`.
+
+## Two Fields Are Where Things Get Interesting
+
+Let's build a login form.
+
+The obvious first version uses separate state:
+
+```jsx
+const [username, setUsername] = useState("");
+const [password, setPassword] = useState("");
+```
+
+Then two handlers:
+
+```jsx
+function handleUsernameChange(event) {
+  setUsername(event.target.value);
+}
+
+function handlePasswordChange(event) {
+  setPassword(event.target.value);
+}
+```
+
+There's nothing wrong with this.
+
+For exactly two fields, you could leave it alone.
+
+The problem appears when the form grows:
+
+```text
+username
+password
+email
+firstName
+lastName
+company
+country
+phone
+```
+
+Creating a setter and nearly identical handler for every field becomes tedious.
+
+I'd rather group related form values:
+
+```jsx
+const [form, setForm] = useState({
+  username: "",
+  password: ""
+});
+```
+
+Now the state looks like the form itself.
+
+The next question is how to update individual properties without creating a handler for each one.
+
+## Let the Input Tell the Handler What Changed
+
+HTML already gives us a useful mechanism for this: `name`.
+
+```jsx
+<input
+  name="username"
+  value={form.username}
+  onChange={handleChange}
+/>
+
+<input
+  name="password"
+  type="password"
+  value={form.password}
+  onChange={handleChange}
+/>
+```
+
+Both fields can use the same function:
+
+```jsx
+function handleChange(event) {
+  const { name, value } = event.target;
+
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }));
+}
+```
+
+When the username changes:
+
+```js
+name === "username";
+```
+
+so:
+
+```js
+[name]: value
+```
+
+becomes:
+
+```js
+username: value
+```
+
+For the password input, the exact same function updates `password`.
+
+Adding another field doesn't require another handler:
+
+```jsx
+const [form, setForm] = useState({
+  username: "",
+  email: "",
+  password: ""
+});
+```
+
+Then:
+
+```jsx
+<input
+  name="email"
+  type="email"
+  value={form.email}
+  onChange={handleChange}
+/>
+```
+
+That's it.
+
+The relationship between the `name` attribute and the state property does the routing for us.
+
+## Don't Accidentally Delete the Rest of the Form
+
+There's one important part of that update:
+
+```jsx
+setForm(prev => ({
+  ...prev,
+  [name]: value
+}));
+```
+
+Specifically:
+
+```js
+...prev
+```
+
+Without it:
+
+```jsx
+setForm({
+  [name]: value
+});
+```
+
+we replace the entire object.
+
+Imagine this state:
+
+```js
+{
+  username: "alex",
+  password: ""
+}
+```
+
+Then the password changes to `"s"`.
+
+Without spreading the previous values, the new state becomes:
+
+```js
+{
+  password: "s"
+}
+```
+
+The username disappeared.
+
+We don't want a new one-property form object. We want the old object with one property changed.
+
+```jsx
+setForm(prev => ({
+  ...prev,
+  [name]: value
+}));
+```
+
+This pattern will show up again when we add errors.
+
+## Keep Errors Away From Form Values
+
+Now the form needs validation.
+
+One option is putting everything into one state object:
+
+```js
+{
+  username: "",
+  usernameError: "",
+  password: "",
+  passwordError: ""
+}
+```
+
+I prefer not to do that.
+
+Values and errors represent different things, so I keep them separate:
+
+```jsx
+const [form, setForm] = useState({
+  username: "",
+  password: ""
+});
+
+const [errors, setErrors] = useState({});
+```
+
+`form` contains what the user entered.
+
+`errors` contains what's wrong with it.
+
+That gives us a simple shape such as:
+
+```js
+form = {
+  username: "al",
+  password: "secret"
+};
+
+errors = {
+  username: "Username must be at least 3 characters",
+  password: ""
+};
+```
+
+Now we need a validator.
+
+## Start With a Small Validator
+
+For two fields, a straightforward function is easier to understand than building a generic validation system.
+
+```jsx
+function validateField(name, value) {
+  let message = "";
+
+  if (name === "username") {
+    const username = value.trim();
+
+    if (!username) {
+      message = "Username is required";
+    } else if (username.length < 3) {
+      message =
+        "Username must be at least 3 characters";
+    }
+  }
+
+  if (name === "password") {
+    if (!value) {
+      message = "Password is required";
+    } else if (value.length < 6) {
+      message =
+        "Password must be at least 6 characters";
+    }
+  }
+
+  setErrors(prev => ({
+    ...prev,
+    [name]: message
+  }));
+}
+```
+
+An empty string means that field currently has no validation error.
+
+We can run it from the existing change handler:
+
+```jsx
+function handleChange(event) {
+  const { name, value } = event.target;
+
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }));
+
+  validateField(name, value);
+}
+```
+
+One user action now updates both sides of the form:
+
+```text
+input changes
+     ↓
+handleChange()
+   ↙       ↘
+form     validation
+           ↓
+         errors
+```
+
+There is no second set of input handlers just for validation.
+
+## Validate the Value You Already Have
+
+Here's a subtle mistake that's easy to make:
+
+```jsx
+function handleChange(event) {
+  const { name, value } = event.target;
+
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }));
+
+  validateField(name, form[name]);
+}
+```
+
+At first glance, that looks reasonable.
+
+We update the form, then validate the form.
+
+But `setForm()` does not immediately replace `form` inside the currently executing function.
+
+`form` still refers to the state from the current render.
+
+Fortunately, we already have the latest value:
+
+```js
+value
+```
+
+So use it:
+
+```jsx
+validateField(name, value);
+```
+
+There's no reason to update state and immediately try to read the same information back from it.
+
+The event already gave us what we need.
+
+## Functional Updates Keep Object State Predictable
+
+We've used this several times:
+
+```jsx
+setForm(prev => ({
+  ...prev,
+  [name]: value
+}));
+```
+
+and:
+
+```jsx
+setErrors(prev => ({
+  ...prev,
+  [name]: message
+}));
+```
+
+Why not just write:
+
+```jsx
+setErrors({
+  ...errors,
+  [name]: message
+});
+```
+
+For many simple interactions, that will appear to work.
+
+The functional version is safer when the new state depends on the previous state.
+
+Suppose the error object currently contains:
+
+```js
+{
+  username: "Too short"
+}
+```
+
+and another update adds a password error.
+
+We want:
+
+```js
+{
+  username: "Too short",
+  password: "Password is required"
+}
+```
+
+The updater function receives the latest state available to that queued update:
+
+```jsx
+setErrors(prev => ({
+  ...prev,
+  password: "Password is required"
+}));
+```
+
+It's a small habit that becomes useful as a component starts doing more than one state update.
+
+## isValid Probably Doesn't Need State
+
+At this stage we have values and errors.
+
+We also need to decide whether submission is allowed.
+
+It would be easy to add:
+
+```jsx
+const [isValid, setIsValid] = useState(false);
+```
+
+But then we have another value to maintain.
+
+Every time `form` changes, maybe `isValid` changes.
+
+Every time `errors` changes, maybe it changes again.
+
+That gives us three pieces of state that can disagree with each other.
+
+There's an easier option.
+
+Calculate it:
+
+```jsx
+const isValid =
+  form.username.trim().length >= 3 &&
+  form.password.length >= 6 &&
+  !errors.username &&
+  !errors.password;
+```
+
+`isValid` is not new information.
+
+It's an answer derived from information we already have.
+
+On every render, React evaluates it again using the current form and errors.
+
+No setter is required.
+
+I try to keep this distinction in mind whenever I add state:
+
+> Is this new information, or can I calculate it from state I already have?
+
+If it's cheap to calculate, I usually don't store a second copy.
+
+## Error Messages Can Be Just as Simple
+
+With errors in state, rendering them doesn't require any special logic:
+
+```jsx
+{errors.username && (
+  <span className="error">
+    {errors.username}
+  </span>
+)}
+```
+
+If `errors.username` is empty, nothing appears.
+
+If validation sets:
+
+```js
+errors.username =
+  "Username must be at least 3 characters";
+```
+
+React renders the message.
+
+The submit button follows the same idea:
+
+```jsx
+<button
+  type="submit"
+  disabled={!isValid}
+>
+  Sign in
+</button>
+```
+
+We aren't calling functions like:
+
+```js
+showUsernameError();
+disableSubmitButton();
+```
+
+The UI is simply a result of the current data.
+
+That relationship is what makes controlled forms useful.
+
+## A Small FormContainer
+
+The JSX for each field is beginning to repeat:
+
+```text
+label
+input
+error
+```
+
+I don't want to build a complete field abstraction yet, but extracting the outer form structure can make the final component cleaner.
+
+A small `FormContainer` is enough:
+
+```jsx
+function FormContainer({
+  title,
+  onSubmit,
+  children
+}) {
+  return (
+    <section className="form-container">
+      <h2>{title}</h2>
+
+      <form onSubmit={onSubmit}>
+        {children}
+      </form>
+    </section>
+  );
+}
+```
+
+This component doesn't know anything about username, passwords, validation, or state.
+
+It only owns the common layout.
+
+That distinction is useful.
+
+I wouldn't put form logic into a component just because its name contains `Form`.
+
+The login component should own the login behavior. The container should remain boring.
+
+## Putting the Form Together
+
+Now we can assemble everything.
+
+```jsx
+import { useState } from "react";
+
+function FormContainer({
+  title,
+  onSubmit,
+  children
+}) {
+  return (
+    <section className="form-container">
+      <h2>{title}</h2>
+
+      <form onSubmit={onSubmit}>
+        {children}
+      </form>
+    </section>
+  );
+}
+
+export default function LoginForm() {
+  const [form, setForm] = useState({
+    username: "",
+    password: ""
+  });
+
+  const [errors, setErrors] = useState({});
+
+  function validateField(name, value) {
+    let message = "";
+
+    if (name === "username") {
+      const username = value.trim();
+
+      if (!username) {
+        message = "Username is required";
+      } else if (username.length < 3) {
+        message =
+          "Username must be at least 3 characters";
+      }
+    }
+
+    if (name === "password") {
+      if (!value) {
+        message = "Password is required";
+      } else if (value.length < 6) {
+        message =
+          "Password must be at least 6 characters";
+      }
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [name]: message
+    }));
+  }
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    validateField(name, value);
+  }
+
+  const isValid =
+    form.username.trim().length >= 3 &&
+    form.password.length >= 6 &&
+    !errors.username &&
+    !errors.password;
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    if (!isValid) return;
+
+    console.log("Submitting:", form);
+  }
+
+  return (
+    <FormContainer
+      title="Sign in"
+      onSubmit={handleSubmit}
+    >
+      <div className="form-item">
+        <label htmlFor="username">
+          Username
+        </label>
+
+        <input
+          id="username"
+          name="username"
+          type="text"
+          autoComplete="username"
+          value={form.username}
+          onChange={handleChange}
+        />
+
+        {errors.username && (
+          <span className="error">
+            {errors.username}
+          </span>
+        )}
+      </div>
+
+      <div className="form-item">
+        <label htmlFor="password">
+          Password
+        </label>
+
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          value={form.password}
+          onChange={handleChange}
+        />
+
+        {errors.password && (
+          <span className="error">
+            {errors.password}
+          </span>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={!isValid}
+      >
+        Sign in
+      </button>
+    </FormContainer>
+  );
+}
+```
+
+There are only two actual state values:
+
+```js
+form
+errors
+```
+
+`isValid` is calculated.
+
+Both fields share `handleChange()`.
+
+Validation receives the value directly instead of waiting for a state update.
+
+`FormContainer` handles layout but stays completely outside the state logic.
+
+For a small form, that's already a fairly comfortable structure.
+
+## Follow One Keystroke Through the Component
+
+It's useful to trace what happens when someone actually types.
+
+Suppose the form starts here:
+
+```js
+form = {
+  username: "",
+  password: ""
+};
+
+errors = {};
+```
+
+The user enters:
+
+```text
+a
+```
+
+into the username field.
+
+The browser calls `handleChange()` with:
+
+```js
+name = "username";
+value = "a";
+```
+
+This update is queued:
+
+```jsx
+setForm(prev => ({
+  ...prev,
+  username: "a"
+}));
+```
+
+Then:
+
+```jsx
+validateField("username", "a");
+```
+
+finds that the value is too short.
+
+The errors become:
+
+```js
+{
+  username:
+    "Username must be at least 3 characters"
+}
+```
+
+React renders again.
+
+The input displays `a`.
+
+The error appears underneath it.
+
+The validity expression is also evaluated:
+
+```js
+const isValid =
+  false &&
+  false &&
+  false;
+```
+
+So the button remains disabled.
+
+The user continues typing:
+
+```text
+alex
+```
+
+Validation now produces an empty error:
+
+```js
+{
+  username: ""
+}
+```
+
+The next render removes the message.
+
+There isn't a separate command telling React to hide it.
+
+The data no longer contains an error, so the JSX no longer produces the error element.
+
+## Then the Password Changes
+
+Suppose we have:
+
+```js
+form = {
+  username: "alex",
+  password: ""
+};
+```
+
+The user types:
+
+```text
+secret1
+```
+
+The next form state becomes:
+
+```js
+{
+  username: "alex",
+  password: "secret1"
+}
+```
+
+and the errors are:
+
+```js
+{
+  username: "",
+  password: ""
+}
+```
+
+Now:
+
+```js
+isValid === true;
+```
+
+The button becomes enabled during that render.
+
+This is the main reason I wouldn't store `isValid` separately.
+
+If we did, we'd have to keep another state value synchronized with values that already tell us the answer.
+
+## Validation Doesn't Have to Run on Every Character
+
+The example above validates in `onChange` because it makes the data flow easy to see.
+
+That doesn't mean every form should behave that way.
+
+Showing an error after the first character can feel unnecessarily aggressive.
+
+For some forms, `onBlur` works better:
+
+```jsx
+function handleBlur(event) {
+  const { name, value } = event.target;
+
+  validateField(name, value);
+}
+```
+
+Then:
+
+```jsx
+<input
+  name="username"
+  value={form.username}
+  onChange={handleChange}
+  onBlur={handleBlur}
+/>
+```
+
+The user can type normally, and validation appears after leaving the field.
+
+Another option is validating only when Submit is pressed.
+
+Or you can combine the approaches: validate after the first blur, then validate subsequent changes immediately.
+
+That's a UX decision rather than a state-management rule.
+
+The underlying structure can stay the same.
+
+## Don't Trust disabled as Validation
+
+Our button has:
+
+```jsx
+disabled={!isValid}
+```
+
+That's useful for the interface.
+
+It should not be the only thing preventing invalid submission.
+
+We still check inside the handler:
+
+```jsx
+function handleSubmit(event) {
+  event.preventDefault();
+
+  if (!isValid) return;
+
+  console.log("Submitting:", form);
+}
+```
+
+And in a real application, the server needs to validate the submitted values again.
+
+Client-side validation improves the experience.
+
+It isn't a security boundary.
+
+## When the Form Gets Bigger
+
+This pattern scales comfortably for a while.
+
+Adding email is straightforward:
+
+```jsx
+const [form, setForm] = useState({
+  username: "",
+  email: "",
+  password: ""
+});
+```
+
+The existing handler already knows how to update it:
+
+```jsx
+<input
+  name="email"
+  type="email"
+  value={form.email}
+  onChange={handleChange}
+/>
+```
+
+Then add the email rules to `validateField()`.
+
+Eventually, though, that validator can become the ugly part of the component.
+
+If it turns into dozens of conditions, I'd move the rules outside:
+
+```js
+const validators = {
+  username(value) {
+    const username = value.trim();
+
+    if (!username) {
+      return "Username is required";
+    }
+
+    if (username.length < 3) {
+      return "Username must be at least 3 characters";
+    }
+
+    return "";
+  },
+
+  password(value) {
+    if (!value) {
+      return "Password is required";
+    }
+
+    if (value.length < 6) {
+      return "Password must be at least 6 characters";
+    }
+
+    return "";
+  }
+};
+```
+
+Then:
+
+```js
+function validateField(name, value) {
+  const validate = validators[name];
+
+  const message = validate
+    ? validate(value)
+    : "";
+
+  setErrors(prev => ({
+    ...prev,
+    [name]: message
+  }));
+}
+```
+
+I wouldn't start here for two fields.
+
+Once the conditions become annoying to navigate, the object earns its place.
+
+## When I'd Reach for a Form Library
+
+Plain React isn't a competition with form libraries.
+
+At some point the form may contain dynamic field arrays, deeply nested values, schema validation, asynchronous checks, conditional sections, multi-step flows, server errors, touched state, dirty state, and dozens of inputs.
+
+You can build all of that yourself.
+
+The more useful question is whether you still want to.
+
+For a login form, I'd rather see ten lines of obvious React than an abstraction that requires learning another API.
+
+For a large checkout or admin editor, a form library can remove a lot of repetitive infrastructure.
+
+Understanding the plain version still pays off because the same questions remain underneath the library:
+
+```text
+Where are the values?
+
+When does validation happen?
+
+How are errors represented?
+
+Which values are derived?
+
+What happens on submit?
+```
+
+A library gives you different tools for answering them. It doesn't make those decisions disappear.
+
+## The Whole Flow
+
+Our final form can be reduced to this:
+
+```text
+                 User input
+                     ↓
+                handleChange
+                 ↙       ↘
+            setForm     validateField
+                            ↓
+                         setErrors
+                 ↘       ↙
+                   render
+              ↙      ↓       ↘
+           values   errors   isValid
+                              ↓
+                            button
+```
+
+Submission is even smaller:
+
+```text
+Submit
+   ↓
+preventDefault
+   ↓
+isValid?
+ ↙     ↘
+no     yes
+↓       ↓
+stop   submit
+```
+
+That is most of the architecture.
+
+The interesting part isn't any single hook. It's keeping each value responsible for one thing.
+
+## Final Thoughts
+
+Small React forms don't need much machinery.
+
+Use an uncontrolled input when React doesn't need to react to every keystroke. Move the value into state when the rest of the interface depends on it.
+
+Once several related fields appear, an object and a shared `name`-based handler can remove a surprising amount of repetition.
+
+Keep validation results separate from the user's data. Pass fresh input values directly to validation instead of expecting state to update synchronously. Use functional updates when you're building new object state from the previous object.
+
+Most importantly, don't store every useful value in state.
+
+For the form we built, the core data is:
+
+```js
+form
+errors
+```
+
+while:
+
+```js
+isValid
+```
+
+is simply something we can calculate.
+
+That small distinction keeps the form easier to follow, and it becomes more valuable with every field you add.
