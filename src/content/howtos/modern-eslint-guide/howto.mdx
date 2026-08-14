@@ -1,0 +1,666 @@
+---
+title: "How ESLint Actually Works in Modern JavaScript Projects"
+slug: modern-eslint-guide
+heading: "ESLint in 2026: A Practical Guide to Modern JavaScript Linting"
+icon: /icons/nodejs.png
+image: /icon.png
+permalink: howto/modern-eslint-guide
+date: 2026-08-14
+author: anton liberant
+category: nodejs
+type: howto
+tags: ['ESLint']
+desc: ESLint does much more than enforce code style. Learn how modern flat config works, how rules find problems, what --fix can change, and how to build.
+subtitle: 'From flat config and rule severity to automatic fixes and custom rules'
+---
+
+ESLint often enters a project quietly. You install a package, copy a configuration file, add a `lint` script to `package.json`, and move on.
+
+Then one day you open `eslint.config.js` and realize that you don't really know what most of it does.
+
+Why is one rule set to `"warn"` while another is `"error"`? Why does ESLint understand that `var` is a variable declaration instead of simply finding the word `var` in a file? Why can `--fix` repair some problems but leave others untouched?
+
+Once those pieces make sense, ESLint becomes much easier to work with.
+
+It isn't just a collection of opinions about semicolons and quotes. ESLint is a configurable static analysis tool for JavaScript. Its rules inspect source code without executing the program and report patterns that match the conditions those rules are looking for. ESLint also supports rules supplied by plugins, so its behavior can be extended beyond the built-in rule set. ([ESLint][2])
+
+## Why Use ESLint?
+
+Consider a small piece of JavaScript:
+
+```js
+var total = 0;
+
+for (var i = 0; i < items.length; i++) {
+  total += items[i].price;
+}
+
+console.log(total);
+```
+
+The code can run perfectly well. That doesn't mean there is nothing worth checking.
+
+Maybe the project doesn't allow `var`. Perhaps a variable was declared and then forgotten. A branch might contain code that can never execute. Another file could reference a variable that doesn't exist.
+
+These aren't necessarily syntax errors.
+
+That's exactly where linting becomes useful.
+
+Instead of waiting until a suspicious piece of code causes a visible bug, ESLint can inspect the source while you're working on it.
+
+For example, the `no-var` rule requires `let` or `const` instead of `var`. ESLint documents the rule as a way to discourage `var` in favor of block-scoped declarations. ([ESLint - Pluggable JavaScript linter][3])
+
+With the rule enabled, this can be reported:
+
+```js
+var username = "Alex";
+```
+
+while this is fine:
+
+```js
+const username = "Alex";
+```
+
+The point isn't that ESLint magically knows which code is good. The project defines the rules it cares about, and ESLint applies them consistently.
+
+## ESLint Doesn't Need to Run Your Program
+
+ESLint performs static analysis.
+
+That distinction matters.
+
+A test normally executes some part of your application and checks what happens:
+
+```js
+const result = add(2, 3);
+
+expect(result).toBe(5);
+```
+
+A linter can find certain problems without running `add()`, starting a server, opening a browser, or connecting to a database.
+
+Give ESLint a file:
+
+```js
+const price = 20;
+
+console.log(prcie);
+```
+
+and a rule such as `no-undef` can identify that `prcie` hasn't been defined.
+
+This is possible because ESLint doesn't treat the program as an arbitrary wall of text.
+
+It parses the code first.
+
+## From JavaScript Source to an AST
+
+Suppose our file contains:
+
+```js
+const count = 10;
+```
+
+We see one line of JavaScript.
+
+A parser can represent the same code as a tree of structured nodes. A simplified version might look roughly like this:
+
+```text
+VariableDeclaration
+└── VariableDeclarator
+    ├── Identifier
+    │   └── name: "count"
+    └── Literal
+        └── value: 10
+```
+
+This structure is an Abstract Syntax Tree, usually shortened to AST.
+
+The exact tree contains more information than this simplified example, but the important idea is straightforward: the parser has identified what each piece of the program means structurally.
+
+`count` isn't just five characters anymore. It is an identifier inside a variable declarator.
+
+`10` is a value.
+
+The whole statement is a variable declaration.
+
+That gives lint rules something much more useful to inspect than raw text.
+
+Conceptually, the process looks like this:
+
+```text
+JavaScript source
+      |
+      v
+    Parser
+      |
+      v
+     AST
+      |
+      v
+    Rules
+      |
+      v
+Warnings and errors
+```
+
+This also explains why linting is different from searching a project with `Ctrl + F`.
+
+A text search can find the word `var`. A lint rule can understand that `var` was used to create a variable declaration.
+
+## What an ESLint Rule Does
+
+Rules are the building blocks of ESLint. According to the official documentation, a rule validates whether code meets a particular expectation and reports it when that expectation isn't met. Rules can also accept their own configuration options. ([ESLint][2])
+
+Imagine a simplified rule that doesn't allow `var`.
+
+Its logic can be thought of like this:
+
+```text
+Visit a variable declaration.
+
+Is its declaration kind "var"?
+
+Yes -> report a problem.
+No  -> continue.
+```
+
+A real rule contains more detail, but that basic model is useful.
+
+Find something in the program structure, check a condition, and report a problem when necessary.
+
+This is also why plugins are powerful. ESLint isn't limited to its own built-in rules. Plugins can provide additional rules, processors, and configurations for particular libraries or project requirements. ([ESLint][4])
+
+## Rule Severity: `off`, `warn`, and `error`
+
+Not every lint problem has to be treated the same way.
+
+ESLint gives a configured rule three severity levels:
+
+```text
+"off"    0
+"warn"   1
+"error"  2
+```
+
+The string and numeric versions are equivalent. ESLint's documentation defines `warn` as a warning that doesn't affect the exit code, while `error` produces a failing exit code when the rule is triggered. ([ESLint][2])
+
+So these configurations mean the same thing:
+
+```js
+{
+  rules: {
+    "no-var": "error",
+    "no-console": "warn"
+  }
+}
+```
+
+and:
+
+```js
+{
+  rules: {
+    "no-var": 2,
+    "no-console": 1
+  }
+}
+```
+
+I prefer the string form.
+
+`"error"` tells you what it means without making you remember what `2` stands for.
+
+For example:
+
+```js
+{
+  rules: {
+    "no-var": "error",
+    "no-console": "warn",
+    "no-debugger": "error"
+  }
+}
+```
+
+Now the intent is visible immediately.
+
+A `var` declaration is considered an error. A console call produces a warning. A leftover `debugger` statement is an error.
+
+Those choices belong to the project. ESLint gives you the mechanism, not a universal severity policy.
+
+## Modern ESLint Uses Flat Config
+
+Older JavaScript projects often contain files such as:
+
+```text
+.eslintrc
+.eslintrc.json
+.eslintrc.js
+```
+
+Modern ESLint uses the flat configuration system. Flat config became the default configuration system in ESLint v9. ([ESLint][5])
+
+A typical project now has a file such as:
+
+```text
+eslint.config.js
+```
+
+or:
+
+```text
+eslint.config.mjs
+```
+
+Instead of relying on the older cascading configuration model, you export configuration objects in an array.
+
+A small JavaScript setup can begin like this:
+
+```js
+import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  js.configs.recommended,
+]);
+```
+
+The `@eslint/js` package exposes ESLint's predefined JavaScript configurations for flat config, including its recommended rule set. ([ESLint][1])
+
+Already, this is enough to understand an important point: you don't need to manually switch on every useful core rule.
+
+You can begin with a recommended baseline and then change what your project needs.
+
+## Adding Rules of Your Own
+
+Suppose we want the recommended rules, but we also want to reject `var`.
+
+We can add another configuration object:
+
+```js
+import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  js.configs.recommended,
+
+  {
+    rules: {
+      "no-var": "error",
+    },
+  },
+]);
+```
+
+Now ESLint starts with the recommended configuration and adds our project-specific choice.
+
+You can expand that gradually:
+
+```js
+import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  js.configs.recommended,
+
+  {
+    rules: {
+      "no-var": "error",
+      "no-console": "warn",
+      "no-debugger": "error",
+    },
+  },
+]);
+```
+
+This is much easier to maintain than blindly copying a giant configuration from another repository.
+
+Start with rules you understand.
+
+Add more when the project gives you a reason.
+
+## Applying Rules Only to Certain Files
+
+Flat config becomes more useful when a repository contains different kinds of files.
+
+For example:
+
+```js
+import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  js.configs.recommended,
+
+  {
+    files: ["src/**/*.js"],
+
+    rules: {
+      "no-var": "error",
+      "no-console": "warn",
+    },
+  },
+]);
+```
+
+Here, that configuration object is scoped to JavaScript files under `src`.
+
+You might have different requirements for tests:
+
+```js
+export default defineConfig([
+  {
+    files: ["src/**/*.js"],
+
+    rules: {
+      "no-console": "warn",
+    },
+  },
+
+  {
+    files: ["tests/**/*.js"],
+
+    rules: {
+      "no-console": "off",
+    },
+  },
+]);
+```
+
+That is a much more realistic use of ESLint than pretending every file in a repository has identical requirements.
+
+Production code, build scripts, tests, browser code, and Node.js utilities often need slightly different environments or rules.
+
+## Global Variables and `languageOptions`
+
+A browser gives JavaScript globals such as `window` and `document`.
+
+They aren't magically part of the JavaScript language itself.
+
+This distinction matters to a static analysis tool. ESLint needs enough information about the environment to know which global names are expected.
+
+Flat config places language-related configuration under `languageOptions`.
+
+The exact configuration depends on the project and any packages you choose to use, but conceptually this is where ESLint learns more about how a particular group of files should be interpreted.
+
+That separation is useful because a repository can contain code intended for very different runtimes.
+
+A browser file may use:
+
+```js
+document.querySelector("#app");
+```
+
+A Node.js script may have completely different globals and assumptions.
+
+Treating them as separate configuration targets makes those assumptions explicit instead of hiding them.
+
+## ESLint and Automatic Fixes
+
+One of ESLint's most useful CLI options is:
+
+```bash
+npx eslint . --fix
+```
+
+The important word here is **some**.
+
+`--fix` doesn't mean "make my program correct."
+
+Rules explicitly indicate whether the problems they report are automatically fixable. ESLint can then apply those fixes when `--fix` is enabled. ([ESLint - Pluggable JavaScript linter][6])
+
+For example, the official `no-var` rule is fixable in some situations. ([ESLint - Pluggable JavaScript linter][3])
+
+You can therefore think of the normal linting workflow as two separate actions:
+
+```bash
+npx eslint .
+```
+
+Inspect the project and report problems.
+
+Then:
+
+```bash
+npx eslint . --fix
+```
+
+Inspect it again and apply fixes that enabled rules know how to make safely.
+
+Problems without an automatic fix remain for you to handle.
+
+That boundary is important. ESLint is a tool helping you inspect and transform code according to known rules. It isn't a replacement for understanding what the program is supposed to do.
+
+## Add ESLint Commands to `package.json`
+
+Typing the full command every time gets old quickly.
+
+A small `package.json` can expose two scripts:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  }
+}
+```
+
+Now the regular check becomes:
+
+```bash
+npm run lint
+```
+
+and the fixing pass becomes:
+
+```bash
+npm run lint:fix
+```
+
+The CLI supports `--fix` for automatic fixes and also provides options such as `--fix-dry-run`, `--fix-type`, `--quiet`, and `--max-warnings` when you need more control. ([ESLint][7])
+
+For a small project, though, the two scripts above are usually enough to begin.
+
+## A Small Setup From Scratch
+
+Let's put the pieces together.
+
+Install ESLint and the official JavaScript configuration package:
+
+```bash
+npm install --save-dev eslint @eslint/js
+```
+
+Then create:
+
+```text
+eslint.config.js
+```
+
+Add a basic configuration:
+
+```js
+import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  js.configs.recommended,
+
+  {
+    files: ["**/*.js"],
+
+    rules: {
+      "no-var": "error",
+      "no-console": "warn",
+    },
+  },
+]);
+```
+
+Create a deliberately messy file:
+
+```js
+var username = "Alex";
+
+console.log(username);
+```
+
+Run:
+
+```bash
+npx eslint .
+```
+
+ESLint can now evaluate that source against the configuration.
+
+This is a better way to learn ESLint than starting with a 150-line config. You have one recommended preset, two rules you can explain, and a clear idea of where each piece came from.
+
+From there, the configuration can grow with the project.
+
+## What About TypeScript?
+
+This is where it's useful to separate ESLint itself from its ecosystem.
+
+ESLint's core is focused on JavaScript. Plugins and other integrations extend what it can analyze and which rules are available. ESLint's plugin system is explicitly designed for this kind of extension. ([ESLint][4])
+
+If you're building a TypeScript project, don't assume that copying JavaScript rules into a config automatically gives ESLint full knowledge of TypeScript semantics.
+
+TypeScript linting deserves its own configuration and, for a beginner guide, probably its own article.
+
+That keeps the mental model much cleaner:
+
+```text
+ESLint
+  |
+  +-- core JavaScript rules
+  |
+  +-- project configuration
+  |
+  +-- plugins and additional integrations
+```
+
+Learn the core first. Add framework and language-specific tooling after you know why you need it.
+
+## Can You Write Your Own ESLint Rules?
+
+Yes, and this is where understanding the AST becomes genuinely useful.
+
+ESLint supports custom rules and plugins. A plugin can package rules that make sense for a particular library, company, architecture, or codebase. ESLint also provides `RuleTester` for testing plugin rules. ([ESLint][4])
+
+Imagine that your team has an internal function:
+
+```js
+dangerouslyDeleteAccount();
+```
+
+and you want to prevent direct calls outside one specific module.
+
+That requirement is far too specific to become a general JavaScript rule. For your application, though, it might be valuable.
+
+A custom rule can inspect the relevant syntax, recognize the call, check where it appears, and report it when necessary.
+
+Conceptually:
+
+```text
+Find CallExpression
+        |
+        v
+Check function name
+        |
+        v
+Check file/context
+        |
+        v
+Report if forbidden
+```
+
+This is why the AST section isn't just theory.
+
+The same model that explains `no-var` eventually lets you enforce conventions that are unique to your own codebase.
+
+## ESLint Is Not a Test Runner
+
+Linting, testing, and type checking overlap occasionally, but they answer different questions.
+
+A linter can ask:
+
+```text
+Does this source contain a pattern our rules consider problematic?
+```
+
+A type checker can ask:
+
+```text
+Are these values being used in ways allowed by their types?
+```
+
+A test can ask:
+
+```text
+When this code actually runs with these inputs, does it produce the expected result?
+```
+
+A healthy project can use all three.
+
+None of them makes the others unnecessary.
+
+ESLint is especially useful because it catches a category of problems very early, often while you're still looking at the file in your editor.
+
+## Don't Turn Your Config Into a Rule Dump
+
+It's tempting to discover ESLint and immediately enable dozens of rules.
+
+That usually makes the configuration harder to understand.
+
+A better starting point is boring:
+
+```js
+import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  js.configs.recommended,
+
+  {
+    rules: {
+      "no-var": "error",
+    },
+  },
+]);
+```
+
+Run it.
+
+Look at what it reports.
+
+Then decide what your project actually needs.
+
+If a rule keeps catching genuine mistakes, keep it. If a rule expresses a convention your team cares about, configure it deliberately. If you can't explain why a rule is enabled, it's worth finding out before adding another twenty.
+
+The goal isn't to have the largest ESLint configuration.
+
+The goal is to have one you trust.
+
+## Conclusion
+
+ESLint becomes much less mysterious once you stop thinking of it as a file full of arbitrary settings.
+
+Your source code is parsed into a structure that rules can inspect. Those rules look for particular patterns and report what they find. You decide which rules matter, how severe their reports should be, which files they apply to, and whether available automatic fixes should be used.
+
+Modern flat config makes those choices explicit. The official recommended configuration gives you a sensible place to begin, while plugins and custom rules leave room to grow when the project needs something more specialized. ([ESLint][1])
+
+Start small:
+
+```bash
+npm run lint
+```
+
+Understand what it reports.
+
+Then build the configuration around your codebase, rather than building your codebase around somebody else's ESLint config.
+
+For current configuration syntax and rule behavior, use the [official ESLint documentation](https://eslint.org/docs/ as the source of truth.
+
