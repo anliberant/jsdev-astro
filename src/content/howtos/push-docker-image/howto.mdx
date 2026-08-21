@@ -1,0 +1,544 @@
+---
+title: Howto Push a Docker Image to a Private Registry
+slug: push-docker-image
+heading: "How to Push and Pull Docker Images With a Private Registry"
+icon: /icons/docker.png
+image: /icon.png
+permalink: howto/push-docker-image
+date: 2026-08-21
+author: anton liberant
+category: docker
+type: howto
+tags: ['']
+desc: Learn how to build a Docker image, authenticate with a private registry, push the image, and pull it onto another server.
+subtitle: 'Build, tag, push, and pull Docker images without turning a simple deployment into a complicated workflow.'
+---
+
+At some point, keeping Docker images only on your local machine stops being enough.
+
+Maybe you built an application locally and now need to deploy it to a server. Or several servers need access to the same image. You might also want your CI pipeline to build an image once and make that exact version available for deployment.
+
+A private Docker Registry solves this problem.
+
+The basic workflow is not complicated:
+
+```text
+Dockerfile
+   ↓
+docker build
+   ↓
+Local image
+   ↓
+docker tag
+   ↓
+docker push
+   ↓
+Private Registry
+   ↓
+docker pull
+   ↓
+Server
+```
+
+In this guide, we'll go through that entire process. We'll build an image, authenticate with a private registry, tag and push the image, then pull it onto another server and start a container.
+
+## What You Need
+
+Before starting, make sure Docker is installed on your development machine:
+
+```bash
+docker --version
+```
+
+You will also need access to a private container registry and credentials that are allowed to push images to it.
+
+Finally, Docker needs to be installed on the server where you plan to run the image.
+
+For the examples below, I'll use these values:
+
+```text
+Registry: registry.example.com
+Repository: my-project/my-app
+Image: my-app
+Tag: 1.0.0
+```
+
+Replace them with the values from your own registry.
+
+## Step 1: Create a Private Registry
+
+The exact setup depends on your provider.
+
+In most registry dashboards, you create a registry or repository and receive a hostname similar to:
+
+```text
+registry.example.com
+```
+
+Depending on the provider, you may also create credentials such as a Key ID and Key Secret.
+
+Keep the secret somewhere safe. It should never be committed to Git or placed directly in your application source code.
+
+Cloud providers can use different authentication methods. For example, some registries use access tokens or service accounts instead of a permanent username and password. Check your provider's authentication instructions before running `docker login`.
+
+Once the registry exists, we can prepare the image.
+
+## Step 2: Build the Docker Image
+
+Let's assume the application already has a `Dockerfile`.
+
+A small Node.js example might look like this:
+
+```dockerfile
+FROM node:24-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+It's also worth adding a `.dockerignore` file:
+
+```text
+node_modules
+.git
+.env
+npm-debug.log
+Dockerfile*
+README.md
+```
+
+This keeps files that Docker doesn't need out of the build context.
+
+Now build the image:
+
+```bash
+docker build -t my-app:1.0.0 .
+```
+
+Here:
+
+```text
+my-app    image name
+1.0.0     image tag
+.         directory containing the Dockerfile
+```
+
+After the build finishes, check that the image exists:
+
+```bash
+docker image ls my-app
+```
+
+You should see something similar to:
+
+```text
+REPOSITORY   TAG       IMAGE ID       CREATED
+my-app       1.0.0     a12bc34de567   1 minute ago
+```
+
+Our image exists locally, but the private registry doesn't know anything about it yet.
+
+## Step 3: Log In to the Registry
+
+Before Docker can push a private image, it needs to authenticate with the registry.
+
+You will often see commands like this:
+
+```bash
+docker login registry.example.com \
+  --username my-registry-key \
+  --password my-registry-secret
+```
+
+It works, but there is a better way.
+
+Passing a secret directly through `--password` can expose it through shell history or process information. Use `--password-stdin` instead:
+
+```bash
+printf '%s' "$REGISTRY_PASSWORD" | \
+  docker login registry.example.com \
+  --username "$REGISTRY_USER" \
+  --password-stdin
+```
+
+For example, you could first provide the credentials through environment variables:
+
+```bash
+export REGISTRY_USER="my-registry-key"
+export REGISTRY_PASSWORD="my-registry-secret"
+```
+
+Then log in:
+
+```bash
+printf '%s' "$REGISTRY_PASSWORD" | \
+  docker login registry.example.com \
+  --username "$REGISTRY_USER" \
+  --password-stdin
+```
+
+If authentication succeeds, Docker prints:
+
+```text
+Login Succeeded
+```
+
+One detail is worth knowing here. Docker stores authentication configuration under:
+
+```text
+~/.docker/config.json
+```
+
+Depending on your Docker setup, credentials may be stored through a configured credential store rather than directly in that file.
+
+Either way, don't copy your Docker configuration into a repository.
+
+## Step 4: Tag the Image for the Registry
+
+We currently have this local image:
+
+```text
+my-app:1.0.0
+```
+
+The registry needs a fully qualified image name:
+
+```text
+registry.example.com/my-project/my-app:1.0.0
+```
+
+We create that name with `docker tag`:
+
+```bash
+docker tag \
+  my-app:1.0.0 \
+  registry.example.com/my-project/my-app:1.0.0
+```
+
+This does not rebuild or duplicate the image data. It simply gives the existing image another tag.
+
+Run:
+
+```bash
+docker image ls
+```
+
+and you should now see both names:
+
+```text
+REPOSITORY                                   TAG
+my-app                                       1.0.0
+registry.example.com/my-project/my-app       1.0.0
+```
+
+The second one is the name we'll push.
+
+## Step 5: Push the Image
+
+Now the image is ready for the registry:
+
+```bash
+docker push registry.example.com/my-project/my-app:1.0.0
+```
+
+Docker uploads the image layers and creates the `1.0.0` tag in the repository.
+
+A successful push usually ends with output containing a digest:
+
+```text
+1.0.0: digest: sha256:...
+```
+
+You can then open your registry dashboard and check that the image appears there.
+
+At this point the workflow looks like this:
+
+```text
+my-app:1.0.0
+      |
+      | docker tag
+      v
+registry.example.com/my-project/my-app:1.0.0
+      |
+      | docker push
+      v
+Private Registry
+```
+
+The image can now be pulled from another machine that has access to the registry.
+
+## Step 6: Pull the Image on Your Server
+
+Connect to the server where you want to run the application.
+
+First, make sure Docker is available:
+
+```bash
+docker --version
+```
+
+Then authenticate with the registry.
+
+Again, avoid putting the secret directly into the command:
+
+```bash
+export REGISTRY_USER="my-registry-key"
+export REGISTRY_PASSWORD="my-registry-secret"
+
+printf '%s' "$REGISTRY_PASSWORD" | \
+  docker login registry.example.com \
+  --username "$REGISTRY_USER" \
+  --password-stdin
+```
+
+Now pull the image:
+
+```bash
+docker pull registry.example.com/my-project/my-app:1.0.0
+```
+
+Check that it arrived:
+
+```bash
+docker image ls
+```
+
+You should see:
+
+```text
+registry.example.com/my-project/my-app   1.0.0
+```
+
+The server now has exactly the image that we pushed earlier.
+
+## Step 7: Start the Container
+
+We can run the image like any other Docker image:
+
+```bash
+docker run -d \
+  --name my-app \
+  -p 3000:3000 \
+  registry.example.com/my-project/my-app:1.0.0
+```
+
+The options are straightforward:
+
+```text
+-d                  run in the background
+--name my-app       name the container
+-p 3000:3000        map host port 3000 to container port 3000
+```
+
+Check whether the container is running:
+
+```bash
+docker ps
+```
+
+If something went wrong, inspect its logs:
+
+```bash
+docker logs my-app
+```
+
+For live logs:
+
+```bash
+docker logs -f my-app
+```
+
+That is usually enough to spot an application startup error.
+
+## Don't Use `latest` for Everything
+
+Using `latest` is convenient:
+
+```bash
+docker build -t my-app:latest .
+```
+
+but it doesn't tell you which version of the application you're actually running.
+
+For deployments, explicit versions are much easier to reason about:
+
+```text
+my-app:1.0.0
+my-app:1.0.1
+my-app:1.1.0
+```
+
+Git commit hashes can also work well:
+
+```text
+my-app:a9c83f1
+```
+
+Then a server can pull one exact build:
+
+```bash
+docker pull registry.example.com/my-project/my-app:1.0.1
+```
+
+If a deployment breaks, you know exactly which image was deployed and which previous version you can return to.
+
+You can still add `latest` as an additional tag if your workflow needs it:
+
+```bash
+docker tag \
+  my-app:1.0.0 \
+  registry.example.com/my-project/my-app:latest
+```
+
+Then push both:
+
+```bash
+docker push registry.example.com/my-project/my-app:1.0.0
+docker push registry.example.com/my-project/my-app:latest
+```
+
+The important part is not to rely on `latest` as your only version identifier.
+
+## Updating the Application
+
+Once the registry is configured, future deployments become much simpler.
+
+Build a new version:
+
+```bash
+docker build -t my-app:1.0.1 .
+```
+
+Tag it:
+
+```bash
+docker tag \
+  my-app:1.0.1 \
+  registry.example.com/my-project/my-app:1.0.1
+```
+
+Push it:
+
+```bash
+docker push registry.example.com/my-project/my-app:1.0.1
+```
+
+Then, on the server:
+
+```bash
+docker pull registry.example.com/my-project/my-app:1.0.1
+```
+
+Stop and remove the old container:
+
+```bash
+docker stop my-app
+docker rm my-app
+```
+
+Start the new version:
+
+```bash
+docker run -d \
+  --name my-app \
+  -p 3000:3000 \
+  registry.example.com/my-project/my-app:1.0.1
+```
+
+For a small project, this is already a perfectly understandable deployment workflow. Larger systems usually automate these steps through CI/CD, Docker Compose, Kubernetes, or another deployment platform.
+
+## Common Problems
+
+If `docker push` returns an authentication error, first check that you're logged in to the correct registry:
+
+```bash
+docker login registry.example.com
+```
+
+An error such as:
+
+```text
+denied: requested access to the resource is denied
+```
+
+often means the account doesn't have permission to push to that repository, or the image was tagged with the wrong repository path.
+
+If Docker cannot find the image:
+
+```text
+An image does not exist locally with the tag...
+```
+
+check your local tags:
+
+```bash
+docker image ls
+```
+
+The name passed to `docker push` must match the registry tag exactly.
+
+Network and TLS errors are different. In that case, verify the registry hostname, HTTPS configuration, firewall rules, DNS, and whether the machine can actually reach the registry.
+
+## The Whole Workflow
+
+Once you've done it a couple of times, the entire process comes down to a handful of commands:
+
+```bash
+# Build
+docker build -t my-app:1.0.0 .
+
+# Tag
+docker tag \
+  my-app:1.0.0 \
+  registry.example.com/my-project/my-app:1.0.0
+
+# Login
+printf '%s' "$REGISTRY_PASSWORD" | \
+  docker login registry.example.com \
+  --username "$REGISTRY_USER" \
+  --password-stdin
+
+# Push
+docker push registry.example.com/my-project/my-app:1.0.0
+```
+
+Then on the server:
+
+```bash
+# Login
+printf '%s' "$REGISTRY_PASSWORD" | \
+  docker login registry.example.com \
+  --username "$REGISTRY_USER" \
+  --password-stdin
+
+# Pull
+docker pull registry.example.com/my-project/my-app:1.0.0
+
+# Run
+docker run -d \
+  --name my-app \
+  -p 3000:3000 \
+  registry.example.com/my-project/my-app:1.0.0
+```
+
+## Final Thoughts
+
+A private registry sits between building an application and deploying it.
+
+Instead of copying project files to a server and rebuilding everything there, you build an image, give it a clear version, push it to the registry, and pull that exact image wherever it needs to run.
+
+The workflow is simple:
+
+```text
+Build → Tag → Login → Push → Pull → Run
+```
+
+Once this works manually, automating the same steps in CI/CD is the natural next move. The commands don't really change. You're just letting your pipeline run them for you.
