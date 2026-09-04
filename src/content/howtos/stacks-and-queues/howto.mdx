@@ -1,0 +1,656 @@
+---
+title: How to Use Stacks and Queues in JavaScript
+slug: stacks-and-queues
+heading: Understanding Stacks and Queues in JavaScript
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/stacks-and-queues
+date: 2026-08-25
+author: anton liberant
+category: javascript
+type: howto
+tags: []
+desc: Learn how stacks and queues work in JavaScript, when to use LIFO and FIFO, and how to implement both data structures with practical examples.
+subtitle: 'Understand LIFO and FIFO data structures through practical JavaScript examples'
+---
+
+Data structures can sound more complicated than they really are. Terms like linked lists, trees, graphs, and queues often make them feel like something you only need for algorithm interviews.
+
+In practice, you use data structures all the time.
+
+Every time you add something to an array, remove an item, process a list of tasks, or keep track of previous actions, you are working with a particular way of organizing data.
+
+Two of the simplest and most useful structures are **stacks** and **queues**.
+
+A stack follows the **Last In, First Out (LIFO)** principle. A queue follows **First In, First Out (FIFO)**.
+
+Once you understand that difference, many everyday programming problems become much easier to reason about.
+
+## JavaScript Arrays as a Foundation
+
+Before looking at stacks and queues, it is worth understanding why JavaScript arrays are so useful for implementing them.
+
+A JavaScript `Array` is an object with special behavior for indexed elements. Unlike a traditional fixed-size array in languages such as C, a JavaScript array can contain values of different types:
+
+```js
+const values = [42, "hello", { name: "John" }, true];
+
+console.log(values[0]); // 42
+console.log(values[1]); // "hello"
+console.log(values[2]); // { name: "John" }
+console.log(values[3]); // true
+```
+
+Arrays can also grow and shrink dynamically:
+
+```js
+const numbers = [1, 2, 3];
+
+numbers.push(4);
+numbers.push(5);
+
+console.log(numbers);
+// [1, 2, 3, 4, 5]
+```
+
+This makes arrays convenient when we need a simple implementation of a stack or queue.
+
+### Sorting Arrays
+
+One common array operation that is easy to get wrong is sorting numbers.
+
+JavaScript's `sort()` converts elements to strings and sorts them lexicographically by default:
+
+```js
+const numbers = [10, 2, 5, 1];
+
+numbers.sort();
+
+console.log(numbers);
+// [1, 10, 2, 5]
+```
+
+For numeric sorting, provide a comparison function:
+
+```js
+const numbers = [10, 2, 5, 1];
+
+numbers.sort((a, b) => a - b);
+
+console.log(numbers);
+// [1, 2, 5, 10]
+```
+
+The comparison function tells JavaScript that the values should be compared as numbers rather than strings.
+
+### Using `splice()`
+
+The `splice()` method can insert and remove elements at any position.
+
+```js
+const numbers = [1, 2, 4];
+
+numbers.splice(2, 0, 3);
+
+console.log(numbers);
+// [1, 2, 3, 4]
+```
+
+The first argument is the starting index. The second tells JavaScript how many elements to remove. Any remaining arguments are inserted at that position.
+
+For example:
+
+```js
+const numbers = [1, 2, 3, 4];
+
+numbers.splice(1, 2, 20, 30);
+
+console.log(numbers);
+// [1, 20, 30, 4]
+```
+
+One important detail is that `splice()` changes the original array. This matters when working with immutable state in frameworks such as React.
+
+## What Is a Stack?
+
+A stack is a data structure that follows **Last In, First Out**, usually abbreviated as **LIFO**.
+
+Think about a stack of plates.
+
+You put one plate on top of another. When you need a plate, you take the one from the top. The last plate you added is the first one you remove.
+
+The same principle applies to a stack in JavaScript.
+
+The two basic operations are:
+
+* `push()` adds an item to the top.
+* `pop()` removes an item from the top.
+
+Here is a simple example:
+
+```js
+const stack = [];
+
+stack.push("First");
+stack.push("Second");
+stack.push("Third");
+
+console.log(stack);
+// ["First", "Second", "Third"]
+
+console.log(stack.pop());
+// "Third"
+
+console.log(stack.pop());
+// "Second"
+
+console.log(stack);
+// ["First"]
+```
+
+The last item added, `"Third"`, is the first item removed.
+
+You can also look at the top item without removing it:
+
+```js
+const stack = ["First", "Second", "Third"];
+
+const top = stack[stack.length - 1];
+
+console.log(top);
+// "Third"
+```
+
+This operation is often called **peek**.
+
+### Building a Reusable Stack
+
+For a larger application, you can wrap the behavior in a class:
+
+```js
+class Stack {
+  #items = [];
+
+  push(item) {
+    this.#items.push(item);
+  }
+
+  pop() {
+    return this.#items.pop();
+  }
+
+  peek() {
+    return this.#items.at(-1);
+  }
+
+  isEmpty() {
+    return this.#items.length === 0;
+  }
+
+  get size() {
+    return this.#items.length;
+  }
+}
+
+const stack = new Stack();
+
+stack.push("HTML");
+stack.push("CSS");
+stack.push("JavaScript");
+
+console.log(stack.peek());
+// "JavaScript"
+
+console.log(stack.pop());
+// "JavaScript"
+
+console.log(stack.size);
+// 2
+```
+
+For this implementation, `push()`, `pop()`, and `peek()` are constant-time operations in normal use.
+
+## Where Are Stacks Used?
+
+Stacks appear in many areas of software development.
+
+### Function Calls
+
+JavaScript uses a call stack to keep track of function execution.
+
+```js
+function first() {
+  second();
+}
+
+function second() {
+  third();
+}
+
+function third() {
+  console.log("Running");
+}
+
+first();
+```
+
+When `first()` runs, it calls `second()`, which calls `third()`.
+
+Conceptually, the calls are placed on the stack:
+
+```text
+third()
+second()
+first()
+```
+
+When `third()` finishes, it is removed first. Then `second()` finishes, followed by `first()`.
+
+This is also why excessive recursion can eventually cause a stack overflow.
+
+### Undo Operations
+
+An editor can store previous operations in a stack:
+
+```js
+const history = [];
+
+history.push("Typed Hello");
+history.push("Changed the font");
+history.push("Deleted a paragraph");
+
+console.log(history.pop());
+// "Deleted a paragraph"
+```
+
+The most recent operation is the first one that should be undone.
+
+### Browser History
+
+Browser navigation can also be modeled using stack-like behavior. A history implementation can maintain previously visited pages and move backward through them in reverse order.
+
+### Matching Parentheses
+
+Stacks are particularly useful for checking whether brackets are correctly nested.
+
+For example:
+
+```text
+({[]})
+```
+
+is valid, while:
+
+```text
+([)]
+```
+
+is not.
+
+Here is a reusable implementation:
+
+```js
+function isValidBrackets(input) {
+  const stack = [];
+  const pairs = {
+    ")": "(",
+    "]": "[",
+    "}": "{",
+  };
+
+  for (const char of input) {
+    if (char === "(" || char === "[" || char === "{") {
+      stack.push(char);
+      continue;
+    }
+
+    if (char in pairs) {
+      const opening = stack.pop();
+
+      if (opening !== pairs[char]) {
+        return false;
+      }
+    }
+  }
+
+  return stack.length === 0;
+}
+
+console.log(isValidBrackets("()[]{}"));
+// true
+
+console.log(isValidBrackets("([{}])"));
+// true
+
+console.log(isValidBrackets("([)]"));
+// false
+```
+
+The algorithm is simple: opening brackets go onto the stack, and closing brackets remove and check the most recent opening bracket.
+
+## What Is a Queue?
+
+A queue works in the opposite way.
+
+It follows **First In, First Out**, or **FIFO**.
+
+Imagine standing in line at a coffee shop. The first person to arrive is served first. New customers join the back of the line.
+
+A queue works the same way.
+
+The two basic operations are:
+
+* **enqueue** adds an item to the back.
+* **dequeue** removes the item from the front.
+
+A basic JavaScript example looks like this:
+
+```js
+const queue = [];
+
+queue.push("Alice");
+queue.push("Bob");
+queue.push("Charlie");
+
+console.log(queue.shift());
+// "Alice"
+
+console.log(queue.shift());
+// "Bob"
+
+console.log(queue);
+// ["Charlie"]
+```
+
+The first element added is the first one removed.
+
+You can also inspect the first element without removing it:
+
+```js
+const queue = ["Alice", "Bob", "Charlie"];
+
+console.log(queue[0]);
+// "Alice"
+```
+
+## The Problem With `shift()`
+
+Using `push()` and `shift()` is perfectly fine for small queues.
+
+However, `shift()` can become inefficient for large arrays because removing the first element may require the remaining elements to be moved.
+
+That means repeatedly doing this:
+
+```js
+queue.push(item);
+queue.shift();
+```
+
+is not the best approach when the queue becomes large.
+
+A simple solution is to keep track of the position of the next item instead.
+
+## Building an Efficient Queue
+
+Here is a queue implementation that uses two indexes:
+
+```js
+class Queue {
+  #items = [];
+  #head = 0;
+
+  enqueue(item) {
+    this.#items.push(item);
+  }
+
+  dequeue() {
+    if (this.isEmpty()) {
+      return undefined;
+    }
+
+    const item = this.#items[this.#head];
+    this.#items[this.#head] = undefined;
+    this.#head++;
+
+    return item;
+  }
+
+  peek() {
+    return this.#items[this.#head];
+  }
+
+  isEmpty() {
+    return this.#head >= this.#items.length;
+  }
+
+  get size() {
+    return this.#items.length - this.#head;
+  }
+}
+
+const queue = new Queue();
+
+queue.enqueue("Task 1");
+queue.enqueue("Task 2");
+queue.enqueue("Task 3");
+
+console.log(queue.dequeue());
+// "Task 1"
+
+console.log(queue.peek());
+// "Task 2"
+
+console.log(queue.size);
+// 2
+```
+
+Both adding an item and removing the next item can be handled without shifting all remaining elements.
+
+For a production implementation, you can also periodically compact the internal array after enough items have been removed. The important idea is that the queue does not need to move every remaining element whenever the front changes.
+
+## Where Are Queues Used?
+
+Queues are useful whenever work needs to be processed in arrival order.
+
+### Task Processing
+
+Imagine an application receiving background jobs:
+
+```js
+const jobs = [];
+
+jobs.push("Send email");
+jobs.push("Generate report");
+jobs.push("Resize image");
+
+while (jobs.length > 0) {
+  const job = jobs.shift();
+
+  console.log(`Processing: ${job}`);
+}
+```
+
+The jobs are processed in exactly the order they were added.
+
+### Breadth-First Search
+
+Queues are commonly used by **Breadth-First Search (BFS)**.
+
+BFS visits nodes level by level instead of going as deep as possible first.
+
+For example, a graph traversal can use a queue like this:
+
+```js
+function bfs(graph, start) {
+  const queue = [start];
+  const visited = new Set([start]);
+
+  while (queue.length > 0) {
+    const node = queue.shift();
+
+    console.log(node);
+
+    for (const neighbor of graph[node]) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push(neighbor);
+      }
+    }
+  }
+}
+
+const graph = {
+  A: ["B", "C"],
+  B: ["D"],
+  C: ["E"],
+  D: [],
+  E: [],
+};
+
+bfs(graph, "A");
+```
+
+The important part is not the specific implementation of the graph. It is the behavior of the queue: nodes discovered earlier are processed before nodes discovered later.
+
+### Message Processing
+
+Queues are also common in producer-consumer systems.
+
+One part of an application produces work while another part processes it:
+
+```text
+Producer
+   |
+   v
+[ Task 1 ]
+[ Task 2 ]
+[ Task 3 ]
+   |
+   v
+Consumer
+```
+
+The same basic idea appears in message queues, job systems, request processing, and many asynchronous architectures.
+
+The JavaScript runtime also uses queues as part of its event loop model. The exact behavior is more nuanced than a single queue, because different kinds of tasks and jobs have different scheduling rules.
+
+## Stack vs Queue
+
+The easiest way to remember the difference is simple:
+
+**Stack: last in, first out.**
+
+**Queue: first in, first out.**
+
+| Feature           | Stack                    | Queue                    |
+| ----------------- | ------------------------ | ------------------------ |
+| Principle         | LIFO                     | FIFO                     |
+| Add               | `push()`                 | `push()`                 |
+| Remove            | `pop()`                  | `shift()` or `dequeue()` |
+| Read next         | Last item                | First item               |
+| Typical algorithm | DFS                      | BFS                      |
+| Common use        | Undo, recursion, history | Tasks, processing, BFS   |
+
+Consider these two examples:
+
+```js
+const stack = [];
+
+stack.push("A");
+stack.push("B");
+stack.push("C");
+
+console.log(stack.pop());
+// C
+```
+
+The last item added comes out first.
+
+Now compare it with a queue:
+
+```js
+const queue = [];
+
+queue.push("A");
+queue.push("B");
+queue.push("C");
+
+console.log(queue.shift());
+// A
+```
+
+The first item added comes out first.
+
+That single difference is the foundation of both data structures.
+
+## A Practical Example: Processing Tasks
+
+Suppose an application receives a series of tasks.
+
+If the newest task should be handled first, a stack is a natural choice:
+
+```js
+const stack = [];
+
+stack.push("Task A");
+stack.push("Task B");
+stack.push("Task C");
+
+while (stack.length > 0) {
+  const task = stack.pop();
+
+  console.log(`Running ${task}`);
+}
+```
+
+The output is:
+
+```text
+Running Task C
+Running Task B
+Running Task A
+```
+
+If tasks need to be processed in the order they arrived, use a queue instead:
+
+```js
+const queue = [];
+
+queue.push("Task A");
+queue.push("Task B");
+queue.push("Task C");
+
+while (queue.length > 0) {
+  const task = queue.shift();
+
+  console.log(`Running ${task}`);
+}
+```
+
+Now the output is:
+
+```text
+Running Task A
+Running Task B
+Running Task C
+```
+
+The choice between the two structures depends on the problem you are trying to solve.
+
+## Conclusion
+
+Stacks and queues are much easier to understand once you stop thinking about them as abstract computer science concepts.
+
+A **stack** is useful when the most recently added item should be processed first. It follows **LIFO**, or Last In, First Out. JavaScript's `push()` and `pop()` methods make arrays a convenient way to model stacks.
+
+A **queue** is useful when items should be processed in the same order they arrive. It follows **FIFO**, or First In, First Out. A simple queue can use `push()` and `shift()`, while a custom implementation can avoid the cost of repeatedly removing the first array element.
+
+These ideas appear in function calls, undo systems, task processing, graph traversal, browser behavior, and many other parts of software.
+
+The important thing is not to memorize a list of data structures. Instead, learn to recognize the problem each structure solves.
+
+When the newest item should come out first, think **stack**.
+
+When the oldest item should come out first, think **queue**.
+
+Once that distinction becomes familiar, many algorithms and everyday programming problems become much easier to understand.
