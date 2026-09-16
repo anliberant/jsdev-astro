@@ -1,0 +1,686 @@
+---
+title: 'Why width and height Still Matter for HTML Images'
+slug: image-width-height
+heading: "Stop Layout Shifts: Add width and height to Your Images"
+permalink: image-width-height
+image: ./images/image-width-height.png
+date: 2026-09-16
+author: anton liberant
+category: html
+type: post
+tags: []
+desc: Learn why HTML image width and height attributes prevent layout shifts, improve CLS, and help browsers reserve space before images load.
+subtitle: 'A tiny HTML detail that prevents layout shifts and makes image-heavy pages feel faster and more stable.'
+---
+
+Images are one of the most common causes of layout shifts.
+
+A page starts loading, the text appears, and everything looks fine. Then an image arrives from the network and suddenly pushes the content below it down the page.
+
+You may have seen this while reading an article on a slow connection. You start reading a paragraph, an image loads above it, and the sentence you were looking at disappears somewhere below the viewport.
+
+The fix is surprisingly simple: give the browser the dimensions of the image before the file finishes loading.
+
+## Why images cause layout shifts
+
+Consider this basic HTML:
+
+```html
+<h1>Page title</h1>
+
+<p>This is the first paragraph.</p>
+
+<img
+  src="article-cover.jpg"
+  alt="Article cover"
+/>
+
+<p>
+  This is the second paragraph. More content continues here.
+</p>
+```
+
+When the browser parses this HTML, it knows that an image exists, but it may not yet know its dimensions.
+
+The image file still has to be downloaded.
+
+Until the browser can determine its size, it may not be able to reserve the correct amount of space for it. The paragraph below can therefore appear much closer to the first paragraph.
+
+Then the image loads.
+
+The browser discovers its dimensions, updates the layout, and moves everything below it.
+
+That movement is a **layout shift**.
+
+A single small shift may not be noticeable. A page with many images can be much worse, especially on a slow connection.
+
+## Why layout shifts are a problem
+
+Unexpected movement affects more than appearance.
+
+First, the browser may need to recalculate parts of the page layout when an element suddenly changes size. More changes mean more layout work.
+
+More importantly, the interface becomes harder to use.
+
+Imagine that you're about to click a button and an image loads above it. The button moves at the last moment and you click something else instead.
+
+The same problem happens while reading. Content moves even though you did nothing.
+
+This kind of instability is also measured by **Cumulative Layout Shift**, or CLS, one of the Core Web Vitals.
+
+The goal is simple: elements should not unexpectedly move around as the page loads.
+
+## The simplest solution
+
+If you know the intrinsic dimensions of an image, put them directly on the `<img>` element:
+
+```html
+<img
+  src="article-cover.jpg"
+  alt="Article cover"
+  width="800"
+  height="600"
+/>
+```
+
+Then make the image responsive with CSS:
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+The important part is that `width="800"` and `height="600"` describe the image's intrinsic dimensions.
+
+They do not mean that the image must always appear at exactly 800 × 600 pixels.
+
+Instead, they give the browser enough information to determine its aspect ratio:
+
+```text
+800 / 600 = 4 / 3
+```
+
+So the browser knows that the image has a 4:3 ratio before `article-cover.jpg` finishes downloading.
+
+It can reserve the appropriate space immediately.
+
+## What happens when the page loads
+
+With dimensions available, the process is much more predictable.
+
+The browser parses:
+
+```html
+<img
+  src="photo.jpg"
+  alt="Mountain landscape"
+  width="1200"
+  height="800"
+/>
+```
+
+It already knows the aspect ratio:
+
+```text
+1200 / 800 = 3 / 2
+```
+
+Suppose the available content width is only 600 pixels.
+
+With:
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+the displayed image can become approximately:
+
+```text
+600 × 400
+```
+
+The original file is still 1200 × 800. CSS simply scales its rendered size while keeping the same proportions.
+
+Most importantly, the browser can reserve that 600 × 400 area before the image itself appears.
+
+The content below no longer has to jump out of the way.
+
+## `width` and `height` are not just styling
+
+It is easy to look at this:
+
+```html
+<img
+  src="photo.jpg"
+  width="1200"
+  height="800"
+  alt="Mountain landscape"
+/>
+```
+
+and assume that `width` and `height` are doing the same job as CSS.
+
+That is not quite the right mental model.
+
+The HTML attributes provide intrinsic sizing information about the resource. Modern browsers can use those values to establish an aspect ratio while the image is still loading.
+
+CSS then decides how large the image should actually appear in the layout.
+
+That is why this combination works so well:
+
+```html
+<img
+  src="photo.jpg"
+  width="1200"
+  height="800"
+  alt="Mountain landscape"
+/>
+```
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+HTML describes the image. CSS controls how it fits into the page.
+
+## Responsive images with `<picture>`
+
+Things become more interesting when different image sources have different dimensions.
+
+For example, the mobile image might be portrait while the desktop version is landscape.
+
+```html
+<picture>
+  <source
+    media="(max-width: 640px)"
+    srcset="cover-mobile.jpg"
+    width="600"
+    height="800"
+  />
+
+  <source
+    media="(min-width: 641px)"
+    srcset="cover-desktop.jpg"
+    width="1200"
+    height="675"
+  />
+
+  <img
+    src="cover-desktop.jpg"
+    width="1200"
+    height="675"
+    alt="Developer working at a desk"
+  />
+</picture>
+```
+
+Here the mobile source has a different aspect ratio from the desktop source.
+
+Providing dimensions for the sources gives the browser useful sizing information for whichever resource it selects.
+
+The `<img>` element should still remain as the fallback and should contain meaningful `alt` text.
+
+## What about `aspect-ratio`?
+
+Modern CSS gives us another useful tool:
+
+```css
+img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+```
+
+This can reserve a 16:9 area.
+
+It is useful when the desired ratio belongs to the layout itself rather than to a particular image file.
+
+For example:
+
+```css
+.thumbnail {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  object-fit: cover;
+}
+```
+
+```html
+<img
+  class="thumbnail"
+  src="photo.jpg"
+  alt="Mountain landscape"
+/>
+```
+
+This makes sense when every thumbnail in a component should occupy the same 16:9 frame regardless of the original image dimensions.
+
+But when you already know the actual dimensions of the image, putting them in HTML is usually clearer:
+
+```html
+<img
+  src="photo.jpg"
+  width="1600"
+  height="900"
+  alt="Mountain landscape"
+/>
+```
+
+The browser can derive the ratio directly from the resource metadata you supplied.
+
+## HTML dimensions and CSS `aspect-ratio` solve different problems
+
+These two techniques are related, but they are not interchangeable in every situation.
+
+Use image dimensions when you want to describe the resource:
+
+```html
+<img
+  src="avatar.jpg"
+  width="800"
+  height="800"
+  alt="Profile photo"
+/>
+```
+
+Use CSS `aspect-ratio` when the component itself should enforce a particular shape:
+
+```css
+.card-image {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+```
+
+For example, an e-commerce grid may contain product photos with many different original dimensions.
+
+You might still provide each file's intrinsic dimensions:
+
+```html
+<img
+  class="product-image"
+  src="shoe.jpg"
+  width="1400"
+  height="1800"
+  alt="Black running shoe"
+/>
+```
+
+while forcing every card preview into the same frame:
+
+```css
+.product-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+```
+
+The HTML describes the source image. The CSS describes the component.
+
+## The old `padding-bottom` hack
+
+Before `aspect-ratio` became widely available, developers often reserved responsive space with percentage padding.
+
+A 16:9 container could look like this:
+
+```css
+.image-wrapper {
+  position: relative;
+  height: 0;
+  padding-bottom: 56.25%;
+  overflow: hidden;
+}
+
+.image-wrapper img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+```
+
+Why `56.25%`?
+
+Because:
+
+```text
+9 / 16 × 100 = 56.25%
+```
+
+It worked, but it was never particularly pleasant.
+
+Today you can usually replace the whole trick with:
+
+```css
+.image-wrapper {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+```
+
+That code says exactly what it means.
+
+There is little reason to introduce the old padding technique in a modern project unless you have a very specific compatibility requirement.
+
+## Don't hardcode the wrong aspect ratio
+
+There is one important catch with `aspect-ratio`.
+
+Suppose the actual image is 4:3:
+
+```html
+<img
+  src="photo.jpg"
+  width="1200"
+  height="900"
+  alt="City street"
+/>
+```
+
+but your CSS says:
+
+```css
+img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+```
+
+Now you have two different pieces of sizing information.
+
+If the design intentionally crops the image, that may be exactly what you want. In that case, use something such as:
+
+```css
+img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+```
+
+But if you simply want to display the original image without cropping or distortion, use its real intrinsic dimensions and let `height: auto` preserve the ratio.
+
+## What about `attr(width)` and `attr(height)`?
+
+You may occasionally encounter CSS experiments or older discussions around patterns such as:
+
+```css
+img {
+  aspect-ratio: attr(width) / attr(height);
+}
+```
+
+You generally do not need this for normal images.
+
+Browsers can already derive the preferred aspect ratio from the `width` and `height` attributes on replaced elements such as images.
+
+In application code, the straightforward version remains easier to understand:
+
+```html
+<img
+  src="photo.jpg"
+  width="1200"
+  height="800"
+  alt="Mountain landscape"
+/>
+```
+
+combined with responsive CSS:
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+Less code, less ambiguity.
+
+## Other media elements
+
+The same general idea applies beyond `<img>`.
+
+Several replaced elements accept `width` and `height`, including:
+
+```html
+<video
+  src="demo.mp4"
+  width="1280"
+  height="720"
+  controls
+></video>
+```
+
+A responsive video can then use:
+
+```css
+video {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+For an embedded video or another iframe, a component-level aspect ratio is often convenient:
+
+```html
+<iframe
+  class="video"
+  src="https://example.com/embed/video"
+  width="1280"
+  height="720"
+  title="Video demonstration"
+></iframe>
+```
+
+```css
+.video {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+```
+
+The exact strategy depends on the element and the layout, but the underlying principle stays the same: give the browser enough sizing information as early as possible.
+
+## Grid layouts do not make dimensions unnecessary
+
+CSS Grid can make a gallery look stable because its tracks and cards may already constrain the size of each item.
+
+For example:
+
+```css
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(240px, 1fr)
+  );
+  gap: 1rem;
+}
+
+.gallery img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+```
+
+In this case, `aspect-ratio` establishes a predictable area for every thumbnail.
+
+That does not mean intrinsic image dimensions suddenly stop being useful.
+
+You can still write:
+
+```html
+<img
+  src="camera.jpg"
+  width="1600"
+  height="1200"
+  alt="Mirrorless camera"
+/>
+```
+
+Good HTML metadata and predictable CSS layout work together.
+
+## Don't forget lazy-loaded images
+
+Lazy loading makes dimensions even more important.
+
+Consider:
+
+```html
+<img
+  src="article-image.jpg"
+  width="1200"
+  height="800"
+  loading="lazy"
+  alt="JavaScript code editor"
+/>
+```
+
+The image may not be downloaded until the user approaches it.
+
+Without predictable sizing, the page could remain unstable long after the initial load.
+
+With dimensions available, the browser can reserve the space while the actual file is still waiting to load.
+
+That gives you the benefits of lazy loading without introducing unnecessary movement.
+
+## A practical pattern
+
+For ordinary responsive content images, a good default is very small:
+
+```html
+<img
+  src="/images/dashboard.png"
+  width="1440"
+  height="900"
+  alt="Application dashboard"
+  loading="lazy"
+/>
+```
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+For a fixed-ratio UI component, add `aspect-ratio` and `object-fit`:
+
+```html
+<img
+  class="card-cover"
+  src="/images/article.jpg"
+  width="1600"
+  height="1067"
+  alt="Laptop on a desk"
+  loading="lazy"
+/>
+```
+
+```css
+.card-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+```
+
+The first pattern respects the original image ratio.
+
+The second intentionally creates a consistent 16:9 component and crops the source when necessary.
+
+## How to test layout shifts yourself
+
+You do not have to guess whether images are moving your page.
+
+Open the page in Chrome DevTools and record a page load in the **Performance** panel.
+
+Reload the page while recording, then inspect the resulting timeline for layout activity and layout shifts.
+
+You can make the problem easier to reproduce by enabling network throttling. A slower connection gives images more time to arrive after the surrounding HTML has already rendered.
+
+Try the test twice.
+
+First, remove the dimensions:
+
+```html
+<img
+  src="large-photo.jpg"
+  alt="Large landscape"
+/>
+```
+
+Then add them:
+
+```html
+<img
+  src="large-photo.jpg"
+  width="1600"
+  height="1067"
+  alt="Large landscape"
+/>
+```
+
+Use responsive CSS in both cases:
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+The second version gives the browser information about the image's proportions before the image data arrives.
+
+## Final thoughts
+
+Adding `width` and `height` to an image looks like a tiny HTML detail.
+
+It is not.
+
+Those two attributes tell the browser something useful before the image has finished loading. The browser can establish the image's intrinsic aspect ratio, reserve space, and keep the surrounding content more stable.
+
+For most responsive images, the pattern is simple:
+
+```html
+<img
+  src="photo.jpg"
+  width="1200"
+  height="800"
+  alt="Description of the image"
+/>
+```
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+Use `aspect-ratio` when the layout itself needs a particular shape. Use `object-fit` when that shape requires cropping.
+
+You usually do not need padding hacks or complicated wrappers anymore.
+
+Give the browser the dimensions it needs, and let it reserve the space before the image arrives.
