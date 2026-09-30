@@ -1,0 +1,644 @@
+---
+title: 7 ECMAScript 2026 Features That Make JavaScript Better
+slug: ecmascript-2026-features
+heading: 7 Useful JavaScript Features Added in ECMAScript 2026
+image: ./images/ES2026.png
+permalink: ecmascript-2026-features
+date: 2026-09-30
+author: anton liberant
+category: javascript
+type: post
+tags: ["ECMAScript", "ES2026", "TC39"]
+desc: Explore seven practical ECMAScript 2026 features for Maps, async iterators, JSON, binary data, errors, precise sums, and cleaner JavaScript.
+subtitle: 'Seven practical additions that remove boilerplate, simplify everyday patterns, and fix a few long-standing JavaScript pain points.'
+---
+
+JavaScript gets a new ECMAScript edition every year. Some releases introduce syntax that immediately changes how we write code. Others are quieter.
+
+ECMAScript 2026 belongs mostly to the second group.
+
+There is no single feature here that forces you to rethink JavaScript. Instead, ES2026 fills several annoying gaps in the standard library. Small helpers that developers have written countless times can now be replaced with built-in APIs.
+
+That includes creating missing `Map` values, collecting async iterators, working with large integers in JSON, converting binary data to Base64, checking errors across realms, and calculating more reliable floating-point sums.
+
+Let's look at the additions that are most likely to be useful in real projects.
+
+## 1. Create Missing Map Values with `getOrInsert()`
+
+Grouping data with a `Map` usually involves a small but repetitive pattern.
+
+Suppose employees arrive from an asynchronous stream and we want to group them by department.
+
+A common implementation looks like this:
+
+```js
+const employeesByDepartment = new Map();
+
+for await (const employee of employeeStream) {
+  const { department } = employee;
+
+  if (!employeesByDepartment.has(department)) {
+    employeesByDepartment.set(department, []);
+  }
+
+  employeesByDepartment.get(department).push(employee);
+}
+```
+
+Nothing is particularly wrong with this code. The annoying part is that three operations are needed to perform one simple task.
+
+We check whether the key exists, create the value when it doesn't, then retrieve that value.
+
+ECMAScript 2026 gives `Map` a more direct way to express this.
+
+### `Map.prototype.getOrInsert()`
+
+When the default value already exists, you can use `getOrInsert()`:
+
+```js
+const preferences = new Map();
+
+const theme = preferences.getOrInsert("theme", "system");
+
+console.log(theme);
+// "system"
+
+console.log(preferences.get("theme"));
+// "system"
+```
+
+If `"theme"` already exists, its current value is returned. Otherwise, `"system"` is inserted and returned.
+
+For mutable values such as arrays or objects, `getOrInsertComputed()` is usually the more useful option.
+
+```js
+const employeesByDepartment = new Map();
+
+for await (const employee of employeeStream) {
+  employeesByDepartment
+    .getOrInsertComputed(employee.department, () => [])
+    .push(employee);
+}
+```
+
+The callback runs only when the key needs a value.
+
+This distinction matters. You don't want to create a new array, object, cache entry, or other potentially expensive value when the `Map` already contains one.
+
+The same idea works nicely for counters, caches, grouped API results, indexes, and other data structures.
+
+```js
+const wordsByLength = new Map();
+
+for (const word of ["cat", "house", "dog", "window"]) {
+  wordsByLength
+    .getOrInsertComputed(word.length, () => [])
+    .push(word);
+}
+
+console.log(wordsByLength.get(3));
+// ["cat", "dog"]
+```
+
+A tiny API change removes quite a bit of routine bookkeeping.
+
+## 2. Turn Async Iterators into Arrays with `Array.fromAsync()`
+
+Async generators are a convenient way to hide pagination.
+
+Imagine an API that returns a list of issues together with a URL for the next page.
+
+```js
+async function* fetchAllIssues(url) {
+  while (url) {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+
+    const page = await response.json();
+
+    yield* page.items;
+
+    url = page.next;
+  }
+}
+```
+
+The consumer doesn't need to know how many pages exist. It simply receives issues one at a time.
+
+Previously, collecting everything into an array usually required another loop:
+
+```js
+const issues = [];
+
+for await (const issue of fetchAllIssues("/api/issues")) {
+  issues.push(issue);
+}
+```
+
+With `Array.fromAsync()`, that becomes:
+
+```js
+const issues = await Array.fromAsync(
+  fetchAllIssues("/api/issues"),
+);
+```
+
+The intent is much clearer. We have an async source and want an array containing its values.
+
+You can also transform values while collecting them:
+
+```js
+const titles = await Array.fromAsync(
+  fetchAllIssues("/api/issues"),
+  (issue) => issue.title,
+);
+```
+
+There is one detail worth remembering.
+
+### `Array.fromAsync()` is not `Promise.all()`
+
+Consider this:
+
+```js
+const responses = await Array.fromAsync(
+  urls,
+  async (url) => fetch(url),
+);
+```
+
+It may look like every request starts at once, but that isn't how `Array.fromAsync()` processes the mapping operation. Each mapped result is awaited before the next item is consumed.
+
+If the operations are independent and should run concurrently, `Promise.all()` is still the better fit:
+
+```js
+const responses = await Promise.all(
+  urls.map((url) => fetch(url)),
+);
+```
+
+Think of the distinction this way:
+
+```text
+Array.fromAsync()
+source → await → source → await → source → await
+
+Promise.all()
+request ↘
+request → wait for all
+request ↗
+```
+
+Use `Array.fromAsync()` when you're consuming an async sequence in order.
+
+Use `Promise.all()` when independent operations should run concurrently.
+
+And if you're dealing with a huge or potentially endless stream, don't collect it at all. A regular `for await...of` loop lets you process values incrementally.
+
+## 3. Combine Iterables Lazily with `Iterator.concat()`
+
+Sometimes several collections logically form one sequence.
+
+For example, a router might process built-in routes first, plugin routes second, and finally a fallback route.
+
+A generator is one way to represent that:
+
+```js
+function* allRoutes() {
+  yield* builtInRoutes;
+  yield* pluginRoutes;
+  yield fallbackRoute;
+}
+```
+
+This works well, but ES2026 gives us a built-in alternative:
+
+```js
+const routes = Iterator.concat(
+  builtInRoutes,
+  pluginRoutes,
+  [fallbackRoute],
+);
+```
+
+The important part is that the result remains lazy.
+
+`Iterator.concat()` does not immediately copy everything into another array. Values are requested as the consumer moves through the iterator.
+
+For example:
+
+```js
+const first = ["/", "/about"];
+const admin = ["/admin", "/admin/users"];
+const fallback = ["*"];
+
+const routes = Iterator.concat(
+  first,
+  admin,
+  fallback,
+);
+
+for (const route of routes) {
+  console.log(route);
+}
+```
+
+The result is:
+
+```text
+/
+/about
+/admin
+/admin/users
+*
+```
+
+You could get similar output with:
+
+```js
+const routes = [
+  ...first,
+  ...admin,
+  ...fallback,
+];
+```
+
+But that creates a new array immediately.
+
+`Iterator.concat()` is useful when laziness matters or when the sources are large enough that building another collection is unnecessary.
+
+One limitation is important: `Iterator.concat()` works with synchronous iterables. It is not the equivalent of an `AsyncIterator.concat()` API.
+
+## 4. Preserve Large Integers When Parsing JSON
+
+JSON and JavaScript numbers have an old and sometimes dangerous relationship.
+
+JavaScript `Number` values cannot safely represent every integer beyond `Number.MAX_SAFE_INTEGER`.
+
+That becomes a problem with large database IDs, timestamps from some systems, Snowflake IDs, and similar values.
+
+Consider this payload:
+
+```js
+const payload = `{
+  "messageId": 1183028002140618753,
+  "channel": "general"
+}`;
+```
+
+Parsing it normally can lose precision:
+
+```js
+const message = JSON.parse(payload);
+
+console.log(message.messageId);
+// 1183028002140618800
+```
+
+The ID silently changed.
+
+That's especially unpleasant because the result still looks perfectly reasonable.
+
+ECMAScript 2026 makes this situation easier to handle by giving the `JSON.parse()` reviver a third argument: `context`.
+
+For primitive values, `context.source` can expose the original JSON source text.
+
+That means we can construct a `BigInt` from the original digits instead of using the already rounded `Number`.
+
+```js
+const message = JSON.parse(
+  payload,
+  (key, value, context) => {
+    if (key === "messageId") {
+      return BigInt(context.source);
+    }
+
+    return value;
+  },
+);
+
+console.log(message.messageId);
+// 1183028002140618753n
+```
+
+This fixes the parsing side of the problem.
+
+But another issue appears when we try to serialize that object again:
+
+```js
+JSON.stringify(message);
+```
+
+Normally, `JSON.stringify()` cannot serialize a `BigInt`.
+
+ES2026 provides `JSON.rawJSON()` for cases like this.
+
+```js
+const json = JSON.stringify(
+  message,
+  (key, value) => {
+    if (typeof value === "bigint") {
+      return JSON.rawJSON(value.toString());
+    }
+
+    return value;
+  },
+);
+
+console.log(json);
+```
+
+The output contains the full integer:
+
+```json
+{"messageId":1183028002140618753,"channel":"general"}
+```
+
+Notice that the ID remains a JSON number rather than becoming a quoted string.
+
+Together, the new parsing context and `JSON.rawJSON()` make round-tripping large numeric values far safer.
+
+That doesn't mean every integer should suddenly become a `BigInt`. The correct representation still depends on what the value means.
+
+An ID, price, counter, and measurement may all appear as JSON numbers while requiring very different handling in your application.
+
+## 5. Convert `Uint8Array` to Base64 and Hex Directly
+
+Binary data has always felt slightly awkward in browser JavaScript.
+
+Encoding bytes as Base64 often required converting those bytes into a temporary string first.
+
+For example, creating a URL-safe random token might involve code like this:
+
+```js
+const bytes = crypto.getRandomValues(
+  new Uint8Array(32),
+);
+
+const token = btoa(
+  String.fromCharCode(...bytes),
+)
+  .replaceAll("+", "-")
+  .replaceAll("/", "_")
+  .replace(/=+$/, "");
+```
+
+It works, but there are several transformations that have nothing to do with our actual goal.
+
+We simply want Base64URL-encoded bytes.
+
+Now `Uint8Array` can do that directly:
+
+```js
+const bytes = crypto.getRandomValues(
+  new Uint8Array(32),
+);
+
+const token = bytes.toBase64({
+  alphabet: "base64url",
+  omitPadding: true,
+});
+
+console.log(token);
+```
+
+Decoding is just as straightforward:
+
+```js
+const decoded = Uint8Array.fromBase64(token, {
+  alphabet: "base64url",
+});
+```
+
+ES2026 also provides hexadecimal conversion:
+
+```js
+const bytes = new Uint8Array([
+  72,
+  101,
+  108,
+  108,
+  111,
+]);
+
+const hex = bytes.toHex();
+
+console.log(hex);
+// "48656c6c6f"
+```
+
+And back again:
+
+```js
+const restored = Uint8Array.fromHex(
+  "48656c6c6f",
+);
+```
+
+There are also methods for writing decoded data into an existing buffer:
+
+```js
+const buffer = new Uint8Array(64);
+
+const result = buffer.setFromBase64(encoded);
+
+console.log(result.read);
+console.log(result.written);
+```
+
+This is useful when you want tighter control over allocations or are working with preallocated buffers.
+
+These methods don't replace `TextEncoder` and `TextDecoder`.
+
+Use those when converting between text and bytes:
+
+```js
+string ↔ bytes
+```
+
+Use the new `Uint8Array` APIs for encoded binary representations:
+
+```js
+bytes ↔ Base64
+bytes ↔ Hex
+```
+
+That separation makes binary code considerably easier to read.
+
+## 6. Detect Real Errors with `Error.isError()`
+
+You've probably written this check hundreds of times:
+
+```js
+if (value instanceof Error) {
+  // handle error
+}
+```
+
+Most of the time, it works.
+
+The problem appears when an error comes from another JavaScript realm.
+
+An iframe is an easy way to demonstrate it:
+
+```js
+const iframe = document.createElement("iframe");
+
+document.body.append(iframe);
+
+const externalError =
+  new iframe.contentWindow.Error("Something failed");
+
+console.log(externalError instanceof Error);
+// false
+```
+
+The object really is an `Error`.
+
+It just belongs to another realm, which has its own `Error` constructor. As a result, the prototype check performed by `instanceof` fails.
+
+ES2026 introduces `Error.isError()`:
+
+```js
+console.log(Error.isError(externalError));
+// true
+```
+
+You can think of it as the error equivalent of `Array.isArray()`.
+
+This is particularly useful at system boundaries, where values can come from plugins, iframes, VM contexts, or other execution environments.
+
+It also helps inside `catch`.
+
+JavaScript allows any value to be thrown:
+
+```js
+throw "Something failed";
+```
+
+Or:
+
+```js
+throw {
+  message: "Something failed",
+};
+```
+
+So defensive code often needs to normalize unknown thrown values.
+
+```js
+try {
+  await runPlugin();
+} catch (value) {
+  const error = Error.isError(value)
+    ? value
+    : new Error(String(value), {
+        cause: value,
+      });
+
+  reportError(error);
+}
+```
+
+`Error.isError()` checks whether the value is actually an error object. An ordinary object with `name` and `message` properties doesn't suddenly become one.
+
+## 7. Sum Floating-Point Numbers More Reliably
+
+Floating-point arithmetic has some famous surprises:
+
+```js
+console.log(0.1 + 0.2);
+// 0.30000000000000004
+```
+
+But rounding problems become more subtle when numbers with very different magnitudes are added together.
+
+Consider:
+
+```js
+const readings = [
+  1e16,
+  3.5,
+  -1e16,
+];
+
+const total = readings.reduce(
+  (sum, value) => sum + value,
+  0,
+);
+
+console.log(total);
+// 4
+```
+
+Mathematically, the result should be `3.5`.
+
+The problem comes from floating-point representation. Around `1e16`, JavaScript cannot represent every possible fractional value. The intermediate result is rounded before the large offset is removed.
+
+ES2026 adds `Math.sumPrecise()` for this kind of calculation:
+
+```js
+const readings = [
+  1e16,
+  3.5,
+  -1e16,
+];
+
+const total = Math.sumPrecise(readings);
+
+console.log(total);
+// 3.5
+```
+
+It accepts an iterable, so you aren't limited to arrays.
+
+```js
+const values = new Set([
+  1e16,
+  3.5,
+  -1e16,
+]);
+
+console.log(Math.sumPrecise(values));
+// 3.5
+```
+
+The name needs a little explanation, though.
+
+"Precise" doesn't mean JavaScript suddenly has exact decimal arithmetic.
+
+This remains true:
+
+```js
+Math.sumPrecise([0.1, 0.2]);
+// 0.30000000000000004
+```
+
+The input values themselves are already binary floating-point approximations.
+
+`Math.sumPrecise()` reduces additional errors introduced while adding many values together. It doesn't change how JavaScript represents numbers.
+
+That makes it useful for statistics, measurements, scientific datasets, analytics, and similar calculations.
+
+It is not a complete solution for financial arithmetic. Money often needs decimal arithmetic or an integer representation such as cents.
+
+## Small APIs, Less Boilerplate
+
+ECMAScript 2026 isn't a release built around one spectacular new syntax feature. Its improvements are much more practical.
+
+A repeated `has()` plus `set()` plus `get()` sequence can become `getOrInsertComputed()`. Async iterators can turn into arrays without a manual collection loop. Iterables can be combined lazily instead of being copied into another collection.
+
+JSON gets better tools for preserving large integers. `Uint8Array` finally has direct Base64 and hex conversions. Error detection works reliably across realms, while `Math.sumPrecise()` makes certain numerical aggregations less fragile.
+
+None of these changes will completely transform an application on its own.
+
+That's also why they're useful.
+
+They replace little utility functions, awkward conversions, defensive checks, and bits of boilerplate that have accumulated in JavaScript projects for years.
+
+Before using them in production, check support in your target browsers and runtimes. ECMAScript defines the language, but browsers, Node.js, Bun, Deno, and other environments don't necessarily ship every new feature at exactly the same time.
+
+ES2026 is less about writing a different kind of JavaScript and more about having better built-in tools for the JavaScript we already write.
