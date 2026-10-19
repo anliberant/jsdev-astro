@@ -9,6 +9,7 @@
   transform: translateY(-50%);
   z-index: 100;
   width: 320px;
+  pointer-events: none;
 
   max-height: 70vh;
   display: flex;
@@ -69,6 +70,7 @@
 }
 
 .toc-tick {
+  pointer-events: auto;
   position: relative;
   display: flex;
   align-items: center;
@@ -219,5 +221,11 @@
     opacity: 0;
     transform: translateX(4px);
     color: var(--color-muted-foreground, #64748b);
+  }
+}
+
+@media (max-width: 1024px) {
+  .post-toc {
+    display: none;
   }
 }

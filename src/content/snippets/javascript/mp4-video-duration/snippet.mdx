@@ -1,0 +1,434 @@
+---
+title: "Get MP4 Video Duration Without Downloading the Entire File"
+slug: mp4-video-duration
+heading: "How to Read MP4 Duration with HTTP Range Requests"
+icon: /icons/javascript.png
+image: /icon.png
+permalink: snippets/mp4-video-duration
+date: 2026-10-19
+author: anton liberant
+category: javascript
+desc: "Read MP4 video duration in Node.js using HTTP Range requests, without downloading the entire file or running FFmpeg."
+subtitle: "Learn how to extract MP4 duration with Node.js and HTTP Range requests, handle fragmented MP4 files, and avoid downloading large videos."
+tags: ['video', 'mp4']
+type: snippets
+---
+
+Sometimes you need to know how long a video is without downloading the entire file.
+
+This is common in video processing services, upload validators, and applications that charge users based on video length.
+
+Downloading a 500 MB video just to read its duration isn't particularly efficient. Fortunately, MP4 stores metadata in a structure that can often be retrieved with a small HTTP request.
+
+There's one catch: not every MP4 stores its duration in the same way.
+
+## How MP4 stores video duration
+
+An MP4 file is made up of structures called boxes. Each box has a type and size.
+
+Some of the important ones are:
+
+- `ftyp`: identifies the file format.
+- `moov`: contains movie metadata.
+- `mvhd`: stores movie-level timing information.
+- `mdat`: contains encoded media data.
+- `moof`: describes a media fragment.
+- `mfra`: may contain a random-access index for fragments.
+
+In a regular MP4 file, the `mvhd` box contains two values:
+
+`timescale` tells us how many time units represent one second, while `duration` tells us how many units the movie lasts.
+
+The calculation is simple:
+
+```js
+const durationTicks = 540_000;
+const timescale = 30_000;
+
+const durationInSeconds = durationTicks / timescale;
+
+console.log(durationInSeconds); // 18
+```
+
+For example, a duration of 540,000 ticks with a timescale of 30,000 gives us 18 seconds.
+
+The difficulty is finding the metadata without reading the entire file.
+
+## The implementation
+
+We'll use Node.js and its built-in `fetch()` API. No third-party packages are needed for the standard MP4 case.
+
+### 1. Download a specific byte range
+
+Instead of requesting the complete video, we'll ask the server for a small section.
+
+```js
+const REQUEST_TIMEOUT = 15_000;
+const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
+
+async function downloadByteRange(resourceUrl, byteRange) {
+  const response = await fetch(resourceUrl, {
+    headers: {
+      Range: byteRange,
+      'Accept-Encoding': 'identity',
+    },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT),
+  });
+
+  if (response.status !== 206) {
+    await response.body?.cancel();
+    throw new Error(
+      `Expected HTTP 206, received ${response.status}`
+    );
+  }
+
+  const declaredLength = response.headers.get('content-length');
+
+  if (
+    declaredLength !== null &&
+    Number(declaredLength) > MAX_CHUNK_SIZE
+  ) {
+    await response.body?.cancel();
+    throw new Error('Range response exceeds size limit');
+  }
+
+  const reader = response.body?.getReader();
+
+  if (!reader) {
+    throw new Error('Missing response body');
+  }
+
+  const chunks = [];
+  let receivedBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      receivedBytes += value.byteLength;
+
+      if (receivedBytes > MAX_CHUNK_SIZE) {
+        throw new Error('Range response exceeds size limit');
+      }
+
+      chunks.push(Buffer.from(value));
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+
+  return {
+    bytes: Buffer.concat(chunks),
+    contentRange: response.headers.get('content-range'),
+  };
+}
+```
+
+A few details matter here.
+
+We require HTTP `206 Partial Content`, rather than accepting a normal `200 OK`. Some servers ignore the `Range` header and return the whole file.
+
+We also enforce a maximum response size while reading the stream. Checking `Content-Length` alone isn't sufficient because that header may be absent.
+
+For production use, validate the returned `Content-Range` against the requested range as well.
+
+### 2. Parse MP4 boxes
+
+Every standard MP4 box begins with a size and a four-character type.
+
+The parser below handles normal box sizes, extended 64-bit sizes, and boxes that extend to the end of the supplied buffer.
+
+```js
+function readMp4Boxes(binaryData, startOffset = 0) {
+  const parsedBoxes = [];
+  let cursorOffset = startOffset;
+
+  while (cursorOffset + 8 <= binaryData.length) {
+    let totalSize = binaryData.readUInt32BE(cursorOffset);
+    let headerLength = 8;
+
+    const boxType = binaryData.toString(
+      'ascii',
+      cursorOffset + 4,
+      cursorOffset + 8
+    );
+
+    if (totalSize === 1) {
+      if (cursorOffset + 16 > binaryData.length) {
+        break;
+      }
+
+      const extendedSize = binaryData.readBigUInt64BE(
+        cursorOffset + 8
+      );
+
+      if (extendedSize > BigInt(Number.MAX_SAFE_INTEGER)) {
+        break;
+      }
+
+      totalSize = Number(extendedSize);
+      headerLength = 16;
+    } else if (totalSize === 0) {
+      totalSize = binaryData.length - cursorOffset;
+    }
+
+    if (
+      totalSize < headerLength ||
+      cursorOffset + totalSize > binaryData.length
+    ) {
+      break;
+    }
+
+    parsedBoxes.push({
+      type: boxType,
+      start: cursorOffset,
+      payloadStart: cursorOffset + headerLength,
+      end: cursorOffset + totalSize,
+    });
+
+    cursorOffset += totalSize;
+  }
+
+  return parsedBoxes;
+}
+```
+
+This parser works on complete boxes within the supplied buffer. It doesn't attempt to interpret partially downloaded box payloads.
+
+That distinction becomes important when the `moov` box is larger than our requested range.
+
+### 3. Extract duration from mvhd
+
+The `mvhd` box has two versions.
+
+Version 0 uses 32-bit fields for its timing values. Version 1 supports a 64-bit duration and uses larger timestamp fields.
+
+We need to account for both.
+
+```js
+function readMovieDuration(binaryData, movieHeader) {
+  const metadataOffset = movieHeader.payloadStart;
+  const headerVersion = binaryData[metadataOffset];
+
+  if (headerVersion !== 0 && headerVersion !== 1) {
+    return null;
+  }
+
+  const scaleOffset = metadataOffset + (
+    headerVersion === 1 ? 20 : 12
+  );
+
+  const durationOffset = scaleOffset + 4;
+  const durationWidth = headerVersion === 1 ? 8 : 4;
+
+  if (durationOffset + durationWidth > movieHeader.end) {
+    return null;
+  }
+
+  const ticksPerSecond = binaryData.readUInt32BE(scaleOffset);
+
+  if (ticksPerSecond === 0) {
+    return null;
+  }
+
+  let totalTicks;
+
+  if (headerVersion === 1) {
+    const wideDuration = binaryData.readBigUInt64BE(
+      durationOffset
+    );
+
+    if (
+      wideDuration === 0xffffffffffffffffn ||
+      wideDuration > BigInt(Number.MAX_SAFE_INTEGER)
+    ) {
+      return null;
+    }
+
+    totalTicks = Number(wideDuration);
+  } else {
+    totalTicks = binaryData.readUInt32BE(durationOffset);
+
+    if (totalTicks === 0xffffffff) {
+      return null;
+    }
+  }
+
+  if (totalTicks === 0) {
+    return null;
+  }
+
+  const seconds = totalTicks / ticksPerSecond;
+
+  return Number.isFinite(seconds) && seconds > 0
+    ? seconds
+    : null;
+}
+```
+
+Notice that we don't return zero as a valid duration.
+
+In fragmented MP4 files, `mvhd` may contain zero because the complete duration wasn't known when the initial metadata was written.
+
+Returning zero would make the parser technically successful but practically incorrect.
+
+## 4. Find the metadata and calculate the duration
+
+Now we can connect everything.
+
+For this example, we'll download the first 256 KB. If the metadata isn't there, we'll inspect the last 2 MB.
+
+```js
+const INITIAL_SCAN_BYTES = 256 * 1024;
+const FINAL_SCAN_BYTES = 2 * 1024 * 1024;
+
+function extractDurationFromBoxes(binaryData) {
+  const topLevelBoxes = readMp4Boxes(binaryData);
+  const movieBox = topLevelBoxes.find(
+    entry => entry.type === 'moov'
+  );
+
+  if (!movieBox) {
+    return null;
+  }
+
+  const nestedBoxes = readMp4Boxes(
+    binaryData.subarray(
+      movieBox.payloadStart,
+      movieBox.end
+    )
+  );
+
+  const movieHeader = nestedBoxes.find(
+    entry => entry.type === 'mvhd'
+  );
+
+  if (!movieHeader) {
+    return null;
+  }
+
+  const moviePayload = binaryData.subarray(
+    movieBox.payloadStart,
+    movieBox.end
+  );
+
+  return readMovieDuration(moviePayload, movieHeader);
+}
+
+export async function getRemoteMp4Duration(videoUrl) {
+  const parsedUrl = new URL(videoUrl);
+
+  if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+    throw new Error('Only HTTP and HTTPS URLs are supported');
+  }
+
+  const beginning = await downloadByteRange(
+    parsedUrl.href,
+    `bytes=0-${INITIAL_SCAN_BYTES - 1}`
+  );
+
+  const initialDuration = extractDurationFromBoxes(
+    beginning.bytes
+  );
+
+  if (initialDuration !== null) {
+    return initialDuration;
+  }
+
+  const ending = await downloadByteRange(
+    parsedUrl.href,
+    `bytes=-${FINAL_SCAN_BYTES}`
+  );
+
+  return extractDurationFromBoxes(ending.bytes);
+}
+```
+
+There is one limitation to this compact implementation: a tail response can begin in the middle of a box. In that situation, `readMp4Boxes()` won't find the `moov` box, even when the metadata is present later in the response.
+
+A complete production implementation should determine the absolute box boundaries, request the full `moov` box if necessary, and validate every range response. The code above intentionally returns `null` for unsupported layouts rather than guessing.
+
+## Usage
+
+```js
+import { getRemoteMp4Duration } from './mp4-duration.js';
+
+const mediaSource = 'https://example.com/uploads/sample.mp4';
+
+try {
+  const playbackSeconds = await getRemoteMp4Duration(
+    mediaSource
+  );
+
+  if (playbackSeconds === null) {
+    console.log('Duration could not be determined');
+  } else {
+    console.log(
+      `Video duration: ${playbackSeconds.toFixed(2)} seconds`
+    );
+  }
+} catch (error) {
+  console.error('Failed to inspect video:', error.message);
+}
+```
+
+## What about fragmented MP4?
+
+Fragmented MP4 files work differently.
+
+Instead of storing all timing information in one place, they divide the media into fragments.
+
+A simplified structure looks like this:
+
+```
+ftyp
+moov
+moof
+mdat
+moof
+mdat
+moof
+mdat
+mfra
+```
+
+The initial `mvhd` duration can be zero.
+
+To determine the real duration, a parser may need to inspect:
+
+- `mdhd` for each track's timescale.
+- `trex` for default sample durations.
+- `mfra` and `tfra` to locate indexed fragments.
+- `tfdt` for a fragment's decode start time.
+- `trun` for sample counts and durations.
+
+For a well-formed indexed file, the final duration can often be calculated from the last fragment without downloading the entire video.
+
+However, `mfra` is optional. Some files don't include it at all. Other files have incomplete or unusual metadata.
+
+If you need reliable support for fragmented MP4, MOV, and other formats, a mature media parser such as `ffprobe` is generally the better choice.
+
+## Important considerations
+
+Don't trust client-provided duration for billing. A user can modify any value sent from the browser. Validate duration on the server using a trusted media-processing workflow.
+
+Don't fetch arbitrary user-provided URLs without restrictions. A server-side URL fetcher can introduce SSRF vulnerabilities. Restrict destinations to trusted storage hosts and validate redirects and resolved addresses.
+
+Don't assume every server supports Range requests. Require a valid `206` response and check the returned byte boundaries.
+
+Don't assume the movie header contains the final duration. Fragmented files may store their timing information elsewhere.
+
+Don't guess when metadata is incomplete. Returning `null` is safer than producing a duration that looks valid but isn't.
+
+## Final Thoughts
+
+Reading MP4 duration doesn't always require downloading the entire video or launching FFmpeg.
+
+For many standard MP4 files, a small HTTP Range request is enough to retrieve the `moov` metadata and calculate the duration from `mvhd`.
+
+The challenge is handling files that don't follow the expected layout.
+
+Fragmented MP4, missing indexes, large metadata boxes, and servers that ignore Range requests can all break a simple parser.
+
+For lightweight metadata inspection, this technique can be useful. For financial calculations or unrestricted user uploads, treat it as an optimization and keep a reliable validation fallback.

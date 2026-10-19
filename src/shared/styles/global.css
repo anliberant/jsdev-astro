@@ -162,6 +162,7 @@ pre code {
 
 table {
   width: fit-content;
+  max-width: 100%;
   border-collapse: collapse;
   margin-top: 1.5rem;
   overflow: hidden;
