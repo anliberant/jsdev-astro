@@ -1,49 +1,179 @@
 ---
 title: 'Friday Links #45: What’s New in JavaScript and the Web'
 slug: friday-45
-heading: "Friday Links #45: JavaScript, Tools, and Things Worth Trying"
+heading: 'Friday Links #45: JavaScript, Tools, and Things Worth Trying'
 image: ./images/friday-45.png
 permalink: friday/friday-45
-date: 2026-08-21
+date: 2026-10-23
 author: anton liberant
 type: friday
-isDraft: true
-desc: "Friday Links #45 rounds up recent JavaScript releases, developer tools, open-source projects, AI experiments, and stories worth catching up on."
-subtitle: "Fresh releases, useful tools, interesting experiments, and a few projects worth opening before the weekend."
+isDraft: false
+desc: 'Friday Links #45 covers Bun, Node.js, Astro, Vite, GitHub security improvements, and useful updates from the JavaScript ecosystem.'
+subtitle: 'Bun package manager fixes, Node.js security releases, Astro build diagnostics, and GitHub security updates.'
 ---
 
 ![Friday Links #45](./images/friday-45.png)
 
 Another couple of weeks, another pile of tabs waiting to be read.
 
-This edition of Friday Links is about the things that actually caught my attention while going through recent releases, new developer tools, open-source projects, and experiments around JavaScript and the wider web.
+This time, the runtime news is particularly good. Bun has been improving its TypeScript checking and package manager, Node.js has shipped another round of updates, and Astro has added a way to see where your build time goes. Meanwhile, GitHub has been busy with security tooling and AI-assisted development.
 
-Some are practical enough to use today. Others are still early, strange, or simply fun to explore. As usual, I’ve skipped the noise and kept the links that seem worth your time.
+I've kept the selection focused on announcements and releases from October 9 through October 23, 2026. Some of these changes are worth trying right away. Others are worth bookmarking for the next time you touch a build pipeline, an agent workflow, or a production app.
 
-Make some coffee, open a few tabs, and let’s see what happened.
+Make some coffee and open a few tabs.
 
 ## 🧠 Language & Runtime Updates
 
+[Bun 1.4.4: package manager improvements](https://bun.sh/blog/bun-v1.4.4)
+
+Bun 1.4.4 follows the October 10 release of 1.4.3. The newer release focuses on package installation correctness and performance, including peer dependency resolution and faster warm-cache installs. The previous 1.4.3 release introduced `bun check`, a built-in TypeScript type checker. The official Bun blog index was still showing 1.4.3 in the search snapshot, so confirm the latest version from the installer or release feed before publishing.
+
+[Node.js 26.12.1 and 24.22.1](https://github.com/nodejs/node/releases)
+
+Node.js published updates for its Current and LTS lines on October 21, following 26.12.0 and 24.22.0 on October 14. Check the release notes before upgrading, especially if you maintain services across multiple supported Node versions.
+
 ## 🧩 Frameworks
+
+[Astro 7.4: build timing reports](https://astro.build/blog/astro-740/)
+
+Released October 15. Run `astro build --timings` to find out where the build spends its time. There are also separate image services for prerendered and on-demand pages, a `notFound()` handler for custom entrypoints, and experimental parallel prerendering. Useful changes for larger content-heavy sites.
+
+[Next.js fixes two critical remote code execution vulnerabilities](https://nextjs.org/blog/nextjs-security-update-october-14-2026). [One stems from an upstream React Server Components](https://github.com/react/react/security/advisories/GHSA-xqc2-xf4c-x3h3) bug affecting `use cache` functions that return typed arrays. The other involves SVG processing in the image optimization API. Both can allow attackers to execute code without authentication. Fixes are available in Next.js 16.4.1 and 15.5.28, and researchers have already published a [proof of concept](https://hash-sec.com/blog/the-use-cache-rce-how-a-typed-array-bug-in-nextjs-became-remote-code-execution). If you're running an affected version, updating should be a priority.
+
+[Foldkit](https://foldkit.dev/) - is a TypeScript frontend framework built on Effect. It makes application state and side effects explicit, helping developers and AI coding agents build features, trace behavior, and test changes with greater confidence.
+
+[Mastro](https://mastrojs.github.io/) is a lightweight web framework and static site generator built with around 800 lines of TypeScript. It focuses on simplicity, server-side rendering, and standard HTML and CSS, while taking advantage of the existing JavaScript and TypeScript ecosystem.
 
 ## 📜 Articles & Tutorials
 
+[How to Gaslight JavaScript Programmers](https://www.bryanpg.com/articles/pragma-twice/proxy.html)
+
+[`replace()` as an iterator](https://www.lazutkin.com/blog/2026-10-13-replace-as-an-iterator)
+
+[The Disappointing Death of Deno](https://brettcodes.com/the-disappointing-death-of-deno/)
+
+[Introducing the HTML-in-Canvas API origin trial](https://developer.chrome.com/blog/html-in-canvas-origin-trial)
+
+[LLMs are making formal software verification feasible at a much larger scale](https://www.anthropic.com/research/formal-verification)
+
+[30 Popular AI Agent Skills Every Developer Should Know](https://jsdev.space/30-agent-skills/)
+
+[React 19.3: Three Changes Worth Your Attention](https://jsdev.space/react-19-3/)
+
 ## ⚒️ Tools
+
+[Pixel Path](https://github.com/jonwheatley/pixel-path) - Turn any two places into a pixel-art fly-through of the real road. A Claude Code skill.
+
+[Keploy](https://github.com/keploy/keploy) is an open-source API and integration testing tool that automatically generates tests and mocks from real application traffic. It uses eBPF to capture API requests, database queries, and network interactions, then replays them as tests without requiring code changes. It works across multiple programming languages and frameworks.
+
+[REA](https://rea.tools) gives AI coding agents tools to reverse engineer native binaries, JavaScript, Electron applications, and browser behavior. It helps agents inspect existing software, understand how it works, and analyze applications without access to their original source code.
+
+[OpenCode 2.0](https://anoma.ly/notes/opencode-2-0/) brings background subagents, a new code mode that lets AI models script MCP tool calls, and JavaScript and Effect clients for programmatic control. The update makes the open-source coding agent more flexible for complex development workflows and automation.
+
+[Tamagui 3](https://tamagui.dev/blog/version-three) updates the cross-platform React UI framework with Tailwind-style props and React Strict DOM support. Developers can share components and styling across web and React Native applications while keeping a single codebase.
+
+[Palette Generator](https://palettevault.github.io/tools/generate/) lets you create color palettes from a base color and a selected harmony scheme. Press the spacebar to generate new combinations and lock your favorite shades to keep them while exploring alternatives.
+
+[Bifrost](https://github.com/maximhq/bifrost) is an open-source, high-performance AI gateway that provides a single OpenAI-compatible API for thousands of models. It supports automatic provider failover, load balancing, semantic caching, virtual API keys, budget controls, and MCP integration, making it easier to manage multiple AI providers.
+
+[reseter.css 3.0](https://ikrishg.github.io/reseter.css/) brings a major overhaul to the lightweight CSS reset library. It introduces full and mini variants, wraps reset styles in a dedicated CSS cascade layer, and adopts logical properties throughout. The result is a modern, customizable reset weighing around 1 KB.
+
+[The Fixi Project](https://fixiproject.org/) is a collection of lightweight JavaScript libraries for building interactive websites without a heavy frontend framework. It includes htmx-style HTML enhancements, inline scripting, reactivity, HTML streaming, DOM morphing, and convenient wrappers around `fetch()`.
+
+[**OpenWiki**](https://github.com/langchain-ai/openwiki) is an open-source CLI tool that automatically generates and maintains documentation for your codebase. It creates an interconnected Markdown wiki, keeps it updated as code changes, and lets developers explore their projects through documentation pages or an interactive graph.
 
 ## 📚 Libs
 
+[React Router 8.5](https://reactrouter.com/changelog#v850) moves away from its own View Transition APIs in favor of React's built-in `<ViewTransition>` component, available in React 19.3 and later. The release also introduces an experimental API-only mode that lets developers serve static HTML separately while keeping loaders, actions, and other data operations on a dedicated server.
+
+[Maplair 4.0](https://maplair.org/2026/10/19/maplair-4.0.0.html) is a fork of Leaflet that builds on its unfinished 2.0 work. It adds built-in map rotation, fullscreen mode, search, heatmaps, and other features that normally require plugins. Everything is tree-shakeable, so applications only bundle what they use.
+
+[Chartist 2.0](https://chartist.dev/) brings the lightweight SVG charting library back to life with a new composable API, server-side SVG rendering, and even terminal-based charts. Charts remain customizable through CSS, while a basic line chart weighs around 12 KB gzipped.
+
+[Pretext 1.0](https://github.com/chenglou/pretext) brings more accurate multiline text layout without relying on DOM elements. It now uses browser-specific line-breaking logic from Chrome, Safari, and Firefox, making text wrapping much closer to what browsers actually render. The release also improves performance, with layout() running 3 to 6 times faster than in version 0.0.9, although bundle sizes have increased.
+
+[Pele](https://pele.run/) is a zero-dependency alternative to Mermaid.js for rendering diagrams as SVG. It supports responsive layouts, CSS variable-based theming, and Mermaid syntax, all in a package roughly six times smaller than Mermaid.js.
+
 ## ⌚ Releases
+
+[Vite 8.3.5](https://github.com/vitejs/vite/releases/tag/v8.3.5)
+
+Released October 21. This patch fixes missing chunk import maps and includes preload dependencies in chunk import-map hashing. Not a flashy release, but exactly the kind of bundler maintenance that prevents awkward production surprises.
+
+[React Native 0.88](https://reactnative.dev/blog/2026/10/19/react-native-0.88) switches to web-standard event handling, adds variable font support, introduces iOS SceneDelegate support, and improves Swift Package Manager integration. It also upgrades to React 19.3 and Metro 0.87, with no user-facing breaking changes.
+
+[TanStack Start 1.0 is Stable](https://tanstack.com/blog/tanstack-start-1-0)
+
+[Introducing Astryx RichText: a rich text field for your forms](https://astryx.atmeta.com/blog/introducing-astryx-richtext)
+
+[LittleJS 1.27](https://frankforce.com/littlejs-is-2d-and-3d-now/) adds 3D rendering to the lightweight, dependency-free HTML5 game engine. Developers can now combine 2D sprites and 3D objects in the same game, while keeping the engine small and easy to use.
+
+[Chokidar 6.0](https://github.com/paulmillr/chokidar/releases/tag/6.0.0) rewrites its file-watching engine for more reliable events, adds native recursive watching on macOS and Windows, and fixes numerous bugs involving missed changes, duplicate events, and high CPU usage. It now requires Node.js 22.22 or later.
+
+[Happy DOM 21.0.4](https://github.com/capricorn86/happy-dom/releases/tag/v21.0.4) disables external stylesheet and iframe loading by default to prevent server-side request forgery (SSRF) attacks. Both features can still be enabled explicitly through the new enableCSSFileLoading and enableIframePageLoading settings.
+
+[p-queue 10.0](https://github.com/sindresorhus/p-queue/releases/tag/v10.0.0) drops all dependencies, replaces EventEmitter with the standard EventTarget API, and improves task cancellation, timeouts, and rate limiting. It also preserves AsyncLocalStorage context across queued tasks and now requires Node.js 22 or later.
+
+[Skia Canvas 4.0](https://skia-canvas.org/releases) brings a major update to the Skia-powered Canvas API for Node.js. It provides high-quality 2D graphics rendering for server-side image generation, charts, and SVG or PDF output without requiring a browser.
+
+[Paper.js 0.16.0](https://github.com/paperjs/paper.js) bring the Canvas-based vector graphics library back with its first major updates in years. Highlights include improved SVG import/export, OffscreenCanvas support in web workers, isolated layer rendering, better event handling, and numerous bug fixes.
+
+[fast-cli 6.0](https://github.com/sindresorhus/fast-cli) updates the command-line internet speed test tool. It now installs the required Chrome version automatically when missing and requires Node.js 22 or later. Run a quick speed test with npx -y fast-cli.
+
+[Elysia 2 RC](https://next.elysiajs.com/blog/elysia-20-rc/), [ESLint 10.13](https://eslint.org/blog/2026/10/eslint-v10.13.0-released/), [tsup 9.0](https://github.com/egoist/tsup/releases/tag/v9.0.0), [Express 5.3](https://github.com/expressjs/express/releases/tag/v5.3.0), [node-oracledb 26.0](https://github.com/oracle/node-oracledb/releases/tag/v26.0.0), [RandExp.js 0.6.1](https://github.com/fent/randexp.js/releases/tag/v0.6.1), [Webpack 5.112](https://webpack.js.org/blog/2026-10-13-webpack-5-112/), [Rsdoctor 2.0](https://rsdoctor.rs/blog/release/release-note-2_0)
 
 ## 📺 Videos
 
+[Andrej Karpathy: "99% Use AI & LLMs Wrong" (Here’s How He Does It)](https://www.youtube.com/watch?v=7YEHs2SMaVQ)
+
+[Design Software Systems Like a Senior Engineer – Complete Course](https://www.youtube.com/watch?v=soTfFFIQQ8U)
+
+[No more `clamp()` magic numbers](https://www.youtube.com/watch?v=bLB90QwRki4)
+
+[How I Got Frontier Performance on 16GB VRAM (Qwen 3.8 27B)](https://www.youtube.com/watch?v=h_KqS4GtU3I)
+
+[How Uber Tracks 5 Million Drivers in Real Time](https://www.youtube.com/watch?v=R_wWbHqpQTg)
+
+[The New Era of Backend Development](https://www.youtube.com/watch?v=jkOUMFaLVGo)
+
+[Object Storage Explained: Full Guide to System Design](https://www.youtube.com/watch?v=anLX4upY0ks)
+
+[n8n Full Course – Architect Scalable AI Automations from Scratch](https://www.youtube.com/watch?v=YY-egxTQirA)
+
+[The Ultimate Vibe Coding Tutorial for Beginners](https://www.youtube.com/watch?v=XLhdE-qV87E)
+
+[NGINX Complete Course: Reverse Proxy, Load Balancing, HTTPS & Docker](https://www.youtube.com/watch?v=-sY9OBgohX0)
+
 ## 🗞️ News & Updates
+
+[PHP: Critical Remote Code Execution Vulnerabilities](https://www.php.net/archive/2026.php#2026-10-21-5) warns of two serious vulnerabilities dubbed “php2shell” that could allow unauthenticated attackers to execute code remotely. The reported issues affect PHP versions dating back to 5.4, potentially putting WordPress, Laravel, and other PHP applications at risk. Administrators should upgrade to a patched PHP release immediately.
+
+[Gemini 4 Argon arrives in GitHub Copilot](https://github.blog/changelog/)
+
+Announced October 13. GitHub expanded its available Copilot models again, giving developers another option for coding assistance. Availability depends on plan and organizational settings.
+
+[GitHub Copilot retires older models](https://github.blog/changelog/2026-09-18-upcoming-deprecation-of-selected-github-copilot-models-in-mid-october/)
+
+The October 19 retirement affects several older models, including GPT-5.5 and Gemini 3.7 Flash. If your team pins specific Copilot models in workflows, verify the replacements before the next run.
+
+[GitHub expands Copilot model policy management](https://github.blog/changelog/)
+
+An October 19 update adds model policy API capabilities for enterprise, organization, and team management. Especially relevant for teams that need predictable agent configurations and access controls.
+
+[GitHub improves secret scanning and Dependabot alerts](https://github.blog/changelog/)
+
+October 20 brought secret-scanning updates and dependency-version information in the Dependabot alerts REST API. Small API improvements can make a noticeable difference in custom security dashboards and automated triage.
+
+[GitHub CLI adds opt-in expiring OAuth tokens](https://github.blog/changelog/)
+
+Announced October 21. The CLI now offers an option for expiring, automatically refreshed OAuth tokens, an improvement for credential hygiene in developer workflows.
 
 ---
 
-That’s it for Friday Links 45.
+That's it for Friday Links 45.
 
-There’s always more happening than can reasonably fit into one issue, so this list is intentionally selective. A useful release, an unexpected open-source project, or a small tool that solves one annoying problem is often more interesting than another week of headlines.
+There was a lot of movement around the tools developers depend on every day, but the most useful changes weren't necessarily the loudest ones. Faster type checking, clearer build diagnostics, and safer dependency management can save more time than another shiny demo.
 
-If you found something here worth trying, save it for later or send this issue to someone who spends too much time looking for new developer tools.
+If something here solves a problem you've been putting off, give it a try this weekend. Otherwise, save a few links for later and close the rest of those tabs.
 
 See you in Friday Links 46.
