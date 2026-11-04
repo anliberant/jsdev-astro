@@ -1,0 +1,1047 @@
+---
+title: 'Stop Unnecessary React Context Re-renders'
+slug: react-context-field
+heading: "How to Optimize React Context with Field-Level Subscriptions"
+image: ./images/react-context-field-level-subscriptions.png
+permalink: react-context-field
+date: 2026-11-04
+author: anton liberant
+category: react
+type: post
+tags: ['slider', 'react-slider', 'tailwind', 'radixui']
+desc: "Learn how to prevent unnecessary React Context re-renders using stable stores, field-level subscriptions, and useSyncExternalStore."
+subtitle: "Build a lightweight, field-level subscription system with useSyncExternalStore and understand why React Context alone cannot prevent unrelated updates."
+---
+
+# How to Optimize React Context with Field-Level Subscriptions
+
+React Context is convenient until a shared state object starts changing frequently.
+
+Imagine a form with two fields, `name` and `age`. One component displays the name, while another edits the age. Everything works as expected, except for one detail: changing the age also causes the name component to render again.
+
+The name hasn't changed. The component doesn't even read the age.
+
+Still, React calls it again.
+
+This happens because Context tracks changes to the provider's value, not individual properties inside that value. Unlike Redux's `useSelector`, the standard `useContext` hook doesn't provide a built-in way to subscribe to a specific field.
+
+For small applications, the extra renders rarely matter. In a large form, editor, or interactive dashboard, however, they can become expensive.
+
+There is a way to make Context more selective without introducing a full state management library.
+
+The trick is to stop storing frequently changing data directly in Context. Instead, Context can provide access to a stable external store, while `useSyncExternalStore` manages subscriptions to individual fields.
+
+The result is a small state management layer in which changing `age` doesn't automatically re-render components subscribed to `name`.
+
+This article builds that system from scratch, examines its limitations, and explains when it makes sense to use it.
+
+## The hidden cost of a changing Context value
+
+Consider a conventional React Context implementation.
+
+```tsx
+import {
+  createContext,
+  useContext,
+  useState,
+} from 'react';
+
+type FormState = {
+  name: string;
+  age: number;
+};
+
+type FormContextValue = FormState & {
+  setName: (name: string) => void;
+  setAge: (age: number) => void;
+};
+
+const FormContext = createContext<FormContextValue | null>(
+  null
+);
+
+function FormProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [name, setName] = useState('Alice');
+  const [age, setAge] = useState(30);
+
+  return (
+    <FormContext
+      value={{ name, age, setName, setAge }}
+    >
+      {children}
+    </FormContext>
+  );
+}
+```
+
+Two components consume different properties:
+
+```tsx
+function NameDisplay() {
+  const context = useContext(FormContext);
+
+  if (!context) {
+    throw new Error('Missing FormProvider');
+  }
+
+  return <span>{context.name}</span>;
+}
+
+function AgeEditor() {
+  const context = useContext(FormContext);
+
+  if (!context) {
+    throw new Error('Missing FormProvider');
+  }
+
+  return (
+    <input
+      type="number"
+      value={context.age}
+      onChange={(event) =>
+        context.setAge(Number(event.target.value))
+      }
+    />
+  );
+}
+```
+
+Whenever `age` changes, `FormProvider` renders again.
+
+The provider creates a new object:
+
+```tsx
+value={{ name, age, setName, setAge }}
+```
+
+React compares the previous and next Context values using `Object.is`.
+
+Because these are different object references, every component reading that Context is eligible for an update.
+
+React doesn't inspect which properties each consumer accesses.
+
+For `NameDisplay`, this means a render even though its relevant value remains unchanged.
+
+### Why React.memo doesn't solve it
+
+Wrapping `NameDisplay` in `React.memo` won't prevent updates caused by a changing Context value.
+
+```tsx
+const NameDisplay = memo(function NameDisplay() {
+  const context = useContext(FormContext);
+
+  return <span>{context?.name}</span>;
+});
+```
+
+`React.memo` can skip renders caused by unchanged props. It doesn't block updates from a Context that the component consumes.
+
+That distinction matters.
+
+Context updates and parent-driven prop updates follow different paths through React's rendering system.
+
+To prevent unrelated Context updates, the subscription mechanism itself needs to change.
+
+## The idea: Context as a store locator
+
+Instead of putting application state directly into Context, the provider can expose a stable store object.
+
+That store provides three operations:
+
+```ts
+type Store<T> = {
+  get: () => T;
+  set: (patch: Partial<T>) => void;
+  subscribe: (
+    key: keyof T,
+    listener: () => void
+  ) => () => void;
+};
+```
+
+Each method has a specific responsibility.
+
+`get()` returns the current state.
+
+`set()` applies a partial update.
+
+`subscribe()` registers a listener for one field and returns an unsubscribe function.
+
+The architecture becomes:
+
+```text
+React Context
+     |
+     v
+Stable Store Instance
+     |
+     +-- get()
+     |
+     +-- set()
+     |
+     +-- subscribe()
+              |
+              +-- name listeners
+              |
+              +-- age listeners
+```
+
+The Context value never changes during the lifetime of a mounted provider.
+
+As a result, updating store data doesn't trigger Context propagation.
+
+Individual components subscribe to the fields they need, and React re-renders them when their selected snapshots change.
+
+This is essentially a miniature external state store.
+
+## Building a field-aware store
+
+The first step is implementing the store independently of React.
+
+Keeping it separate makes the subscription logic easier to test and avoids coupling the store's internal state to component renders.
+
+```ts
+type Listener = () => void;
+
+type Store<T extends object> = {
+  get: () => T;
+  set: (patch: Partial<T>) => void;
+  subscribe: (
+    key: keyof T,
+    listener: Listener
+  ) => () => void;
+};
+
+function createStore<T extends object>(
+  initialState: T
+): Store<T> {
+  let state = { ...initialState };
+
+  const listeners = new Map<
+    keyof T,
+    Set<Listener>
+  >();
+
+  return {
+    get() {
+      return state;
+    },
+
+    set(patch) {
+      const previous = state;
+      const next = { ...previous, ...patch };
+
+      state = next;
+
+      for (const key of Object.keys(patch) as Array<
+        keyof T
+      >) {
+        if (Object.is(previous[key], next[key])) {
+          continue;
+        }
+
+        const subscribers = listeners.get(key);
+
+        if (!subscribers) {
+          continue;
+        }
+
+        for (const listener of [...subscribers]) {
+          listener();
+        }
+      }
+    },
+
+    subscribe(key, listener) {
+      let subscribers = listeners.get(key);
+
+      if (!subscribers) {
+        subscribers = new Set();
+        listeners.set(key, subscribers);
+      }
+
+      subscribers.add(listener);
+
+      return () => {
+        subscribers.delete(listener);
+
+        if (subscribers.size === 0) {
+          listeners.delete(key);
+        }
+      };
+    },
+  };
+}
+```
+
+There are a few important decisions in this implementation.
+
+### State updates are immutable
+
+The store doesn't mutate properties directly:
+
+```ts
+state.age = 31;
+```
+
+Instead, it creates a new top-level object:
+
+```ts
+const next = { ...previous, ...patch };
+```
+
+This preserves the references of unchanged nested values and gives the store a predictable update model.
+
+The implementation uses shallow updates. Nested objects must be replaced explicitly when their contents change.
+
+For example:
+
+```ts
+store.set({
+  profile: {
+    ...store.get().profile,
+    city: 'Berlin',
+  },
+});
+```
+
+Mutating `store.get().profile.city` directly would bypass the notification system.
+
+### Unchanged fields don't notify subscribers
+
+The comparison:
+
+```ts
+Object.is(previous[key], next[key])
+```
+
+prevents unnecessary notifications.
+
+If the age is already `30`, calling:
+
+```ts
+store.set({ age: 30 });
+```
+
+doesn't notify age subscribers.
+
+The same principle applies to object references. A nested object is considered unchanged when its reference remains identical.
+
+### Listeners are grouped by field
+
+Each field has its own set of subscribers.
+
+Updating `age` notifies age listeners, while name listeners remain untouched.
+
+This makes notifications more selective, especially when many components subscribe to different properties.
+
+There is a subtle point here: field-specific listener collections are an optimization, not the fundamental mechanism preventing renders.
+
+Even if every listener were notified, `useSyncExternalStore` could still skip a render when its snapshot remained equal according to `Object.is`.
+
+Grouping listeners avoids the unnecessary callback and snapshot checks in the first place.
+
+## Connecting the store to React Context
+
+The next step is to expose the store through Context.
+
+A reusable factory can create a provider and the hooks associated with a particular state shape.
+
+```tsx
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
+
+export function createSelectiveContext<
+  T extends object
+>(initialState: T) {
+  const Context = createContext<Store<T> | null>(
+    null
+  );
+
+  function Provider({
+    children,
+  }: {
+    children: ReactNode;
+  }) {
+    const storeRef = useRef<Store<T> | null>(null);
+
+    if (storeRef.current === null) {
+      storeRef.current = createStore(initialState);
+    }
+
+    return (
+      <Context value={storeRef.current}>
+        {children}
+      </Context>
+    );
+  }
+
+  function useStore() {
+    const store = useContext(Context);
+
+    if (!store) {
+      throw new Error(
+        'Selective Context hooks require a Provider'
+      );
+    }
+
+    return store;
+  }
+
+  function useField<K extends keyof T>(
+    key: K
+  ): T[K] {
+    const store = useStore();
+
+    const subscribe = useCallback(
+      (listener: Listener) =>
+        store.subscribe(key, listener),
+      [store, key]
+    );
+
+    const getSnapshot = useCallback(
+      () => store.get()[key],
+      [store, key]
+    );
+
+    const getServerSnapshot = useCallback(
+      () => initialState[key],
+      [key]
+    );
+
+    return useSyncExternalStore(
+      subscribe,
+      getSnapshot,
+      getServerSnapshot
+    );
+  }
+
+  function useSetState() {
+    return useStore().set;
+  }
+
+  return {
+    Provider,
+    useField,
+    useSetState,
+  };
+}
+```
+
+This implementation assumes that the earlier `Store`, `Listener`, and `createStore` definitions are available in the same module.
+
+The factory exposes three public APIs:
+
+- `Provider` supplies a stable store instance.
+- `useField` subscribes to a specific property.
+- `useSetState` returns the store's update function.
+
+Notice that the store is created lazily inside the provider's ref.
+
+This avoids constructing a new store on every render.
+
+Each mounted provider gets its own state instance, allowing multiple independent copies of the same widget or form to coexist.
+
+The factory-level initial state acts as the starting snapshot for each instance.
+
+For SSR, this example assumes the initial state is identical on the server and during client hydration. Applications with request-specific initial data need an explicit snapshot-transfer strategy.
+
+## Using the selective Context
+
+The API is intentionally small.
+
+```tsx
+const {
+  Provider: FormProvider,
+  useField,
+  useSetState,
+} = createSelectiveContext({
+  name: 'Alice',
+  age: 30,
+});
+```
+
+A component can subscribe to `name`:
+
+```tsx
+function NameDisplay() {
+  const name = useField('name');
+
+  return <span>{name}</span>;
+}
+```
+
+Another component subscribes to `age`:
+
+```tsx
+function AgeEditor() {
+  const age = useField('age');
+  const setState = useSetState();
+
+  return (
+    <input
+      type="number"
+      value={age}
+      onChange={(event) => {
+        setState({
+          age: Number(event.target.value),
+        });
+      }}
+    />
+  );
+}
+```
+
+A third component only updates the store:
+
+```tsx
+function ResetButton() {
+  const setState = useSetState();
+
+  return (
+    <button
+      onClick={() => {
+        setState({
+          name: '',
+          age: 0,
+        });
+      }}
+    >
+      Reset
+    </button>
+  );
+}
+```
+
+Finally, the components are combined:
+
+```tsx
+export default function App() {
+  return (
+    <FormProvider>
+      <NameDisplay />
+      <AgeEditor />
+      <ResetButton />
+    </FormProvider>
+  );
+}
+```
+
+When the user changes the age, the store notifies the subscribers registered for `age`.
+
+`AgeEditor` receives the new snapshot and renders again.
+
+`NameDisplay` doesn't receive an age notification, and `ResetButton` doesn't subscribe to either field.
+
+The provider's Context value also remains unchanged.
+
+In this isolated example, a store update therefore doesn't cause those unrelated components to render.
+
+Of course, this doesn't make the components immune to every possible render. Parent updates, local state changes, or other Context subscriptions can still cause them to render normally.
+
+The optimization specifically removes unrelated updates originating from this store.
+
+## Why useMemo isn't enough
+
+Before building a custom store, it is worth considering simpler React techniques.
+
+The first is memoizing the provider value.
+
+```tsx
+const value = useMemo(
+  () => ({
+    name,
+    age,
+    setName,
+    setAge,
+  }),
+  [name, age, setName, setAge]
+);
+```
+
+This is useful when the provider renders for reasons unrelated to its state.
+
+If all dependencies remain unchanged, `useMemo` can preserve the object reference and prevent unnecessary Context propagation.
+
+However, changing `age` changes one of the dependencies.
+
+React creates a new value object, so consumers of that Context receive the update.
+
+Memoization doesn't introduce property-level subscriptions.
+
+It only helps preserve the provider value when its dependencies haven't changed.
+
+For many applications, that optimization is sufficient.
+
+A custom store becomes interesting when the Context value itself changes frequently and consumers need more selective subscriptions.
+
+## Separating state from actions
+
+Another common approach is to use two contexts.
+
+One provides the current state. The other provides the update function.
+
+```tsx
+import {
+  createContext,
+  useContext,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
+
+type User = {
+  name: string;
+  email: string;
+};
+
+const UserContext = createContext<User | null>(
+  null
+);
+
+const UserActionsContext = createContext<
+  Dispatch<SetStateAction<User | null>> | null
+>(null);
+
+function UserProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [user, setUser] = useState<User | null>(
+    null
+  );
+
+  return (
+    <UserContext value={user}>
+      <UserActionsContext value={setUser}>
+        {children}
+      </UserActionsContext>
+    </UserContext>
+  );
+}
+```
+
+Components that only need to update state can subscribe to the actions context.
+
+```tsx
+function LogoutButton() {
+  const setUser = useContext(UserActionsContext);
+
+  if (!setUser) {
+    throw new Error('Missing UserProvider');
+  }
+
+  return (
+    <button onClick={() => setUser(null)}>
+      Log out
+    </button>
+  );
+}
+```
+
+The setter returned by `useState` has a stable identity.
+
+Consequently, changing the user doesn't change the actions Context value.
+
+The button won't receive a Context update merely because the user data changed.
+
+This pattern works well when many components perform actions without reading the corresponding state.
+
+But it still doesn't provide field-level subscriptions.
+
+A component reading `user.name` through `UserContext` receives updates whenever the user object changes, including changes to `user.email`.
+
+The distinction is between readers and writers, not between individual state properties.
+
+### Why not create one Context per field?
+
+That approach can work when fields are genuinely independent.
+
+A theme value and an authentication state, for example, usually belong in separate contexts.
+
+But splitting every field of a complex form into its own provider creates additional coordination work.
+
+Related updates may need to modify several fields together.
+
+Consider a location form where changing the country must reset the selected city:
+
+```ts
+setState({
+  country: 'Germany',
+  city: '',
+});
+```
+
+A single store can apply both changes and notify the relevant subscribers.
+
+With separate contexts, the application must coordinate multiple state setters and providers.
+
+Neither approach is universally better. The appropriate choice depends on how closely the fields are related and how frequently they change.
+
+## Why useSyncExternalStore matters
+
+The selective store works outside React's state system.
+
+Its data lives in a closure, and updates happen through ordinary JavaScript functions.
+
+React doesn't automatically know when that data changes.
+
+A subscription hook must connect the external state to React's rendering lifecycle.
+
+Before React 18, developers commonly implemented this connection using `useState` and `useEffect`.
+
+```tsx
+function useExternalField<K extends keyof T>(
+  key: K
+) {
+  const store = useStore();
+
+  const [value, setValue] = useState(
+    () => store.get()[key]
+  );
+
+  useEffect(() => {
+    return store.subscribe(key, () => {
+      setValue(store.get()[key]);
+    });
+  }, [store, key]);
+
+  return value;
+}
+```
+
+At first glance, this seems reasonable.
+
+The component reads the current value, subscribes to changes, and updates local state when a notification arrives.
+
+The difficulty appears when rendering is interrupted or when the external store changes between rendering and committing.
+
+### Render and commit are different phases
+
+React doesn't immediately update the DOM whenever it calls a component function.
+
+First, React renders components to calculate the next UI.
+
+Then it commits the result, applying the necessary changes to the DOM.
+
+Some rendering work can be interrupted, delayed, or restarted.
+
+For example, React may begin rendering a lower-priority update, allow the browser to handle another event, and resume work afterward.
+
+This creates a challenge for mutable external stores.
+
+Imagine two components reading the same external value.
+
+```text
+Initial store value: 10
+
+Component A renders: reads 10
+
+Rendering pauses
+
+External store changes: 20
+
+Rendering resumes
+
+Component B renders: reads 20
+```
+
+If React committed those results together, the interface could contain inconsistent views of the same store.
+
+One component would display `10`, while another would display `20`.
+
+This problem is called **tearing**.
+
+It is not simply an unnecessary render. It is a consistency problem.
+
+## How useSyncExternalStore prevents tearing
+
+`useSyncExternalStore` was introduced to let React safely integrate external stores with its rendering system.
+
+Its API is straightforward:
+
+```tsx
+const value = useSyncExternalStore(
+  subscribe,
+  getSnapshot,
+  getServerSnapshot
+);
+```
+
+The three arguments serve different purposes.
+
+`subscribe` registers a listener that React can use to detect changes.
+
+`getSnapshot` returns the current value of the external store.
+
+`getServerSnapshot` supplies the snapshot used during server rendering and hydration.
+
+The important difference from a manual `useEffect` subscription is that React can coordinate snapshot reads with its rendering and commit process.
+
+For non-blocking transitions, React checks whether external-store snapshots remain consistent before committing.
+
+If a relevant snapshot changed during rendering, React can restart the update as a blocking render.
+
+This prevents a partially outdated external-store view from being committed as part of the interrupted render.
+
+React also performs checks associated with subscriptions to detect changes that occur around mounting or committing.
+
+The exact scheduling is an implementation detail, but the contract is important: components using `useSyncExternalStore` participate in React's consistency checks for external state.
+
+A manually implemented `useState` and `useEffect` subscription doesn't provide the same guarantees.
+
+### The trade-off with transitions
+
+There is a performance consequence.
+
+External-store mutations cannot be treated as ordinary non-blocking transition updates.
+
+For example:
+
+```tsx
+startTransition(() => {
+  setState({ age: 31 });
+});
+```
+
+Wrapping the mutation in `startTransition` doesn't turn the external-store update into a deferred transition.
+
+React's external-store consistency requirements can force affected rendering work to be synchronous.
+
+For state that benefits heavily from non-blocking transitions, React's built-in `useState` or `useReducer` may be more appropriate.
+
+This is one reason selective external stores shouldn't replace React state everywhere.
+
+## Three implementation details that matter
+
+The basic architecture is small, but a few mistakes can undermine it.
+
+### 1. The Context store must remain stable
+
+This implementation is problematic:
+
+```tsx
+function Provider({ children }: Props) {
+  const store = createStore(initialState);
+
+  return (
+    <Context value={store}>
+      {children}
+    </Context>
+  );
+}
+```
+
+Every provider render creates a new store.
+
+That can reset state, change the Context value, and cause unnecessary updates.
+
+A ref provides a persistent location for the store instance:
+
+```tsx
+const storeRef = useRef<Store<T> | null>(null);
+
+if (storeRef.current === null) {
+  storeRef.current = createStore(initialState);
+}
+```
+
+The store remains associated with the mounted provider.
+
+This also makes the intended lifetime explicit.
+
+React may invoke rendering logic more than once in development to detect unsafe behavior. Store construction should therefore remain pure, without external side effects.
+
+### 2. The subscribe function should have a stable identity
+
+Consider:
+
+```tsx
+useSyncExternalStore(
+  (listener) => store.subscribe(key, listener),
+  () => store.get()[key]
+);
+```
+
+The inline subscription function is recreated on every render.
+
+React may unsubscribe and subscribe again because the function identity changed.
+
+This isn't necessarily a correctness bug, but it introduces avoidable work.
+
+A memoized callback is better:
+
+```tsx
+const subscribe = useCallback(
+  (listener: Listener) =>
+    store.subscribe(key, listener),
+  [store, key]
+);
+```
+
+The function remains stable as long as the store and selected key remain the same.
+
+### 3. Snapshots must be stable
+
+`useSyncExternalStore` compares snapshots using `Object.is`.
+
+This means `getSnapshot` must not create a new object every time it runs unless the underlying selected data has actually changed.
+
+The following selector is unsafe:
+
+```tsx
+const getSnapshot = () => ({
+  name: store.get().name,
+  age: store.get().age,
+});
+```
+
+Every call returns a different object.
+
+React sees a changed snapshot even when the values are identical, potentially causing repeated renders and warnings.
+
+Reading an existing field is safer:
+
+```tsx
+const getSnapshot = () => store.get().name;
+```
+
+For object-valued fields, the store must preserve the object's reference until its value actually changes.
+
+More advanced selectors that construct derived objects need memoization or equality-aware subscription utilities.
+
+That is one reason mature state management libraries often provide selector-specific APIs.
+
+## Server rendering and hydration
+
+External stores introduce an additional concern when an application uses server-side rendering.
+
+The third argument to `useSyncExternalStore` is responsible for the server snapshot:
+
+```tsx
+useSyncExternalStore(
+  subscribe,
+  getSnapshot,
+  getServerSnapshot
+);
+```
+
+React uses `getServerSnapshot` during server rendering and during the initial client hydration process.
+
+Those snapshots must agree.
+
+If the server renders a name of `Alice`, but the client hydrates the same component with `Bob`, the rendered output may not match.
+
+The simple factory uses the initial state:
+
+```tsx
+const getServerSnapshot = () => initialState[key];
+```
+
+That works for a static initial state shared by the server and client.
+
+However, applications frequently initialize state from request-specific data.
+
+For example, a server-rendered dashboard may receive a user profile from a database.
+
+In that case, the application must make the server's initial snapshot available to the client so hydration can use the same data.
+
+The initial snapshot should also be isolated per request where appropriate. A mutable module-level store shared between server requests could expose state across users.
+
+A provider-scoped store avoids sharing one mutable instance across mounted provider instances, but it doesn't automatically solve snapshot serialization.
+
+Production SSR integrations need to account for both concerns.
+
+## When field-level subscriptions are worth the complexity
+
+Selective subscriptions are useful when a shared state object contains many independently changing properties.
+
+A large form is an obvious example.
+
+One field may update on every keystroke, while dozens of other components display unrelated values.
+
+An editor is another candidate. Cursor position, selection state, panel visibility, and document metadata may change at very different frequencies.
+
+A dashboard with several independent controls can have similar characteristics.
+
+In these situations, preventing unrelated Context propagation may reduce rendering work.
+
+However, the optimization comes with a maintenance cost.
+
+The application now owns a custom store, subscription logic, snapshot rules, and SSR behavior.
+
+That is not always a worthwhile trade.
+
+### Comparing the available approaches
+
+| Approach | Subscription granularity | Main trade-off |
+|---|---|---|
+| Regular Context | Entire Context value | Simple, but all consumers receive value changes |
+| Context with `useMemo` | Entire memoized value | Avoids some unnecessary reference changes |
+| Separate state and actions contexts | Read vs. write | More providers, limited granularity |
+| Selective external store | Individual fields | Custom subscription and snapshot logic |
+| Zustand or similar library | Selectors | Additional dependency, less custom infrastructure |
+
+For small components, regular Context is usually sufficient.
+
+When the main problem is that action-only components update unnecessarily, separating state and actions may be enough.
+
+If a complex subtree needs fine-grained subscriptions, the external-store approach becomes more attractive.
+
+For larger applications, an established state management library often provides better long-term value.
+
+Libraries such as Zustand already implement subscription infrastructure and selector-based access. They also provide integrations and ecosystem tooling that would otherwise need to be maintained manually.
+
+The custom approach is most appealing when the state is local to a particular subtree and adding another dependency would be unnecessary.
+
+## A note on measuring performance
+
+An extra React render isn't automatically a performance problem.
+
+React may call a component function without making expensive DOM changes. A small component that returns a simple element is usually cheap to render.
+
+Before introducing selective subscriptions, it is worth measuring the actual cost.
+
+React DevTools Profiler can help identify components that render frequently and reveal whether those renders contribute meaningful work.
+
+A useful experiment is to compare the ordinary Context implementation with the selective store while updating one field repeatedly.
+
+The expected difference is not that React stops rendering altogether.
+
+Instead, components subscribed to unchanged fields no longer render because of those external-store updates.
+
+That distinction helps avoid optimizing harmless render counts while ignoring more expensive work elsewhere.
+
+## Final thoughts
+
+React Context is a mechanism for distributing values through a component tree. It is not a selector-based state store.
+
+When a provider's value changes, React notifies consumers of that Context without tracking which properties they use.
+
+Memoization can reduce unnecessary value changes, and splitting state from actions can help components that only dispatch updates.
+
+Neither technique provides general field-level subscriptions.
+
+A stable external store offers a different model.
+
+Context supplies the store instance, while `useSyncExternalStore` connects individual snapshots to React's rendering lifecycle. Components subscribe to the values they need rather than receiving every update to a shared state object.
+
+The result can be more efficient for complex, frequently updated interfaces.
+
+But the additional machinery should solve a measured problem, not become the default architecture for every Context provider.
+
+**The most useful distinction is simple: Context distributes access to state, while an external store controls how changes to that state are observed.**
+
+Understanding that separation makes it easier to choose between ordinary Context, a small selective store, and a dedicated state management library.
