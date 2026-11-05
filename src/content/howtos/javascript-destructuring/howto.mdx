@@ -1,0 +1,1125 @@
+---
+title: How to Master JavaScript Destructuring and Spread Syntax
+slug: javascript-destructuring
+heading: 'How to Use Destructuring, Rest, and Spread in JavaScript'
+icon: /icons/javascript.png
+image: /icon.png
+permalink: howto/javascript-destructuring
+date: 2026-11-05
+author: anton liberant
+category: javascript
+type: howto
+tags: ['destructuring']
+desc: Learn JavaScript destructuring, rest parameters, and spread syntax with practical examples, safer defaults, shallow copying, and common pitfalls.
+subtitle: 'Practical patterns for extracting values, handling defaults, merging objects, and writing cleaner JavaScript without unexpected mutations.'
+---
+
+JavaScript developers spend a surprising amount of time moving data around. Extracting a few properties from an object, passing values to a function, combining arrays, or creating an updated copy of an object are all routine operations.
+
+None of these tasks is particularly difficult. The problem is how quickly the code becomes repetitive.
+
+Modern JavaScript provides three closely related features that make these operations easier: **destructuring assignment, rest syntax, and spread syntax**.
+
+They share similar notation, but they solve different problems. Destructuring extracts values, rest collects them, and spread expands them into another structure.
+
+Understanding the differences is useful for more than writing shorter code. These features also make function APIs easier to understand, simplify immutable updates, and help avoid unnecessary temporary variables.
+
+There are a few traps, though. Destructuring defaults don't behave like nullish coalescing, object spread doesn't create deep copies, and nested destructuring can fail when an intermediate value is missing.
+
+The following examples explore the practical patterns and the details that matter.
+
+## 1. Array destructuring: extract values by position
+
+Without destructuring, reading several array elements requires individual index lookups.
+
+```js
+const coordinates = [42, 18];
+
+const x = coordinates[0];
+const y = coordinates[1];
+```
+
+Array destructuring expresses the same operation more directly.
+
+```js
+const coordinates = [42, 18];
+
+const [x, y] = coordinates;
+
+console.log(x); // 42
+console.log(y); // 18
+```
+
+The variables receive values according to their positions.
+
+Unlike object destructuring, array destructuring doesn't look for property names. It consumes values from an iterable.
+
+That distinction becomes important with strings, sets, generators, and other iterable objects.
+
+### Skipping elements
+
+Sometimes only one value matters.
+
+```js
+const rgb = [255, 128, 64];
+
+const [, green] = rgb;
+
+console.log(green); // 128
+```
+
+The empty position skips the first element.
+
+Multiple positions can be skipped:
+
+```js
+const values = [10, 20, 30, 40];
+
+const [first, , third] = values;
+
+console.log(first); // 10
+console.log(third); // 30
+```
+
+This works well for short, predictable structures. For large arrays, named access through an object may communicate intent more clearly.
+
+### Swapping variables
+
+Destructuring also provides a concise way to exchange two values.
+
+```js
+let left = 'A';
+let right = 'B';
+
+[left, right] = [right, left];
+
+console.log(left);  // B
+console.log(right); // A
+```
+
+No temporary variable is needed.
+
+The right-hand array is evaluated before the assignments take place, so the original values are preserved during the swap.
+
+### Nested arrays
+
+The pattern on the left can mirror the structure of the data.
+
+```js
+const points = [
+  [10, 20],
+  [30, 40],
+];
+
+const [
+  [startX, startY],
+  [endX, endY],
+] = points;
+
+console.log(startX, startY); // 10 20
+console.log(endX, endY);     // 30 40
+```
+
+Nested destructuring is useful when the data has a known structure.
+
+However, deeply nested patterns can become difficult to read. If the structure is complex or optional, extracting one level at a time is often easier to maintain.
+
+## 2. Destructuring works with more than arrays
+
+Array destructuring uses the iterable protocol.
+
+That means any iterable can provide values to a destructuring pattern.
+
+For example, a string:
+
+```js
+const [first, second] = 'JavaScript';
+
+console.log(first);  // J
+console.log(second); // a
+```
+
+A `Set` works too:
+
+```js
+const languages = new Set([
+  'JavaScript',
+  'TypeScript',
+  'Python',
+]);
+
+const [primary, secondary] = languages;
+
+console.log(primary);   // JavaScript
+console.log(secondary); // TypeScript
+```
+
+A `Map` yields key-value pairs, so nested destructuring becomes particularly convenient.
+
+```js
+const settings = new Map([
+  ['theme', 'dark'],
+  ['language', 'en'],
+]);
+
+for (const [key, value] of settings) {
+  console.log(`${key}: ${value}`);
+}
+```
+
+Output:
+
+```text
+theme: dark
+language: en
+```
+
+Generators can also be destructured.
+
+```js
+function* generateIds() {
+  yield 101;
+  yield 102;
+  yield 103;
+}
+
+const [firstId, secondId] = generateIds();
+
+console.log(firstId);  // 101
+console.log(secondId); // 102
+```
+
+There is an important consequence here: destructuring an iterable consumes values from its iterator.
+
+With generators, those values may not be available again unless a new generator is created.
+
+## 3. Object destructuring: extract values by name
+
+Object destructuring uses property names rather than positions.
+
+Consider a user object:
+
+```js
+const user = {
+  id: 42,
+  name: 'Alice',
+  email: 'alice@example.com',
+  role: 'admin',
+};
+```
+
+Instead of repeating the object reference:
+
+```js
+const name = user.name;
+const email = user.email;
+const role = user.role;
+```
+
+the properties can be extracted together:
+
+```js
+const { name, email, role } = user;
+
+console.log(name);  // Alice
+console.log(email); // alice@example.com
+console.log(role);  // admin
+```
+
+Property order doesn't matter.
+
+```js
+const { role, name } = user;
+```
+
+JavaScript looks up the requested property names, regardless of their order in the original object.
+
+### Renaming variables
+
+Sometimes a property name conflicts with an existing variable or doesn't describe its purpose clearly.
+
+Destructuring supports aliases.
+
+```js
+const response = {
+  id: 42,
+  name: 'Alice',
+};
+
+const {
+  id: userId,
+  name: userName,
+} = response;
+
+console.log(userId);   // 42
+console.log(userName); // Alice
+```
+
+The syntax follows this pattern:
+
+```js
+const { propertyName: localVariable } = object;
+```
+
+The property is still called `name` in the original object. Only the local variable is renamed.
+
+### Nested object destructuring
+
+Nested properties can be extracted directly.
+
+```js
+const user = {
+  name: 'Alice',
+  profile: {
+    city: 'Berlin',
+    country: 'Germany',
+  },
+};
+
+const {
+  profile: { city, country },
+} = user;
+
+console.log(city);    // Berlin
+console.log(country); // Germany
+```
+
+One subtle detail: this pattern doesn't create a variable named `profile`.
+
+It only creates `city` and `country`.
+
+If both the nested object and one of its properties are needed, they can be extracted separately.
+
+```js
+const {
+  profile,
+  profile: { city },
+} = user;
+
+console.log(profile);
+console.log(city);
+```
+
+## 4. Destructuring function parameters
+
+Function parameters are one of the most useful places for object destructuring.
+
+Consider a function that accepts several configuration options.
+
+```js
+function createRequest(options) {
+  const url = options.url;
+  const method = options.method;
+  const timeout = options.timeout;
+
+  return { url, method, timeout };
+}
+```
+
+The repeated property access adds little value.
+
+Destructuring makes the expected configuration visible in the function signature.
+
+```js
+function createRequest({
+  url,
+  method = 'GET',
+  timeout = 5000,
+} = {}) {
+  if (!url) {
+    throw new Error('A request URL is required');
+  }
+
+  return {
+    url,
+    method,
+    timeout,
+  };
+}
+
+console.log(
+  createRequest({
+    url: '/api/users',
+    timeout: 3000,
+  })
+);
+```
+
+Result:
+
+```js
+{
+  url: '/api/users',
+  method: 'GET',
+  timeout: 3000
+}
+```
+
+This pattern has several advantages.
+
+The function accepts named options rather than relying on positional arguments. Callers can omit optional settings, and adding another option doesn't require changing the order of existing arguments.
+
+The final `= {}` also matters.
+
+Without it, calling `createRequest()` would attempt to destructure `undefined` and throw a `TypeError`.
+
+The default empty object makes the call safe, allowing the function to produce its own validation error for the missing URL.
+
+### Keeping unknown options
+
+A function may need to extract a few known properties while forwarding everything else.
+
+```js
+function createButton({
+  label = 'Submit',
+  variant = 'primary',
+  ...attributes
+} = {}) {
+  return {
+    label,
+    variant,
+    attributes,
+  };
+}
+
+const button = createButton({
+  label: 'Save',
+  disabled: true,
+  title: 'Save changes',
+});
+
+console.log(button);
+```
+
+Result:
+
+```js
+{
+  label: 'Save',
+  variant: 'primary',
+  attributes: {
+    disabled: true,
+    title: 'Save changes'
+  }
+}
+```
+
+This pattern is especially common in component libraries and configuration helpers.
+
+## 5. Default values only apply to undefined
+
+Destructuring supports default values.
+
+```js
+const { theme = 'light' } = {};
+
+console.log(theme); // light
+```
+
+The default is used when the extracted value is `undefined`.
+
+That includes missing properties.
+
+It does not apply to `null`, `false`, `0`, or an empty string.
+
+```js
+const settings = {
+  theme: null,
+  notifications: false,
+  retries: 0,
+  title: '',
+};
+
+const {
+  theme = 'light',
+  notifications = true,
+  retries = 3,
+  title = 'Untitled',
+} = settings;
+
+console.log(theme);         // null
+console.log(notifications); // false
+console.log(retries);       // 0
+console.log(title);         // ''
+```
+
+This behavior is intentional.
+
+Values such as `false` and `0` often carry meaningful information and shouldn't be replaced automatically.
+
+### When null should also trigger a fallback
+
+If both `null` and `undefined` should use a fallback, the nullish coalescing operator is a better choice.
+
+```js
+const config = {
+  timeout: null,
+  retries: 0,
+};
+
+const timeout = config.timeout ?? 5000;
+const retries = config.retries ?? 3;
+
+console.log(timeout); // 5000
+console.log(retries); // 0
+```
+
+Unlike `||`, the `??` operator preserves valid falsy values.
+
+For example:
+
+```js
+const count = 0;
+
+console.log(count || 10); // 10
+console.log(count ?? 10); // 0
+```
+
+This distinction is particularly important for configuration objects and form values.
+
+### Default expressions are evaluated lazily
+
+A default value can be an expression or a function call.
+
+JavaScript evaluates it only when the extracted value is `undefined`.
+
+```js
+function generateFallback() {
+  console.log('Generating fallback');
+  return 'Anonymous';
+}
+
+const { name = generateFallback() } = {
+  name: 'Alice',
+};
+
+console.log(name); // Alice
+```
+
+The function isn't called because `name` already has a value.
+
+Defaults can also reference variables declared earlier in the same destructuring pattern.
+
+```js
+const {
+  width,
+  height = width,
+} = {
+  width: 320,
+};
+
+console.log(width);  // 320
+console.log(height); // 320
+```
+
+The order matters. Referencing a later binding before it has been initialized can cause a `ReferenceError`.
+
+## 6. Safely destructuring optional nested objects
+
+Nested destructuring is convenient when the structure is guaranteed.
+
+It becomes risky when part of the object may be missing.
+
+Consider:
+
+```js
+const user = {
+  name: 'Alice',
+};
+```
+
+This throws an error:
+
+```js
+const {
+  profile: { city },
+} = user;
+```
+
+The `profile` property is `undefined`, so JavaScript cannot destructure `city` from it.
+
+A default nested object fixes the missing-property case.
+
+```js
+const {
+  profile: { city = 'Unknown' } = {},
+} = user;
+
+console.log(city); // Unknown
+```
+
+However, this still fails if `profile` is explicitly `null`.
+
+For data that may contain either `null` or `undefined`, optional chaining and nullish coalescing can be clearer.
+
+```js
+const city = user.profile?.city ?? 'Unknown';
+```
+
+This handles both cases without throwing.
+
+The choice depends on the data.
+
+Destructuring works well for predictable structures. Optional chaining is often easier to read when several nested properties may be absent.
+
+## 7. Rest syntax: collect what remains
+
+The three-dot syntax has different meanings depending on where it appears.
+
+In a destructuring pattern or function parameter list, it collects remaining values.
+
+This is called **rest syntax**.
+
+### Rest elements in arrays
+
+```js
+const scores = [95, 87, 76, 64];
+
+const [highest, ...remaining] = scores;
+
+console.log(highest);   // 95
+console.log(remaining); // [87, 76, 64]
+```
+
+The rest element collects the remaining iterator values into a new array.
+
+It must appear at the end of the destructuring pattern.
+
+### Rest parameters in functions
+
+Rest parameters allow functions to accept a variable number of arguments.
+
+```js
+function sum(...numbers) {
+  return numbers.reduce(
+    (total, number) => total + number,
+    0
+  );
+}
+
+console.log(sum(1, 2, 3));       // 6
+console.log(sum(10, 20, 30, 40)); // 100
+console.log(sum());               // 0
+```
+
+The `numbers` variable is a real array, so methods such as `map`, `filter`, and `reduce` are immediately available.
+
+Rest parameters can follow named parameters.
+
+```js
+function logMessage(level, ...messages) {
+  console.log(`[${level}]`, ...messages);
+}
+
+logMessage(
+  'INFO',
+  'Server started',
+  'Port:',
+  3000
+);
+```
+
+The first argument is assigned to `level`. Everything else goes into `messages`.
+
+### Rest parameters versus arguments
+
+Older JavaScript code often uses the `arguments` object.
+
+```js
+function example() {
+  console.log(arguments);
+}
+```
+
+Unlike rest parameters, `arguments` is array-like rather than an actual array.
+
+It also contains all arguments, not just those remaining after named parameters.
+
+Arrow functions don't have their own `arguments` object.
+
+Rest parameters work in both ordinary and arrow functions.
+
+```js
+const multiply = (...numbers) =>
+  numbers.reduce(
+    (result, number) => result * number,
+    1
+  );
+
+console.log(multiply(2, 3, 4)); // 24
+```
+
+For modern JavaScript, rest parameters are generally the clearer option.
+
+## 8. Object rest: exclude properties without mutation
+
+Object rest syntax is useful when a new object should contain everything except a few properties.
+
+```js
+const user = {
+  id: 42,
+  name: 'Alice',
+  email: 'alice@example.com',
+  password: 'secret',
+};
+
+const { password, ...publicUser } = user;
+
+console.log(publicUser);
+```
+
+Result:
+
+```js
+{
+  id: 42,
+  name: 'Alice',
+  email: 'alice@example.com'
+}
+```
+
+The original object remains unchanged.
+
+This is useful for preparing data transfer objects, removing internal fields from configuration objects, and selecting properties for UI components.
+
+However, removing a password field this way is not a complete security strategy.
+
+For security-sensitive responses, explicitly selecting allowed properties is safer than copying everything except known secrets. A future field added to the source object could otherwise be exposed unintentionally.
+
+For example:
+
+```js
+const publicUser = {
+  id: user.id,
+  name: user.name,
+  email: user.email,
+};
+```
+
+This approach makes the allowed output structure explicit.
+
+## 9. Spread syntax: expand values into new structures
+
+Spread syntax also uses `...`, but its purpose is different.
+
+Rest collects values. Spread expands them.
+
+### Copying an array
+
+```js
+const original = [10, 20, 30];
+const copy = [...original];
+
+console.log(copy); // [10, 20, 30]
+console.log(copy === original); // false
+```
+
+The result is a new array.
+
+The elements are copied into it, but nested objects are not deeply cloned.
+
+### Combining arrays
+
+```js
+const frontend = ['HTML', 'CSS'];
+const programming = ['JavaScript', 'TypeScript'];
+
+const skills = [
+  ...frontend,
+  ...programming,
+];
+
+console.log(skills);
+// ['HTML', 'CSS', 'JavaScript', 'TypeScript']
+```
+
+Spread can also insert values at specific positions.
+
+```js
+const tasks = ['Write code', 'Run tests'];
+
+const updatedTasks = [
+  'Review requirements',
+  ...tasks,
+  'Deploy application',
+];
+```
+
+This creates a new array without modifying the original.
+
+### Spreading arguments into functions
+
+Spread is useful when a function expects separate arguments but the values are stored in an iterable.
+
+```js
+const temperatures = [18, 24, 21, 27];
+
+const highest = Math.max(...temperatures);
+
+console.log(highest); // 27
+```
+
+For very large arrays, spreading into a function call can exceed the engine's argument limit. A loop or `reduce` is more appropriate when the input size is unbounded.
+
+## 10. Object spread and property precedence
+
+Object spread creates a new object and copies enumerable own properties from the source.
+
+```js
+const defaults = {
+  theme: 'light',
+  fontSize: 14,
+  notifications: true,
+};
+
+const preferences = {
+  theme: 'dark',
+  fontSize: 16,
+};
+
+const settings = {
+  ...defaults,
+  ...preferences,
+};
+
+console.log(settings);
+```
+
+Result:
+
+```js
+{
+  theme: 'dark',
+  fontSize: 16,
+  notifications: true
+}
+```
+
+When multiple objects contain the same property, the last assigned value wins.
+
+This makes property order significant.
+
+```js
+const defaults = { timeout: 5000 };
+const options = { timeout: 2000 };
+
+const first = {
+  ...defaults,
+  ...options,
+};
+
+const second = {
+  ...options,
+  ...defaults,
+};
+
+console.log(first.timeout);  // 2000
+console.log(second.timeout); // 5000
+```
+
+A common pattern is to spread defaults first and user-provided options afterward.
+
+That allows explicit configuration to override defaults.
+
+### Updating an object immutably
+
+Object spread is frequently used when updating React state.
+
+```js
+const user = {
+  name: 'Alice',
+  role: 'viewer',
+};
+
+const updatedUser = {
+  ...user,
+  role: 'editor',
+};
+
+console.log(updatedUser);
+// { name: 'Alice', role: 'editor' }
+
+console.log(user.role); // viewer
+```
+
+The original object isn't modified.
+
+This is particularly useful when state updates depend on reference changes.
+
+## 11. Spread creates shallow copies
+
+One of the most common misconceptions is that spreading an object creates a completely independent copy.
+
+It doesn't.
+
+Spread copies one level of properties.
+
+If a property contains another object, both copies reference that same nested object.
+
+```js
+const original = {
+  name: 'Alice',
+  preferences: {
+    theme: 'dark',
+  },
+};
+
+const copy = { ...original };
+
+copy.preferences.theme = 'light';
+
+console.log(original.preferences.theme);
+// light
+```
+
+The top-level objects are different, but `preferences` is shared.
+
+```js
+console.log(copy === original);
+// false
+
+console.log(
+  copy.preferences === original.preferences
+);
+// true
+```
+
+### Updating nested objects safely
+
+When only a specific nested property needs to change, nested spread is often the best solution.
+
+```js
+const updated = {
+  ...original,
+  preferences: {
+    ...original.preferences,
+    theme: 'light',
+  },
+};
+```
+
+Now the nested object is also replaced.
+
+```js
+console.log(
+  updated.preferences === original.preferences
+);
+// false
+```
+
+This approach is explicit and avoids copying unrelated parts of a large structure.
+
+It is commonly used in reducers and immutable state updates.
+
+## 12. When structuredClone is the better option
+
+For a genuinely independent copy of a supported data structure, modern JavaScript provides `structuredClone()`.
+
+```js
+const original = {
+  name: 'Alice',
+  preferences: {
+    theme: 'dark',
+    shortcuts: ['save', 'search'],
+  },
+};
+
+const copy = structuredClone(original);
+
+copy.preferences.theme = 'light';
+copy.preferences.shortcuts.push('close');
+
+console.log(original.preferences.theme);
+// dark
+
+console.log(original.preferences.shortcuts);
+// ['save', 'search']
+```
+
+Unlike spread, `structuredClone()` recursively clones supported nested values.
+
+It also supports several built-in types, including `Map`, `Set`, `Date`, and many typed arrays.
+
+However, it isn't a universal cloning solution.
+
+Functions cannot be cloned. Certain values, including DOM nodes, are unsupported. Custom class instances may also lose prototype-specific behavior.
+
+For example:
+
+```js
+const data = {
+  calculate: () => 42,
+};
+
+structuredClone(data);
+// DataCloneError
+```
+
+The choice depends on what needs to be copied.
+
+For ordinary immutable updates, spread is usually simpler and more efficient because it only replaces the necessary levels.
+
+For supported nested data that must be independently cloned, `structuredClone()` is often appropriate.
+
+## 13. Practical patterns worth remembering
+
+The individual features become especially useful when combined.
+
+### Extracting the first item and keeping the rest
+
+```js
+const notifications = [
+  'New message',
+  'Build completed',
+  'Deployment successful',
+];
+
+const [latest, ...older] = notifications;
+
+console.log(latest);
+// New message
+
+console.log(older);
+// ['Build completed', 'Deployment successful']
+```
+
+### Removing a property from an object
+
+```js
+const filters = {
+  category: 'books',
+  sort: 'price',
+  page: 2,
+};
+
+const { page, ...persistentFilters } = filters;
+
+console.log(persistentFilters);
+// { category: 'books', sort: 'price' }
+```
+
+### Merging defaults with user options
+
+```js
+function createClient(options = {}) {
+  const defaults = {
+    timeout: 5000,
+    retries: 2,
+    cache: true,
+  };
+
+  return {
+    ...defaults,
+    ...options,
+  };
+}
+
+const client = createClient({
+  timeout: 3000,
+});
+```
+
+### Updating one item in an array
+
+```js
+const users = [
+  { id: 1, name: 'Alice', active: true },
+  { id: 2, name: 'Bob', active: false },
+];
+
+const updatedUsers = users.map((user) =>
+  user.id === 2
+    ? { ...user, active: true }
+    : user
+);
+```
+
+Only the matching user object is replaced. Unchanged objects retain their references.
+
+### Passing selected properties to another function
+
+```js
+function sendEmail({
+  to,
+  subject,
+  ...options
+}) {
+  console.log({
+    recipient: to,
+    subject,
+    options,
+  });
+}
+
+sendEmail({
+  to: 'alice@example.com',
+  subject: 'Welcome',
+  priority: 'high',
+  trackOpens: true,
+});
+```
+
+These patterns appear frequently in API clients, React components, state updates, and general application code.
+
+## 14. Common mistakes
+
+Several problems are easy to avoid once the syntax rules are clear.
+
+| Problem | Risk | Better approach |
+|---|---|---|
+| Destructuring `null` or `undefined` | Throws a `TypeError` | Use `value ?? {}` |
+| Assuming defaults replace `null` | Unexpected `null` values | Use `??` when appropriate |
+| Placing rest before another element | Syntax error | Keep rest last |
+| Reversing object spread order | Wrong property precedence | Spread defaults first |
+| Treating spread as a deep clone | Shared nested references | Use nested spread or `structuredClone()` |
+| Destructuring missing nested objects | Runtime error | Add nested defaults or optional chaining |
+
+One additional readability concern is worth mentioning.
+
+Destructuring isn't automatically better simply because it produces fewer lines.
+
+This is technically valid:
+
+```js
+const {
+  response: {
+    data: {
+      user: {
+        profile: {
+          preferences: {
+            theme,
+          },
+        },
+      },
+    },
+  },
+} = result;
+```
+
+But it is difficult to scan and assumes every intermediate object exists.
+
+A simpler expression may be preferable:
+
+```js
+const theme =
+  result.response?.data?.user?.profile
+    ?.preferences?.theme ?? 'light';
+```
+
+The shorter syntax isn't always the clearest syntax. The goal is to make the code easier to understand, not merely reduce its line count.
+
+## Conclusion
+
+Destructuring, rest, and spread syntax solve different but closely related problems.
+
+Destructuring extracts values from arrays, iterables, and objects. Rest collects values that haven't been assigned to named bindings. Spread expands values into arrays, function calls, or object literals.
+
+Together, they eliminate repetitive property access, simplify configuration objects, and make immutable updates more approachable.
+
+Their limitations are just as important as their convenience.
+
+Destructuring defaults only apply to `undefined`. Nested destructuring requires care when properties may be missing. Spread creates shallow copies, and object property order determines which values take precedence during merging.
+
+Once these rules become familiar, the syntax stops feeling like a collection of shortcuts and becomes a natural part of writing maintainable JavaScript.
+
+The most effective use of modern JavaScript syntax is not the most compact expression. It is the one that makes the intent of the code immediately clear.
