@@ -1,0 +1,1187 @@
+---
+title: "How to Export HTML to DOCX with Images That Work on Mobile"
+slug: html-to-docx
+heading: "How to Convert HTML to DOCX Without Breaking Mobile Compatibility"
+permalink: howto/html-to-docx
+icon: /icons/javascript.png
+image: /icon.png
+date: 2026-11-05
+author: anton liberant
+category: javascript
+type: howto
+tags: ['DOCX']
+desc: "Learn why HTML-based Word exports lose images on mobile and how to generate compatible DOCX files with embedded images using JavaScript."
+subtitle: "Why HTML-based Word exports fail on mobile devices, and how to generate real DOCX files with embedded images, tables, and reliable formatting."
+---
+
+A Word document generated in the browser works perfectly on a desktop. The headings look right, tables appear where they should, and every image is visible.
+
+Then someone downloads the same file on a phone.
+
+The text is still there, but the images have disappeared. In another viewer, the document opens as a blank page.
+
+The obvious assumption is that something went wrong during the download. Perhaps the images weren't loaded, or the browser created an incomplete file.
+
+Often, neither explanation is correct.
+
+The real problem is the document format.
+
+A file with a `.doc` or `.docx` extension isn't necessarily a genuine Word document. Some JavaScript export solutions simply wrap HTML in a file that Microsoft Word happens to understand. Others place HTML inside a DOCX container and expect the document viewer to convert it.
+
+Desktop Word can handle several of these approaches. Mobile Word, WPS Office, and built-in file previewers are frequently less forgiving.
+
+For consistent results, the document should contain actual WordprocessingML elements and embedded image files rather than relying on an HTML rendering engine.
+
+This article examines the differences, explains why common export methods fail, and builds a browser-based HTML-to-DOCX pipeline using JavaScript and the `docx` library.
+
+## 1. Why a Word file can work on desktop but fail on mobile
+
+The first thing to understand is that a filename extension doesn't determine the document's internal structure.
+
+A file named `report.doc` might contain ordinary HTML.
+
+A file named `report.docx` might be a ZIP-based Office Open XML package containing HTML that still needs to be converted.
+
+Both can look correct in desktop Microsoft Word while failing in mobile applications.
+
+Three export approaches are particularly common.
+
+| Export method | Internal content | Desktop Word | Mobile compatibility |
+|---|---|---|---|
+| HTML saved as `.doc` | HTML markup | Often works | Unreliable, especially for images |
+| DOCX using `altChunk` | HTML embedded inside OOXML | Often converted by desktop Word | Limited viewer support |
+| Native OOXML DOCX | Word paragraphs, tables, and embedded media | Supported | Most reliable option |
+
+The differences become clearer when each method is examined separately.
+
+### HTML disguised as a DOC file
+
+A quick export implementation might look like this:
+
+```js
+function downloadWord(html) {
+  const blob = new Blob(
+    [html],
+    { type: 'application/msword' }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = 'report.doc';
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+```
+
+This creates a downloadable file, but it doesn't convert HTML into Word's native document structure.
+
+The file still contains HTML.
+
+Desktop Word has historically supported importing HTML documents, which is why the technique appears to work.
+
+The situation changes on mobile devices.
+
+Some mobile viewers don't support this HTML-based representation, especially when images use data URLs:
+
+```html
+<img src="data:image/png;base64,iVBORw0KGgo..." />
+```
+
+The result may be missing images, incorrect formatting, or an unsupported document.
+
+Changing the MIME type won't solve the underlying problem.
+
+The bytes inside the file are still HTML.
+
+### DOCX files built with altChunk
+
+Another approach uses the Office Open XML `altChunk` mechanism.
+
+Libraries such as `html-docx-js` can embed HTML inside a DOCX package and instruct a compatible Word application to import it.
+
+Conceptually, the package contains a relationship to an HTML part:
+
+```text
+document.docx
+├── [Content_Types].xml
+├── _rels/
+└── word/
+    ├── document.xml
+    ├── _rels/
+    └── afchunk.html
+```
+
+The actual package structure can vary, but the important detail is that the HTML remains HTML until a compatible application processes it.
+
+Desktop Word can perform that conversion.
+
+Other viewers may not support the mechanism. Depending on the application, the document can appear empty or incomplete.
+
+A `.docx` extension therefore doesn't guarantee that the file contains fully converted Word content.
+
+### Native OOXML documents
+
+A more reliable solution generates real WordprocessingML.
+
+Paragraphs become Word paragraphs. Tables become Word tables. Images are stored as binary media files with relationships connecting them to the document.
+
+A simplified DOCX structure looks like this:
+
+```text
+report.docx
+├── [Content_Types].xml
+├── _rels/
+│   └── .rels
+└── word/
+    ├── document.xml
+    ├── styles.xml
+    ├── _rels/
+    │   └── document.xml.rels
+    └── media/
+        ├── image1.png
+        └── image2.jpeg
+```
+
+The document viewer no longer needs to interpret arbitrary HTML or convert an `altChunk` into Word elements.
+
+This doesn't guarantee identical rendering in every application, but it removes a major source of incompatibility.
+
+For downloadable reports that must work across desktop and mobile environments, native OOXML is the strongest starting point.
+
+## 2. Designing a reliable export pipeline
+
+A browser-based HTML-to-DOCX exporter has several responsibilities.
+
+It must parse the HTML, convert supported elements into Word structures, download remote images, and package those images into the document.
+
+The complete pipeline looks like this:
+
+```text
+Markdown or HTML content
+          |
+          v
+      Parse HTML
+          |
+          v
+   Resolve image URLs
+          |
+          v
+ Fetch and decode images
+          |
+          v
+ Convert DOM elements
+          |
+          +-- Headings -> Paragraphs
+          |
+          +-- Text -> TextRun
+          |
+          +-- Tables -> Word tables
+          |
+          +-- Images -> ImageRun
+          |
+          v
+    Build DOCX document
+          |
+          v
+       Packer.toBlob()
+          |
+          v
+     Download report.docx
+```
+
+The browser already provides most of the necessary primitives.
+
+`DOMParser` handles HTML parsing.
+
+`fetch` retrieves remote images.
+
+`Blob` and `URL.createObjectURL()` support downloads.
+
+The `docx` library handles the OOXML structures and final packaging.
+
+The most important architectural decision is to separate these responsibilities.
+
+Image fetching shouldn't be mixed into paragraph conversion. File downloading shouldn't depend on how tables are rendered.
+
+A small collection of focused functions is easier to test and debug than one large HTML-to-Word converter.
+
+## 3. Installing the DOCX library
+
+The examples use the `docx` package.
+
+```bash
+npm install docx
+```
+
+The library provides classes for constructing Word documents programmatically.
+
+A minimal document can be generated with only a few imports:
+
+```js
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+} from 'docx';
+
+async function createDocument() {
+  const document = new Document({
+    sections: [
+      {
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Hello from JavaScript',
+                bold: true,
+              }),
+            ],
+          }),
+        ],
+      },
+    ],
+  });
+
+  return Packer.toBlob(document);
+}
+```
+
+The returned `Blob` contains a DOCX package.
+
+Unlike HTML renamed to `.doc`, this output uses native WordprocessingML structures.
+
+The implementation details of `docx` can differ between major versions. In particular, image construction APIs have changed over time.
+
+The following examples target modern `docx` releases that support explicit image types in `ImageRun`.
+
+## 4. Downloading a generated DOCX file
+
+Before implementing HTML conversion, it helps to create a reusable download function.
+
+```js
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
+```
+
+The function creates a temporary object URL, triggers a download, and releases the URL afterward.
+
+The delayed cleanup is intentional.
+
+Revoking an object URL immediately after calling `click()` can cause problems in some browsers because the download may not have consumed the URL yet.
+
+The timeout is a pragmatic compatibility measure, not a guarantee across every browser.
+
+Mobile browsers may also open a preview or share interface instead of saving the file directly.
+
+That behavior is controlled by the browser and operating system, not by the DOCX generator.
+
+## 5. Remote images must be downloaded before embedding
+
+An HTML document may contain images hosted on a CDN or object storage service.
+
+```html
+<img
+  src="https://cdn.example.com/reports/chart.png"
+  alt="Monthly revenue chart"
+/>
+```
+
+A native DOCX document shouldn't depend on the viewer fetching this image from the original URL.
+
+Instead, the exporter needs the image bytes.
+
+The most straightforward approach is to fetch the resource and convert the response into a `Uint8Array`.
+
+```js
+async function fetchImage(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(
+      `Image request failed: ${response.status}`
+    );
+  }
+
+  const contentType =
+    response.headers.get('content-type') ?? '';
+
+  const supportedTypes = new Map([
+    ['image/png', 'png'],
+    ['image/jpeg', 'jpg'],
+    ['image/gif', 'gif'],
+    ['image/bmp', 'bmp'],
+  ]);
+
+  const mimeType = contentType
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
+
+  const type = supportedTypes.get(mimeType);
+
+  if (!type) {
+    throw new Error(
+      `Unsupported image type: ${mimeType}`
+    );
+  }
+
+  const buffer = await response.arrayBuffer();
+
+  return {
+    data: new Uint8Array(buffer),
+    type,
+  };
+}
+```
+
+This implementation avoids converting images to base64.
+
+Base64 can be useful when images are already represented as data URLs, but it isn't required for generating DOCX files.
+
+The `docx` library can work with binary image data directly.
+
+Avoiding unnecessary base64 conversion reduces memory overhead and simplifies the pipeline.
+
+### Why CORS matters
+
+If the image is hosted on another origin, the remote server must allow the browser to read its response.
+
+For example, a server might return:
+
+```http
+Access-Control-Allow-Origin: https://app.example.com
+```
+
+Without an appropriate CORS policy, the browser may display the image in an ordinary `<img>` element but still prevent JavaScript from reading its bytes.
+
+This distinction is easy to miss.
+
+Displaying a cross-origin image and downloading its data through JavaScript are different operations.
+
+A failed CORS request cannot be repaired by changing JavaScript syntax.
+
+The image server must allow the request, or the application needs a trusted server-side image proxy.
+
+For production applications, the proxy should restrict allowed destinations to prevent server-side request forgery and other unwanted network access.
+
+## 6. Supporting base64 images
+
+Some HTML content already contains embedded images.
+
+```html
+<img src="data:image/png;base64,..." />
+```
+
+These can be decoded without making a network request.
+
+```js
+function decodeDataUrl(src) {
+  const match = src.match(
+    /^data:(image\/(?:png|jpeg|gif|bmp));base64,([\s\S]+)$/i
+  );
+
+  if (!match) {
+    throw new Error('Unsupported image data URL');
+  }
+
+  const mimeType = match[1].toLowerCase();
+
+  const types = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/gif': 'gif',
+    'image/bmp': 'bmp',
+  };
+
+  const binary = atob(
+    match[2].replace(/\s/g, '')
+  );
+
+  const bytes = Uint8Array.from(
+    binary,
+    (character) => character.charCodeAt(0)
+  );
+
+  return {
+    data: bytes,
+    type: types[mimeType],
+  };
+}
+```
+
+A shared helper can support both data URLs and remote images.
+
+```js
+async function loadImage(src) {
+  if (src.startsWith('data:')) {
+    return decodeDataUrl(src);
+  }
+
+  return fetchImage(src);
+}
+```
+
+This is more flexible than requiring every image to be converted to base64 before document generation.
+
+It also avoids using a canvas solely to change the image representation.
+
+Canvas conversion remains useful when resizing or changing formats is necessary, but it shouldn't be the default for every image.
+
+## 7. Converting images into ImageRun elements
+
+Once the binary data is available, it can be embedded using `ImageRun`.
+
+```js
+import { ImageRun } from 'docx';
+
+async function createImageRun(src) {
+  const image = await loadImage(src);
+
+  return new ImageRun({
+    type: image.type,
+    data: image.data,
+    transformation: {
+      width: 400,
+      height: 250,
+    },
+  });
+}
+```
+
+The image becomes part of the DOCX package.
+
+The document no longer needs to contact the original image server when opened.
+
+However, the dimensions deserve attention.
+
+Hardcoding a width and height can distort the image.
+
+A better implementation preserves the original aspect ratio.
+
+### Reading image dimensions
+
+The browser can determine image dimensions using `createImageBitmap()` for supported formats.
+
+```js
+async function getImageDimensions(data, mimeType) {
+  const blob = new Blob(
+    [data],
+    { type: mimeType }
+  );
+
+  const bitmap = await createImageBitmap(blob);
+
+  try {
+    return {
+      width: bitmap.width,
+      height: bitmap.height,
+    };
+  } finally {
+    bitmap.close();
+  }
+}
+```
+
+The dimensions can then be scaled to fit the document.
+
+```js
+function fitImage(width, height, maxWidth = 500) {
+  const scale = Math.min(
+    1,
+    maxWidth / width
+  );
+
+  return {
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  };
+}
+```
+
+The complete image helper becomes:
+
+```js
+async function createImageRun(src) {
+  const image = await loadImage(src);
+
+  const mimeTypes = {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    gif: 'image/gif',
+    bmp: 'image/bmp',
+  };
+
+  const dimensions = await getImageDimensions(
+    image.data,
+    mimeTypes[image.type]
+  );
+
+  const size = fitImage(
+    dimensions.width,
+    dimensions.height
+  );
+
+  return new ImageRun({
+    type: image.type,
+    data: image.data,
+    transformation: size,
+  });
+}
+```
+
+For very large images, production code may also need to resize or compress the binary content before embedding it.
+
+Changing the displayed dimensions alone doesn't reduce the file size.
+
+## 8. Parsing HTML into a DOM tree
+
+The exporter needs to understand the structure of the HTML before creating Word elements.
+
+`DOMParser` provides a convenient starting point.
+
+```js
+function parseHtml(html) {
+  const parser = new DOMParser();
+
+  return parser.parseFromString(
+    html,
+    'text/html'
+  );
+}
+```
+
+The resulting document can be traversed using standard DOM APIs.
+
+```js
+const html = `
+  <h1>Monthly Report</h1>
+  <p>Revenue increased this month.</p>
+  <p><strong>Growth:</strong> 12%</p>
+`;
+
+const document = parseHtml(html);
+
+for (const element of document.body.children) {
+  console.log(element.tagName);
+}
+```
+
+Output:
+
+```text
+H1
+P
+P
+```
+
+The next step is to translate these elements into Word structures.
+
+This isn't the same as rendering HTML in a browser.
+
+CSS layout, arbitrary HTML elements, and browser-specific styling don't automatically map to WordprocessingML.
+
+A converter must explicitly decide which HTML features it supports.
+
+For a report exporter, a practical starting set includes headings, paragraphs, inline formatting, lists, tables, images, and code blocks.
+
+## 9. Converting inline text formatting
+
+HTML paragraphs often contain nested inline elements.
+
+```html
+<p>
+  The result is <strong>important</strong>
+  and should be <em>reviewed carefully</em>.
+</p>
+```
+
+A plain `textContent` conversion would preserve the words but lose the formatting.
+
+The exporter needs to create separate `TextRun` elements.
+
+```js
+import { TextRun } from 'docx';
+
+function convertInline(node, style = {}) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return [
+      new TextRun({
+        text: node.textContent ?? '',
+        ...style,
+      }),
+    ];
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return [];
+  }
+
+  const nextStyle = { ...style };
+
+  switch (node.tagName) {
+    case 'STRONG':
+    case 'B':
+      nextStyle.bold = true;
+      break;
+
+    case 'EM':
+    case 'I':
+      nextStyle.italics = true;
+      break;
+
+    case 'DEL':
+    case 'S':
+      nextStyle.strike = true;
+      break;
+
+    case 'CODE':
+      nextStyle.font = 'Courier New';
+      break;
+  }
+
+  return Array.from(node.childNodes).flatMap(
+    (child) => convertInline(child, nextStyle)
+  );
+}
+```
+
+The recursive approach preserves nested formatting.
+
+For example:
+
+```html
+<strong>
+  Important <em>and emphasized</em>
+</strong>
+```
+
+The inner text receives both bold and italic styles.
+
+A production converter should also handle hyperlinks using the library's hyperlink elements rather than simply underlining anchor text.
+
+## 10. Converting headings and paragraphs
+
+Block elements can be mapped to `Paragraph` instances.
+
+```js
+import {
+  HeadingLevel,
+  Paragraph,
+} from 'docx';
+
+function convertTextBlock(element) {
+  const headings = {
+    H1: HeadingLevel.HEADING_1,
+    H2: HeadingLevel.HEADING_2,
+    H3: HeadingLevel.HEADING_3,
+    H4: HeadingLevel.HEADING_4,
+  };
+
+  const heading = headings[element.tagName];
+
+  return new Paragraph({
+    heading,
+    children: Array.from(
+      element.childNodes
+    ).flatMap((node) => convertInline(node)),
+    spacing: {
+      after: heading ? 240 : 120,
+    },
+  });
+}
+```
+
+Using native heading styles is preferable to manually making every heading bold and large.
+
+Word applications can recognize semantic headings, making document navigation and future editing easier.
+
+The document can define consistent heading styles centrally instead of repeating formatting throughout the conversion logic.
+
+## 11. Why manual line breaks can break mobile formatting
+
+One of the more unusual problems appears when HTML line breaks are translated directly into Word line breaks.
+
+Consider:
+
+```html
+<p class="report-title">
+  Monthly Report<br />
+  November 2026
+</p>
+```
+
+A converter might create a single Word paragraph containing a manual break.
+
+In some mobile Word and WPS versions, paragraphs containing manual line breaks can render with unexpected character spacing or justification.
+
+The result may look like this:
+
+```text
+M  o  n  t  h  l  y    R  e  p  o  r  t
+November 2026
+```
+
+This behavior is viewer-dependent, but it is worth avoiding when generating documents for mobile devices.
+
+A more predictable solution is to convert meaningful line breaks into separate paragraphs.
+
+### Splitting content at BR elements
+
+The following helper splits a block into groups of nodes.
+
+```js
+function splitAtBreaks(element) {
+  const groups = [[]];
+
+  for (const node of element.childNodes) {
+    if (
+      node.nodeType === Node.ELEMENT_NODE &&
+      node.tagName === 'BR'
+    ) {
+      groups.push([]);
+      continue;
+    }
+
+    groups.at(-1).push(node);
+  }
+
+  return groups;
+}
+```
+
+Each group can become its own paragraph.
+
+```js
+function convertParagraph(element) {
+  return splitAtBreaks(element).map(
+    (nodes) =>
+      new Paragraph({
+        children: nodes.flatMap(
+          (node) => convertInline(node)
+        ),
+        alignment: 'left',
+      })
+  );
+}
+```
+
+This helper handles direct-child `<br>` elements. A complete converter should also account for line breaks nested inside inline formatting elements.
+
+Separating paragraphs also allows different styles for a title and its metadata.
+
+```js
+const title = new Paragraph({
+  children: [
+    new TextRun({
+      text: 'Monthly Report',
+      bold: true,
+      size: 32,
+    }),
+  ],
+});
+
+const date = new Paragraph({
+  children: [
+    new TextRun({
+      text: 'November 2026',
+      size: 21,
+    }),
+  ],
+});
+```
+
+The title uses 16-point text, while the date uses 10.5-point text.
+
+In `docx`, font sizes are commonly expressed in half-points.
+
+Explicit paragraph alignment can also help avoid unexpected justification differences between viewers.
+
+## 12. Converting HTML tables
+
+Tables are more complicated than paragraphs because they contain nested rows, cells, and potentially different header styles.
+
+A simple HTML table might look like this:
+
+```html
+<table>
+  <thead>
+    <tr>
+      <th>Product</th>
+      <th>Revenue</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Starter</td>
+      <td>$1,200</td>
+    </tr>
+    <tr>
+      <td>Pro</td>
+      <td>$3,400</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+The `docx` library provides corresponding table classes.
+
+```js
+import {
+  Table,
+  TableRow,
+  TableCell,
+  Paragraph,
+  BorderStyle,
+  WidthType,
+} from 'docx';
+
+function convertTable(element) {
+  const border = {
+    style: BorderStyle.SINGLE,
+    size: 4,
+    color: 'D1D5DB',
+  };
+
+  const rows = Array.from(element.rows).map(
+    (row) => {
+      const isHeader =
+        row.parentElement?.tagName === 'THEAD';
+
+      return new TableRow({
+        tableHeader: isHeader,
+        children: Array.from(row.cells).map(
+          (cell) =>
+            new TableCell({
+              shading: isHeader
+                ? { fill: 'E8E8E8' }
+                : undefined,
+              children: [
+                new Paragraph({
+                  children: Array.from(
+                    cell.childNodes
+                  ).flatMap((node) =>
+                    convertInline(node, {
+                      bold: isHeader,
+                    })
+                  ),
+                }),
+              ],
+            })
+        ),
+      });
+    }
+  );
+
+  return new Table({
+    rows,
+    width: {
+      size: 100,
+      type: WidthType.PERCENTAGE,
+    },
+    borders: {
+      top: border,
+      bottom: border,
+      left: border,
+      right: border,
+      insideHorizontal: border,
+      insideVertical: border,
+    },
+  });
+}
+```
+
+This supports straightforward tables with ordinary cells.
+
+It doesn't yet handle `rowspan`, `colspan`, nested tables, or complex CSS layout.
+
+Those features require additional conversion logic.
+
+For report exports, it is often better to support a defined subset of HTML tables reliably than to promise complete browser-style table rendering.
+
+## 13. Putting the conversion pipeline together
+
+With the individual converters available, the exporter can traverse the HTML document and build the DOCX structure.
+
+The following function demonstrates the overall approach.
+
+```js
+import {
+  Document,
+  Packer,
+  Paragraph,
+  AlignmentType,
+} from 'docx';
+
+async function htmlToDocx(html) {
+  const dom = parseHtml(html);
+  const children = [];
+
+  for (const element of dom.body.children) {
+    const tag = element.tagName;
+
+    if (/^H[1-4]$/.test(tag) || tag === 'P') {
+      children.push(
+        ...(
+          tag === 'P'
+            ? convertParagraph(element)
+            : [convertTextBlock(element)]
+        )
+      );
+
+      continue;
+    }
+
+    if (tag === 'TABLE') {
+      children.push(convertTable(element));
+      continue;
+    }
+
+    if (tag === 'IMG') {
+      try {
+        const src = element.getAttribute('src');
+
+        if (!src) {
+          continue;
+        }
+
+        const imageRun = await createImageRun(src);
+
+        children.push(
+          new Paragraph({
+            children: [imageRun],
+            alignment: AlignmentType.CENTER,
+          })
+        );
+      } catch (error) {
+        console.warn(
+          'Unable to embed image:',
+          error
+        );
+      }
+
+      continue;
+    }
+  }
+
+  const document = new Document({
+    styles: {
+      default: {
+        document: {
+          run: {
+            font: 'Arial',
+            size: 21,
+          },
+          paragraph: {
+            alignment: AlignmentType.LEFT,
+            spacing: {
+              after: 120,
+            },
+          },
+        },
+      },
+    },
+    sections: [
+      {
+        children: children.length
+          ? children
+          : [new Paragraph('')],
+      },
+    ],
+  });
+
+  return Packer.toBlob(document);
+}
+```
+
+This is a foundation rather than a complete HTML renderer.
+
+It handles headings, paragraphs, tables, and standalone images using the helpers defined earlier.
+
+Lists, blockquotes, code blocks, hyperlinks, nested images, and other elements need dedicated handlers before the exporter can be considered feature-complete.
+
+The benefit of the structure is that each new element type can be added without rewriting the entire pipeline.
+
+## 14. Handling export failures
+
+A document exporter should fail predictably.
+
+If one remote image cannot be fetched, the application needs to decide whether to continue without it or reject the export.
+
+For some reports, a missing decorative image is acceptable.
+
+For invoices, charts, or compliance documents, silently dropping an image may produce an incomplete or misleading file.
+
+A useful approach is to collect diagnostics during conversion.
+
+```js
+const diagnostics = {
+  embeddedImages: 0,
+  failedImages: [],
+};
+```
+
+When an image succeeds:
+
+```js
+diagnostics.embeddedImages++;
+```
+
+When an image fails:
+
+```js
+diagnostics.failedImages.push({
+  src,
+  reason: String(error),
+});
+```
+
+After conversion, the application can report the result.
+
+```js
+console.info(
+  `Embedded ${diagnostics.embeddedImages} images`
+);
+
+if (diagnostics.failedImages.length > 0) {
+  console.warn(
+    'Some images could not be embedded',
+    diagnostics.failedImages
+  );
+}
+```
+
+This is more useful than simply logging a generic conversion error.
+
+It also makes production troubleshooting easier, particularly when image URLs come from a CDN or object storage service with environment-specific CORS settings.
+
+## 15. Choosing a fallback format
+
+A failed DOCX conversion shouldn't automatically produce a misleading file.
+
+One possible fallback is HTML disguised as `.doc`, but that reintroduces the compatibility problem the exporter was designed to solve.
+
+A better fallback depends on the user's goal.
+
+If the document contains important images or tables, the application should usually report that the DOCX export failed and offer a retry.
+
+If only the text matters, a plain-text export can be useful.
+
+```js
+function downloadText(text, filename) {
+  const blob = new Blob(
+    [text],
+    {
+      type: 'text/plain;charset=utf-8',
+    }
+  );
+
+  downloadBlob(blob, `${filename}.txt`);
+}
+```
+
+A simple export handler can offer that fallback.
+
+```js
+async function exportReport(html, filename) {
+  try {
+    const blob = await htmlToDocx(html);
+
+    downloadBlob(
+      blob,
+      `${filename}.docx`
+    );
+
+    return {
+      success: true,
+      format: 'docx',
+    };
+  } catch (error) {
+    console.error('DOCX export failed:', error);
+
+    const dom = parseHtml(html);
+    const text = dom.body.innerText ??
+      dom.body.textContent ??
+      '';
+
+    downloadText(text, filename);
+
+    return {
+      success: false,
+      format: 'txt',
+    };
+  }
+}
+```
+
+The example uses `textContent` as a fallback because documents created with `DOMParser` may not provide useful layout-dependent `innerText` behavior in every environment.
+
+A production exporter should tell users when the output format changes.
+
+Silently returning a `.txt` file after the user requested DOCX can be confusing.
+
+For applications where plain text isn't an acceptable substitute, rejecting the operation and displaying an error is preferable.
+
+## 16. Mobile compatibility checklist
+
+A DOCX exporter intended for mobile devices should be tested beyond a single desktop Word installation.
+
+Several checks are particularly useful.
+
+- Confirm that the generated file is a real OOXML DOCX package, not renamed HTML.
+- Verify that images are stored as binary media inside the document.
+- Test remote image downloads with the actual production CORS configuration.
+- Preserve image aspect ratios when setting dimensions.
+- Use native Word paragraphs, headings, and tables.
+- Avoid relying on `altChunk` for essential document content.
+- Test paragraph alignment and manual line breaks in mobile viewers.
+- Check documents containing multiple images and large tables.
+- Test the generated file in Microsoft Word and other viewers used by the target audience.
+- Record conversion errors instead of silently omitting important content.
+
+It is also worth testing long documents.
+
+A report containing dozens of high-resolution images can consume significant memory during generation, especially on mobile devices.
+
+For large exports, server-side document generation may be more reliable than doing all the work in a mobile browser.
+
+## Conclusion
+
+When a Word export looks correct on desktop but loses images on mobile, the problem is often not the image URL or download process.
+
+It is the document representation.
+
+HTML saved with a `.doc` extension relies on the viewer understanding HTML. DOCX files using `altChunk` rely on the viewer importing embedded HTML.
+
+Neither approach provides consistent compatibility across mobile document applications.
+
+Native OOXML takes a different route.
+
+HTML content is converted into actual Word paragraphs, tables, and text runs. Images are downloaded, decoded, and embedded as binary media inside the DOCX package.
+
+That produces a document that can be opened without depending on the original image URLs or an HTML import engine.
+
+The implementation requires more work than wrapping HTML in a Blob, but it provides control over formatting, image handling, and error reporting.
+
+For simple text exports, HTML-based approaches may still be sufficient.
+
+For reports containing charts, images, tables, and structured content, generating real DOCX files is the more dependable choice.
+
+**The important lesson is that a `.docx` extension isn't enough. Mobile compatibility depends on what is actually inside the document.**

@@ -1,0 +1,1155 @@
+---
+title: How to Fix React State Updates with Immutable Data
+slug: react-immutable-state
+heading: "How Immutable State Updates Keep React Components in Sync"
+icon: /icons/react.png
+image: /icon.png
+permalink: howto/react-immutable-state
+date: 2026-11-05
+author: anton liberant
+category: react
+type: howto
+tags: ['Immutability', 'React.memo']
+desc: Learn why React state mutations cause stale UI, how reference equality affects rendering, and how to update arrays and nested objects safely.
+subtitle: 'Understand why React sometimes ignores state changes, how object references affect rendering and memoization, and how to update nested data safely with spread syntax and Immer.'
+---
+
+A shopping cart contains three products. A user clicks the remove button, and the application updates the array. The console confirms that the product is gone.
+
+But the screen still shows all three items.
+
+There is no error message. The event handler runs, and the data appears correct when inspected. Yet React doesn't update the interface.
+
+This is one of those bugs that can consume an afternoon because the code seems to be doing exactly what it should.
+
+The problem usually comes down to a small but important distinction: **changing an object is not the same as creating a new state value**.
+
+React treats state as a snapshot. When an object or array is stored in state, mutating its contents doesn't automatically tell React that something changed.
+
+Understanding this behavior helps prevent stale interfaces, makes memoization more predictable, and provides the foundation for features such as undo and redo.
+
+## 1. Why React sometimes ignores state changes
+
+Consider a simple shopping cart.
+
+```jsx
+import { useState } from 'react';
+
+function ShoppingCart() {
+  const [items, setItems] = useState([
+    { id: 1, name: 'Keyboard' },
+    { id: 2, name: 'Mouse' },
+    { id: 3, name: 'Monitor' },
+  ]);
+
+  function removeItem(id) {
+    const index = items.findIndex(
+      (item) => item.id === id
+    );
+
+    items.splice(index, 1);
+    setItems(items);
+  }
+
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item.id}>
+          {item.name}
+          <button onClick={() => removeItem(item.id)}>
+            Remove
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+At first glance, `removeItem` looks reasonable.
+
+It finds the requested item, removes it from the array, and calls the state setter.
+
+The problem is `splice()`.
+
+This method changes the existing array instead of returning a new one.
+
+```js
+const items = ['A', 'B', 'C'];
+const original = items;
+
+items.splice(1, 1);
+
+console.log(items); // ['A', 'C']
+console.log(items === original); // true
+```
+
+Although the contents changed, the array reference did not.
+
+React compares the next state value with the current one using `Object.is()`.
+
+If both values are considered equal, React can skip the update.
+
+```js
+const previous = ['A', 'B'];
+const next = previous;
+
+next.push('C');
+
+console.log(Object.is(previous, next));
+// true
+```
+
+Calling `setItems(items)` with the same mutated array doesn't provide React with a new state value.
+
+The fix is to create a new array.
+
+```jsx
+function removeItem(id) {
+  setItems((currentItems) =>
+    currentItems.filter((item) => item.id !== id)
+  );
+}
+```
+
+`filter()` returns a new array containing every item except the one being removed.
+
+React receives a different reference and can render the updated list.
+
+There is another benefit: the original state snapshot remains unchanged.
+
+That matters because React may still need the previous value while processing updates.
+
+## 2. React compares values, not object contents
+
+JavaScript treats primitive values and objects differently when comparing them.
+
+Two numbers with the same value compare as equal.
+
+```js
+Object.is(42, 42); // true
+```
+
+Two independently created objects do not.
+
+```js
+const first = { count: 42 };
+const second = { count: 42 };
+
+console.log(Object.is(first, second));
+// false
+```
+
+Their properties are identical, but they are different objects.
+
+Now consider two variables referencing the same object.
+
+```js
+const first = { count: 42 };
+const second = first;
+
+second.count = 100;
+
+console.log(Object.is(first, second));
+// true
+```
+
+Changing `count` doesn't change the reference.
+
+React doesn't recursively inspect every property to discover whether an object has been mutated.
+
+That would be expensive, particularly for large state structures.
+
+Instead, state updates rely on value identity.
+
+For objects and arrays, this means a new reference is needed when the state changes.
+
+This leads to a useful rule:
+
+**Create new references for the parts of state that change, and preserve existing references for the parts that don't.**
+
+The second half is just as important as the first.
+
+Unnecessarily creating new objects can interfere with memoization and trigger avoidable rendering work.
+
+## 3. Updating arrays without mutation
+
+Arrays are among the most common sources of accidental state mutation.
+
+Several familiar JavaScript methods modify the original array.
+
+These include `push()`, `pop()`, `shift()`, `unshift()`, `splice()`, `sort()`, and `reverse()`.
+
+They aren't inherently bad methods. They simply need care when working with React state.
+
+### Adding an item
+
+Incorrect:
+
+```jsx
+function addTodo(text) {
+  todos.push({
+    id: crypto.randomUUID(),
+    text,
+    completed: false,
+  });
+
+  setTodos(todos);
+}
+```
+
+The array is modified in place.
+
+A safer version uses spread syntax.
+
+```jsx
+function addTodo(text) {
+  const newTodo = {
+    id: crypto.randomUUID(),
+    text,
+    completed: false,
+  };
+
+  setTodos((currentTodos) => [
+    ...currentTodos,
+    newTodo,
+  ]);
+}
+```
+
+The functional updater is important.
+
+It calculates the next state from the latest state React provides, rather than relying on a potentially outdated value captured by the event handler.
+
+### Removing an item
+
+Instead of finding an index and calling `splice()`, use `filter()`.
+
+```jsx
+function removeTodo(id) {
+  setTodos((currentTodos) =>
+    currentTodos.filter((todo) => todo.id !== id)
+  );
+}
+```
+
+This also avoids a subtle bug in the original shopping cart example.
+
+`findIndex()` returns `-1` when no item matches. Calling `splice(-1, 1)` would accidentally remove the final element.
+
+`filter()` doesn't have that problem.
+
+### Updating one item
+
+To change a single object inside an array, use `map()`.
+
+```jsx
+function toggleTodo(id) {
+  setTodos((currentTodos) =>
+    currentTodos.map((todo) =>
+      todo.id === id
+        ? { ...todo, completed: !todo.completed }
+        : todo
+    )
+  );
+}
+```
+
+The result contains a new array.
+
+Only the matching todo receives a new object reference. Unchanged todos retain their existing references.
+
+That reference preservation can help memoized child components avoid unnecessary work.
+
+### Sorting an array
+
+`sort()` modifies the array on which it is called.
+
+This is unsafe:
+
+```jsx
+function sortByPrice() {
+  products.sort((a, b) => a.price - b.price);
+  setProducts(products);
+}
+```
+
+A compatible approach is to copy the array first.
+
+```jsx
+function sortByPrice() {
+  setProducts((currentProducts) =>
+    [...currentProducts].sort(
+      (a, b) => a.price - b.price
+    )
+  );
+}
+```
+
+Modern JavaScript also provides `toSorted()`, which returns a sorted copy.
+
+```jsx
+function sortByPrice() {
+  setProducts((currentProducts) =>
+    currentProducts.toSorted(
+      (a, b) => a.price - b.price
+    )
+  );
+}
+```
+
+The same idea applies to `toReversed()` and `toSpliced()`.
+
+These newer methods are convenient for immutable array operations, provided the target JavaScript environment supports them.
+
+## 4. Updating objects without mutation
+
+Objects have the same reference identity problem as arrays.
+
+Consider a profile component.
+
+```jsx
+const [user, setUser] = useState({
+  name: 'Alice',
+  age: 25,
+  role: 'viewer',
+});
+```
+
+This code modifies the existing state object:
+
+```jsx
+function celebrateBirthday() {
+  user.age += 1;
+  setUser(user);
+}
+```
+
+The property changes, but the reference remains the same.
+
+Instead, create a new object.
+
+```jsx
+function celebrateBirthday() {
+  setUser((currentUser) => ({
+    ...currentUser,
+    age: currentUser.age + 1,
+  }));
+}
+```
+
+Spread syntax copies the object's enumerable own properties into a new object.
+
+The `age` property is then overwritten with the updated value.
+
+The original object remains untouched.
+
+This is a shallow copy, however.
+
+Nested objects require additional attention.
+
+## 5. Nested state is where mutation bugs become harder to find
+
+Imagine a profile containing an address.
+
+```jsx
+const [user, setUser] = useState({
+  name: 'Alice',
+  address: {
+    country: 'Germany',
+    city: 'Berlin',
+    postalCode: '10115',
+  },
+});
+```
+
+The following update is incorrect:
+
+```jsx
+function changeCity(city) {
+  user.address.city = city;
+  setUser(user);
+}
+```
+
+It modifies the existing nested object and keeps the top-level reference unchanged.
+
+A developer might try to fix it by spreading only the outer object.
+
+```jsx
+function changeCity(city) {
+  user.address.city = city;
+
+  setUser({
+    ...user,
+  });
+}
+```
+
+This creates a new top-level object, so React can render again.
+
+But the implementation still mutates the previous state's nested address.
+
+That can cause problems with memoization, previous state snapshots, and undo history.
+
+The correct approach copies each object along the path being updated.
+
+```jsx
+function changeCity(city) {
+  setUser((currentUser) => ({
+    ...currentUser,
+    address: {
+      ...currentUser.address,
+      city,
+    },
+  }));
+}
+```
+
+Now both the user object and its address object have new references.
+
+Unchanged values are preserved.
+
+```js
+const previous = {
+  name: 'Alice',
+  address: {
+    city: 'Berlin',
+  },
+};
+
+const next = {
+  ...previous,
+  address: {
+    ...previous.address,
+    city: 'Munich',
+  },
+};
+
+console.log(previous === next);
+// false
+
+console.log(previous.address === next.address);
+// false
+
+console.log(previous.name === next.name);
+// true
+```
+
+This pattern is called structural sharing.
+
+The updated path receives new objects, while unchanged branches can reuse existing references.
+
+There is no need to deeply clone the entire state tree for every small update.
+
+## 6. Why React.memo can hide mutation bugs
+
+Immutability isn't only about getting React to render.
+
+It also affects how React optimizes components.
+
+`React.memo` can skip rendering a component when its props are unchanged according to a shallow comparison.
+
+Consider a memoized list.
+
+```jsx
+import { memo, useState } from 'react';
+
+const UserList = memo(function UserList({ users }) {
+  console.log('UserList rendered');
+
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+});
+```
+
+The parent stores the users in state.
+
+```jsx
+function App() {
+  const [users, setUsers] = useState([
+    { id: 1, name: 'Alice' },
+    { id: 2, name: 'Bob' },
+  ]);
+
+  function addUser() {
+    users.push({
+      id: 3,
+      name: 'Charlie',
+    });
+
+    setUsers(users);
+  }
+
+  return (
+    <>
+      <UserList users={users} />
+      <button onClick={addUser}>
+        Add user
+      </button>
+    </>
+  );
+}
+```
+
+The problem is the same mutation as before.
+
+The array reference doesn't change.
+
+React may skip the parent state update, and the memoized child receives the same `users` reference.
+
+Even if the parent later renders for an unrelated reason, `React.memo` may consider the `users` prop unchanged.
+
+The correct implementation creates a new array.
+
+```jsx
+function addUser() {
+  setUsers((currentUsers) => [
+    ...currentUsers,
+    {
+      id: crypto.randomUUID(),
+      name: 'Charlie',
+    },
+  ]);
+}
+```
+
+Now `UserList` receives a different array reference.
+
+Its shallow prop comparison detects the change, allowing it to render the updated list.
+
+`React.memo` doesn't make components reactive to mutations inside their props. It depends on props being updated consistently.
+
+## 7. The opposite problem: creating new objects unnecessarily
+
+Mutation causes stale references.
+
+But constantly creating new objects can cause the opposite problem: unstable references.
+
+Consider this component.
+
+```jsx
+function App() {
+  return (
+    <ExpensiveCalculator
+      options={{ precision: 2 }}
+    />
+  );
+}
+```
+
+Every render creates a new object literal.
+
+Even though the contents remain the same, the reference changes.
+
+```js
+const first = { precision: 2 };
+const second = { precision: 2 };
+
+console.log(Object.is(first, second));
+// false
+```
+
+If `ExpensiveCalculator` is memoized, the new `options` reference can prevent the memoization from skipping renders.
+
+One solution is to define a constant outside the component when the configuration is static.
+
+```jsx
+const CALCULATOR_OPTIONS = {
+  precision: 2,
+};
+
+function App() {
+  return (
+    <ExpensiveCalculator
+      options={CALCULATOR_OPTIONS}
+    />
+  );
+}
+```
+
+The reference remains stable across renders.
+
+When configuration depends on props or state, `useMemo` may be appropriate.
+
+```jsx
+function App({ precision }) {
+  const options = useMemo(
+    () => ({ precision }),
+    [precision]
+  );
+
+  return (
+    <ExpensiveCalculator options={options} />
+  );
+}
+```
+
+Memoization should be introduced when it solves a measurable problem, not automatically for every object literal.
+
+The important distinction is that references should change when their meaningful data changes, and remain stable when the same value is intentionally reused.
+
+## 8. How mutations break useMemo
+
+`useMemo` caches the result of a calculation until one of its dependencies changes.
+
+React compares dependencies using `Object.is()`.
+
+If a dependency is an object and that object is mutated in place, the dependency reference remains unchanged.
+
+Consider:
+
+```jsx
+function PriceSummary({ cart }) {
+  const total = useMemo(
+    () =>
+      cart.items.reduce(
+        (sum, item) => sum + item.price,
+        0
+      ),
+    [cart]
+  );
+
+  return <p>Total: ${total}</p>;
+}
+```
+
+If another part of the application mutates `cart.items` without replacing `cart`, the memoized calculation can become stale.
+
+Even if the component renders again for another reason, the dependency comparison may still report that `cart` is unchanged.
+
+A proper immutable update creates the necessary new references.
+
+```jsx
+setCart((currentCart) => ({
+  ...currentCart,
+  items: currentCart.items.map((item) =>
+    item.id === targetId
+      ? { ...item, price: newPrice }
+      : item
+  ),
+}));
+```
+
+Now the `cart` dependency changes when the cart data changes.
+
+The calculation can run again with the updated values.
+
+This demonstrates why immutability and memoization are closely connected.
+
+Memoization works best when reference identity accurately reflects meaningful changes.
+
+## 9. Immer makes complex immutable updates easier
+
+Spread syntax is effective for small state structures.
+
+But as nesting grows, copying each level can become verbose.
+
+Consider a project state object.
+
+```js
+const project = {
+  id: 1,
+  settings: {
+    permissions: {
+      editors: ['Alice', 'Bob'],
+    },
+  },
+};
+```
+
+Adding an editor immutably requires copying several levels.
+
+```js
+const updatedProject = {
+  ...project,
+  settings: {
+    ...project.settings,
+    permissions: {
+      ...project.settings.permissions,
+      editors: [
+        ...project.settings.permissions.editors,
+        'Charlie',
+      ],
+    },
+  },
+};
+```
+
+This works, but the actual change is buried inside repeated spread expressions.
+
+Immer provides a more convenient alternative.
+
+It lets developers write update logic that looks like mutation while producing immutable results.
+
+Install the library:
+
+```bash
+npm install immer
+```
+
+Then use `produce()`.
+
+```js
+import { produce } from 'immer';
+
+const updatedProject = produce(
+  project,
+  (draft) => {
+    draft.settings.permissions.editors.push(
+      'Charlie'
+    );
+  }
+);
+```
+
+The callback receives a draft object managed by Immer.
+
+Changes to the draft are recorded, and Immer produces the next immutable state.
+
+The original state isn't modified.
+
+```js
+console.log(
+  project.settings.permissions.editors
+);
+// ['Alice', 'Bob']
+
+console.log(
+  updatedProject.settings.permissions.editors
+);
+// ['Alice', 'Bob', 'Charlie']
+```
+
+Immer also preserves references for unchanged branches when possible.
+
+That makes it suitable for state management patterns that depend on structural sharing.
+
+### Using Immer with useState
+
+Immer can be combined with a functional state update.
+
+```jsx
+import { produce } from 'immer';
+
+function addEditor(name) {
+  setProject((currentProject) =>
+    produce(currentProject, (draft) => {
+      draft.settings.permissions.editors.push(name);
+    })
+  );
+}
+```
+
+The functional updater ensures Immer receives the latest state.
+
+This is preferable to producing the next state from a value captured by an earlier render when multiple updates may be queued.
+
+## 10. Using useImmer for simpler React state updates
+
+The `use-immer` package provides a React hook that integrates Immer with component state.
+
+Install it with:
+
+```bash
+npm install immer use-immer
+```
+
+A profile component might look like this:
+
+```jsx
+import { useImmer } from 'use-immer';
+
+function Profile() {
+  const [user, updateUser] = useImmer({
+    name: 'Alice',
+    address: {
+      country: 'Germany',
+      city: 'Berlin',
+    },
+    hobbies: ['Reading'],
+  });
+
+  function changeCity(city) {
+    updateUser((draft) => {
+      draft.address.city = city;
+    });
+  }
+
+  function addHobby(hobby) {
+    updateUser((draft) => {
+      draft.hobbies.push(hobby);
+    });
+  }
+
+  return (
+    <section>
+      <h2>{user.name}</h2>
+      <p>{user.address.city}</p>
+
+      <ul>
+        {user.hobbies.map((hobby) => (
+          <li key={hobby}>{hobby}</li>
+        ))}
+      </ul>
+
+      <button onClick={() => changeCity('Munich')}>
+        Move to Munich
+      </button>
+
+      <button onClick={() => addHobby('Cycling')}>
+        Add hobby
+      </button>
+    </section>
+  );
+}
+```
+
+The update functions are concise, but the resulting state changes remain immutable.
+
+Immer is particularly useful for nested objects, arrays of objects, and update logic involving several related changes.
+
+For simple state values, ordinary `useState` and spread syntax may still be easier to understand.
+
+## 11. Why immutability makes undo and redo possible
+
+Immutable state updates have another useful property.
+
+They preserve previous snapshots.
+
+If each update produces a new state value without modifying earlier values, an application can keep a history of those states.
+
+That makes undo and redo straightforward.
+
+Imagine a text editor.
+
+The user enters text, changes a heading, and deletes a paragraph.
+
+Each committed edit can be stored as a separate state snapshot.
+
+```text
+Initial document
+      |
+      v
+Document after edit 1
+      |
+      v
+Document after edit 2
+      |
+      v
+Document after edit 3
+```
+
+Undo moves backward through the snapshots.
+
+Redo moves forward.
+
+The implementation becomes much harder if every history entry points to the same mutable object.
+
+### Building a small useHistory hook
+
+A history hook can store the snapshots and the current position.
+
+Using `useReducer` keeps the history array and its index together in one state transition.
+
+```jsx
+import { useReducer } from 'react';
+
+function historyReducer(state, action) {
+  switch (action.type) {
+    case 'PUSH': {
+      const current = state.history[state.index];
+
+      if (Object.is(current, action.value)) {
+        return state;
+      }
+
+      const history = [
+        ...state.history.slice(0, state.index + 1),
+        action.value,
+      ];
+
+      return {
+        history,
+        index: history.length - 1,
+      };
+    }
+
+    case 'UNDO':
+      return {
+        ...state,
+        index: Math.max(0, state.index - 1),
+      };
+
+    case 'REDO':
+      return {
+        ...state,
+        index: Math.min(
+          state.history.length - 1,
+          state.index + 1
+        ),
+      };
+
+    default:
+      return state;
+  }
+}
+
+function useHistory(initialValue) {
+  const [state, dispatch] = useReducer(
+    historyReducer,
+    {
+      history: [initialValue],
+      index: 0,
+    }
+  );
+
+  const current = state.history[state.index];
+
+  return {
+    current,
+
+    push(value) {
+      dispatch({
+        type: 'PUSH',
+        value,
+      });
+    },
+
+    undo() {
+      dispatch({ type: 'UNDO' });
+    },
+
+    redo() {
+      dispatch({ type: 'REDO' });
+    },
+
+    canUndo: state.index > 0,
+
+    canRedo:
+      state.index < state.history.length - 1,
+  };
+}
+```
+
+The hook maintains three pieces of information:
+
+- The complete history of committed values.
+- The index of the currently selected snapshot.
+- Whether backward or forward navigation is available.
+
+The reducer also discards future snapshots when a new value is pushed after undoing an earlier change.
+
+That matches the behavior users expect from a conventional undo stack.
+
+### Using the hook
+
+A simple editor can use the hook like this:
+
+```jsx
+function TextEditor() {
+  const {
+    current,
+    push,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useHistory('');
+
+  return (
+    <section>
+      <textarea
+        value={current}
+        onChange={(event) => {
+          push(event.target.value);
+        }}
+      />
+
+      <div>
+        <button
+          onClick={undo}
+          disabled={!canUndo}
+        >
+          Undo
+        </button>
+
+        <button
+          onClick={redo}
+          disabled={!canRedo}
+        >
+          Redo
+        </button>
+      </div>
+    </section>
+  );
+}
+```
+
+This demonstration records every text change, which can create a large history during typing.
+
+A production editor would usually group related edits, limit history length, or record changes at meaningful boundaries.
+
+The important requirement is that each stored snapshot must remain unchanged after it is added to history.
+
+The hook assumes callers provide immutable values. It doesn't automatically protect historical objects from external mutation.
+
+## 12. Why old snapshots must remain untouched
+
+Consider a history array containing several references to the same object.
+
+```js
+const document = {
+  title: 'Draft',
+};
+
+const history = [document];
+
+document.title = 'Final';
+
+history.push(document);
+```
+
+Both entries point to the same object.
+
+```js
+console.log(history[0].title);
+// Final
+
+console.log(history[1].title);
+// Final
+```
+
+The original title is lost.
+
+There is nothing meaningful to undo.
+
+Now compare an immutable update.
+
+```js
+const initial = {
+  title: 'Draft',
+};
+
+const updated = {
+  ...initial,
+  title: 'Final',
+};
+
+const history = [initial, updated];
+
+console.log(history[0].title);
+// Draft
+
+console.log(history[1].title);
+// Final
+```
+
+Each snapshot preserves its value.
+
+This principle supports undo stacks, state inspection, and debugging tools that replay historical application states.
+
+It is also one reason immutable data structures are common in predictable state management systems.
+
+## 13. Common mistakes to avoid
+
+The same few mistakes account for many React state bugs.
+
+| Mistake | What goes wrong | Better approach |
+|---|---|---|
+| Calling `push()` on a state array | Mutates the existing reference | Use `[...items, newItem]` |
+| Calling `splice()` directly | Changes the original array | Use `filter()` or `toSpliced()` |
+| Sorting state with `sort()` | Reorders the existing array | Use `toSorted()` or copy first |
+| Updating nested properties directly | Mutates previous state snapshots | Copy each changed level |
+| Passing freshly created objects to memoized children | Prevents useful memoization | Preserve stable references when appropriate |
+| Mutating a dependency used by `useMemo` | Can leave cached results stale | Update dependencies immutably |
+| Using old state inside queued updates | Can overwrite or lose changes | Use functional state updaters |
+
+One more point deserves attention: immutability doesn't mean every object must be deeply cloned.
+
+Deep cloning an entire state tree for a small update can create unnecessary work and destroy reference stability for unchanged branches.
+
+Structural sharing is usually the better approach.
+
+Only the modified path needs new references.
+
+## 14. A practical mental model for React state
+
+A useful way to think about React state is as a series of snapshots.
+
+Each render receives a particular state value.
+
+When an update occurs, React should receive a new value representing the next snapshot.
+
+The previous snapshot shouldn't be modified behind React's back.
+
+```text
+Render 1
+  state A
+     |
+     | immutable update
+     v
+Render 2
+  state B
+     |
+     | immutable update
+     v
+Render 3
+  state C
+```
+
+This mental model explains several React behaviors at once.
+
+State setters don't mutate the variable belonging to the current render. Memoization relies on meaningful reference changes. Historical snapshots remain useful only when previous values are preserved.
+
+It also explains why functional state updaters are valuable.
+
+```jsx
+setCount((currentCount) => currentCount + 1);
+```
+
+The updater describes how to calculate the next state from the latest queued value.
+
+For objects and arrays, the same pattern applies.
+
+```jsx
+setSettings((currentSettings) => ({
+  ...currentSettings,
+  theme: 'dark',
+}));
+```
+
+The goal isn't to avoid JavaScript mutation everywhere.
+
+Local variables, temporary arrays, and objects created inside a function can be modified when doing so is safe and clear.
+
+The important rule is to avoid mutating values that React treats as existing state or props.
+
+## Conclusion
+
+React state bugs often appear mysterious because the underlying JavaScript operation succeeds.
+
+An array loses an item. An object receives a new property. A nested field changes exactly as expected.
+
+But React doesn't necessarily render the result.
+
+The missing piece is reference identity.
+
+React relies on value comparisons to decide whether state has changed, and its memoization tools use similar comparisons to avoid unnecessary work.
+
+Immutable updates make those comparisons meaningful.
+
+For arrays, methods such as `map()`, `filter()`, and `toSorted()` provide convenient ways to create updated copies. For objects, spread syntax allows specific properties to be replaced while preserving the rest.
+
+When state becomes deeply nested, Immer can reduce the boilerplate without sacrificing immutability.
+
+The same approach also enables more predictable debugging, memoization, and undo history.
+
+**The essential rule is simple: treat existing React state as a snapshot, not as an object to modify in place.**
+
+Once that becomes a habit, an entire category of difficult-to-trace UI bugs becomes easier to prevent.
