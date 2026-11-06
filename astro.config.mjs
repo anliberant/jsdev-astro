@@ -3,7 +3,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { unified } from '@astrojs/markdown-remark';
 import mdx from '@astrojs/mdx';
-import netlify from '@astrojs/netlify';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
 
@@ -108,7 +107,6 @@ export default defineConfig({
       filter: page => !isNoindexSitemapUrl(page),
     }),
   ],
-  adapter: netlify(),
 
   markdown: {
     processor: unified({
