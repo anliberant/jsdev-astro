@@ -1,0 +1,571 @@
+---
+title: "The Binance Hack: Why You Should Never Trust a Coding Assignment"
+slug: binance-hack-interview
+heading: How a Fake Job Interview Led to the $6.34B Binance Hack
+permalink: binance-hack-interview
+image: ./images/binance-hack-fake-job-interview.png
+date: 2026-11-06
+author: anton liberant
+category: security
+type: post
+tags: []
+desc: How a fake coding interview led to the $6.34B Binance hack. Learn how malicious npm packages, VS Code tasks, and developer tools can compromise your machine.
+subtitle: "A malicious coding assignment, compromised developer tools, and stolen credentials turned a routine interview into a major security breach."
+---
+
+import InteractiveChecklist from '@/shared/ui/mdx/interactive-checklist.astro';
+
+A coding assignment arrives from a recruiter. The repository looks ordinary: a React application, a few dependencies, maybe a small bug to fix. You clone it, run `npm install`, and open the project in VS Code.
+
+Nothing unusual. You've probably done this dozens of times.
+
+But what if the repository was designed to compromise your computer before you even started working on the assignment?
+
+That is one of the techniques behind the October 29, 2026, attack on Binance. According to the company's preliminary incident report, attackers used a fake recruitment process, malicious developer software, and compromised internal systems to gain access to cryptocurrency wallet infrastructure.
+
+Approximately $6.34 billion in digital assets were affected. Binance reported that about $2.85 billion had been frozen or intercepted as of November 3, and said it would cover the financial losses rather than pass them on to customers. These figures remain subject to reconciliation as the investigation continues.
+
+The most troubling part isn't the amount of money involved. It's how familiar the first steps look to anyone who writes code for a living.
+
+## How the Binance attack unfolded
+
+The breach wasn't a single phishing email or an obvious malicious download. It developed over several months, with different engineers and systems becoming part of the attack chain.
+
+Binance's initial findings describe three engineers, identified as A, B, and C.
+
+June 2026 — A compromised developer tool
+
+Engineer A, a Wallet DevOps engineer, searched for an AI coding tool and downloaded a tampered Homebrew installer. Binance detected the activity, replaced the device, and rotated credentials. However, the attackers had already learned about the engineer's role and colleagues.
+
+September 2026 — The fake interview
+
+Engineer B was contacted through a legitimate job platform. After interviews with supposed HR and executive staff, the engineer downloaded a coding assignment to a work computer. Its setup process executed malware that escaped the endpoint protection tools in use.
+
+October 20 — Lateral movement through AI tooling
+
+Attackers used Engineer B's compromised machine and an internal AI tool to gain control over the devices of Engineers A and C. They discovered a container deployment token on Engineer A's computer.
+
+October 29 — Wallet infrastructure compromised
+
+Using stolen credentials, the attackers deployed a container and executed a malicious script. This gave them unauthorized access to a wallet-signing service and allowed transactions outside the normal withdrawal process.
+
+The attackers transferred assets across several blockchain networks, including XRP, Solana, Optimism, Bitcoin, and Ethereum.
+
+One particularly difficult containment problem involved [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702), an Ethereum mechanism that allows an externally owned account to delegate execution to smart-contract code.
+
+According to Binance, the attackers abused this mechanism to establish unauthorized delegation on a hot wallet. Suspending withdrawals did not automatically remove the on-chain authorization. Binance ultimately cleared the delegation at 00:10 UTC on October 30.
+
+The FBI attributed the incident to North Korean actors associated with TraderTraitor. That attribution is separate from the technical findings in Binance's preliminary report, and the independent review is still pending.
+
+### The developer tool that became malware
+
+One detail from the incident is especially relevant to developers.
+
+The malicious code reportedly replaced part of `pyenv`, a legitimate Python version-management tool installed through Homebrew.
+
+The sequence in Binance's report shows a replacement executable being created, the original removed, and a new symbolic link installed.
+
+The attacker wasn't simply running an unfamiliar program once. The goal was to make an ordinary developer tool behave maliciously during subsequent use.
+
+That changes the threat model.
+
+When a trusted executable has been replaced, checking the repository that originally introduced the malware may no longer be enough. The compromise has moved into the developer's environment.
+
+And that environment often has access to things production systems are supposed to protect: SSH keys, GitHub credentials, package registry tokens, cloud accounts, and internal development tools.
+
+## Fake coding interviews are an established attack technique
+
+The Binance incident follows a pattern security researchers have been documenting for years.
+
+Palo Alto Networks Unit 42 identified a campaign known as Contagious Interview, in which attackers impersonate recruiters or employers and convince software developers to download malicious projects.
+
+The campaign has been associated with two malware families:
+
+- BeaverTail, a JavaScript-based information stealer and downloader.
+- InvisibleFerret, a Python-based backdoor capable of supporting further malicious activity.
+
+Unit 42 traced infrastructure associated with the campaign back to late 2022. The attacks have frequently targeted developers working with cryptocurrency, blockchain, and related technologies.
+
+Other researchers, including ESET, have documented similar operations under the name DeceptiveDevelopment.
+
+The approach is effective because the attacker doesn't need to persuade a developer to open a suspicious executable. They can simply ask the developer to do something that looks like normal work.
+
+Clone the repository. Install the dependencies. Fix the bug. Run the tests.
+
+Each step can become an execution opportunity.
+
+## 1. Malicious scripts in package.json
+
+For JavaScript developers, `package.json` is one of the first places to inspect.
+
+npm supports lifecycle scripts such as `preinstall`, `install`, `postinstall`, and `prepare`. These can execute automatically during package installation.
+
+Consider this harmless demonstration:
+
+```
+{
+  "name": "frontend-coding-assignment",
+  "private": true,
+  "scripts": {
+    "postinstall": "node ./scripts/check-env.js",
+    "prepare": "node ./scripts/prepare.js",
+    "dev": "vite",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
+```
+
+Nothing here proves the repository is malicious. Many legitimate projects use lifecycle scripts.
+
+The important question is what those scripts execute.
+
+A file named `check-env.js` could verify the Node.js version. It could also read environment variables, inspect local credentials, or communicate with a remote server.
+
+The name tells you very little.
+
+Worse, the malicious script may not appear in the top-level `package.json` at all. It could belong to a transitive dependency installed alongside the application.
+
+### Inspect scripts before installation
+
+Start by reading the project scripts:
+
+```
+npm pkg get scripts
+```
+
+Or inspect the file directly without invoking npm:
+
+```
+cat package.json
+```
+
+If you decide to install dependencies, suppress lifecycle scripts:
+
+```
+npm ci --ignore-scripts
+```
+
+For projects without a suitable lockfile:
+
+```
+npm install --ignore-scripts
+```
+
+This reduces one important risk, but it doesn't make the project safe.
+
+`--ignore-scripts` is not a general-purpose sandbox.
+
+Explicit commands such as `npm run dev` can still execute the requested script. Starting Vite, Jest, or another development tool can also load JavaScript from configuration files and plugins.
+
+In other words, avoiding installation scripts doesn't mean you've avoided executing untrusted code.
+
+## 2. Malicious code hidden in configuration files
+
+Developers tend to focus on application code.
+
+Attackers know that.
+
+Files such as `vite.config.js`, `tailwind.config.js`, `jest.config.js`, and custom setup scripts often receive less attention during a quick code review.
+
+Yet these files can contain executable JavaScript.
+
+Here is a harmless example of encoded code:
+
+```
+// Example only: the payload prints "demo".
+
+const encoded = "Y29uc29sZS5sb2coImRlbW8iKQ==";
+
+const decoded = Buffer.from(
+  encoded,
+  "base64"
+).toString("utf8");
+
+console.log(decoded);
+// console.log("demo")
+```
+
+Base64 is not inherently suspicious. It is a common encoding format.
+
+The problem arises when encoded strings are combined with dynamic execution, system commands, or unexpected network access.
+
+An attacker might conceal a loader inside a configuration file, bury it at the end of an unusually long line, or make it look like generated code.
+
+The file can appear harmless during a quick glance while still executing unexpected operations when the development server starts.
+
+### Search for suspicious patterns
+
+Before running the project, inspect potentially dangerous APIs:
+
+```
+rg -n --hidden \
+  -g '!node_modules' \
+  -g '!.git' \
+  -e 'eval\(' \
+  -e 'new Function' \
+  -e 'child_process' \
+  -e 'execSync|spawn\(' \
+  -e 'Buffer\.from' \
+  -e 'atob\(' \
+  -e 'fromCharCode' \
+  .
+```
+
+You can also look for unusually long lines:
+
+```
+rg -n --hidden \
+  -g '!node_modules' \
+  -g '!.git' \
+  '.{400,}' \
+  .
+```
+
+These commands are useful for triage, not definitive malware detection.
+
+Minified libraries, generated files, and legitimate tooling can produce similar matches. Sophisticated malware may also avoid these patterns entirely.
+
+Treat search results as places to investigate, not automatic proof of compromise.
+
+## 3. VS Code tasks that execute automatically
+
+One of the less obvious places to hide executable commands is `.vscode/tasks.json`.
+
+VS Code supports workspace tasks for building, testing, and running commands. Tasks can be configured to run when a folder opens, subject to the editor's trust and automatic-task controls.
+
+Consider this harmless example:
+
+```
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "environment-check",
+      "type": "shell",
+      "command": "echo Environment checked",
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "never"
+      }
+    }
+  ]
+}
+```
+
+The command itself is safe.
+
+But two properties deserve attention:
+
+`"runOn": "folderOpen"` requests execution when the workspace opens.
+
+`"reveal": "never"` prevents the task's terminal panel from appearing automatically.
+
+In a malicious repository, the command could be replaced with something that downloads or executes code.
+
+Fortunately, VS Code provides several protections.
+
+Workspace Trust allows unfamiliar projects to remain in Restricted Mode. Automatic tasks are also subject to permission controls, rather than being guaranteed to execute merely because a folder contains a task definition.
+
+Keep these protections enabled. Do not approve automatic tasks just because an interviewer says the project needs them.
+
+Read more in the [VS Code Workspace Trust documentation](https://code.visualstudio.com/docs/editing/workspaces/workspace-trust).
+
+## 4. Git hooks and setup scripts
+
+Git hooks provide another execution surface.
+
+A normal `git clone` does not copy the source repository's `.git/hooks` directory. However, projects can configure a custom hooks path through `core.hooksPath`.
+
+Tools such as Husky use this mechanism for legitimate development workflows.
+
+An attacker can exploit the same idea.
+
+For example, a setup script might configure Git to use a hooks directory included in the repository. A subsequent commit could then trigger unexpected commands.
+
+Before trusting a project, inspect:
+
+```
+git config --local --get core.hooksPath
+```
+
+And review common hook directories:
+
+```
+ls -la .husky .githooks 2>/dev/null
+```
+
+Also inspect `Makefile`, `setup.sh`, and scripts referenced in the README.
+
+Be especially cautious of instructions that ask you to pipe a downloaded script directly into a shell.
+
+## 5. Dev containers are not automatically safe
+
+A project may include a `.devcontainer/devcontainer.json` file and suggest opening it inside a development container.
+
+That can sound reassuring.
+
+Containers are useful for reproducible development, but a dev container configuration is still executable infrastructure.
+
+For example, the Dev Container specification supports `initializeCommand`, which runs on the host before the container is created.
+
+Other configuration options can mount host directories, expose sockets, or pass environment variables into the container.
+
+A malicious configuration can therefore undermine the isolation you expected.
+
+Never assume a repository is safe just because it comes with a dev container.
+
+Read its configuration first, especially host commands, mounts, environment variables, and privileged options.
+
+See the [Dev Container JSON reference](https://containers.dev/implementors/json_reference/).
+
+## A safer workflow for reviewing unfamiliar repositories
+
+You don't need to treat every coding assignment as malicious. But you should treat an unfamiliar repository as untrusted until you've inspected it.
+
+A useful workflow separates code review from code execution.
+
+### Step 1: Inspect the repository without running it
+
+For a GitHub repository, start with the browser.
+
+GitHub's web editor, accessible by pressing `.` on a repository page, lets you inspect files without running the project's development environment.
+
+Look at the commit history, contributors, dependency declarations, and configuration files.
+
+If you need a local copy, clone it into a separate review directory. Cloning itself does not normally execute the repository's application scripts.
+
+```
+git clone https://github.com/ORG/REPO.git review-repo
+cd review-repo
+```
+
+Replace the URL with the repository you intend to review. Do not run any setup instructions yet.
+
+Inspect the history:
+
+```
+git log -10 --format="%h %ad %an %s" --date=short
+git shortlog -sne HEAD
+```
+
+A newly created repository with a single commit isn't necessarily malicious. Coding assignments are often small, disposable projects.
+
+But it deserves additional scrutiny when combined with an unverifiable company, suspicious dependencies, or pressure to execute code immediately.
+
+### Step 2: Check execution entry points
+
+Review the files that can cause commands to run:
+
+```
+cat package.json
+```
+
+On macOS or Linux, list common configuration directories:
+
+```
+ls -la .vscode .devcontainer .husky .githooks 2>/dev/null
+```
+
+Inspect files such as:
+
+```
+package.json
+vite.config.js
+webpack.config.js
+jest.config.js
+tailwind.config.js
+.vscode/tasks.json
+.devcontainer/devcontainer.json
+.husky/
+Makefile
+setup.sh
+```
+
+Pay attention to unexpected downloads, shell commands, encoded payloads, and dependencies that don't seem related to the assignment.
+
+### Step 3: Install dependencies with scripts disabled
+
+If you've decided the project merits further inspection, use:
+
+```
+npm ci --ignore-scripts
+```
+
+For projects using modern npm versions that support dependency script policies, consider an explicit `allowScripts` policy. With pnpm, use the applicable dependency build-approval mechanism for your version.
+
+These controls are useful, but remember that running application code, build tools, or tests remains a separate risk.
+
+### Step 4: Execute only in an isolated environment
+
+The strongest practical approach for an unfamiliar coding assignment is a disposable virtual machine or cloud sandbox.
+
+It should have no access to your personal files, corporate VPN, browser sessions, SSH agent, or development credentials.
+
+A container can provide some isolation, but it's not equivalent to a separate VM.
+
+For example, this command starts a Node.js container with a read-only project mount and without Linux capabilities:
+
+```
+docker run --rm -it \
+  --network none \
+  --cap-drop=ALL \
+  --security-opt no-new-privileges \
+  --read-only \
+  --tmpfs /tmp \
+  --mount type=bind,src="$PWD",dst=/app,readonly \
+  -w /app \
+  node:22-bookworm bash
+```
+
+This is a restricted inspection environment, not a complete solution for running an application.
+
+The network is disabled, the project directory is read-only, and the container's root filesystem is read-only. Those restrictions may prevent installation or tests from working.
+
+For assignments requiring package downloads or a development server, prepare dependencies in a controlled environment and use a disposable VM with carefully restricted network access.
+
+Avoid mounting Docker's control socket, host home directories, cloud credentials, or SSH agent into untrusted containers.
+
+The goal isn't merely to make the project run. It's to prevent the project from reaching anything valuable.
+
+## Never run a coding assignment on a corporate laptop
+
+This is arguably the most important lesson from the Binance incident.
+
+A compromised personal development environment is serious. A compromised corporate workstation can become an entry point into an entire organization.
+
+Modern development machines often have access to:
+
+- GitHub and GitLab authentication tokens.
+- npm publishing credentials and private registries.
+- SSH keys and cloud provider credentials.
+- Kubernetes configuration files and deployment tokens.
+- Internal documentation, source code, and AI development tools.
+- Active browser sessions and password managers.
+
+Even if an attacker cannot immediately reach production infrastructure, these resources may help them move through internal systems.
+
+In the Binance incident, a deployment permission token discovered on an engineer's machine became part of the path toward the wallet-signing infrastructure.
+
+That is why security boundaries matter more than whether an individual developer recognizes every malicious script.
+
+An organization should not depend on every employee making the correct decision during every interview.
+
+## How to recognize a suspicious recruiter
+
+A fake recruitment process can look remarkably convincing.
+
+The attacker may use a legitimate job platform, maintain an active-looking social media account, conduct video interviews, and provide a realistic coding assignment.
+
+No single detail proves fraud.
+
+However, certain combinations should make you cautious.
+
+<InteractiveChecklist
+  title='Recruitment security checklist'
+  description='Review before running an assignment'
+  items={[
+    'I verified the company through an independently found website or contact channel.',
+    'I confirmed the recruiter or interviewer actually works for that company.',
+    'I inspected the repository and its dependencies before installation.',
+    'I checked setup scripts, editor tasks, Git hooks, and dev container configuration.',
+    'I will not run the assignment on a corporate workstation.',
+    'I have an isolated environment without personal or work credentials.',
+    'I am not being pressured to disable security protections or install an unfamiliar video-call app.',
+  ]}
+/>
+
+A legitimate employer should be able to explain the assignment and provide reasonable alternatives when security restrictions prevent you from running it locally.
+
+If someone insists that you disable security protections immediately, that's a strong reason to stop.
+
+## What companies should change
+
+Developer education is necessary, but it isn't enough.
+
+The Binance incident demonstrates how multiple weaknesses can interact: social engineering, compromised workstations, powerful internal tools, deployment credentials, and access to critical infrastructure.
+
+Organizations should address the entire chain.
+
+### Separate recruitment activities from production access
+
+Employees should not run third-party interview assignments on managed workstations that have access to sensitive systems.
+
+Provide dedicated environments for evaluating external code, and establish clear policies for personal recruitment activities.
+
+### Reduce the value of stolen credentials
+
+Use short-lived credentials, narrowly scoped deployment permissions, and additional approval requirements for sensitive operations.
+
+A token stolen from a developer's machine should not be sufficient to deploy arbitrary code into critical infrastructure.
+
+### Treat AI development tools as privileged software
+
+An AI agent that can access repositories, execute shell commands, inspect internal systems, or communicate with other machines creates an additional security boundary.
+
+Its permissions need to be reviewed just like those of any other automation account.
+
+Restrict its access, log its actions, and avoid giving it credentials or capabilities unrelated to its task.
+
+### Monitor unusual behavior, not just known malware
+
+Endpoint security remains important, but it cannot guarantee detection of new or heavily obfuscated threats.
+
+Organizations should also monitor unexpected changes to developer binaries, unusual credential usage, lateral movement between employee devices, and suspicious deployment activity.
+
+### Make incident reporting straightforward
+
+Developers need a safe way to report suspicious assignments, unexpected package behavior, or accidental execution.
+
+A quick report can be more valuable than a perfect security policy nobody feels comfortable using.
+
+## What to do if you've already executed suspicious code
+
+If you suspect that a repository or package has compromised your machine, don't assume deleting the project directory will solve the problem.
+
+Malware may have installed persistence mechanisms, modified developer tools, or copied credentials before you noticed anything.
+
+Stop using the affected environment and follow your organization's incident response process.
+
+For a personal machine, disconnect it from the network if safe to do so. From a separate trusted device, rotate exposed credentials and revoke active sessions or tokens.
+
+Review SSH keys, GitHub access, npm tokens, cloud credentials, and any other secrets available to the compromised user account.
+
+For a corporate machine, contact the security team promptly. Preserve relevant evidence according to their instructions rather than attempting an improvised cleanup.
+
+Depending on the compromise, rebuilding the machine from a trusted image may be safer than trying to identify every modified file.
+
+## Final thoughts
+
+The Binance attack is a reminder that software development tools are part of the security perimeter.
+
+A repository isn't just a collection of files. It can contain installation scripts, executable configuration, editor tasks, build plugins, and automation instructions.
+
+A coding assignment can therefore request much more than a few hours of your time. If executed carelessly, it can gain the permissions of your user account.
+
+You don't need to become a malware analyst to protect yourself from every possible attack. A few consistent habits make a meaningful difference.
+
+Inspect unfamiliar repositories before executing them. Disable unnecessary lifecycle scripts. Keep editor trust protections enabled. Use isolated environments for external code. And never mix experimental assignments with access to critical systems.
+
+The rule is simple: untrusted code should never inherit the trust of your development machine.
+
+### Binance incident and attribution
+
+1. [Binance — 29 October 2026 Security Incident: Initial Findings and Response Update](https://www.binance.com/fr-AF/blog/community/3229153443759566763) — November 3, 2026. Primary source for the attack timeline, financial figures, and remediation.
+2. [Reuters — Binance hackers used fake job interview in $6.3 billion attack](https://www.reuters.com/world/binance-says-hackers-used-fake-job-interview-compromise-computer-before-63-2026-11-03/) — Independent reporting.
+3. [WIRED — Binance Says Hackers Used Well-Known Tricks](https://www.wired.com/story/binance-says-hackers-used-well-known-tricks-to-carry-out-a-dollar634-billion-heist/) — Technical and security context.
+4. [The Block — Fake Job Interview and Internal AI Tool](https://www.theblock.co/news/business/2026-11-03-binance-hack-incident-report-north-korea-fake-job-interview-ai-tool-432406) — November 3, 2026.
+
+### Malware campaigns and developer attacks
+
+5. [Palo Alto Networks Unit 42 — Contagious Interview](https://unit42.paloaltonetworks.com/two-campaigns-by-north-korea-bad-actors-target-job-hunters/) — Primary research into fraudulent recruitment and developer-targeting malware.
+6. [ESET — DeceptiveDevelopment Targets Freelance Developers](https://www.welivesecurity.com/en/eset-research/deceptivedevelopment-targets-freelance-developers/) — Malicious repositories and coding assignments.
+7. [Socket — 338 Malicious npm Packages](https://socket.dev/blog/north-korea-contagious-interview-campaign-338-malicious-npm-packages) — npm supply-chain campaign.
+8. [Jamf Threat Labs — Abuse of Visual Studio Code](https://www.jamf.com/blog/threat-actors-expand-abuse-of-visual-studio-code/) — Malicious editor tasks.
+9. [GitLab — Detecting and Preventing Contagious Interview IDE Attacks](https://about.gitlab.com/blog/how-to-detect-and-prevent-contagious-interview-ide-attacks/) — Detection and prevention guidance.
+10. [Microsoft Threat Intelligence — AI Adoption in North Korean Threat Actor Tradecraft](https://www.microsoft.com/en-us/security/blog/2026/10/29/tracking-ai-adoption-in-north-korean-threat-actor-tradecraft/) — October 29, 2026.
