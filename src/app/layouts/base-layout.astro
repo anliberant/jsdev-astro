@@ -41,28 +41,45 @@ const truncateSeoText = (value: string, maxLength = 155) => {
 
 const fullTitle = title || siteConfig.title;
 const seoDescription = truncateSeoText(description);
-const shouldUseGeneratedOG = ['howto', 'snippets'].includes(
-  contentType.toLowerCase()
-);
+const shouldUseGeneratedOG = ['howto', 'snippets'].includes(contentType.toLowerCase());
 
-const fullImageUrl = shouldUseGeneratedOG
-  ? `${siteConfig.siteUrl}/og/${slug}.png`
-  : typeof image === 'string' && image.trim() !== ''
-    ? image.startsWith('http')
-      ? image
-      : `${siteConfig.siteUrl}${image}`
-    : siteConfig.image;
+const fullImageUrl =
+  shouldUseGeneratedOG ? `${siteConfig.siteUrl}/og/${slug}.png`
+  : typeof image === 'string' && image.trim() !== '' ?
+    image.startsWith('http') ?
+      image
+    : `${siteConfig.siteUrl}${image}`
+  : siteConfig.image;
 ---
 
 <!doctype html>
-<html lang='en' data-theme='light'>
+<html
+  lang='en'
+  data-theme='light'>
   <head>
     <meta charset='UTF-8' />
-    <meta name='description' content={seoDescription} />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <link rel='preconnect' href='https://fonts.googleapis.com' />
-    <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
-    <link rel='icon' type='image/png' href='/icon.png' />
+    <meta
+      name='description'
+      content={seoDescription}
+    />
+    <meta
+      name='viewport'
+      content='width=device-width, initial-scale=1.0'
+    />
+    <link
+      rel='preconnect'
+      href='https://fonts.googleapis.com'
+    />
+    <link
+      rel='preconnect'
+      href='https://fonts.gstatic.com'
+      crossorigin
+    />
+    <link
+      rel='icon'
+      type='image/png'
+      href='/icon.png'
+    />
     <title>{fullTitle}</title>
 
     <!-- Fonts: display=optional prevents font-swap CLS -->
@@ -86,28 +103,73 @@ const fullImageUrl = shouldUseGeneratedOG
     />
 
     <!-- SEO Meta Tags -->
-    <meta property='og:title' content={fullTitle} />
-    <meta property='og:description' content={seoDescription} />
-    <meta property='og:image' content={fullImageUrl} />
-    <meta property='og:url' content={Astro.url} />
-    <meta property='og:type' content={type} />
-    <meta property='og:site_name' content={siteConfig.shortTitle} />
+    <meta
+      property='og:title'
+      content={fullTitle}
+    />
+    <meta
+      property='og:description'
+      content={seoDescription}
+    />
+    <meta
+      property='og:image'
+      content={fullImageUrl}
+    />
+    <meta
+      property='og:url'
+      content={Astro.url}
+    />
+    <meta
+      property='og:type'
+      content={type}
+    />
+    <meta
+      property='og:site_name'
+      content={siteConfig.shortTitle}
+    />
 
     <!-- Twitter Card -->
-    <meta name='twitter:card' content='summary_large_image' />
-    <meta name='twitter:title' content={fullTitle} />
-    <meta name='twitter:description' content={seoDescription} />
-    <meta name='twitter:image' content={fullImageUrl} />
+    <meta
+      name='twitter:card'
+      content='summary_large_image'
+    />
+    <meta
+      name='twitter:title'
+      content={fullTitle}
+    />
+    <meta
+      name='twitter:description'
+      content={seoDescription}
+    />
+    <meta
+      name='twitter:image'
+      content={fullImageUrl}
+    />
     {
       siteConfig.twitterUsername && (
-        <meta name='twitter:site' content={siteConfig.twitterUsername} />
+        <meta
+          name='twitter:site'
+          content={siteConfig.twitterUsername}
+        />
       )
     }
 
     <!-- Canonical URL (default, can be overridden) -->
-    <link rel='canonical' href={Astro.url} />
-    <link rel='sitemap' href='/sitemap-index.xml' />
+    <link
+      rel='canonical'
+      href={Astro.url}
+    />
+    <link
+      rel='sitemap'
+      href='/sitemap-index.xml'
+    />
     <slot name='head' />
+    <script
+      is:inline
+      async
+      src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8429290713386535'
+      crossorigin='anonymous'
+    ></script>
   </head>
   <body>
     <div class='container'>
@@ -145,12 +207,9 @@ const fullImageUrl = shouldUseGeneratedOG
           window.gtag('js', new Date());
           window.gtag('config', GA_MEASUREMENT_ID);
 
-          appendScript(
-            `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`,
-            {
-              async: '',
-            }
-          );
+          appendScript(`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`, {
+            async: '',
+          });
 
           appendScript('https://cloud.umami.is/script.js', {
             defer: '',
