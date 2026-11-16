@@ -1,0 +1,688 @@
+---
+type Mode =
+  | 'basic'
+  | 'dynamic'
+  | 'operations'
+  | 'semantic'
+  | 'step'
+  | 'style'
+  | 'fallback';
+
+interface Props {
+  mode: Mode;
+}
+
+const { mode } = Astro.props;
+
+const configs = {
+  basic: {
+    title: 'Countdown from 10 to 1',
+    items: Array.from({ length: 10 }, (_, i) => `Item ${i + 1}`),
+  },
+  dynamic: {
+    title: 'Automatic starting value',
+    items: ['HTML', 'CSS', 'JavaScript', 'TypeScript'],
+  },
+  operations: {
+    title: 'Which items affect the counter?',
+    items: ['Design', 'Build', 'Test', 'Deploy'],
+  },
+  semantic: {
+    title: 'HTML reversed vs CSS reversed()',
+    items: ['Bronze', 'Silver', 'Gold'],
+  },
+  step: {
+    title: 'Countdown by two',
+    items: ['Step A', 'Step B', 'Step C', 'Step D', 'Step E'],
+  },
+  style: {
+    title: 'Custom counter styles',
+    items: ['Introduction', 'Architecture', 'Implementation', 'Conclusion'],
+  },
+  fallback: {
+    title: 'Compare fallback strategies',
+    items: ['HTML', 'CSS', 'JavaScript', 'TypeScript'],
+  },
+};
+
+const config = configs[mode];
+
+const codeExamples = {
+  basic: `.list {
+  counter-reset: reversed(item) 11;
+}
+
+.list > div {
+  counter-increment: item;
+}
+
+.list > div::before {
+  content: counter(item);
+}`,
+
+  dynamic: `.list {
+  counter-reset: reversed(item);
+}
+
+.list > div {
+  counter-increment: item;
+}
+
+.list > div::before {
+  content: counter(item);
+}`,
+
+  operations: `.item.is-counted {
+  counter-increment: item;
+}
+
+/* Items without the operation are not counted. */`,
+
+  semantic: `<ol reversed>
+  <li>Bronze</li>
+  <li>Silver</li>
+  <li>Gold</li>
+</ol>
+
+/* CSS counters also work on non-list elements. */`,
+
+  step: `.list {
+  counter-reset: reversed(item) 12;
+}
+
+.list > div {
+  counter-increment: item -2;
+}
+
+.list > div::before {
+  content: counter(item);
+}`,
+
+  style: `@counter-style circled {
+  system: fixed;
+  symbols: '①' '②' '③' '④' '⑤';
+  fallback: decimal;
+}
+
+.list {
+  counter-reset: reversed(item);
+}
+
+.list > div {
+  counter-increment: item;
+}
+
+.list > div::before {
+  content: counter(item, upper-roman);
+}
+
+/* Or: counter(item, circled) */`,
+
+  fallback: `/* Modern */
+counter-reset: reversed(item);
+counter-increment: item;
+
+/* Compatible fallback */
+counter-reset: item var(--count);
+counter-increment: item -1;`,
+};
+---
+
+<section class='counter-demo' data-mode={mode} aria-label={config.title}>
+  <div class='demo-heading'>
+    <strong>{config.title}</strong>
+    <span class='demo-tag'>Live CSS demo</span>
+  </div>
+
+  {
+    mode === 'style' && (
+      <label class='style-select'>
+        Number style
+        <select aria-label='Counter number style'>
+          <option value='roman'>Roman numerals</option>
+          <option value='circled'>Circled numbers</option>
+        </select>
+      </label>
+    )
+  }
+
+  {
+    mode === 'step' && (
+      <div class='demo-controls'>
+        <label>
+          Start
+          <input class='step-start' type='number' value='12' />
+        </label>
+        <label>
+          Step
+          <select class='step-size' aria-label='Counter step'>
+            <option value='-1'>−1</option>
+            <option value='-2' selected>
+              −2
+            </option>
+            <option value='-5'>−5</option>
+          </select>
+        </label>
+      </div>
+    )
+  }
+
+  {
+    (mode === 'semantic' || mode === 'fallback') && (
+      <div class='demo-tabs' role='group' aria-label='Demo implementation'>
+        <button type='button' class='demo-tab is-active' data-choice='first'>
+          {mode === 'semantic' ? '<ol reversed>' : 'reversed()'}
+        </button>
+        <button type='button' class='demo-tab' data-choice='second'>
+          {mode === 'semantic' ? 'CSS counter' : 'CSS fallback'}
+        </button>
+        {mode === 'fallback' && (
+          <button type='button' class='demo-tab' data-choice='third'>
+            JavaScript
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  <div class='demo-preview'>
+    {
+      mode === 'semantic' && (
+        <ol class='native-list' reversed>
+          {config.items.map(item => (
+            <li>{item}</li>
+          ))}
+        </ol>
+      )
+    }
+    <div
+      class:list={['demo-list', { 'is-hidden': mode === 'semantic' }]}
+      data-style='roman'
+    >
+      {
+        config.items.map(item => (
+          <div class='demo-item'>
+            <span class='demo-number' aria-hidden='true' />
+            <span class='demo-label'>{item}</span>
+
+            {mode === 'dynamic' && (
+              <button
+                type='button'
+                class='remove-item'
+                aria-label={`Remove ${item}`}
+              >
+                ×
+              </button>
+            )}
+            {mode === 'operations' && (
+              <label class='count-toggle'>
+                <input type='checkbox' checked /> Counted
+              </label>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  {
+    mode === 'dynamic' && (
+      <div class='demo-actions'>
+        <button type='button' class='add-item'>
+          + Add item
+        </button>
+        <button type='button' class='reset-items'>
+          Reset
+        </button>
+      </div>
+    )
+  }
+
+  <details class='demo-source'>
+    <summary>Show CSS</summary>
+    <pre><code>{codeExamples[mode]}</code></pre>
+  </details>
+
+  <p class='demo-note' aria-live='polite'></p>
+</section>
+
+<style>
+  .counter-demo {
+    margin: 1.5rem 0;
+    border: 1px solid #263650;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0f172a;
+    color: #f8fafc;
+    max-width: 100%;
+  }
+
+  @media (min-width: 1200px) {
+    .counter-demo {
+      max-width: 80%;
+    }
+  }
+
+  .demo-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #334155;
+  }
+
+  .demo-tag {
+    font-size: 11px;
+    color: #67e8f9;
+    border: 1px solid #155e75;
+    border-radius: 99px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  .demo-preview {
+    padding: 14px 16px;
+  }
+
+  .demo-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+    counter-reset: item var(--counter-start, 5);
+  }
+
+  .is-hidden {
+    display: none;
+  }
+
+  .native-list {
+    margin: 0;
+    padding-left: 2.25rem;
+  }
+
+  .native-list li {
+    margin: 7px 0;
+    padding: 5px 9px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #1e293b;
+  }
+
+  .demo-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 7px 9px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #1e293b;
+    counter-increment: item -1;
+  }
+
+  .demo-number {
+    min-width: 30px;
+    text-align: center;
+    padding: 3px 6px;
+    background: #164e63;
+    border-radius: 6px;
+    color: #a5f3fc;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .demo-number::before {
+    content: counter(item);
+  }
+
+  [data-mode='fallback'] .demo-list.is-js .demo-number::before {
+    content: attr(data-value);
+  }
+
+  [data-mode='basic'] .demo-list {
+    --counter-start: 11;
+  }
+
+  [data-mode='step'] .demo-list {
+    --counter-start: 12;
+  }
+
+  [data-mode='step'] .demo-item {
+    counter-increment: item var(--counter-step, -2);
+  }
+
+  [data-mode='operations'] .demo-item.is-excluded {
+    counter-increment: none;
+    opacity: 0.55;
+  }
+
+  [data-mode='operations'] .demo-item.is-excluded .demo-number::before {
+    content: '—';
+  }
+
+  [data-mode='style'] .demo-list[data-style='roman'] .demo-number::before {
+    content: counter(item, upper-roman);
+  }
+
+  [data-mode='style'] .demo-list[data-style='circled'] .demo-number::before {
+    content: counter(item, demo-circled);
+  }
+
+  @supports (counter-reset: reversed(item)) {
+    .demo-list {
+      counter-reset: reversed(item);
+    }
+
+    .demo-item {
+      counter-increment: item;
+    }
+
+    [data-mode='basic'] .demo-list {
+      counter-reset: reversed(item) 11;
+    }
+
+    [data-mode='step'] .demo-list {
+      counter-reset: reversed(item) var(--counter-start, 12);
+    }
+
+    [data-mode='step'] .demo-item {
+      counter-increment: item var(--counter-step, -2);
+    }
+  }
+
+  .demo-label {
+    flex: 1;
+  }
+
+  button,
+  select,
+  input {
+    font: inherit;
+  }
+
+  .demo-controls,
+  .demo-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px 0;
+  }
+
+  .demo-controls label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+  }
+
+  .demo-controls input,
+  .demo-controls select {
+    width: 72px;
+    padding: 5px 7px;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    background: #1e293b;
+    color: #fff;
+  }
+
+  .demo-tab {
+    padding: 6px 10px;
+    border: 1px solid #475569;
+    border-radius: 7px;
+    background: #1e293b;
+    color: #cbd5e1;
+    cursor: pointer;
+  }
+
+  .demo-tab.is-active {
+    border-color: #0891b2;
+    background: #164e63;
+    color: #a5f3fc;
+  }
+
+  .count-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #cbd5e1;
+    cursor: pointer;
+  }
+
+  .remove-item {
+    border: 0;
+    color: #cbd5e1;
+    background: transparent;
+    cursor: pointer;
+    padding: 3px 9px;
+    font-size: 20px;
+  }
+
+  .demo-actions {
+    display: flex;
+    gap: 10px;
+    padding: 0 18px 18px;
+  }
+
+  .demo-actions button {
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 7px;
+    border: 1px solid #475569;
+    color: #f8fafc;
+    background: #334155;
+  }
+
+  .demo-actions .add-item {
+    background: #0891b2;
+    border-color: #0891b2;
+  }
+
+  .style-select {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px 0;
+    font-size: 13px;
+  }
+
+  .style-select select {
+    background: #1e293b;
+    color: #fff;
+    border: 1px solid #475569;
+    padding: 6px;
+    border-radius: 6px;
+  }
+
+  .demo-source {
+    border-top: 1px solid #334155;
+    padding: 8px 16px;
+  }
+
+  .demo-source summary {
+    cursor: pointer;
+    color: #67e8f9;
+  }
+
+  .demo-source pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #020617;
+  }
+
+  .demo-note {
+    margin: 0;
+    padding: 0 18px 12px;
+    color: #fbbf24;
+    font-size: 12px;
+  }
+
+  .demo-note:empty {
+    display: none;
+  }
+
+  @counter-style demo-circled {
+    system: fixed;
+    symbols: '①' '②' '③' '④' '⑤';
+    fallback: decimal;
+  }
+
+  @media (max-width: 480px) {
+    .demo-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .demo-preview {
+      padding: 12px;
+    }
+  }
+</style>
+
+<script>
+  // Astro bundles this script once, even when
+  // the component appears multiple times.
+  function initCounterDemos() {
+    document.querySelectorAll<HTMLElement>('.counter-demo').forEach(demo => {
+      if (demo.dataset.initialized) return;
+
+      demo.dataset.initialized = 'true';
+
+      const list = demo.querySelector<HTMLElement>('.demo-list');
+
+      if (!list) return;
+
+      const original = list.innerHTML;
+
+      let added = 0;
+
+      const updateFallbackStart = () => {
+        const countedItems = list.querySelectorAll(
+          '.demo-item:not(.is-excluded)'
+        ).length;
+        const start =
+          demo.dataset.mode === 'basic'
+            ? 11
+            : demo.dataset.mode === 'step'
+              ? 12
+              : countedItems + 1;
+
+        list.style.setProperty('--counter-start', String(start));
+      };
+
+      updateFallbackStart();
+
+      demo.addEventListener('click', event => {
+        const target = event.target;
+
+        if (!(target instanceof Element)) return;
+
+        if (target.closest('.add-item')) {
+          added++;
+
+          const template = list.querySelector<HTMLElement>('.demo-item');
+          const item = template?.cloneNode(true);
+
+          if (!(item instanceof HTMLElement)) return;
+
+          const label = item.querySelector<HTMLElement>('.demo-label');
+          const remove = item.querySelector<HTMLButtonElement>('.remove-item');
+          const itemName = `New item ${added}`;
+
+          if (label) label.textContent = itemName;
+          if (remove) remove.setAttribute('aria-label', `Remove ${itemName}`);
+
+          list.append(item);
+          updateFallbackStart();
+        } else if (target.closest('.remove-item')) {
+          if (list.children.length > 1) {
+            target.closest('.demo-item')?.remove();
+            updateFallbackStart();
+          }
+        } else if (target.closest('.reset-items')) {
+          list.innerHTML = original;
+          added = 0;
+          updateFallbackStart();
+        }
+      });
+
+      demo
+        .querySelector<HTMLSelectElement>('select')
+        ?.addEventListener('change', event => {
+          list.dataset.style = (event.target as HTMLSelectElement).value;
+        });
+
+      demo.addEventListener('change', event => {
+        const target = event.target;
+
+        if (!(
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLSelectElement
+        )) {
+          return;
+        }
+
+        if (target.matches('.count-toggle input')) {
+          target
+            .closest('.demo-item')
+            ?.classList.toggle('is-excluded', !target.checked);
+          updateFallbackStart();
+        }
+
+        if (target.matches('.step-start')) {
+          list.style.setProperty('--counter-start', target.value || '12');
+        }
+
+        if (target.matches('.step-size')) {
+          list.style.setProperty('--counter-step', target.value);
+        }
+      });
+
+      demo.querySelectorAll<HTMLButtonElement>('.demo-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          demo.querySelectorAll('.demo-tab').forEach(item => {
+            item.classList.toggle('is-active', item === tab);
+          });
+
+          const choice = tab.dataset.choice;
+
+          if (demo.dataset.mode === 'semantic') {
+            demo
+              .querySelector('.native-list')
+              ?.classList.toggle('is-hidden', choice !== 'first');
+            list.classList.toggle('is-hidden', choice === 'first');
+          }
+
+          if (demo.dataset.mode === 'fallback') {
+            const note = demo.querySelector<HTMLElement>('.demo-note');
+            const notes = {
+              first:
+                'Modern reversed() syntax: the browser determines the initial value.',
+              second:
+                'CSS fallback: an explicit start value and a negative increment.',
+              third:
+                'JavaScript writes the displayed values; CSS only handles presentation.',
+            };
+
+            list.classList.toggle('is-js', choice === 'third');
+            list
+              .querySelectorAll<HTMLElement>('.demo-number')
+              .forEach((number, index, numbers) => {
+                number.dataset.value = String(numbers.length - index);
+              });
+            if (note && choice)
+              note.textContent = notes[choice as keyof typeof notes];
+          }
+        });
+      });
+    });
+  }
+
+  initCounterDemos();
+
+  document.addEventListener('astro:page-load', initCounterDemos);
+</script>
