@@ -1,0 +1,222 @@
+---
+import BaseLayout from '@/app/layouts/base-layout.astro';
+
+const title = 'Privacy Policy | JSDev Space';
+const description =
+  'Learn how JSDev Space collects, uses, and protects information, including data used by Google AdSense, analytics services, and the contact form.';
+---
+
+<BaseLayout title={title} description={description}>
+  <main class='main mt-10 privacy-policy'>
+    <header class='policy-header'>
+      <h1 class='post-title'>Privacy Policy</h1>
+      <p class='last-updated'>Last updated: November 18, 2026</p>
+      <p>
+        This Privacy Policy explains how JSDev Space (“we,” “us,” or “our”)
+        collects, uses, and shares information when you visit <a
+          href='https://jsdev.space'>jsdev.space</a
+        > (the “Website”). By using the Website, you acknowledge the practices described
+        below.
+      </p>
+    </header>
+
+    <section>
+      <h2>Information we collect</h2>
+      <p>We may collect the following categories of information:</p>
+      <ul>
+        <li>
+          <strong>Information you provide:</strong> your name, email address, phone
+          number (if provided), and message when you use our contact form.
+        </li>
+        <li>
+          <strong>Usage and device information:</strong> pages visited, referring
+          pages, browser type, device type, approximate location, IP address, and
+          interaction or diagnostic data.
+        </li>
+        <li>
+          <strong>Cookies and similar technologies:</strong> identifiers stored or
+          accessed by us and our service providers for preferences, measurement, security,
+          and advertising.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>How we use information</h2>
+      <p>We use information to:</p>
+      <ul>
+        <li>operate, maintain, secure, and improve the Website;</li>
+        <li>understand traffic and how visitors use our content;</li>
+        <li>respond to questions, feedback, and support requests;</li>
+        <li>display, measure, and improve advertising; and</li>
+        <li>comply with legal obligations and prevent abuse.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Google AdSense and advertising cookies</h2>
+      <p>
+        We use Google AdSense to display advertisements. Google and its partners
+        may use cookies, web beacons, IP addresses, and similar technologies to
+        serve, personalize, and measure ads based on your visits to this and
+        other websites. Google’s use of advertising cookies enables it and its
+        partners to serve ads based on your browsing activity.
+      </p>
+      <p>
+        You can learn how Google uses information from sites that use its
+        services in
+        <a
+          href='https://policies.google.com/technologies/partner-sites'
+          rel='noopener noreferrer'
+          >Google’s Privacy &amp; Terms documentation</a
+        >. You can manage personalized advertising in
+        <a href='https://myadcenter.google.com/' rel='noopener noreferrer'
+          >Google My Ad Center</a
+        >
+        or opt out of some third-party personalized advertising through
+        <a href='https://optout.aboutads.info/' rel='noopener noreferrer'
+          >AboutAds</a
+        >.
+      </p>
+    </section>
+
+    <section>
+      <h2>Analytics</h2>
+      <p>
+        We use Google Analytics and Umami to understand Website usage and
+        performance. These services may process technical and usage data such as
+        your IP address, device and browser information, visited pages,
+        referrer, and interaction data. Google may process this data under its
+        own privacy policy. You can reduce Google Analytics tracking by
+        installing the
+        <a
+          href='https://tools.google.com/dlpage/gaoptout'
+          rel='noopener noreferrer'>Google Analytics Opt-out Browser Add-on</a
+        >.
+      </p>
+    </section>
+
+    <section>
+      <h2>Cookie choices</h2>
+      <p>
+        You can block or delete cookies through your browser settings. Blocking
+        cookies may affect how parts of the Website work. Where required by law,
+        we will request consent before using non-essential cookies or similar
+        technologies. You may withdraw that consent through the cookie controls
+        made available on the Website.
+      </p>
+    </section>
+
+    <section>
+      <h2>How we share information</h2>
+      <p>
+        We do not sell your personal information for money. We may share
+        information with service providers that help us host, analyze, secure,
+        and monetize the Website, including Google, Umami, and Netlify. We may
+        also disclose information when required by law, to protect our rights or
+        users, or in connection with a merger, acquisition, or transfer of the
+        Website.
+      </p>
+    </section>
+
+    <section>
+      <h2>Data retention and security</h2>
+      <p>
+        We retain information only for as long as reasonably necessary for the
+        purposes described in this policy, including legal, accounting,
+        security, and dispute-resolution needs. We use reasonable safeguards to
+        protect information, but no method of transmission or storage is
+        completely secure.
+      </p>
+    </section>
+
+    <section>
+      <h2>Your privacy rights</h2>
+      <p>
+        Depending on where you live, you may have rights to access, correct,
+        delete, restrict, or object to certain processing of your personal
+        information, withdraw consent, or request a portable copy. You may also
+        have the right to complain to your local data protection authority. To
+        make a request, please use our <a href='/contact/'>contact page</a>. We
+        may need to verify your identity before completing a request.
+      </p>
+    </section>
+
+    <section>
+      <h2>Children’s privacy</h2>
+      <p>
+        The Website is not directed to children under 13, and we do not
+        knowingly collect personal information from children under 13. If you
+        believe a child has provided us with personal information, please
+        contact us so we can delete it.
+      </p>
+    </section>
+
+    <section>
+      <h2>External links</h2>
+      <p>
+        Our content may link to third-party websites. We are not responsible for
+        their privacy or security practices, and we encourage you to review
+        their policies.
+      </p>
+    </section>
+
+    <section>
+      <h2>Changes to this policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time. We will publish
+        changes on this page and revise the “Last updated” date above.
+      </p>
+    </section>
+
+    <section>
+      <h2>Contact us</h2>
+      <p>
+        If you have questions or a privacy request, contact JSDev Space through
+        our
+        <a href='/contact/'>contact page</a>.
+      </p>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .privacy-policy {
+    max-width: 52rem;
+  }
+
+  .policy-header,
+  section {
+    margin-bottom: 2rem;
+  }
+
+  .last-updated {
+    margin: 0.75rem 0 1.5rem;
+    color: var(--muted-foreground, #64748b);
+    font-size: 0.95rem;
+  }
+
+  h2 {
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+  }
+
+  p,
+  li {
+    line-height: 1.75;
+  }
+
+  ul {
+    margin: 0.75rem 0 0;
+    padding-left: 1.5rem;
+  }
+
+  li + li {
+    margin-top: 0.5rem;
+  }
+
+  a {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+</style>

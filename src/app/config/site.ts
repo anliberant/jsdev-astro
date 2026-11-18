@@ -17,7 +17,7 @@ export const siteConfig = {
     {
       name: 'Friday',
       path: '/friday/',
-    }
+    },
   ],
   footerLinks: [
     {
@@ -32,6 +32,10 @@ export const siteConfig = {
       name: 'Contact',
       path: '/contact/',
     },
+    {
+      name: 'Privacy Policy',
+      path: '/privacy-policy/',
+    },
   ],
   social: {
     github: 'https://github.com/jsdevspace',
@@ -44,7 +48,8 @@ export const siteConfig = {
     dailydev: 'https://app.daily.dev/squads/jsdevelopment',
   },
   postsPerPage: 15,
-  mainHeadTitle: 'Production-ready JavaScript tutorials with full code and architecture notes',
+  mainHeadTitle:
+    'Production-ready JavaScript tutorials with full code and architecture notes',
   mainHeadHeadingTwo:
     'Master JavaScript, Node.js, and Frontend Development with Hands-On Tutorials',
   mainHeadDescription:
