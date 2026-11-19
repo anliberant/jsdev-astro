@@ -1,3 +1,5 @@
+
+
 # 🚀 JSDev.Space - Modern JavaScript Development Hub
 
 > **Built with passion for [JSDev.Space](https://jsdev.space), shared with love for the community** ❤️
@@ -20,7 +22,7 @@ A modern, lightning-fast blog and developer tools platform built with Astro, Typ
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22.12.0+
 - pnpm (recommended) or npm
 
 ### Installation
