@@ -9,6 +9,7 @@ import Posts from '@/entities/post/posts.astro';
 import Button from '@/shared/ui/base/button.astro';
 import HeadingBlock from '@/shared/ui/layout/heading-block.astro';
 import Pagination from '@/shared/ui/layout/pagination.astro';
+import { createWebsiteJsonLd } from '@/shared/helpers/seo.helpers';
 
 const allPosts = await getCollection('posts', ({ data }) => !data.isDraft);
 const sortedPosts = allPosts.sort((a, b) => {
@@ -46,6 +47,14 @@ const description =
   title={title}
   description={description}>
   <Fragment slot='head'>
+    {
+      page.currentPage === 1 && (
+        <script
+          type='application/ld+json'
+          set:html={JSON.stringify(createWebsiteJsonLd())}
+        />
+      )
+    }
     {
       page.currentPage > 1 && (
         <meta

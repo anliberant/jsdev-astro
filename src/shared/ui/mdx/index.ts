@@ -1,6 +1,7 @@
 // import MdxImage from './MdxImage.astro';
 import Code from './code.astro';
 import Codepen from './codepen.astro';
+import CssStarterDemo from './css-starter-demo.astro';
 import InlineRelated from './inline-related.astro';
 import MdxBlockquote from './mdx-blockquote.astro';
 import MdxLink from './mdx-link.astro';
@@ -20,4 +21,5 @@ export const mdxComponents = {
   li: MdxListItem,
   quote: MdxBlockquote,
   ReversedCounterDemo,
+  CssStarterDemo,
 };

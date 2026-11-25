@@ -1,0 +1,1235 @@
+---
+type Mode =
+  | 'box-sizing'
+  | 'scrollbar-gutter'
+  | 'color-scheme'
+  | 'focus-visible'
+  | 'text-wrap'
+  | 'object-fit'
+  | 'flex-overflow'
+  | 'logical-properties';
+
+interface Props {
+  mode: Mode;
+}
+
+const { mode } = Astro.props;
+
+const titles: Record<Mode, string> = {
+  'box-sizing': 'content-box vs border-box',
+  'scrollbar-gutter': 'Opening a modal with a classic scrollbar',
+  'color-scheme': 'One palette, two themes with light-dark()',
+  'focus-visible': 'Removed focus vs visible focus',
+  'text-wrap': 'wrap vs balance vs pretty',
+  'object-fit': 'object-fit inside a 16:9 frame',
+  'flex-overflow': 'Flex item with a long code line',
+  'logical-properties': 'Physical vs logical properties',
+};
+
+// Portrait test image with TOP / BOTTOM markers, so cropping is obvious.
+const photoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">
+<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+<rect width="600" height="900" fill="url(#s)"/>
+<circle cx="300" cy="300" r="90" fill="#fde68a"/>
+<path d="M0 700 L150 520 L260 640 L380 470 L600 720 L600 900 L0 900Z" fill="#0f172a"/>
+<path d="M0 780 L120 690 L240 760 L420 640 L600 800 L600 900 L0 900Z" fill="#020617"/>
+<rect x="200" y="24" width="200" height="56" rx="10" fill="#22d3ee"/>
+<text x="300" y="64" font-family="Arial, sans-serif" font-size="32" font-weight="700" text-anchor="middle" fill="#020617">TOP</text>
+<rect x="175" y="820" width="250" height="56" rx="10" fill="#22d3ee"/>
+<text x="300" y="860" font-family="Arial, sans-serif" font-size="32" font-weight="700" text-anchor="middle" fill="#020617">BOTTOM</text>
+</svg>`;
+const photo = `data:image/svg+xml,${encodeURIComponent(photoSvg)}`;
+---
+
+<section class='csd' data-mode={mode} aria-label={titles[mode]}>
+  <div class='csd-heading'>
+    <strong>{titles[mode]}</strong>
+    <span class='csd-tag'>Live CSS demo</span>
+  </div>
+
+  {
+    mode === 'box-sizing' && (
+      <>
+        <div class='csd-controls'>
+          <label class='csd-range'>
+            padding
+            <input type='range' min='0' max='40' value='20' data-csd='padding' />
+            <output data-csd='padding-out'>20px</output>
+          </label>
+        </div>
+        <div class='csd-stage csd-box-stage' data-csd='box-stage'>
+          <div class='csd-box-col'>
+            <code>box-sizing: content-box</code>
+            <div class='csd-box csd-box--content'>width: 200px</div>
+            <span class='csd-measure' data-csd='measure'></span>
+          </div>
+          <div class='csd-box-col'>
+            <code>box-sizing: border-box</code>
+            <div class='csd-box csd-box--border'>width: 200px</div>
+            <span class='csd-measure' data-csd='measure'></span>
+          </div>
+        </div>
+        <p class='csd-legend'>
+          <span class='csd-swatch csd-swatch--content'></span> content
+          <span class='csd-swatch csd-swatch--padding'></span> padding
+          <span class='csd-swatch csd-swatch--border'></span> 2px border
+        </p>
+      </>
+    )
+  }
+
+  {
+    mode === 'scrollbar-gutter' && (
+      <>
+        <div class='csd-controls'>
+          <button type='button' class='csd-btn csd-btn--primary' data-csd='modal'>
+            Open modal
+          </button>
+          <label class='csd-check'>
+            <input type='checkbox' data-csd='gutter' />
+            <code>scrollbar-gutter: stable</code>
+          </label>
+        </div>
+        <div class='csd-stage'>
+          <div class='csd-browser' data-csd='browser'>
+            <div class='csd-page'>
+              <div class='csd-nav'>
+                <span class='csd-logo'></span>
+                <span>Home</span>
+                <span>Blog</span>
+                <span class='csd-nav-last'>About</span>
+              </div>
+              <div class='csd-lines'>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class='csd-scrollbar' aria-hidden='true'>
+              <span class='csd-thumb'></span>
+            </div>
+            <span class='csd-guide' aria-hidden='true'></span>
+            <div class='csd-backdrop'>
+              <div class='csd-modal'>
+                <span>Modal dialog</span>
+                <button type='button' class='csd-btn' data-csd='close'>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class='csd-caption'>
+          Simulated classic (non-overlay) scrollbar. The dashed line marks where the
+          page content ended before the modal opened.
+        </p>
+      </>
+    )
+  }
+
+  {
+    mode === 'color-scheme' && (
+      <>
+        <div class='csd-controls csd-segment' role='group' aria-label='Color scheme'>
+          <button type='button' class='csd-btn is-active' data-csd='scheme' data-value='light'>
+            Light
+          </button>
+          <button type='button' class='csd-btn' data-csd='scheme' data-value='dark'>
+            Dark
+          </button>
+          <button type='button' class='csd-btn' data-csd='scheme' data-value='light dark'>
+            System
+          </button>
+        </div>
+        <div class='csd-stage'>
+          <div class='csd-theme' data-csd='theme' style='color-scheme: light'>
+            <div class='csd-theme-card'>
+              <span class='csd-theme-label'>Dashboard</span>
+              <span class='csd-theme-muted'>Total revenue</span>
+              <span class='csd-theme-big'>$12,840</span>
+              <label class='csd-theme-native'>
+                <input type='checkbox' checked /> Native checkbox follows color-scheme
+              </label>
+            </div>
+            <ul class='csd-tokens'>
+              <li>
+                <span class='csd-token-swatch' data-token style='background: var(--background)'></span>
+                <code>--background</code>
+                <code class='csd-token-value'></code>
+              </li>
+              <li>
+                <span class='csd-token-swatch' data-token style='background: var(--foreground)'></span>
+                <code>--foreground</code>
+                <code class='csd-token-value'></code>
+              </li>
+              <li>
+                <span class='csd-token-swatch' data-token style='background: var(--surface)'></span>
+                <code>--surface</code>
+                <code class='csd-token-value'></code>
+              </li>
+              <li>
+                <span class='csd-token-swatch' data-token style='background: var(--border)'></span>
+                <code>--border</code>
+                <code class='csd-token-value'></code>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  {
+    mode === 'focus-visible' && (
+      <>
+        <p class='csd-caption csd-caption--top'>
+          Click inside the demo, then move through the controls with <kbd>Tab</kbd>.
+        </p>
+        <div class='csd-stage csd-focus-grid'>
+          <div class='csd-focus-col csd-focus--none'>
+            <code>:focus {'{'} outline: none; {'}'}</code>
+            <button type='button' class='csd-btn csd-btn--primary'>Continue</button>
+            <a href='#' data-csd='noop'>Learn more</a>
+            <input type='email' placeholder='you@example.com' aria-label='Email (no focus style)' />
+          </div>
+          <div class='csd-focus-col csd-focus--ring'>
+            <code>:focus-visible {'{'} outline: 2px solid; {'}'}</code>
+            <button type='button' class='csd-btn csd-btn--primary'>Continue</button>
+            <a href='#' data-csd='noop'>Learn more</a>
+            <input type='email' placeholder='you@example.com' aria-label='Email (visible focus)' />
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  {
+    mode === 'text-wrap' && (
+      <>
+        <div class='csd-controls csd-segment' role='group' aria-label='text-wrap value'>
+          <button type='button' class='csd-btn is-active' data-csd='wrap' data-value='wrap'>
+            wrap
+          </button>
+          <button type='button' class='csd-btn' data-csd='wrap' data-value='balance'>
+            balance
+          </button>
+          <button type='button' class='csd-btn' data-csd='wrap' data-value='pretty'>
+            pretty
+          </button>
+        </div>
+        <div class='csd-controls'>
+          <label class='csd-range'>
+            container width
+            <input type='range' min='180' max='560' value='320' data-csd='width' />
+            <output data-csd='width-out'>320px</output>
+          </label>
+        </div>
+        <div class='csd-stage'>
+          <div class='csd-wrap-box' data-csd='wrap-box' style='inline-size: 320px'>
+            <p class='csd-wrap-title'>
+              Modern CSS defaults that make every new frontend project easier
+            </p>
+            <p class='csd-wrap-text'>
+              A starter stylesheet doesn't need to be a full reset or a framework. It
+              just needs to provide a reasonable foundation that is easy to override
+              later.
+            </p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  {
+    mode === 'object-fit' && (
+      <>
+        <div class='csd-controls csd-segment' role='group' aria-label='object-fit value'>
+          <button type='button' class='csd-btn is-active' data-csd='fit' data-value='cover'>
+            cover
+          </button>
+          <button type='button' class='csd-btn' data-csd='fit' data-value='contain'>
+            contain
+          </button>
+          <button type='button' class='csd-btn' data-csd='fit' data-value='fill'>
+            fill
+          </button>
+        </div>
+        <div class='csd-controls'>
+          <label class='csd-range'>
+            vertical object-position
+            <input type='range' min='0' max='100' value='50' data-csd='pos' />
+            <output data-csd='pos-out'>50%</output>
+          </label>
+        </div>
+        <div class='csd-stage'>
+          <div class='csd-frame'>
+            <img
+              class='csd-fit-img'
+              data-csd='fit-img'
+              src={photo}
+              width='600'
+              height='900'
+              alt='Portrait test image with TOP and BOTTOM labels'
+              loading='lazy'
+              decoding='async'
+            />
+          </div>
+          <code class='csd-fit-code' data-csd='fit-code'>
+            object-fit: cover; object-position: 50% 50%;
+          </code>
+        </div>
+      </>
+    )
+  }
+
+  {
+    mode === 'flex-overflow' && (
+      <>
+        <div class='csd-controls'>
+          <label class='csd-check'>
+            <input type='checkbox' data-csd='minzero' />
+            <code>.content {'{'} min-inline-size: 0; {'}'}</code>
+          </label>
+        </div>
+        <div class='csd-stage csd-scroll-stage' data-csd='flex-stage'>
+          <div class='csd-flex' data-csd='flex'>
+            <div class='csd-side'>Sidebar</div>
+            <div class='csd-main' data-csd='main'>
+              <span class='csd-main-title'>Main content</span>
+              <pre class='csd-pre'><code>const url = "https://example.com/api/v2/projects/frontend/really/long/path/that/keeps/going?include=everything";</code></pre>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  {
+    mode === 'logical-properties' && (
+      <>
+        <div class='csd-controls csd-segment' role='group' aria-label='Writing direction'>
+          <button type='button' class='csd-btn is-active' data-csd='dir' data-value='ltr'>
+            LTR (English)
+          </button>
+          <button type='button' class='csd-btn' data-csd='dir' data-value='rtl'>
+            RTL (Hebrew)
+          </button>
+        </div>
+        <div class='csd-stage'>
+          <div class='csd-logical-grid' dir='ltr' data-csd='dir-box'>
+            <div class='csd-logical-card csd-physical'>
+              <code dir='ltr'>padding-left + border-left</code>
+              <p class='csd-dir-text' data-csd='dir-text'>Account settings</p>
+            </div>
+            <div class='csd-logical-card csd-logical'>
+              <code dir='ltr'>padding-inline-start + border-inline-start</code>
+              <p class='csd-dir-text' data-csd='dir-text'>Account settings</p>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  <p class='csd-note' aria-live='polite'></p>
+</section>
+
+<style>
+  .csd {
+    margin: 1.5rem 0;
+    border: 1px solid #263650;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0f172a;
+    color: #f8fafc;
+    max-width: 100%;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 1200px) {
+    .csd {
+      max-width: 80%;
+    }
+  }
+
+  .csd code {
+    font-family: 'Fira Code', ui-monospace, monospace;
+    font-size: 12px;
+    background: transparent;
+    padding: 0;
+    color: #a5f3fc;
+  }
+
+  .csd-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #334155;
+  }
+
+  .csd-tag {
+    font-size: 11px;
+    color: #67e8f9;
+    border: 1px solid #155e75;
+    border-radius: 99px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  .csd-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 12px 16px 0;
+    font-size: 13px;
+  }
+
+  .csd-stage {
+    margin: 12px 16px;
+  }
+
+  .csd button,
+  .csd input,
+  .csd select {
+    font: inherit;
+  }
+
+  .csd-btn {
+    padding: 6px 12px;
+    border: 1px solid #475569;
+    border-radius: 7px;
+    background: #1e293b;
+    color: #cbd5e1;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .csd-btn.is-active {
+    border-color: #0891b2;
+    background: #164e63;
+    color: #a5f3fc;
+  }
+
+  .csd-btn--primary {
+    border-color: #0891b2;
+    background: #0891b2;
+    color: #f8fafc;
+  }
+
+  .csd-range,
+  .csd-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .csd-range input {
+    inline-size: 140px;
+    accent-color: #22d3ee;
+  }
+
+  .csd-check input {
+    accent-color: #22d3ee;
+  }
+
+  .csd-range output {
+    min-inline-size: 44px;
+    color: #a5f3fc;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .csd-caption {
+    margin: 0 16px 12px;
+    color: #94a3b8;
+    font-size: 12px;
+  }
+
+  .csd-caption--top {
+    margin-top: 12px;
+    margin-bottom: 0;
+  }
+
+  .csd kbd {
+    padding: 1px 6px;
+    border: 1px solid #475569;
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: #1e293b;
+    font-size: 12px;
+  }
+
+  .csd-note {
+    margin: 0;
+    padding: 0 16px 12px;
+    color: #fbbf24;
+    font-size: 12px;
+  }
+
+  .csd-note:empty {
+    display: none;
+  }
+
+  /* box-sizing */
+  .csd-box-stage {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+  }
+
+  .csd-box-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+
+  .csd-box {
+    inline-size: 200px;
+    padding: var(--pad, 20px);
+    border: 2px solid #38bdf8;
+    background:
+      linear-gradient(#155e75, #155e75) content-box,
+      rgb(245 158 11 / 0.35);
+    color: #f8fafc;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .csd-box--content {
+    box-sizing: content-box;
+  }
+
+  .csd-box--border {
+    box-sizing: border-box;
+  }
+
+  .csd-measure {
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+
+  .csd-measure strong {
+    color: #fbbf24;
+  }
+
+  .csd-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0 16px 12px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .csd-swatch {
+    display: inline-block;
+    inline-size: 12px;
+    block-size: 12px;
+    border-radius: 3px;
+    margin-inline-start: 8px;
+  }
+
+  .csd-swatch--content {
+    background: #155e75;
+    margin-inline-start: 0;
+  }
+
+  .csd-swatch--padding {
+    background: rgb(245 158 11 / 0.35);
+  }
+
+  .csd-swatch--border {
+    border: 2px solid #38bdf8;
+  }
+
+  /* scrollbar-gutter */
+  .csd-browser {
+    position: relative;
+    display: flex;
+    block-size: 170px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #020617;
+  }
+
+  .csd-page {
+    flex: 1;
+    min-inline-size: 0;
+    padding: 12px;
+  }
+
+  .csd-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-block-end: 10px;
+    border-bottom: 1px solid #1e293b;
+    font-size: 12px;
+    color: #cbd5e1;
+  }
+
+  .csd-logo {
+    inline-size: 22px;
+    block-size: 22px;
+    border-radius: 6px;
+    background: #0891b2;
+    margin-inline-end: auto;
+  }
+
+  .csd-nav-last {
+    padding: 2px 8px;
+    border-radius: 5px;
+    background: #1e293b;
+  }
+
+  .csd-lines {
+    display: grid;
+    gap: 10px;
+    padding-block-start: 14px;
+  }
+
+  .csd-lines span {
+    block-size: 8px;
+    border-radius: 4px;
+    background: #1e293b;
+  }
+
+  .csd-lines span:nth-child(2) {
+    inline-size: 85%;
+  }
+
+  .csd-lines span:nth-child(4) {
+    inline-size: 60%;
+  }
+
+  .csd-scrollbar {
+    flex: none;
+    inline-size: 16px;
+    padding: 3px;
+    border-inline-start: 1px solid #1e293b;
+    background: #0f172a;
+  }
+
+  .csd-thumb {
+    display: block;
+    block-size: 40%;
+    border-radius: 6px;
+    background: #475569;
+  }
+
+  .csd-guide {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 16px;
+    border-inline-end: 2px dashed #f87171;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .csd-backdrop {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgb(2 6 23 / 0.55);
+    z-index: 2;
+  }
+
+  .csd-modal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    background: #1e293b;
+    font-size: 13px;
+  }
+
+  .is-modal .csd-backdrop {
+    display: flex;
+  }
+
+  .is-modal .csd-scrollbar {
+    display: none;
+  }
+
+  .is-modal.is-stable .csd-scrollbar {
+    display: block;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent 0 4px,
+      rgb(148 163 184 / 0.15) 4px 8px
+    );
+  }
+
+  .is-modal.is-stable .csd-thumb {
+    visibility: hidden;
+  }
+
+  /* color-scheme + light-dark() */
+  .csd-theme {
+    --background: light-dark(#ffffff, #111827);
+    --foreground: light-dark(#1f2937, #f3f4f6);
+    --surface: light-dark(#f3f4f6, #1f2937);
+    --border: light-dark(#d1d5db, #374151);
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 14px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--background);
+    color: var(--foreground);
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  .csd-theme-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  .csd-theme-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+  }
+
+  .csd-theme-muted {
+    font-size: 13px;
+    opacity: 0.8;
+  }
+
+  .csd-theme-big {
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .csd-theme-native {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-block-start: 6px;
+    font-size: 12px;
+  }
+
+  .csd-tokens {
+    display: grid;
+    align-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .csd-tokens li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .csd-tokens li::before {
+    display: none;
+  }
+
+  .csd-theme .csd-tokens code {
+    color: var(--foreground);
+  }
+
+  .csd-token-swatch {
+    flex: none;
+    inline-size: 18px;
+    block-size: 18px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .csd-theme .csd-token-value {
+    margin-inline-start: auto;
+    opacity: 0.7;
+  }
+
+  /* focus-visible */
+  .csd-focus-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 12px;
+  }
+
+  .csd-focus-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #1e293b;
+  }
+
+  .csd-focus-col a {
+    color: #67e8f9;
+    text-decoration: underline;
+  }
+
+  .csd-focus-col input {
+    inline-size: 100%;
+    padding: 6px 8px;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    background: #0f172a;
+    color: #f8fafc;
+  }
+
+  .csd-focus--none :focus {
+    outline: none;
+  }
+
+  .csd-focus--ring :focus {
+    outline: none;
+  }
+
+  .csd-focus--ring :focus-visible {
+    outline: 2px solid #67e8f9;
+    outline-offset: 3px;
+  }
+
+  @media (forced-colors: active) {
+    .csd-focus--ring :focus-visible {
+      outline-color: Highlight;
+    }
+  }
+
+  /* text-wrap */
+  .csd-wrap-box {
+    max-inline-size: 100%;
+    padding: 12px;
+    border: 1px dashed #475569;
+    border-radius: 8px;
+  }
+
+  .csd-wrap-title {
+    margin: 0 0 8px;
+    font-family: 'PT Serif', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .csd-wrap-text {
+    margin: 0;
+    font-size: 14px;
+    color: #cbd5e1;
+  }
+
+  .csd-wrap-box[data-wrap='balance'] p {
+    text-wrap: balance;
+  }
+
+  .csd-wrap-box[data-wrap='pretty'] p {
+    text-wrap: pretty;
+  }
+
+  /* object-fit */
+  .csd-frame {
+    inline-size: 100%;
+    max-inline-size: 480px;
+    aspect-ratio: 16 / 9;
+    border: 2px solid #22d3ee;
+    border-radius: 8px;
+    overflow: hidden;
+    background: repeating-conic-gradient(#1e293b 0 25%, #0f172a 0 50%) 0 0 / 20px 20px;
+  }
+
+  .csd .csd-fit-img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none;
+    margin: 0;
+    border-radius: 0;
+    object-fit: cover;
+    object-position: 50% 50%;
+  }
+
+  .csd-fit-code {
+    display: block;
+    margin-block-start: 10px;
+  }
+
+  /* flex overflow */
+  .csd-scroll-stage {
+    overflow: auto;
+    border: 1px dashed #475569;
+    border-radius: 8px;
+  }
+
+  .csd-flex {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .csd-side {
+    flex: 0 0 100px;
+    padding: 10px;
+    border-radius: 6px;
+    background: #1e293b;
+    font-size: 12px;
+  }
+
+  .csd-main {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    background: #164e63;
+  }
+
+  .csd-main.is-fixed {
+    min-inline-size: 0;
+  }
+
+  .csd-main-title {
+    display: block;
+    margin-block-end: 8px;
+    font-size: 12px;
+  }
+
+  .csd .csd-pre {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #020617;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* logical properties */
+  .csd-logical-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 12px;
+  }
+
+  .csd-logical-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #1e293b;
+  }
+
+  .csd-logical-card code {
+    text-align: start;
+  }
+
+  .csd .csd-dir-text {
+    margin: 0;
+    padding-block: 8px;
+    background: #0f172a;
+    border-radius: 4px;
+  }
+
+  .csd-physical .csd-dir-text {
+    padding-left: 2.5rem;
+    border-left: 4px solid #f59e0b;
+    text-align: left;
+  }
+
+  .csd-logical .csd-dir-text {
+    padding-inline-start: 2.5rem;
+    border-inline-start: 4px solid #22d3ee;
+    text-align: start;
+  }
+
+  @media (max-width: 480px) {
+    .csd-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .csd-theme {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const toHex = (rgb: string) => {
+    const nums = rgb.match(/\d+(\.\d+)?/g);
+
+    if (!nums || nums.length < 3) return rgb;
+
+    return (
+      '#' +
+      nums
+        .slice(0, 3)
+        .map(n => Math.round(Number(n)).toString(16).padStart(2, '0'))
+        .join('')
+    );
+  };
+
+  const setActive = (demo: HTMLElement, key: string, active: Element) => {
+    demo.querySelectorAll(`[data-csd="${key}"]`).forEach(button => {
+      button.classList.toggle('is-active', button === active);
+    });
+  };
+
+  const note = (demo: HTMLElement, text: string) => {
+    const el = demo.querySelector<HTMLElement>('.csd-note');
+
+    if (el) el.textContent = text;
+  };
+
+  const q = <T extends Element = HTMLElement>(demo: HTMLElement, key: string) =>
+    demo.querySelector<T>(`[data-csd="${key}"]`);
+
+  function initBoxSizing(demo: HTMLElement) {
+    const range = q<HTMLInputElement>(demo, 'padding');
+    const out = q(demo, 'padding-out');
+    const stage = q(demo, 'box-stage');
+
+    const update = () => {
+      const pad = `${range?.value ?? 20}px`;
+
+      stage?.style.setProperty('--pad', pad);
+      if (out) out.textContent = pad;
+
+      demo.querySelectorAll<HTMLElement>('.csd-box-col').forEach(col => {
+        const box = col.querySelector<HTMLElement>('.csd-box');
+        const measure = col.querySelector<HTMLElement>('[data-csd="measure"]');
+
+        if (box && measure) {
+          measure.innerHTML = `Rendered width: <strong>${box.offsetWidth}px</strong>`;
+        }
+      });
+    };
+
+    range?.addEventListener('input', update);
+    update();
+  }
+
+  function initScrollbarGutter(demo: HTMLElement) {
+    const browser = q(demo, 'browser');
+    const gutter = q<HTMLInputElement>(demo, 'gutter');
+
+    const update = () => {
+      if (!browser) return;
+
+      const open = browser.classList.contains('is-modal');
+
+      if (!open) {
+        note(demo, '');
+      } else if (gutter?.checked) {
+        note(demo, 'Space for the scrollbar is reserved, so nothing moved.');
+      } else {
+        note(demo, 'The scrollbar disappeared and the content jumped 16px to the right.');
+      }
+    };
+
+    q(demo, 'modal')?.addEventListener('click', () => {
+      browser?.classList.add('is-modal');
+      update();
+    });
+
+    q(demo, 'close')?.addEventListener('click', () => {
+      browser?.classList.remove('is-modal');
+      update();
+    });
+
+    gutter?.addEventListener('change', () => {
+      browser?.classList.toggle('is-stable', gutter.checked);
+      update();
+    });
+  }
+
+  function initColorScheme(demo: HTMLElement) {
+    const theme = q(demo, 'theme');
+
+    if (!CSS.supports('color', 'light-dark(#000, #fff)')) {
+      note(demo, 'Your browser does not support light-dark() yet.');
+    }
+
+    const update = () => {
+      demo.querySelectorAll<HTMLElement>('.csd-tokens li').forEach(item => {
+        const swatch = item.querySelector<HTMLElement>('[data-token]');
+        const value = item.querySelector<HTMLElement>('.csd-token-value');
+
+        if (swatch && value) {
+          value.textContent = toHex(getComputedStyle(swatch).backgroundColor);
+        }
+      });
+    };
+
+    demo.querySelectorAll<HTMLElement>('[data-csd="scheme"]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (theme) theme.style.colorScheme = button.dataset.value ?? 'light';
+        setActive(demo, 'scheme', button);
+        // wait for the 200ms colour transition before reading the values
+        window.setTimeout(update, 250);
+      });
+    });
+
+    update();
+  }
+
+  function initFocusVisible(demo: HTMLElement) {
+    demo.querySelectorAll('[data-csd="noop"]').forEach(link => {
+      link.addEventListener('click', event => event.preventDefault());
+    });
+  }
+
+  function initTextWrap(demo: HTMLElement) {
+    const box = q(demo, 'wrap-box');
+    const range = q<HTMLInputElement>(demo, 'width');
+    const out = q(demo, 'width-out');
+
+    demo.querySelectorAll<HTMLElement>('[data-csd="wrap"]').forEach(button => {
+      button.addEventListener('click', () => {
+        const value = button.dataset.value ?? 'wrap';
+
+        if (box) box.dataset.wrap = value;
+        setActive(demo, 'wrap', button);
+
+        note(
+          demo,
+          value !== 'wrap' && !CSS.supports('text-wrap', value)
+            ? `Your browser does not support text-wrap: ${value} yet.`
+            : ''
+        );
+      });
+    });
+
+    range?.addEventListener('input', () => {
+      const width = `${range.value}px`;
+
+      if (box) box.style.inlineSize = width;
+      if (out) out.textContent = width;
+    });
+  }
+
+  function initObjectFit(demo: HTMLElement) {
+    const img = q<HTMLImageElement>(demo, 'fit-img');
+    const range = q<HTMLInputElement>(demo, 'pos');
+    const out = q(demo, 'pos-out');
+    const code = q(demo, 'fit-code');
+    let fit = 'cover';
+
+    const update = () => {
+      const y = `${range?.value ?? 50}%`;
+
+      if (img) {
+        img.style.objectFit = fit;
+        img.style.objectPosition = `50% ${y}`;
+      }
+
+      if (out) out.textContent = y;
+      if (code) code.textContent = `object-fit: ${fit}; object-position: 50% ${y};`;
+
+      note(
+        demo,
+        fit === 'fill' ? 'fill ignores the aspect ratio, so the image is distorted.' : ''
+      );
+    };
+
+    demo.querySelectorAll<HTMLElement>('[data-csd="fit"]').forEach(button => {
+      button.addEventListener('click', () => {
+        fit = button.dataset.value ?? 'cover';
+        setActive(demo, 'fit', button);
+        update();
+      });
+    });
+
+    range?.addEventListener('input', update);
+  }
+
+  function initFlexOverflow(demo: HTMLElement) {
+    const main = q(demo, 'main');
+    const stage = q(demo, 'flex-stage');
+    const flex = q(demo, 'flex');
+    const toggle = q<HTMLInputElement>(demo, 'minzero');
+
+    const update = () => {
+      main?.classList.toggle('is-fixed', Boolean(toggle?.checked));
+
+      if (!stage || !flex) return;
+
+      const overflow = flex.scrollWidth - stage.clientWidth;
+
+      note(
+        demo,
+        overflow > 1
+          ? `The layout is ${overflow}px wider than its container.`
+          : 'The layout fits; the code block scrolls on its own.'
+      );
+    };
+
+    toggle?.addEventListener('change', update);
+    window.addEventListener('resize', update);
+    update();
+  }
+
+  function initLogical(demo: HTMLElement) {
+    const box = q(demo, 'dir-box');
+    const texts = { ltr: 'Account settings', rtl: 'הגדרות חשבון' };
+
+    demo.querySelectorAll<HTMLElement>('[data-csd="dir"]').forEach(button => {
+      button.addEventListener('click', () => {
+        const dir = button.dataset.value === 'rtl' ? 'rtl' : 'ltr';
+
+        box?.setAttribute('dir', dir);
+        demo.querySelectorAll('[data-csd="dir-text"]').forEach(text => {
+          text.textContent = texts[dir];
+        });
+        setActive(demo, 'dir', button);
+      });
+    });
+  }
+
+  const initializers: Record<string, (demo: HTMLElement) => void> = {
+    'box-sizing': initBoxSizing,
+    'scrollbar-gutter': initScrollbarGutter,
+    'color-scheme': initColorScheme,
+    'focus-visible': initFocusVisible,
+    'text-wrap': initTextWrap,
+    'object-fit': initObjectFit,
+    'flex-overflow': initFlexOverflow,
+    'logical-properties': initLogical,
+  };
+
+  function initCssStarterDemos() {
+    document.querySelectorAll<HTMLElement>('.csd').forEach(demo => {
+      if (demo.dataset.initialized) return;
+
+      demo.dataset.initialized = 'true';
+      initializers[demo.dataset.mode ?? '']?.(demo);
+    });
+  }
+
+  initCssStarterDemos();
+
+  document.addEventListener('astro:page-load', initCssStarterDemos);
+</script>

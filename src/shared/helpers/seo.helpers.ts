@@ -99,3 +99,29 @@ export const createBreadcrumbJsonLd = (
     item: item.href ? absoluteUrl(item.href) : currentUrl,
   })),
 });
+
+export const createWebsiteJsonLd = () => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${siteConfig.siteUrl}/#website`,
+      url: `${siteConfig.siteUrl}/`,
+      name: siteConfig.shortTitle,
+      description: siteConfig.description,
+      inLanguage: 'en',
+      publisher: { '@id': `${siteConfig.siteUrl}/#organization` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${siteConfig.siteUrl}/#organization`,
+      name: siteConfig.shortTitle,
+      url: `${siteConfig.siteUrl}/`,
+      logo: {
+        '@type': 'ImageObject',
+        url: absoluteUrl('/icon.png'),
+      },
+      sameAs: Object.values(siteConfig.social),
+    },
+  ],
+});
